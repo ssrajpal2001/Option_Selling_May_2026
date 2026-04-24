@@ -86,8 +86,12 @@ async def global_provider_auth(provider: str, request: Request, admin=Depends(re
         from web.auth import _fernet
         state_payload = f"admin:{int(time.time())}"
         state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
-        url = f"https://login.dhan.co/?state={urllib.parse.quote(state_encrypted)}"
-        return RedirectResponse(url)
+        # Include applicationId so Dhan generates the correct app-scoped token
+        app_id = decrypt_secret(dp.get("user_id_encrypted", "") or "") if dp else ""
+        base_url = f"https://login.dhan.co/?state={urllib.parse.quote(state_encrypted)}"
+        if app_id:
+            base_url += f"&applicationId={urllib.parse.quote(app_id)}"
+        return RedirectResponse(base_url)
     raise HTTPException(400, f"OAuth not supported for {provider}")
 
 
@@ -113,31 +117,21 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
         elif provider == 'dhan':
-            from utils.auth_manager_dhan import generate_dhan_token
-            client_id  = decrypt_secret(dp.get("api_key_encrypted",    "") or "")
-            app_id     = decrypt_secret(dp.get("user_id_encrypted",     "") or "")
-            api_secret = decrypt_secret(dp.get("api_secret_encrypted",  "") or "")
-            pin        = decrypt_secret(dp.get("password_encrypted",    "") or "")
-            totp_sec   = decrypt_secret(dp.get("totp_encrypted",        "") or "")
-            missing = [f for f, v in [
-                ("Client ID",    client_id),
-                ("API Key",      app_id),
-                ("API Secret",   api_secret),
-                ("PIN",          pin),
-                ("TOTP Secret",  totp_sec),
-            ] if not v]
-            if missing:
-                return {"success": False,
-                        "message": f"Dhan credentials incomplete — missing: {', '.join(missing)}. Save all 5 fields first."}
-            # api_secret (UUID) is stored as a required credential and used by is_dhan_api_key_mode()
-            # to detect auto-login mode, but Dhan's token generation endpoint (POST /token) does
-            # not accept an api_secret parameter — only applicationId, loginId, password, and 2FA.
-            token = generate_dhan_token(
-                api_key=app_id,
-                client_id=client_id,
-                password=pin,
-                totp_secret=totp_sec,
-            )
+            # Dhan does not offer a server-side token generation REST API.
+            # Tokens must be obtained via browser-based login at login.dhan.co.
+            from web.auth import _fernet
+            state_payload = f"admin:{int(time.time())}"
+            state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
+            app_id = decrypt_secret(dp.get("user_id_encrypted", "") or "")
+            login_url = f"https://login.dhan.co/?state={urllib.parse.quote(state_encrypted)}"
+            if app_id:
+                login_url += f"&applicationId={urllib.parse.quote(app_id)}"
+            return {
+                "success": False,
+                "requires_browser": True,
+                "login_url": login_url,
+                "message": "Dhan requires browser login. Opening Dhan portal automatically…"
+            }
 
         if token:
             enc_token = encrypt_secret(token)
@@ -214,30 +208,21 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
             elif provider == "dhan":
-                from utils.auth_manager_dhan import generate_dhan_token
-                _client_id  = decrypt_secret(dp.get("api_key_encrypted",   "") or "")
-                _app_id     = decrypt_secret(dp.get("user_id_encrypted",    "") or "")
-                _api_secret = decrypt_secret(dp.get("api_secret_encrypted", "") or "")
-                _pin        = decrypt_secret(dp.get("password_encrypted",   "") or "")
-                _totp_sec   = decrypt_secret(dp.get("totp_encrypted",       "") or "")
-                _missing = [f for f, v in [
-                    ("Client ID",   _client_id),
-                    ("API Key",     _app_id),
-                    ("API Secret",  _api_secret),
-                    ("PIN",         _pin),
-                    ("TOTP Secret", _totp_sec),
-                ] if not v]
-                if _missing:
-                    results[provider] = {"success": False,
-                                         "message": f"Dhan credentials incomplete — missing: {', '.join(_missing)}."}
-                    continue
-                # api_secret is validated/stored for mode detection; not sent to Dhan token API.
-                token = generate_dhan_token(
-                    api_key=_app_id,
-                    client_id=_client_id,
-                    password=_pin,
-                    totp_secret=_totp_sec,
-                )
+                # Dhan requires browser-based login — no server-side token API available.
+                from web.auth import _fernet
+                _state_payload = f"admin:{int(time.time())}"
+                _state_enc = _fernet.encrypt(_state_payload.encode()).decode()
+                _app_id = decrypt_secret(dp.get("user_id_encrypted", "") or "")
+                _login_url = f"https://login.dhan.co/?state={urllib.parse.quote(_state_enc)}"
+                if _app_id:
+                    _login_url += f"&applicationId={urllib.parse.quote(_app_id)}"
+                results[provider] = {
+                    "success": False,
+                    "requires_browser": True,
+                    "login_url": _login_url,
+                    "message": "Dhan needs browser login — opening Dhan portal."
+                }
+                continue
 
             if token:
                 enc_token = encrypt_secret(token)
