@@ -1,0 +1,83 @@
+2026-03-06 09:37:54,675 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-03-06 09:37:54,676 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-03-06 09:37:54,676 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-03-06 09:37:54,676 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-03-06 09:37:54,677 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-03-06 09:37:54,677 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-03-06 09:37:54,677 - UpstoxApp - INFO - Initializing API Client Manager for data providers...
+2026-03-06 09:37:54,677 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_1]
+2026-03-06 09:37:54,677 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_1]
+2026-03-06 09:37:54,727 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_1].
+2026-03-06 09:37:54,727 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_2]
+2026-03-06 09:37:54,727 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_2]
+2026-03-06 09:37:54,780 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_2].
+2026-03-06 09:37:54,781 - UpstoxApp - INFO - API client pool initialized with 2 clients. Active client is set.
+2026-03-06 09:37:54,783 - UpstoxApp - ERROR - Failed to connect to database: [Errno 111] Connect call failed ('127.0.0.1', 5432)
+2026-03-06 09:37:54,783 - UpstoxApp - WARNING - DATABASE WARNING: Connection failed ([Errno 111] Connect call failed ('127.0.0.1', 5432)). Proceeding in legacy mode (INI only).
+2026-03-06 09:37:54,783 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-03-06 09:37:54,783 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-03-06 09:37:55,095 - UpstoxApp - INFO - Starting Zerodha authentication for section: Zerodha_Client_Live_1...
+2026-03-06 09:37:55,100 - UpstoxApp - INFO - Validating Zerodha access token for Zerodha_Client_Live_1...
+2026-03-06 09:37:55,145 - UpstoxApp - INFO - Zerodha access token for Zerodha_Client_Live_1 is valid.
+2026-03-06 09:37:55,171 - UpstoxApp - INFO - Zerodha authentication successful for user: SA5770 [Zerodha_Client_Live_1].
+2026-03-06 09:37:55,171 - UpstoxApp - INFO - Successfully loaded broker: Zerodha_Client_Live_1 (Client: Zerodha)
+2026-03-06 09:37:55,171 - UpstoxApp - INFO - Backtest mode enabled. Using CSVDataFeeder for WebSocket and enabling REST client for historical data.
+2026-03-06 09:37:55,171 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-06 09:37:55,202 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-03-06 09:37:55,215 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-03-06 09:37:55,576 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-03-06) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-03-06 09:37:55,608 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-03-06
+2026-03-06 09:37:55,646 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-03-06 09:37:55,647 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-03-06 (key=NSE_INDEX|Nifty 50)
+2026-03-06 09:37:55,647 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-03-06 09:37:55,647 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-10 (day=Tuesday)
+2026-03-06 09:37:55,650 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-10 (CURRENT_WEEK), trade=2026-03-10 (WEEKLY)
+2026-03-06 09:37:55,651 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-06 09:37:55,652 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-06 09:37:55,653 - UpstoxApp - INFO - UserSession Initialized: User=backtest_user@local | Instrument=NIFTY
+2026-03-06 09:37:55,653 - UpstoxApp - INFO - StateManager: Backtest mode detected. Starting with a fresh state (skipping load).
+2026-03-06 09:37:55,653 - UpstoxApp - INFO - Trading bot is now live.
+2026-03-06 09:37:55,653 - UpstoxApp - INFO - Starting synchronous backtest loop...
+2026-03-06 09:37:55,653 - UpstoxApp - INFO - 
+==================== STARTING BACKTEST FOR DATE: 2026-03-05 ====================
+2026-03-06 09:37:55,653 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-06 09:37:55,653 - UpstoxApp - WARNING - CSV file NOT FOUND or is a directory at /home/ec2-user/environment/Option_buying_March/tick_data_log.csv. Generating synthetic 1-minute timestamps for API-only backtest.
+2026-03-06 09:37:55,669 - UpstoxApp - INFO - Generated 376 synthetic timestamps for 2026-03-05
+2026-03-06 09:37:55,669 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-06 09:37:56,017 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-03-06) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-03-06 09:37:56,045 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-03-06
+2026-03-06 09:37:56,064 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-03-06 09:37:56,064 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-03-06 (key=NSE_INDEX|Nifty 50)
+2026-03-06 09:37:56,064 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-03-06 09:37:56,064 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-10 (day=Tuesday)
+2026-03-06 09:37:56,068 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-10 (CURRENT_WEEK), trade=2026-03-10 (WEEKLY)
+2026-03-06 09:37:56,069 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-06 09:37:56,070 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-06 09:37:56,154 - UpstoxApp - WARNING - [Backtest] ATP file not found: /home/ec2-user/environment/Option_buying_March/atp_data_NIFTY_2026-03-05.csv. Slope will use synthetic OHLC VWAP.
+2026-03-06 09:37:56,449 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-03-05 09:15:00+05:30 | ATM: 24650 | Status: IDLE | P&L: 0.00
+[TRADE_SUMMARY] Timestamp: 2026-03-05 09:15:00+05:30 | ATM: 24650 | Status: IDLE | P&L: 0.00
+2026-03-06 09:37:56,676 - UpstoxApp - INFO - [SellManager] Fetching option chain: NSE_INDEX|Nifty 50 expiry=2026-03-10 INDEX=24626.20 → ATM=24650
+2026-03-06 09:37:56,735 - UpstoxApp - INFO - [SellManager] CE candidates (ATM=24650, ITM=2): [(24650, 'NSE_FO|45515'), (24600, 'NSE_FO|45513'), (24550, 'NSE_FO|45509')]
+2026-03-06 09:37:56,741 - UpstoxApp - INFO - [SellManager] PE candidates (ATM=24650, ITM=2): [(24650, 'NSE_FO|45516'), (24700, 'NSE_FO|45518'), (24750, 'NSE_FO|45520')]
+2026-03-06 09:37:56,741 - UpstoxApp - INFO - [SellManager] Subscribed 6 candidate keys to WS.
+2026-03-06 09:37:56,741 - UpstoxApp - INFO - [SellManager] Pre-subscribed 6 BUY execution keys at ATM=24650 ± 50 (expiry=2026-03-10)
+2026-03-06 09:37:56,742 - UpstoxApp - INFO - [SellManager] Forced _relevant_keys_cache rebuild to include BUY execution keys.
+2026-03-06 09:37:56,742 - UpstoxApp - INFO - [SellManager] Ready — CE searching=True PE searching=True
+2026-03-06 09:37:56,789 - UpstoxApp - INFO - [SellManager][Backtest PAPER SELL NRML] CE: strike=24650 histLTP=223.85
+2026-03-06 09:37:56,807 - UpstoxApp - INFO - [SellManager][Backtest PAPER SELL NRML] PE: strike=24650 histLTP=311.75
+2026-03-06 09:37:56,834 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-03-05 09:16:00+05:30 | ATM: 24700 | Status: IDLE | P&L: 0.00
+[TRADE_SUMMARY] Timestamp: 2026-03-05 09:16:00+05:30 | ATM: 24700 | Status: IDLE | P&L: 0.00
+2026-03-06 09:37:57,073 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-03-05 09:17:00+05:30 | ATM: 24750 | Status: IDLE | P&L: 0.00
+[TRADE_SUMMARY] Timestamp: 2026-03-05 09:17:00+05:30 | ATM: 24750 | Status: IDLE | P&L: 0.00
+2026-03-06 09:37:57,363 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-03-05 09:18:00+05:30 | ATM: 24700 | Status: IDLE | P&L: 0.00
+[TRADE_SUMMARY] Timestamp: 2026-03-05 09:18:00+05:30 | ATM: 24700 | Status: IDLE | P&L: 0.00
+2026-03-06 09:37:57,398 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 9999s since last switch): None -> 24650 (User: backtest_user)
+2026-03-06 09:37:57,612 - UpstoxApp - INFO - V2: [CE] [BUY] Status [24650]: slope(V1:233.27 > V0:235.21 (Pct:-0.83%, Cons:0/1))=False | LTP: 225.55 | Formula: vwap_slope AND oi_gate
+2026-03-06 09:37:57,623 - UpstoxApp - INFO - V2: [PE] [BUY] Status [24650]: slope(V1:275.85 > V0:282.53 (Pct:-2.37%, Cons:0/1))=False | LTP: 268.55 | Formula: vwap_slope AND oi_gate
+2026-03-06 09:37:57,624 - UpstoxApp - INFO - V2: [CE] [SELL] Status [24650]: slope(V1:233.27 < V0:235.21 (Pct:-0.83%, Cons:1/1))=True | LTP: 225.55 | Formula: vwap_slope OR cross_slope_comparison
+2026-03-06 09:37:57,624 - UpstoxApp - INFO - [Task 139712452326272] V2: SETTING entry_confirmed=True for CE (SELL)
+2026-03-06 09:37:57,632 - UpstoxApp - INFO - V2: [PE] [SELL] Status [24650]: slope(V1:275.85 < V0:282.53 (Pct:-2.37%, Cons:1/1))=True | LTP: 268.55 | Formula: vwap_slope OR cross_slope_comparison
+2026-03-06 09:37:57,632 - UpstoxApp - INFO - [Task 139712452326272] V2: SETTING entry_confirmed=True for PE (SELL)
+2026-03-06 09:37:57,632 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 24650 (SWITCHED) | Index: 24584.85 | CE: slope(V1:233.27 < V0:235.21 (Pct:-0.83%, Cons:1/1)):True (LTP: 225.55) | PE: slope(V1:275.85 < V0:282.53 (Pct:-2.37%, Cons:1/1)):True (LTP: 268.55) | SOLD CE 24650@225.55 | SOLD PE 24650@268.55
+2026-03-06 09:37:57,640 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-03-05 09:19:00+05:30 | ATM: 24700 | Status: IDLE | P&L: 0.00
+[TRADE_SUMMARY] Timestamp: 2026-03-05 09:19:00+05:30 | ATM: 24700 | Status: IDLE | P&L: 0.00

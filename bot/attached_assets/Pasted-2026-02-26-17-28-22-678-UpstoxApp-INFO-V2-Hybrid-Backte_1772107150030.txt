@@ -1,0 +1,28 @@
+2026-02-26 17:28:22,678 - UpstoxApp - INFO - V2 Hybrid [Backtest]: Discovered execution price: 86.40
+2026-02-26 17:28:22,679 - UpstoxApp - ERROR - Error processing backtest data for timestamp 2026-02-26 09:17:00+05:30: name 'quantity_multiplier' is not defined
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/lifecycle_manager.py", line 94, in _run_backtest_loop
+    await self.trade_orchestrator.run_backtest_strategy_for_timestamp(
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/backtest_orchestrator.py", line 95, in run_backtest_strategy_for_timestamp
+    await session.signal_monitor.check_crossover_breach(timestamp=timestamp, current_atm=current_atm)
+  File "/home/ec2-user/environment/AlgoSoft_March/utils/profiler.py", line 15, in async_wrapper
+    result = await func(*args, **kwargs)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 380, in check_crossover_breach
+    await self._update_tick_criteria_and_evaluate(timestamp, active_modes)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 452, in _update_tick_criteria_and_evaluate
+    await self.evaluator.evaluate_tick_criteria(timestamp, active_modes)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_evaluator.py", line 337, in evaluate_tick_criteria
+    await self.monitor._confirm_entry(side, data, inst_key,
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 855, in _confirm_entry
+    await self.orchestrator.broadcast_signal(
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/base_orchestrator.py", line 175, in broadcast_signal
+    await asyncio.gather(*tasks)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/user_session.py", line 83, in evaluate_signal
+    await self.orchestrator.trade_executor.execute_trade_v2(
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 121, in execute_trade_v2
+    await self._finalize_trade_entry(direction, trade_instrument_key, trade_ltp, trade_strike, timestamp, signal_strike, strategy_log, user_id, entry_type)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 206, in _finalize_trade_entry
+    return await self._finalize_trade_entry_unlocked(direction, trade_instrument_key, trade_ltp, trade_strike, timestamp, signal_strike, strategy_log, user_id, entry_type)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 265, in _finalize_trade_entry_unlocked
+    quantity=quantity_multiplier
+NameError: name 'quantity_multiplier' is not defined

@@ -1,0 +1,661 @@
+{% extends "admin_base.html" %}
+{% set active_page = "clients" %}
+{% block title %}Client Detail{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <a href="/admin/clients" class="text-xs mb-2 inline-block" style="color:#64748b">← Back to Clients</a>
+  <h1 class="text-2xl font-bold text-white" id="client-name">Loading...</h1>
+  <p class="text-sm mt-1" id="client-email" style="color:#64748b"></p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Status</div>
+    <div id="d-status" class="text-lg font-bold text-white">--</div>
+  </div>
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Subscription</div>
+    <div id="d-tier" class="text-lg font-bold text-white">--</div>
+  </div>
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Joined</div>
+    <div id="d-joined" class="text-lg font-bold text-white">--</div>
+  </div>
+</div>
+
+<div class="flex gap-2 mb-4">
+  <button onclick="showClientTab('info')" id="ct-info" class="tab-btn active">Info & Trades</button>
+  <button onclick="showClientTab('monitor')" id="ct-monitor" class="tab-btn">Live Monitor</button>
+</div>
+
+<!-- INFO TAB -->
+<div id="pane-info">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div class="card p-4">
+      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Bot Instances</div>
+      <div id="instances-list" style="color:#64748b;font-size:13px">Loading...</div>
+      <div class="flex gap-2 mt-3">
+        <button onclick="forceClose()" class="btn-danger px-3 py-1.5 text-xs">Force Stop Bot</button>
+        <button id="toggle-active-btn" onclick="toggleActive()" class="btn-primary px-3 py-1.5 text-xs">Loading...</button>
+        <button onclick="clearTrades()" class="btn-ghost px-3 py-1.5 text-xs" style="color:#f87171;border-color:#450a0a">Clear Trade History</button>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Order Failures</div>
+      <div id="failures-list" style="color:#64748b;font-size:13px">Loading...</div>
+    </div>
+  </div>
+
+  <div class="card p-4 mb-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Broker Change Requests</div>
+    <div id="bcr-detail-list" style="color:#64748b;font-size:13px">Loading...</div>
+  </div>
+
+  <div class="card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Trade History</div>
+    <table>
+      <thead><tr>
+        <th>Time</th><th>Type</th><th>Dir</th><th>Strike</th><th>Nifty</th>
+        <th>Entry</th><th>Exit</th><th>P&L pts</th><th>P&L ₹</th><th>Reason</th>
+      </tr></thead>
+      <tbody id="trades-body">
+        <tr><td colspan="9" class="text-center" style="color:#475569">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LIVE MONITOR TAB -->
+<div id="pane-monitor" class="hidden">
+  <div id="monitor-idle" class="card p-8 text-center">
+    <div class="text-4xl mb-3">📡</div>
+    <div class="text-white font-bold text-lg mb-1">Bot Not Running</div>
+    <p class="text-sm" style="color:#64748b">This client's bot is not active. Live data will appear here when the bot is started.</p>
+  </div>
+
+  <div id="monitor-live" class="hidden">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <span id="m-bot-badge" class="flex items-center gap-2 text-sm px-3 py-1 rounded-full" style="background:#064e3b;border:1px solid #059669;color:#34d399">
+          <span class="pulse-dot pulse-green" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#34d399;animation:pulse 2s infinite"></span>
+          <span id="m-bot-label">LIVE</span>
+        </span>
+      </div>
+      <div id="m-last-update" class="text-xs" style="color:#64748b">--</div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <div class="stat-card p-4">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">ATM Strike</div>
+        <div id="m-atm" class="text-2xl font-bold text-white">--</div>
+        <div class="text-xs mt-1" style="color:#64748b">Futures <span id="m-spot" class="text-slate-300">--</span></div>
+      </div>
+      <div class="stat-card p-4">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Index (Spot)</div>
+        <div id="m-index" class="text-2xl font-bold text-white">--</div>
+      </div>
+      <div class="stat-card p-4">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Session P&L</div>
+        <div id="m-pnl" class="text-2xl font-bold" style="color:#94a3b8">₹ --</div>
+        <div class="text-xs mt-1" style="color:#64748b">Trades: <span id="m-trades">0</span></div>
+      </div>
+      <div class="stat-card p-4">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Mode</div>
+        <div id="m-mode" class="text-2xl font-bold" style="color:#60a5fa">--</div>
+        <div class="text-xs mt-1" style="color:#64748b">Instrument: <span id="m-instrument">--</span></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="card p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:#1e3a5f;color:#60a5fa">BUY SIDE</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold" style="color:#818cf8">CALL</span>
+              <span id="m-buy-call-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+            </div>
+            <div class="text-lg font-bold text-white" id="m-buy-call-strike">--</div>
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+              <div>Entry <span id="m-buy-call-entry" class="text-slate-300">--</span></div>
+              <div>LTP <span id="m-buy-call-ltp" class="text-slate-300">--</span></div>
+              <div class="mt-1">Time <span id="m-buy-call-time" class="text-slate-300">--</span></div>
+            </div>
+            <div class="text-sm font-bold mt-2" id="m-buy-call-pnl">--</div>
+          </div>
+          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold" style="color:#f472b6">PUT</span>
+              <span id="m-buy-put-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+            </div>
+            <div class="text-lg font-bold text-white" id="m-buy-put-strike">--</div>
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+              <div>Entry <span id="m-buy-put-entry" class="text-slate-300">--</span></div>
+              <div>LTP <span id="m-buy-put-ltp" class="text-slate-300">--</span></div>
+              <div class="mt-1">Time <span id="m-buy-put-time" class="text-slate-300">--</span></div>
+            </div>
+            <div class="text-sm font-bold mt-2" id="m-buy-put-pnl">--</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:#3b1f00;color:#fb923c">SELL SIDE</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold" style="color:#818cf8">SELL CE</span>
+              <span id="m-sell-ce-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+            </div>
+            <div class="text-lg font-bold text-white" id="m-sell-ce-strike">--</div>
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+              <div>Entry <span id="m-sell-ce-entry" class="text-slate-300">--</span></div>
+              <div>LTP <span id="m-sell-ce-ltp" class="text-slate-300">--</span></div>
+              <div class="mt-1">Time <span id="m-sell-ce-time" class="text-slate-300">--</span></div>
+              <div class="mt-1">Spot <span id="m-sell-ce-index" class="text-slate-300">--</span></div>
+            </div>
+            <div class="text-sm font-bold mt-2" id="m-sell-ce-pnl">--</div>
+          </div>
+          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold" style="color:#f472b6">SELL PE</span>
+              <span id="m-sell-pe-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+            </div>
+            <div class="text-lg font-bold text-white" id="m-sell-pe-strike">--</div>
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+              <div>Entry <span id="m-sell-pe-entry" class="text-slate-300">--</span></div>
+              <div>LTP <span id="m-sell-pe-ltp" class="text-slate-300">--</span></div>
+              <div class="mt-1">Time <span id="m-sell-pe-time" class="text-slate-300">--</span></div>
+              <div class="mt-1">Spot <span id="m-sell-pe-index" class="text-slate-300">--</span></div>
+            </div>
+            <div class="text-sm font-bold mt-2" id="m-sell-pe-pnl">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div class="card p-4">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">OI Snapshot</div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs" style="color:#818cf8">Call OI</span>
+          <span id="m-oi-call" class="text-sm font-bold text-white">--</span>
+        </div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs" style="color:#f472b6">Put OI</span>
+          <span id="m-oi-put" class="text-sm font-bold text-white">--</span>
+        </div>
+        <div class="h-2 rounded-full" style="background:#1e293b">
+          <div id="m-oi-bar" class="h-2 rounded-full" style="background:#818cf8;width:50%;transition:width 0.5s"></div>
+        </div>
+      </div>
+
+      <div class="card p-4 md:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">V3 Strategy Monitor</span>
+          <span id="m-v3-monitor-status" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400">IDLE</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <div>
+            <div class="text-[10px] uppercase text-slate-500">Strikes</div>
+            <div id="m-v3-monitor-strikes" class="text-sm font-bold text-white">--</div>
+          </div>
+          <div id="m-v3-box-rsi" class="rounded p-1">
+            <div class="text-[10px] uppercase text-slate-500">RSI (<span id="m-v3-thresh-rsi">50</span>)</div>
+            <div id="m-v3-monitor-rsi" class="text-sm font-bold text-white">--</div>
+            <div class="text-[9px] text-slate-400 mt-1">C:<span id="m-v3-ce-ltp">--</span> P:<span id="m-v3-pe-ltp">--</span></div>
+          </div>
+          <div id="m-v3-box-vwap" class="rounded p-1">
+            <div class="text-[10px] uppercase text-slate-500">Price < VWAP</div>
+            <div id="m-v3-monitor-vwap" class="text-[11px] font-bold text-white leading-tight">--</div>
+            <div class="text-[9px] text-slate-400 mt-1">LTP sum: <span id="m-v3-ltp-sum">--</span></div>
+          </div>
+          <div id="m-v3-box-slope" class="rounded p-1">
+            <div class="text-[10px] uppercase text-slate-500">V-Slope</div>
+            <div id="m-v3-monitor-slope" class="text-[10px] font-bold text-white leading-tight">--</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase text-slate-500">Rule</div>
+            <div id="m-v3-monitor-reason" class="text-[10px] font-bold text-slate-400 mt-1 uppercase">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div class="card p-4 md:col-span-3">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#64748b">Heartbeat</div>
+        <div id="m-heartbeat" class="text-sm" style="color:#34d399">--</div>
+        <div id="m-stale-warning" class="text-xs mt-1 hidden" style="color:#fb923c"></div>
+      </div>
+    </div>
+
+    <div class="card p-4 mb-4 hidden" id="m-v3-pool-card">
+      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">V3 Re-entry Pool Analysis (Scanning ATM ± offset)</div>
+      <div class="overflow-x-auto max-h-64">
+        <table class="w-full text-[11px]">
+          <thead>
+            <tr class="text-slate-500 border-bottom" style="border-bottom:1px solid #1e293b">
+              <th class="text-left py-1 pr-2">CE / PE Strike (LTP)</th>
+              <th class="text-right py-1 pr-2">Combined Premium</th>
+              <th class="text-center py-1 pr-2">RSI</th>
+              <th class="text-center py-1 pr-2">Price < VWAP</th>
+              <th class="text-center py-1 pr-2">V-Slope (Curr / Prev)</th>
+              <th class="text-center py-1">Gate Result</th>
+            </tr>
+          </thead>
+          <tbody id="m-v3-pool-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Bot Log (last 50 lines)</span>
+        <button onclick="document.getElementById('m-log-box').scrollTop = document.getElementById('m-log-box').scrollHeight" class="text-xs" style="color:#00d4aa">↓ Bottom</button>
+      </div>
+      <div id="m-log-box" class="rounded-lg p-3 h-48 overflow-y-auto" style="background:#040810;font-family:'Courier New',monospace;font-size:11px;color:#94a3b8">
+        <p style="color:#475569">Waiting for bot logs…</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const clientId = window.location.pathname.split('/').pop();
+
+function showClientTab(tab) {
+  document.getElementById('pane-info').classList.toggle('hidden', tab !== 'info');
+  document.getElementById('pane-monitor').classList.toggle('hidden', tab !== 'monitor');
+  document.getElementById('ct-info').classList.toggle('active', tab === 'info');
+  document.getElementById('ct-monitor').classList.toggle('active', tab === 'monitor');
+  if (tab === 'monitor') loadBotStatus();
+}
+
+async function loadDetail() {
+  const r = await fetch(`/api/admin/clients/${clientId}/detail`);
+  const d = await r.json();
+  const c = d.client;
+
+  document.getElementById('client-name').textContent = c.username;
+  document.getElementById('client-email').textContent = c.email;
+  document.getElementById('d-status').innerHTML = c.is_active
+    ? '<span class="badge-ok">Active</span>' : '<span class="badge-warn">Pending</span>';
+  document.getElementById('d-tier').textContent = c.subscription_tier;
+  document.getElementById('d-joined').textContent = (c.created_at||'').substring(0,10);
+
+  const activeBtn = document.getElementById('toggle-active-btn');
+  if (c.is_active) {
+    activeBtn.textContent = 'Deactivate Account';
+    activeBtn.className = 'btn-ghost px-3 py-1.5 text-xs';
+    activeBtn.style.color = '#fb923c';
+    activeBtn.style.borderColor = '#431407';
+  } else {
+    activeBtn.textContent = 'Activate Account';
+    activeBtn.className = 'btn-primary px-3 py-1.5 text-xs';
+    activeBtn.style.color = '';
+    activeBtn.style.borderColor = '';
+  }
+
+  const ilist = document.getElementById('instances-list');
+  if (d.instances && d.instances.length) {
+    ilist.innerHTML = d.instances.map(i => {
+      const tokenInfo = i.token_updated_at
+        ? `<span class="text-xs" style="color:#64748b">Token: ${(i.token_updated_at||'').substring(0,10)}</span>`
+        : '<span class="text-xs" style="color:#f87171">No token</span>';
+      return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid #1e293b">
+        <div>
+          <div class="text-white font-bold">${escapeHtml((i.broker||'').toUpperCase())} · ${escapeHtml(i.instrument)} · ${i.quantity} lots</div>
+          <div class="text-xs mt-0.5" style="color:#64748b">${i.strategy_version} · ${i.trading_mode} · ${tokenInfo}</div>
+        </div>
+        <span class="${i.status === 'running' ? 'badge-ok' : 'badge-idle'}">${i.status}</span>
+      </div>`;
+    }).join('');
+  } else {
+    ilist.textContent = 'No broker configured yet.';
+  }
+
+  const bcrList = document.getElementById('bcr-detail-list');
+  if (d.broker_requests && d.broker_requests.length) {
+    bcrList.innerHTML = d.broker_requests.map(r => {
+      const statusColor = r.status === 'approved' ? '#34d399' : r.status === 'denied' ? '#f87171' : '#fb923c';
+      const statusLabel = r.status.toUpperCase();
+      const actionBtns = r.status === 'pending'
+        ? `<div class="flex gap-2 ml-auto">
+            <button onclick="approveBCR(${r.id})" class="btn-primary px-3 py-1 text-xs">Approve</button>
+            <button onclick="denyBCR(${r.id})" class="btn-ghost px-3 py-1 text-xs">Deny</button>
+          </div>`
+        : '';
+      return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid #1e293b">
+        <div>
+          <span style="color:${statusColor};font-weight:700;font-size:11px">${statusLabel}</span>
+          <span class="text-white ml-2">${escapeHtml((r.current_broker||'').toUpperCase())} → ${escapeHtml((r.requested_broker||'').toUpperCase())}</span>
+          ${r.reason ? '<span class="text-xs ml-2" style="color:#94a3b8">"' + escapeHtml(r.reason) + '"</span>' : ''}
+          <span class="text-xs ml-2" style="color:#64748b">${(r.created_at||'').substring(0,10)}</span>
+        </div>
+        ${actionBtns}
+      </div>`;
+    }).join('');
+  } else {
+    bcrList.textContent = 'No broker change requests.';
+  }
+
+  const flist = document.getElementById('failures-list');
+  if (d.failures && d.failures.length) {
+    flist.innerHTML = d.failures.map(f => `
+      <div class="py-1.5" style="border-bottom:1px solid #1e293b">
+        <div class="flex items-center justify-between">
+          <span style="color:#f87171">Leg ${escapeHtml(f.order_side)} failed</span>
+          <span style="color:#64748b;font-size:11px">${(f.created_at||'').substring(11,19)}</span>
+        </div>
+        <div class="text-xs mt-0.5" style="color:#64748b">${escapeHtml(f.failure_reason||'')} · Retry ${f.retry_attempt} · ${f.paired_leg_closed ? 'Paired leg closed ✓' : 'Paired leg open ⚠'}</div>
+      </div>
+    `).join('');
+  } else {
+    flist.textContent = 'No failures recorded.';
+  }
+
+  const tbody = document.getElementById('trades-body');
+  if (d.trades && d.trades.length) {
+    tbody.innerHTML = d.trades.map(t => {
+      const pnlColor = (t.pnl_pts||0) > 0 ? '#34d399' : (t.pnl_pts||0) < 0 ? '#f87171' : '#64748b';
+      const pSign = (t.pnl_pts||0) > 0 ? '+' : '';
+      const rSign = (t.pnl_rs||0) > 0 ? '+' : '';
+      return `<tr>
+        <td style="color:#64748b;font-size:12px">${(t.closed_at||'').substring(11,19)}</td>
+        <td style="color:${t.trade_type==='BUY'?'#60a5fa':'#fb923c'};font-weight:700">${escapeHtml(t.trade_type||'')}</td>
+        <td style="color:${(t.direction==='CE'||t.direction==='CALL')?'#818cf8':'#f472b6'}">${escapeHtml(t.direction||'')}</td>
+        <td class="text-white">${t.strike||'--'}</td>
+        <td style="color:#64748b">${t.entry_index_price ? parseFloat(t.entry_index_price).toFixed(1) : '--'}</td>
+        <td style="color:#94a3b8">${t.entry_price ? parseFloat(t.entry_price).toFixed(2) : '--'}</td>
+        <td style="color:#94a3b8">${t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '--'}</td>
+        <td style="color:${pnlColor};font-weight:700">${pSign}${t.pnl_pts !== null ? parseFloat(t.pnl_pts).toFixed(2) : '--'}</td>
+        <td style="color:${pnlColor};font-weight:700">${rSign}${t.pnl_rs !== null ? parseFloat(t.pnl_rs).toFixed(0) : '--'}</td>
+        <td style="color:#64748b;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.exit_reason||'')}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="color:#475569">No trades yet.</td></tr>';
+  }
+}
+
+function fmt(v) { return v !== null && v !== undefined ? parseFloat(v).toFixed(2) : '--'; }
+function fmtOI(v) { return v ? (v/100000).toFixed(1) + 'L' : '--'; }
+function pnlClass(v) {
+  if (!v && v !== 0) return '#94a3b8';
+  return v > 0 ? '#34d399' : v < 0 ? '#f87171' : '#94a3b8';
+}
+
+async function loadBotStatus() {
+  try {
+    const r = await fetch(`/api/admin/clients/${clientId}/bot-status`);
+    const d = await r.json();
+
+    if (!d.configured) {
+      document.getElementById('monitor-idle').classList.remove('hidden');
+      document.getElementById('monitor-live').classList.add('hidden');
+      return;
+    }
+
+    const running = d.live && d.live.running;
+    const bd = d.bot_data || {};
+
+    if (!running || !bd.bot_running) {
+      document.getElementById('monitor-idle').classList.remove('hidden');
+      document.getElementById('monitor-live').classList.add('hidden');
+      return;
+    }
+
+    document.getElementById('monitor-idle').classList.add('hidden');
+    document.getElementById('monitor-live').classList.remove('hidden');
+
+    const badge = document.getElementById('m-bot-badge');
+    const label = document.getElementById('m-bot-label');
+    const isLive = (d.instance.trading_mode === 'live');
+    if (isLive) {
+      badge.style.background = '#064e3b';
+      badge.style.borderColor = '#059669';
+      badge.style.color = '#34d399';
+      label.textContent = 'LIVE · ' + (d.instance.broker || 'zerodha').toUpperCase();
+    } else {
+      badge.style.background = '#1e3a5f';
+      badge.style.borderColor = '#2563eb';
+      badge.style.color = '#60a5fa';
+      label.textContent = 'PAPER · ' + (d.instance.broker || 'zerodha').toUpperCase();
+    }
+
+    document.getElementById('m-atm').textContent = bd.atm || '--';
+    document.getElementById('m-spot').textContent = bd.spot_price ? parseFloat(bd.spot_price).toFixed(1) : '--';
+    document.getElementById('m-index').textContent = bd.index_price ? parseFloat(bd.index_price).toFixed(1) : '--';
+    document.getElementById('m-mode').textContent = bd.mode || '--';
+    document.getElementById('m-instrument').textContent = bd.instrument || '--';
+    document.getElementById('m-trades').textContent = bd.trade_count || 0;
+
+    const pnl = bd.session_pnl || 0;
+    const pnlEl = document.getElementById('m-pnl');
+    pnlEl.textContent = '\u20B9 ' + parseFloat(pnl).toFixed(2);
+    pnlEl.style.color = pnlClass(pnl);
+
+    if (bd.heartbeat) {
+      document.getElementById('m-last-update').textContent = 'Last update: ' + new Date(bd.heartbeat * 1000).toLocaleTimeString();
+      document.getElementById('m-heartbeat').textContent = 'Last heartbeat: ' + new Date(bd.heartbeat * 1000).toLocaleTimeString();
+      document.getElementById('m-heartbeat').style.color = bd.stale ? '#fb923c' : '#34d399';
+    }
+    const staleEl = document.getElementById('m-stale-warning');
+    if (bd.stale) {
+      staleEl.textContent = '\u26A0 Bot may be frozen (last seen ' + bd.stale_seconds + 's ago)';
+      staleEl.classList.remove('hidden');
+    } else {
+      staleEl.classList.add('hidden');
+    }
+
+    const buy = bd.buy || {};
+    ['CALL', 'PUT'].forEach(function(side) {
+      const s = side.toLowerCase();
+      const pos = buy[side] || {};
+      const active = pos.status === 'ACTIVE';
+      const pfx = 'm-buy-' + s;
+      const statusEl = document.getElementById(pfx + '-status');
+      statusEl.textContent = active ? 'ACTIVE' : 'IDLE';
+      statusEl.style.background = active ? '#064e3b' : '#1e293b';
+      statusEl.style.color = active ? '#34d399' : '#64748b';
+      document.getElementById(pfx + '-strike').textContent = pos.strike || '--';
+      document.getElementById(pfx + '-entry').textContent = fmt(pos.entry);
+      document.getElementById(pfx + '-ltp').textContent = fmt(pos.ltp);
+      if (document.getElementById(pfx + '-time')) {
+        document.getElementById(pfx + '-time').textContent = pos.entry_time || '--';
+      }
+      const pEl = document.getElementById(pfx + '-pnl');
+      if (active) {
+        pEl.textContent = '\u20B9 ' + fmt(pos.pnl);
+        pEl.style.color = pnlClass(pos.pnl);
+      } else {
+        pEl.textContent = '--';
+        pEl.style.color = '#94a3b8';
+      }
+    });
+
+    const sell = bd.sell || {};
+
+    const v3 = sell.v3_extras || {};
+    if (v3.slope_status) {
+      document.getElementById('m-v3-monitor-status').textContent = v3.slope_status;
+      document.getElementById('m-v3-monitor-status').className = 'text-[10px] font-bold px-2 py-0.5 rounded ' + (v3.slope_status === 'DECREASING' ? 'bg-green-900 text-green-400' : (v3.slope_status === 'WAITING' ? 'bg-slate-800 text-slate-400' : 'bg-red-900 text-red-400'));
+      document.getElementById('m-v3-monitor-strikes').textContent = (v3.ce_strike && v3.pe_strike) ? v3.ce_strike + '/' + v3.pe_strike : '--';
+      document.getElementById('m-v3-monitor-rsi').textContent = v3.combined_rsi !== null ? v3.combined_rsi : '--';
+      document.getElementById('m-v3-thresh-rsi').textContent = v3.rsi_threshold || '50';
+      document.getElementById('m-v3-ce-ltp').textContent = v3.ce_ltp || '--';
+      document.getElementById('m-v3-pe-ltp').textContent = v3.pe_ltp || '--';
+
+      document.getElementById('m-v3-monitor-vwap').textContent = (v3.combined_close && v3.combined_vwap) ? v3.combined_close + ' < ' + v3.combined_vwap : '--';
+      document.getElementById('m-v3-ltp-sum').textContent = v3.combined_price || '--';
+
+    const cSl = v3.curr_slope !== null ? (v3.curr_slope > 0 ? '+' : '') + v3.curr_slope.toFixed(4) : '--';
+    const pSl = v3.prev_slope !== null ? (v3.prev_slope > 0 ? '+' : '') + v3.prev_slope.toFixed(4) : '--';
+    const vCurr = v3.v_curr !== null ? v3.v_curr.toFixed(2) : '--';
+    const vPrev = v3.v_prev !== null ? v3.v_prev.toFixed(2) : '--';
+    document.getElementById('m-v3-monitor-slope').innerHTML =
+        `<span class="text-slate-400 font-normal">C:</span> ${vCurr} (${cSl})<br/>` +
+        `<span class="text-slate-400 font-normal">P:</span> ${vPrev} (${pSl})`;
+
+      document.getElementById('m-v3-box-rsi').style.background = v3.rsi_ok ? '#064e3b' : '#2d1010';
+      document.getElementById('m-v3-box-vwap').style.background = v3.vwap_ok ? '#064e3b' : '#2d1010';
+      document.getElementById('m-v3-box-slope').style.background = v3.slope_ok ? '#064e3b' : '#2d1010';
+    document.getElementById('m-v3-monitor-slope').style.color = v3.slope_ok ? '#34d399' : '#f87171';
+
+      var mr = 'WAITING';
+      if (!v3.slope_ok) mr = 'SLOPE RISE';
+      else if (!v3.vwap_ok) mr = 'PRICE > VWAP';
+      else if (!v3.rsi_ok) mr = 'RSI > THRESH';
+      else mr = 'ALL OK';
+      document.getElementById('m-v3-monitor-reason').textContent = mr;
+      document.getElementById('m-v3-monitor-reason').style.color = (mr === 'ALL OK') ? '#34d399' : '#f87171';
+
+      // Update Pool Table
+      if (v3.pool && v3.pool.length) {
+        document.getElementById('m-v3-pool-card').classList.remove('hidden');
+        document.getElementById('m-v3-pool-body').innerHTML = v3.pool.map(p => {
+          const pass = p.slope_ok && p.rsi_ok && p.vwap_ok;
+          return `
+            <tr style="border-bottom:1px solid #0f172a">
+              <td class="py-1.5 text-slate-300 font-mono">
+                ${p.ce} <span class="text-[10px] text-slate-500">(${p.ce_ltp})</span> /
+                ${p.pe} <span class="text-[10px] text-slate-500">(${p.pe_ltp})</span>
+              </td>
+              <td class="py-1.5 text-right font-bold text-white">${p.total}</td>
+              <td class="py-1.5 text-center font-bold" style="color:${p.rsi_ok ? '#34d399' : '#f87171'}">${p.rsi || '--'}</td>
+              <td class="py-1.5 text-center font-bold" style="color:${p.vwap_ok ? '#34d399' : '#f87171'}">${p.total} < ${p.vwap}</td>
+              <td class="py-1.5 text-center font-mono text-[10px]" style="color:${p.curr_slope <= 0 ? '#34d399' : '#f87171'}">${p.v_curr} (${p.curr_slope > 0 ? '+' : ''}${p.curr_slope.toFixed(2)}) / ${p.v_prev} (${p.prev_slope > 0 ? '+' : ''}${p.prev_slope.toFixed(2)})</td>
+              <td class="py-1.5 text-center">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${pass ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}">${pass ? 'PASS' : 'REJECT'}</span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        document.getElementById('m-v3-pool-card').classList.add('hidden');
+      }
+
+    } else {
+      document.getElementById('m-v3-monitor-status').textContent = 'IDLE';
+      document.getElementById('m-v3-monitor-status').className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400';
+      document.getElementById('m-v3-monitor-strikes').textContent = '--';
+      document.getElementById('m-v3-monitor-rsi').textContent = '--';
+      document.getElementById('m-v3-monitor-vwap').textContent = '--';
+      document.getElementById('m-v3-monitor-slope').textContent = '--';
+    }
+
+    ['CE', 'PE'].forEach(function(side) {
+      const s = side.toLowerCase();
+      const pos = sell[side] || {};
+      const active = pos.placed;
+      const pfx = 'm-sell-' + s;
+      const statusEl = document.getElementById(pfx + '-status');
+      statusEl.textContent = active ? 'PLACED' : 'IDLE';
+      statusEl.style.background = active ? '#3b1f00' : '#1e293b';
+      statusEl.style.color = active ? '#fb923c' : '#64748b';
+      document.getElementById(pfx + '-strike').textContent = pos.strike || '--';
+      document.getElementById(pfx + '-entry').textContent = fmt(pos.entry);
+      document.getElementById(pfx + '-ltp').textContent = fmt(pos.ltp);
+      if (document.getElementById(pfx + '-time')) {
+        document.getElementById(pfx + '-time').textContent = pos.entry_time || '--';
+        document.getElementById(pfx + '-index').textContent = pos.entry_index ? pos.entry_index.toFixed(1) : '--';
+      }
+      const pEl = document.getElementById(pfx + '-pnl');
+      if (active) {
+        pEl.textContent = '\u20B9 ' + fmt(pos.pnl);
+        pEl.style.color = pnlClass(pos.pnl);
+      } else {
+        pEl.textContent = '--';
+        pEl.style.color = '#94a3b8';
+      }
+    });
+
+    const oi = bd.oi_snapshot || {};
+    document.getElementById('m-oi-call').textContent = fmtOI(oi.call_oi);
+    document.getElementById('m-oi-put').textContent = fmtOI(oi.put_oi);
+    const total = (oi.call_oi || 0) + (oi.put_oi || 0);
+    if (total > 0) {
+      document.getElementById('m-oi-bar').style.width = Math.round((oi.call_oi / total) * 100) + '%';
+    }
+
+    if (bd.log_tail && bd.log_tail.length) {
+      const box = document.getElementById('m-log-box');
+      const atBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 20;
+      box.innerHTML = bd.log_tail.map(function(l) {
+        let color = '#94a3b8';
+        if (l.includes('ERROR')) color = '#f87171';
+        else if (l.includes('WARNING') || l.includes('WARN')) color = '#fb923c';
+        else if (l.includes('[BUY]') || l.includes('[SELL]')) color = '#34d399';
+        else if (l.includes('INFO')) color = '#93c5fd';
+        return '<div style="color:' + color + '">' + escapeHtml(l) + '</div>';
+      }).join('');
+      if (atBottom) box.scrollTop = box.scrollHeight;
+    }
+  } catch(e) {}
+}
+
+async function forceClose() {
+  if (!confirm('Stop all bot instances for this client?')) return;
+  const r = await fetch(`/api/admin/clients/${clientId}/force-close`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message, d.success ? 'success' : 'error');
+  loadDetail();
+  loadBotStatus();
+}
+
+async function clearTrades() {
+  if (!confirm('Permanently delete all trade history for this client? This cannot be undone.')) return;
+  const r = await fetch(`/api/admin/clients/${clientId}/clear-history`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message, d.success ? 'success' : 'error');
+  loadDetail();
+}
+
+async function toggleActive() {
+  const r_detail = await fetch(`/api/admin/clients/${clientId}/detail`);
+  const d_detail = await r_detail.json();
+  const c = d_detail.client;
+
+  if (c.is_active) {
+    if (!confirm('Deactivate and stop all bots for this client?')) return;
+    const r = await fetch(`/api/admin/clients/${clientId}/deactivate`, {method:'POST'});
+    const d = await r.json();
+    showToast(d.message, d.success ? 'success' : 'error');
+  } else {
+    const r = await fetch(`/api/admin/clients/${clientId}/activate`, {method:'POST'});
+    const d = await r.json();
+    showToast(d.message, d.success ? 'success' : 'error');
+  }
+  loadDetail();
+}
+
+async function approveBCR(id) {
+  if (!confirm('Approve this broker change? The old broker instance will be removed.')) return;
+  const r = await fetch(`/api/admin/broker-requests/${id}/approve`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message || 'Done', d.success ? 'success' : 'error');
+  loadDetail();
+}
+
+async function denyBCR(id) {
+  if (!confirm('Deny this broker change request?')) return;
+  const r = await fetch(`/api/admin/broker-requests/${id}/deny`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message || 'Done', d.success ? 'success' : 'error');
+  loadDetail();
+}
+
+loadDetail();
+loadBotStatus();
+setInterval(loadBotStatus, 5000);
+</script>
+{% endblock %}

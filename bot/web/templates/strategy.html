@@ -1,0 +1,1356 @@
+{% extends "admin_base.html" %}
+{% set active_page = "strategy" %}
+
+{% block content %}
+<div class="mb-5 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-white">Strategy Settings</h1>
+    <p class="text-xs mt-1" style="color:#64748b">All changes write to strategy_logic.json instantly — bot picks up on next tick, no restart needed.</p>
+  </div>
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-semibold text-slate-500 uppercase">Selected Instrument</label>
+      <select id="instr-selector" onchange="loadStrategy()" class="input-field py-1.5 px-3 text-sm w-36">
+        <option value="NIFTY">NIFTY</option>
+        <option value="BANKNIFTY">BANKNIFTY</option>
+        <option value="FINNIFTY">FINNIFTY</option>
+        <option value="MIDCAP">MIDCAP</option>
+        <option value="CRUDEOIL">CRUDEOIL</option>
+        <option value="NATURALGAS">NATURALGAS</option>
+      </select>
+    </div>
+    <button onclick="saveAll()" class="btn-primary px-6 py-2 text-sm">Save All Changes</button>
+  </div>
+</div>
+
+<div class="mb-4 flex gap-2" id="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('general')">General</button>
+  <button class="tab-btn" onclick="switchTab('buy')">Buy Side</button>
+  <button class="tab-btn" onclick="switchTab('sell')">Sell Side</button>
+  <button class="tab-btn" onclick="switchTab('sell_v3')" style="border-color:#00d4aa;color:#00d4aa;background:transparent;">Sell Side V3</button>
+  <button class="tab-btn" onclick="switchTab('oi')">OI Exit</button>
+</div>
+
+<!-- ═══════════════════ TAB: GENERAL ═══════════════════ -->
+<div id="tab-general" class="tab-content">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <div class="card p-5">
+      <div class="section-label">Master Switches</div>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid #334155;margin-bottom:4px;">
+          <div>
+            <span class="text-sm font-semibold" style="color:#00d4aa;">V3 Mode</span>
+            <span class="text-xs ml-2" style="color:#64748b;">When ON, Buy/Sell toggles are managed by V3</span>
+          </div>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" id="v3-mode-toggle" data-path="v3_mode" onclick="toggleV3Mode(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        {% set toggles_general = [
+          ('Buy Side Enabled',    'buy.enabled'),
+          ('Sell Side Enabled',   'sell.enabled'),
+          ('OI Exit Enabled',     'oi_exit.enabled'),
+          ('Profit Target Exit',  'profit_target_exit.enabled'),
+          ('Market Open Gate',    'range_915_gate_enabled'),
+        ] %}
+        {% for label, path in toggles_general %}
+        <div class="flex items-center justify-between v3-managed-row" data-v3-managed="{{ 'true' if path in ['buy.enabled', 'sell.enabled'] else 'false' }}">
+          <span class="text-sm">{{ label }}</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="{{ path }}" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Timing & Product Types</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Buy Start Time</label>
+            <input type="text" class="input-field" data-path="buy.start_time" placeholder="09:17"/>
+          </div>
+          <div>
+            <label class="field-label">Sell Start Time</label>
+            <input type="text" class="input-field" data-path="sell.start_time" placeholder="09:20"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Buy Product Type</label>
+            <select class="input-field" data-path="buy.product_type">
+              <option value="MIS">MIS (Intraday)</option>
+              <option value="NRML">NRML</option>
+              <option value="CNC">CNC</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Sell Product Type</label>
+            <select class="input-field" data-path="sell.product_type">
+              <option value="NRML">NRML</option>
+              <option value="MIS">MIS (Intraday)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Sell Hedge Product Type (buy_product_type)</label>
+          <select class="input-field" data-path="sell.buy_product_type">
+            <option value="MIS">MIS (Intraday)</option>
+            <option value="NRML">NRML</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Buy Signal Expiry</label>
+            <select class="input-field" data-path="buy.signal_expiry">
+              <option value="WEEKLY">WEEKLY</option>
+              <option value="MONTHLY">MONTHLY</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Buy Trade Expiry</label>
+            <select class="input-field" data-path="buy.trade_expiry">
+              <option value="WEEKLY">WEEKLY</option>
+              <option value="MONTHLY">MONTHLY</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Sell Signal Expiry</label>
+            <select class="input-field" data-path="sell.signal_expiry">
+              <option value="WEEKLY">WEEKLY</option>
+              <option value="MONTHLY">MONTHLY</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Sell Trade Expiry</label>
+            <select class="input-field" data-path="sell.trade_expiry">
+              <option value="WEEKLY">WEEKLY</option>
+              <option value="MONTHLY">MONTHLY</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Profit Target Exit</div>
+      <div class="space-y-3">
+        <div>
+          <label class="field-label">Target Points (combined session P&L)</label>
+          <input type="number" class="input-field" data-path="profit_target_exit.points"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Formulas</div>
+      <div class="space-y-3">
+        <div>
+          <label class="field-label">Buy Entry Formula</label>
+          <input type="text" class="input-field font-mono text-xs" data-path="buy.entry_formula"/>
+        </div>
+        <div>
+          <label class="field-label">Buy Exit Formula</label>
+          <input type="text" class="input-field font-mono text-xs" data-path="buy.exit_formula"/>
+        </div>
+        <div>
+          <label class="field-label">Sell Entry Formula</label>
+          <input type="text" class="input-field font-mono text-xs" data-path="sell.entry_formula"/>
+        </div>
+        <div>
+          <label class="field-label">Sell Exit Formula</label>
+          <input type="text" class="input-field font-mono text-xs" data-path="sell.exit_formula"/>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB: BUY SIDE ═══════════════════ -->
+<div id="tab-buy" class="tab-content hidden">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <div class="card p-5">
+      <div class="section-label">Buy Side Switches</div>
+      <div class="space-y-3">
+        {% set toggles_buy = [
+          ('TSL Enabled',        'buy.exit_indicators.tsl.enabled'),
+          ('ATR-TSL Enabled',    'buy.exit_indicators.atr_tsl.enabled'),
+          ('Reversal Enabled',   'buy.exit_indicators.reversal.enabled'),
+          ('Target Exit Enabled','buy.exit_indicators.target_exit.enabled'),
+        ] %}
+        {% for label, path in toggles_buy %}
+        <div class="flex items-center justify-between">
+          <span class="text-sm">{{ label }}</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="{{ path }}" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Entry — VWAP Slope</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">TF (minutes)</label>
+            <input type="number" class="input-field" data-path="buy.indicators.vwap_slope.tf"/>
+          </div>
+          <div>
+            <label class="field-label">Check Mode</label>
+            <select class="input-field" data-path="buy.indicators.vwap_slope.check_mode">
+              <option value="TICK">TICK</option>
+              <option value="CLOSE">CLOSE</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="field-label">Operator</label>
+            <select class="input-field" data-path="buy.indicators.vwap_slope.operator">
+              <option value=">">&gt;</option>
+              <option value="<">&lt;</option>
+              <option value=">=">&gt;=</option>
+              <option value="<=">&lt;=</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Threshold</label>
+            <input type="number" class="input-field" step="0.001" data-path="buy.indicators.vwap_slope.threshold"/>
+          </div>
+          <div>
+            <label class="field-label">Occurrences</label>
+            <input type="number" class="input-field" data-path="buy.indicators.vwap_slope.occurrences"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Entry — VWAP & Pattern</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">VWAP TF (minutes)</label>
+            <input type="number" class="input-field" data-path="buy.indicators.vwap.tf"/>
+          </div>
+          <div>
+            <label class="field-label">VWAP Check Mode</label>
+            <select class="input-field" data-path="buy.indicators.vwap.check_mode">
+              <option value="TICK">TICK</option>
+              <option value="CLOSE">CLOSE</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Pattern TF (minutes)</label>
+            <input type="number" class="input-field" data-path="buy.indicators.pattern.tf"/>
+          </div>
+          <div>
+            <label class="field-label">R1 High TF (minutes)</label>
+            <input type="number" class="input-field" data-path="buy.indicators.r1_high.tf"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — VWAP Slope</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">TF (minutes)</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.vwap_slope.tf"/>
+          </div>
+          <div>
+            <label class="field-label">Check Mode</label>
+            <select class="input-field" data-path="buy.exit_indicators.vwap_slope.check_mode">
+              <option value="TICK">TICK</option>
+              <option value="CLOSE">CLOSE</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="field-label">Operator</label>
+            <select class="input-field" data-path="buy.exit_indicators.vwap_slope.operator">
+              <option value="<">&lt;</option>
+              <option value=">">&gt;</option>
+              <option value="<=">&lt;=</option>
+              <option value=">=">&gt;=</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Threshold</label>
+            <input type="number" class="input-field" step="0.001" data-path="buy.exit_indicators.vwap_slope.threshold"/>
+          </div>
+          <div>
+            <label class="field-label">Occurrences</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.vwap_slope.occurrences"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — TSL</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Offset (points)</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.tsl.offset"/>
+          </div>
+          <div>
+            <label class="field-label">Multiplier</label>
+            <input type="number" class="input-field" step="0.1" data-path="buy.exit_indicators.tsl.multiplier"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — ATR-TSL</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">ATR Length</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.atr_tsl.length"/>
+          </div>
+          <div>
+            <label class="field-label">ATR Multiplier</label>
+            <input type="number" class="input-field" step="0.1" data-path="buy.exit_indicators.atr_tsl.multiplier"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">TF (minutes)</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.atr_tsl.tf"/>
+          </div>
+          <div>
+            <label class="field-label">Check Mode</label>
+            <select class="input-field" data-path="buy.exit_indicators.atr_tsl.check_mode">
+              <option value="CLOSE">CLOSE</option>
+              <option value="TICK">TICK</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — R1 Indicators</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">R1 Target TF</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.r1_target.tf"/>
+          </div>
+          <div>
+            <label class="field-label">R1 Target Threshold</label>
+            <input type="number" class="input-field" step="0.5" data-path="buy.exit_indicators.r1_target.threshold"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">R1 Falling TF</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.r1_falling.tf"/>
+          </div>
+          <div>
+            <label class="field-label">R1 Low Breach TF</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.r1_low_breach.tf"/>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">R1 Stagnation (minutes)</label>
+          <input type="number" class="input-field" data-path="buy.exit_indicators.r1_stagnation.minutes"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — S1 Indicators</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">S1 Low TF</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.s1_low.tf"/>
+          </div>
+          <div>
+            <label class="field-label">S1 Low Fast TF</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.s1_low.fast_tf"/>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm">S1 Low Dynamic TF</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="buy.exit_indicators.s1_low.dynamic_tf" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        <div>
+          <label class="field-label">S1 Double Drop TF</label>
+          <input type="number" class="input-field" data-path="buy.exit_indicators.s1_double_drop.tf"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">S1 Confirm Fast TF</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.s1_confirm.fast_tf"/>
+          </div>
+          <div>
+            <label class="field-label">S1 Confirm Slow TF</label>
+            <input type="number" class="input-field" data-path="buy.exit_indicators.s1_confirm.slow_tf"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB: SELL SIDE ═══════════════════ -->
+<div id="tab-sell" class="tab-content hidden">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <div class="card p-5">
+      <div class="section-label">Sell Side Switches</div>
+      <div class="space-y-3">
+        {% set toggles_sell = [
+          ('TSL Enabled (Sell)',         'sell.exit_indicators.tsl.enabled'),
+          ('ATR-TSL Enabled (Sell)',     'sell.exit_indicators.atr_tsl.enabled'),
+          ('LTP Below Min Exit',         'sell.exit_indicators.ltp_below_min.enabled'),
+        ] %}
+        {% for label, path in toggles_sell %}
+        <div class="flex items-center justify-between">
+          <span class="text-sm">{{ label }}</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="{{ path }}" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Core Parameters</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">LTP Min (entry filter)</label>
+            <input type="number" class="input-field" data-path="sell.ltp_min"/>
+          </div>
+          <div>
+            <label class="field-label">LTP Target (nearest to)</label>
+            <input type="number" class="input-field" data-path="sell.ltp_target"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">LTP Exit Min</label>
+            <input type="number" class="input-field" data-path="sell.ltp_exit_min"/>
+          </div>
+          <div>
+            <label class="field-label">LTP Below Min Threshold</label>
+            <input type="number" class="input-field" data-path="sell.exit_indicators.ltp_below_min.threshold"/>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">ITM Count (candidates per side)</label>
+          <input type="number" class="input-field" data-path="sell.itm_count"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Entry — VWAP Slope</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">TF (minutes)</label>
+            <input type="number" class="input-field" data-path="sell.indicators.vwap_slope.tf"/>
+          </div>
+          <div>
+            <label class="field-label">Check Mode</label>
+            <select class="input-field" data-path="sell.indicators.vwap_slope.check_mode">
+              <option value="TICK">TICK</option>
+              <option value="CLOSE">CLOSE</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="field-label">Operator</label>
+            <select class="input-field" data-path="sell.indicators.vwap_slope.operator">
+              <option value="<">&lt;</option>
+              <option value=">">&gt;</option>
+              <option value="<=">&lt;=</option>
+              <option value=">=">&gt;=</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Threshold</label>
+            <input type="number" class="input-field" step="0.001" data-path="sell.indicators.vwap_slope.threshold"/>
+          </div>
+          <div>
+            <label class="field-label">Occurrences</label>
+            <input type="number" class="input-field" data-path="sell.indicators.vwap_slope.occurrences"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — Combined VWAP Rise (both legs exit together)</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">TF (minutes)</label>
+            <input type="number" class="input-field" data-path="sell.exit_indicators.combined_vwap_slope.tf"/>
+          </div>
+          <div>
+            <label class="field-label">Threshold (%)</label>
+            <input type="number" class="input-field" step="0.1" data-path="sell.exit_indicators.combined_vwap_slope.threshold" data-pct="true"/>
+          </div>
+        </div>
+        <p class="text-xs mt-1" style="color:#64748b">Exit both CE+PE when combined VWAP rises above this % from prev TF. E.g. 1 = 1%.</p>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — TSL (Sell)</div>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm">Standard TSL Enabled</span>
+            <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.exit_indicators.tsl.enabled" onclick="toggleSwitch(this)">
+                <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+            </button>
+        </div>
+        <div>
+          <label class="field-label">TSL Offset (points)</label>
+          <input type="number" class="input-field" step="0.5" data-path="sell.exit_indicators.tsl.offset"/>
+        </div>
+        <div class="pt-3 border-t border-slate-700 mt-2">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-bold text-emerald-400">Scalable Profit Locking</span>
+                <button class="toggle-btn w-10 h-5 rounded-full relative transition-colors" data-path="sell.v3.tsl_scalable.enabled" onclick="toggleSwitch(this)">
+                    <span class="toggle-knob absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[9px] text-slate-500 uppercase">Base Profit (₹)</label><input type="number" class="input-field py-1 text-xs" data-path="sell.v3.tsl_scalable.base_profit"/></div>
+                <div><label class="text-[9px] text-slate-500 uppercase">Base Lock (₹)</label><input type="number" class="input-field py-1 text-xs" data-path="sell.v3.tsl_scalable.base_lock"/></div>
+                <div><label class="text-[9px] text-slate-500 uppercase">Step Profit (₹)</label><input type="number" class="input-field py-1 text-xs" data-path="sell.v3.tsl_scalable.step_profit"/></div>
+                <div><label class="text-[9px] text-slate-500 uppercase">Step Lock (₹)</label><input type="number" class="input-field py-1 text-xs" data-path="sell.v3.tsl_scalable.step_lock"/></div>
+            </div>
+            <p class="text-[9px] text-slate-500 mt-2">Logic: After 1000 profit → lock 200. Every +250 → trail up by 200.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="section-label">Exit — ATR-TSL (Sell)</div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">ATR Length</label>
+            <input type="number" class="input-field" data-path="sell.exit_indicators.atr_tsl.length"/>
+          </div>
+          <div>
+            <label class="field-label">ATR Multiplier</label>
+            <input type="number" class="input-field" step="0.1" data-path="sell.exit_indicators.atr_tsl.multiplier"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">TF (minutes)</label>
+            <input type="number" class="input-field" data-path="sell.exit_indicators.atr_tsl.tf"/>
+          </div>
+          <div>
+            <label class="field-label">Check Mode</label>
+            <select class="input-field" data-path="sell.exit_indicators.atr_tsl.check_mode">
+              <option value="TICK">TICK</option>
+              <option value="CLOSE">CLOSE</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB: SELL SIDE V3 ═══════════════════ -->
+<div id="tab-sell_v3" class="tab-content hidden">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <div class="card p-5" style="border-color:#00d4aa33;">
+      <div class="section-label" style="color:#00d4aa;">V3 Strategy Status</div>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid #334155;">
+          <div>
+            <span class="text-sm font-semibold" style="color:#00d4aa;">V3 Mode (Master Switch)</span>
+            <span class="text-xs ml-2" style="color:#64748b;">Enables V3 strategy globally</span>
+          </div>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" id="v3-mode-toggle-v3tab" data-path="v3_mode" onclick="toggleV3ModeSync(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="field-label">Start Time</label>
+            <input type="text" class="input-field" data-path="sell.start_time" placeholder="09:20"/>
+          </div>
+          <div>
+            <label class="field-label">Entry End Time</label>
+            <input type="text" class="input-field" data-path="sell.v3.entry_end_time" placeholder="14:00:00"/>
+          </div>
+          <div>
+            <label class="field-label">Bot Close Time</label>
+            <input type="text" class="input-field" data-path="sell.v3.close_time" placeholder="15:20:00"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Max Trades</label>
+            <input type="number" class="input-field" data-path="sell.v3.max_trades_per_day" placeholder="0"/>
+          </div>
+          <div>
+            <label class="field-label">Pool Range (Strikes +/-)</label>
+            <input type="number" class="input-field" data-path="sell.v3.v_slope_pool_offset"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">LTP Target</label>
+            <input type="number" class="input-field" data-path="sell.v3.ltp_target"/>
+          </div>
+          <div>
+            <label class="field-label">Entry Workflow Mode</label>
+            <select class="input-field" data-path="sell.v3.entry_workflow_mode">
+              <option value="hybrid">Beginning / Re-entry (Hybrid)</option>
+              <option value="beginning_only">Beginning Concept for Both</option>
+              <option value="reentry_only">Re-entry Concept for Both</option>
+            </select>
+          </div>
+          <div style="display:none;">
+            <label class="field-label">Workflow Phase</label>
+            <select class="input-field" data-path="sell.v3.workflow_phase">
+              <option value="ai_beginning">AI Beginning</option>
+              <option value="continue">Continue</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-3">
+          <div>
+            <label class="field-label">Best Strike Metric (for Re-entry Concept)</label>
+            <select class="input-field" data-path="sell.v3.reentry_best_metric">
+              <option value="roc">Closest to Target ROC</option>
+              <option value="vwap_pct">Min VWAP % Deviation</option>
+              <option value="balanced_premium">Balanced Premium (Relative Diff)</option>
+            </select>
+          </div>
+        </div>
+        <div class="space-y-4 pt-3">
+          <div class="p-4 bg-slate-900/50 rounded-xl border border-emerald-500/20">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Entry Rules (Beginning)</span>
+              <button onclick="addRuleRow('entry-beg')" class="text-[9px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded font-bold transition-colors">+ ADD CONDITION</button>
+            </div>
+            <div id="preview-entry-beg" class="text-[10px] font-mono text-emerald-400/60 mb-3 break-all bg-emerald-500/5 p-1.5 rounded"></div>
+            <div id="rule-builder-entry-beg" class="space-y-0 relative"></div>
+          </div>
+
+          <div class="p-4 bg-slate-900/50 rounded-xl border border-emerald-500/20">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Entry Rules (Re-entry)</span>
+              <button onclick="addRuleRow('entry-re')" class="text-[9px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded font-bold transition-colors">+ ADD CONDITION</button>
+            </div>
+            <div id="preview-entry-re" class="text-[10px] font-mono text-emerald-400/60 mb-3 break-all bg-emerald-500/5 p-1.5 rounded"></div>
+            <div id="rule-builder-entry-re" class="space-y-0 relative"></div>
+          </div>
+
+          <div class="p-4 bg-slate-900/50 rounded-xl border border-rose-500/20">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest">Technical Exit Rules</span>
+              <button onclick="addRuleRow('exit')" class="text-[9px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 px-2 py-1 rounded font-bold transition-colors">+ ADD CONDITION</button>
+            </div>
+            <div id="preview-exit" class="text-[10px] font-mono text-rose-400/60 mb-3 break-all bg-rose-500/5 p-1.5 rounded"></div>
+            <div id="rule-builder-exit" class="space-y-0 relative"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card p-5" style="border-color:#00d4aa33;">
+      <div class="section-label" style="color:#00d4aa;">V3 ROLLOVER / SMART ROLL</div>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid #334155;margin-bottom:4px;">
+          <div>
+            <span class="text-sm font-semibold" style="color:#00d4aa;">Smart Rolling (Master)</span>
+            <span class="text-xs ml-2" style="color:#64748b;">Allows continuous trading without stopping</span>
+          </div>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.smart_rolling_enabled" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-semibold">Profit Target Enabled</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.profit_target_enabled" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Profit Target (%)</label>
+            <input type="number" class="input-field" step="0.5" data-path="sell.v3.profit_target_pct"/>
+          </div>
+          <div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between py-2" style="border-top:1px solid #334155;">
+          <span class="text-sm font-semibold">LTP Decay Enabled</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.ltp_decay_enabled" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">LTP Exit Min (≤ 20)</label>
+            <input type="number" class="input-field" data-path="sell.v3.ltp_exit_min"/>
+          </div>
+        </div>
+        <div class="flex items-center justify-between py-2" style="border-top:1px solid #334155;">
+          <span class="text-sm font-semibold">Ratio Exit (3:1)</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.ratio_exit.enabled" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        <div>
+          <label class="field-label">Ratio Threshold</label>
+          <input type="number" class="input-field" step="0.1" data-path="sell.v3.ratio_exit.threshold"/>
+          <p class="text-[10px] text-slate-500 mt-1">Breaching this ratio triggers a FULL EXIT to re-scan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5" style="border-color:#00d4aa33;">
+      <div class="section-label" style="color:#00d4aa;">Single Trade Risk (Points)</div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div><label class="field-label">Target Pts</label><input type="number" step="0.1" class="input-field" data-path="sell.v3.single_trade_target_pts"/></div>
+        <div><label class="field-label">SL Pts</label><input type="number" step="0.1" class="input-field" data-path="sell.v3.single_trade_stoploss_pts"/></div>
+      </div>
+
+      <div class="section-label" style="color:#3b82f6; font-size:10px; margin-top:15px;">Day-Wise Target/SL Overrides</div>
+      <div class="space-y-2">
+        <div class="grid grid-cols-3 gap-2 font-bold text-[8px] text-slate-500 uppercase px-1">
+          <div>Day</div><div>Target</div><div>Stop Loss</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-slate-400 w-16 uppercase">MON</span>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.monday.single_trade_target_pts" placeholder="Tgt"/>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.monday.single_trade_stoploss_pts" placeholder="SL"/>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-slate-400 w-16 uppercase">TUE</span>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.tuesday.single_trade_target_pts" placeholder="Tgt"/>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.tuesday.single_trade_stoploss_pts" placeholder="SL"/>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-slate-400 w-16 uppercase">WED</span>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.wednesday.single_trade_target_pts" placeholder="Tgt"/>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.wednesday.single_trade_stoploss_pts" placeholder="SL"/>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-slate-400 w-16 uppercase">THU</span>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.thursday.single_trade_target_pts" placeholder="Tgt"/>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.thursday.single_trade_stoploss_pts" placeholder="SL"/>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-slate-400 w-16 uppercase">FRI</span>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.friday.single_trade_target_pts" placeholder="Tgt"/>
+          <input type="number" step="0.1" class="input-field py-1 text-xs" data-path="sell.v3.friday.single_trade_stoploss_pts" placeholder="SL"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5" style="border-color:#00d4aa33;">
+      <div class="section-label" style="color:#00d4aa;">Scalable Profit Locking (TSL)</div>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-semibold">Scalable TSL Enabled</span>
+          <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.tsl_scalable.enabled" onclick="toggleSwitch(this)">
+            <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Base Profit (₹)</label>
+            <input type="number" class="input-field" data-path="sell.v3.tsl_scalable.base_profit"/>
+          </div>
+          <div>
+            <label class="field-label">Base Lock (₹)</label>
+            <input type="number" class="input-field" data-path="sell.v3.tsl_scalable.base_lock"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Step Profit (₹)</label>
+            <input type="number" class="input-field" data-path="sell.v3.tsl_scalable.step_profit"/>
+          </div>
+          <div>
+            <label class="field-label">Step Lock (₹)</label>
+            <input type="number" class="input-field" data-path="sell.v3.tsl_scalable.step_lock"/>
+          </div>
+        </div>
+        <p class="text-xs" style="color:#64748b;">After ₹<span id="v3-base-profit-hint">1000</span> profit → lock ₹<span id="v3-base-lock-hint">200</span>. Every +₹<span id="v3-step-profit-hint">250</span> → trail up by ₹<span id="v3-step-lock-hint">200</span>.</p>
+      </div>
+    </div>
+
+    <div class="card p-5" style="border-color:#f59e0b33;">
+      <div class="section-label" style="color:#f59e0b;">GLOBAL EXIT GUARDRAILS</div>
+      <div class="space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">ROC Trend SL / Target</span>
+            <button class="toggle-btn w-10 h-5 rounded-full relative transition-colors" data-path="sell.v3.guardrail_roc.enabled" onclick="toggleSwitch(this)">
+              <span class="toggle-knob absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
+            </button>
+          </div>
+          <div class="grid grid-cols-4 gap-2">
+            <div><label class="field-label">TF</label><input type="number" class="input-field" data-path="sell.v3.guardrail_roc.tf" placeholder="15"/></div>
+            <div><label class="field-label">Len</label><input type="number" class="input-field" data-path="sell.v3.guardrail_roc.length" placeholder="9"/></div>
+            <div><label class="field-label">Target</label><input type="number" class="input-field" data-path="sell.v3.guardrail_roc.target" placeholder="20" step="0.1"/></div>
+            <div><label class="field-label">SL</label><input type="number" class="input-field" data-path="sell.v3.guardrail_roc.stoploss" placeholder="-40" step="0.1"/></div>
+          </div>
+        </div>
+        <div class="pt-3" style="border-top:1px solid #334155;">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Session PnL Exit (Points)</span>
+            <button class="toggle-btn w-10 h-5 rounded-full relative transition-colors" data-path="sell.v3.guardrail_pnl.enabled" onclick="toggleSwitch(this)">
+              <span class="toggle-knob absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="field-label">Target Pts</label><input type="number" class="input-field" data-path="sell.v3.guardrail_pnl.target_pts" placeholder="60" step="0.1"/></div>
+            <div><label class="field-label">SL Pts</label><input type="number" class="input-field" data-path="sell.v3.guardrail_pnl.stoploss_pts" placeholder="-40" step="0.1"/></div>
+          </div>
+        </div>
+        <div class="pt-3" style="border-top:1px solid #334155;">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">VWAP Rise SL (1m)</span>
+            <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.exit_indicators.combined_vwap_slope.enabled" onclick="toggleSwitch(this)">
+              <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="field-label">Rise TF</label><input type="number" class="input-field" data-path="sell.v3.vwap_rise_sl.tf" placeholder="1"/></div>
+            <div><label class="field-label">Threshold (%)</label><input type="number" class="input-field" step="0.1" data-path="sell.v3.vwap_rise_sl.threshold" placeholder="1.0"/></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB: OI EXIT ═══════════════════ -->
+<div id="tab-oi" class="tab-content hidden">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <div class="card p-5">
+      <div class="section-label">OI Exit Parameters</div>
+      <div class="space-y-3">
+        <div>
+          <label class="field-label">Strikes Range (ATM ± N)</label>
+          <input type="number" class="input-field" data-path="oi_exit.strikes_range"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Call OI Increase % (trigger)</label>
+            <input type="number" class="input-field" step="0.5" data-path="oi_exit.call_oi_increase_pct"/>
+          </div>
+          <div>
+            <label class="field-label">Put OI Increase % (trigger)</label>
+            <input type="number" class="input-field" step="0.5" data-path="oi_exit.put_oi_increase_pct"/>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Check Interval (seconds)</label>
+          <input type="number" class="input-field" data-path="oi_exit.check_interval_seconds"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5" style="border-color:#1e3a5f">
+      <div class="section-label" style="color:#60a5fa">How OI Exit Works</div>
+      <div class="space-y-2 text-xs" style="color:#94a3b8">
+        <p>OI is collected live from Upstox websocket every tick for the <strong class="text-white">ATM ± strikes_range</strong> contracts.</p>
+        <p class="mt-2">Every <strong class="text-white">check_interval_seconds</strong>, the monitor compares current OI to the OI at position entry:</p>
+        <div class="mt-2 p-3 rounded" style="background:#0f1b2d">
+          <p><span style="color:#f59e0b">Call OI rise</span> &gt; threshold → Exit <span style="color:#f59e0b">Sell PE</span> + Buy CE</p>
+          <p class="mt-1"><span style="color:#a78bfa">Put OI rise</span> &gt; threshold → Exit <span style="color:#a78bfa">Sell CE</span> + Buy PE</p>
+        </div>
+        <p class="mt-2">OI data is collected unconditionally — toggling <strong class="text-white">OI Exit Enabled</strong> only controls whether the exit action fires.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let strategyData = {};
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  event.currentTarget.classList.add('active');
+}
+
+function getNestedValue(obj, path) {
+  return path.split('.').reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : null), obj);
+}
+
+function setNestedValue(obj, path, value) {
+  const keys = path.split('.');
+  let node = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!node[keys[i]]) node[keys[i]] = {};
+    node = node[keys[i]];
+  }
+  node[keys[keys.length - 1]] = value;
+}
+
+function setToggleState(btn, on) {
+  const knob = btn.querySelector('.toggle-knob');
+  if (on) {
+    btn.style.background = '#00d4aa';
+    knob.style.transform = 'translateX(24px)';
+    btn.dataset.value = 'true';
+  } else {
+    btn.style.background = '#475569';
+    knob.style.transform = 'translateX(0)';
+    btn.dataset.value = 'false';
+  }
+}
+
+function toggleSwitch(btn) {
+  const current = btn.dataset.value === 'true';
+  setToggleState(btn, !current);
+}
+
+function toggleV3Mode(btn) {
+  const current = btn.dataset.value === 'true';
+  setToggleState(btn, !current);
+  applyV3ModeState(!current);
+  const other = document.getElementById('v3-mode-toggle-v3tab');
+  if (other && other !== btn) setToggleState(other, !current);
+}
+
+function toggleV3ModeSync(btn) {
+  const current = btn.dataset.value === 'true';
+  setToggleState(btn, !current);
+  applyV3ModeState(!current);
+  const other = document.getElementById('v3-mode-toggle');
+  if (other && other !== btn) setToggleState(other, !current);
+}
+
+function applyV3ModeState(v3On) {
+  document.querySelectorAll('.v3-managed-row').forEach(row => {
+    if (row.dataset.v3Managed === 'true') {
+      const toggle = row.querySelector('.toggle-btn');
+      if (v3On) {
+        row.style.opacity = '0.4';
+        row.style.pointerEvents = 'none';
+        row.title = 'Managed by V3';
+        if (toggle) setToggleState(toggle, false);
+      } else {
+        row.style.opacity = '1';
+        row.style.pointerEvents = 'auto';
+        row.title = '';
+      }
+    }
+  });
+}
+
+function updateTslHints(data) {
+  const instr = document.getElementById('instr-selector').value;
+  const lookup = data[instr] ? instr : 'NIFTY';
+
+  const bp = getNestedValue(data, `${lookup}.sell.v3.tsl_scalable.base_profit`);
+  const bl = getNestedValue(data, `${lookup}.sell.v3.tsl_scalable.base_lock`);
+  const sp = getNestedValue(data, `${lookup}.sell.v3.tsl_scalable.step_profit`);
+  const sl = getNestedValue(data, `${lookup}.sell.v3.tsl_scalable.step_lock`);
+  if (bp !== null) document.getElementById('v3-base-profit-hint').textContent = bp;
+  if (bl !== null) document.getElementById('v3-base-lock-hint').textContent = bl;
+  if (sp !== null) document.getElementById('v3-step-profit-hint').textContent = sp;
+  if (sl !== null) document.getElementById('v3-step-lock-hint').textContent = sl;
+
+  const rsiLegacy = getNestedValue(data, `${lookup}.sell.v3.rsi.tf`);
+  const vwapLegacy = getNestedValue(data, `${lookup}.sell.v3.vwap.tf`);
+  const rsiEl = document.getElementById('v3-rsi-tf-legacy');
+  const vwapEl = document.getElementById('v3-vwap-tf-legacy');
+  if (rsiLegacy !== null && rsiEl) rsiEl.textContent = rsiLegacy;
+  if (vwapLegacy !== null && vwapEl) vwapEl.textContent = vwapLegacy;
+
+  ['base_profit','base_lock','step_profit','step_lock'].forEach(key => {
+    const el = document.querySelector(`[data-path="sell.v3.tsl_scalable.${key}"]`);
+    if (el) el.addEventListener('input', () => {
+      const hintId = `v3-${key.replace('_','-')}-hint`;
+      const hint = document.getElementById(hintId);
+      if (hint) hint.textContent = el.value;
+    });
+  });
+}
+
+function initAll(data) {
+  const instr = document.getElementById('instr-selector').value;
+  const useFallback = !data[instr];
+  const lookupPrefix = useFallback ? 'NIFTY' : instr;
+
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    const val = getNestedValue(data, `${lookupPrefix}.${btn.dataset.path}`);
+    setToggleState(btn, !!val);
+  });
+  const v3On = !!getNestedValue(data, `${lookupPrefix}.v3_mode`);
+  applyV3ModeState(v3On);
+  updateTslHints(data);
+  document.querySelectorAll('[data-path]:not(.toggle-btn)').forEach(el => {
+    let val = getNestedValue(data, `${lookupPrefix}.${el.dataset.path}`);
+    if (val === null || val === undefined) return;
+    if (el.tagName === 'SELECT') {
+      for (let opt of el.options) {
+        if (opt.value === String(val)) { opt.selected = true; break; }
+      }
+    } else {
+      if (el.dataset.pct === 'true' && typeof val === 'number') val = val * 100;
+      el.value = val;
+    }
+  });
+}
+
+function addRuleRow(builderId, rule = null) {
+  const container = document.getElementById('rule-builder-' + builderId);
+  const rowId = builderId + '-row-' + Math.random().toString(36).substr(2, 9);
+
+  const div = document.createElement('div');
+  div.className = 'flex items-center gap-2 p-2 bg-slate-800/50 rounded border border-slate-700 mb-2';
+  div.id = rowId;
+  div.dataset.builder = builderId;
+
+  const indicators = [
+    {val: 'vwap', label: 'VWAP'},
+    {val: 'vwap_slope', label: 'Slope'},
+    {val: 'rsi', label: 'RSI'},
+    {val: 'roc', label: 'ROC'},
+    {val: 'advanced', label: 'Advanced Rule Builder'}
+  ];
+
+  let html = `
+    <select class="bg-slate-900 text-blue-400 text-[10px] p-1 rounded border border-slate-600 open-br-select w-10">
+      <option value="" ${!rule || !rule.openBrackets ? 'selected' : ''}></option>
+      <option value="(" ${rule && rule.openBrackets === '(' ? 'selected' : ''}>(</option>
+      <option value="((" ${rule && rule.openBrackets === '((' ? 'selected' : ''}>((</option>
+    </select>
+    <select class="bg-slate-900 text-white text-[10px] p-1 rounded border border-slate-600 ind-select w-20" onchange="updateRowParams('${rowId}')">
+      ${indicators.map(i => `<option value="${i.val}" ${rule && rule.indicator === i.val ? 'selected' : ''}>${i.label}</option>`).join('')}
+    </select>
+    <div class="params-container flex gap-2 flex-1 flex-wrap"></div>
+    <select class="bg-slate-900 text-blue-400 text-[10px] p-1 rounded border border-slate-600 close-br-select w-10">
+      <option value="" ${!rule || !rule.closeBrackets ? 'selected' : ''}></option>
+      <option value=")" ${rule && rule.closeBrackets === ')' ? 'selected' : ''}>)</option>
+      <option value="))" ${rule && rule.closeBrackets === '))' ? 'selected' : ''}>))</option>
+    </select>
+    <select class="bg-slate-900 text-yellow-400 text-[10px] p-1 rounded border border-slate-600 op-select">
+      <option value="AND" ${rule && rule.operator === 'AND' ? 'selected' : ''}>AND</option>
+      <option value="OR" ${rule && rule.operator === 'OR' ? 'selected' : ''}>OR</option>
+    </select>
+    <button onclick="document.getElementById('${rowId}').remove()" class="text-rose-500 text-xs px-2">×</button>
+  `;
+
+  div.innerHTML = html;
+  container.appendChild(div);
+
+  // Attach listeners for live preview updates
+  div.querySelectorAll('select, input').forEach(el => {
+    el.addEventListener('change', () => updateRulePreview(builderId));
+  });
+
+  updateRowParams(rowId, rule);
+  updateRulePreview(builderId);
+}
+
+function updateRulePreview(builderId) {
+  const rules = packRules(builderId);
+  const preview = document.getElementById('preview-' + builderId);
+  if (!rules || rules.length === 0) {
+    preview.textContent = "No rules defined.";
+    return;
+  }
+
+  let str = "";
+  rules.forEach((r, i) => {
+    let ind = r.indicator.toUpperCase().replace('_', '-');
+    if (ind === 'VWAP-SLOPE') ind = 'Slope';
+    const tf = r.tf || 1;
+    const op = r.operator;
+    const ob = r.openBrackets || "";
+    const cb = r.closeBrackets || "";
+
+    let params = "";
+    if (r.indicator === 'rsi') {
+       const sym = r.operator_sym || (builderId === 'exit' ? '>' : '<');
+       params = `, ${sym}${r.threshold || 50}`;
+    } else if (r.indicator === 'roc') {
+       if (builderId === 'exit') params = `, >${r.threshold || r.upper}`;
+       else params = `, ${r.lower} to ${r.upper}`;
+    } else if (r.indicator === 'advanced') {
+       const o1 = r.operand1 === 'VALUE' ? r.operand1_val : r.operand1;
+       const o2 = r.operand2 === 'VALUE' ? r.operand2_val : r.operand2;
+       params = `, ${o1}${r.operator_sym}${o2}`;
+    }
+
+    str += `${ob}${ind}(${tf}m${params})${cb}`;
+    if (i < rules.length - 1) str += ` ${op} `;
+  });
+  preview.textContent = str;
+}
+
+function updateRowParams(rowId, rule = null) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const builderId = row.dataset.builder;
+  const indicator = row.querySelector('.ind-select').value;
+  const container = row.querySelector('.params-container');
+  container.innerHTML = '';
+
+  const addField = (label, key, val, step=1) => {
+    container.innerHTML += `
+      <div class="flex items-baseline gap-1">
+        <span class="text-[8px] text-slate-500 uppercase">${label}:</span>
+        <input type="number" step="${step}" class="bg-transparent border-b border-slate-600 text-[10px] text-emerald-400 w-10 text-center param-input" data-key="${key}" value="${val}">
+      </div>
+    `;
+  };
+
+  if (indicator === 'vwap') {
+    addField('TF', 'tf', rule ? rule.tf : 1);
+  } else if (indicator === 'vwap_slope') {
+    addField('TF', 'tf', rule ? rule.tf : 1);
+  } else if (indicator === 'rsi') {
+    const opSyms = ['<', '>', '<=', '>=', '=='];
+    const currentOp = rule ? (rule.operator_sym || (builderId === 'exit' ? '>' : '<')) : (builderId === 'exit' ? '>' : '<');
+
+    container.innerHTML += `
+      <div class="flex items-baseline gap-1">
+        <span class="text-[8px] text-slate-500 uppercase">TF:</span>
+        <input type="number" class="bg-transparent border-b border-slate-600 text-[10px] text-emerald-400 w-8 text-center param-input" data-key="tf" value="${rule ? rule.tf : 1}">
+      </div>
+      <div class="flex items-baseline gap-1">
+        <span class="text-[8px] text-slate-500 uppercase">P:</span>
+        <input type="number" class="bg-transparent border-b border-slate-600 text-[10px] text-emerald-400 w-8 text-center param-input" data-key="period" value="${rule ? rule.period : 14}">
+      </div>
+      <div class="flex items-center gap-1">
+        <select class="bg-slate-900 text-yellow-400 text-[9px] p-0.5 rounded border border-slate-700 param-input w-10" data-key="operator_sym">
+          ${opSyms.map(s => `<option value="${s}" ${currentOp === s ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+        <input type="number" class="bg-transparent border-b border-slate-600 text-[10px] text-emerald-400 w-10 text-center param-input" data-key="threshold" value="${rule ? rule.threshold : 50}">
+      </div>
+    `;
+  } else if (indicator === 'roc') {
+    const isExit = (builderId === 'exit');
+    if (isExit) {
+      addField('TF', 'tf', rule ? rule.tf : 1);
+      addField('Len', 'length', rule ? rule.length : 9);
+      const val = rule ? (rule.threshold !== undefined ? rule.threshold : (rule.upper !== undefined ? rule.upper : 10.0)) : 10.0;
+      addField('Threshold', 'threshold', val, 0.1);
+    } else {
+      addField('TF', 'tf', rule ? rule.tf : 1);
+      addField('L', 'length', rule ? rule.length : 9);
+      addField('U.Gate', 'upper', rule ? rule.upper : 5, 0.1);
+      addField('L.Gate', 'lower', rule ? rule.lower : -5, 0.1);
+      addField('Near', 'target', rule ? rule.target : 0, 0.1);
+    }
+
+    const info = document.createElement('div');
+    info.className = 'text-[7px] text-slate-600 w-full mt-1 italic';
+    info.textContent = isExit ? '*Exits if ROC > Threshold' : '*Entry if inside range';
+    container.appendChild(info);
+  } else if (indicator === 'advanced') {
+    const operands = [
+        {val: 'LTP', label: 'Combined LTP'},
+        {val: 'CLOSE', label: 'Combined Close'},
+        {val: 'VWAP', label: 'Combined VWAP'},
+        {val: 'RSI', label: 'Combined RSI'},
+        {val: 'ROC', label: 'Combined ROC'},
+        {val: 'SLOPE', label: 'V-Slope'},
+        {val: 'VALUE', label: 'Fixed Value'}
+    ];
+    const opSyms = ['>', '<', '>=', '<=', '=='];
+
+    let op1Html = `<select class="bg-slate-900 text-[9px] text-emerald-400 p-1 rounded border border-slate-700 param-input w-24" data-key="operand1">
+        ${operands.map(o => `<option value="${o.val}" ${rule && rule.operand1 === o.val ? 'selected' : ''}>${o.label}</option>`).join('')}
+    </select>`;
+
+    let operatorHtml = `<select class="bg-slate-900 text-[9px] text-yellow-400 p-1 rounded border border-slate-700 param-input w-12" data-key="operator_sym">
+        ${opSyms.map(s => `<option value="${s}" ${rule && rule.operator_sym === s ? 'selected' : ''}>${s}</option>`).join('')}
+    </select>`;
+
+    let op2Html = `<select class="bg-slate-900 text-[9px] text-emerald-400 p-1 rounded border border-slate-700 param-input w-24" data-key="operand2">
+        ${operands.map(o => `<option value="${o.val}" ${rule && rule.operand2 === o.val ? 'selected' : ''}>${o.label}</option>`).join('')}
+    </select>`;
+
+    container.innerHTML = `
+        <div class="flex items-center gap-1 w-full">
+            <div class="flex flex-col gap-1">
+                <span class="text-[7px] text-slate-500 uppercase px-1">Operand 1</span>
+                ${op1Html}
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[7px] text-slate-500 uppercase px-1">Op</span>
+                ${operatorHtml}
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[7px] text-slate-500 uppercase px-1">Operand 2</span>
+                ${op2Html}
+            </div>
+            <div class="flex flex-col gap-1 ml-auto">
+                <span class="text-[7px] text-slate-500 uppercase px-1">TF</span>
+                <input type="number" class="bg-slate-900 text-[9px] text-emerald-400 p-1 rounded border border-slate-700 param-input w-10" data-key="tf" value="${rule ? rule.tf : 1}">
+            </div>
+        </div>
+    `;
+
+    // Handle Fixed Value input if VALUE is selected
+    const refreshOperands = () => {
+        const op1 = container.querySelector('[data-key="operand1"]');
+        const op2 = container.querySelector('[data-key="operand2"]');
+        if (op1.value === 'VALUE' && !container.querySelector('[data-key="operand1_val"]')) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.1';
+            input.className = 'bg-slate-900 text-[9px] text-emerald-400 p-1 rounded border border-slate-700 param-input w-16 mt-1';
+            input.placeholder = 'Value';
+            input.dataset.key = 'operand1_val';
+            input.value = rule ? rule.operand1_val : 0;
+            op1.parentNode.appendChild(input);
+        }
+        if (op2.value === 'VALUE' && !container.querySelector('[data-key="operand2_val"]')) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.1';
+            input.className = 'bg-slate-900 text-[9px] text-emerald-400 p-1 rounded border border-slate-700 param-input w-16 mt-1';
+            input.placeholder = 'Value';
+            input.dataset.key = 'operand2_val';
+            input.value = rule ? rule.operand2_val : 0;
+            op2.parentNode.appendChild(input);
+        }
+    };
+    container.querySelectorAll('select').forEach(s => s.addEventListener('change', refreshOperands));
+    refreshOperands();
+  }
+}
+
+function packRules(builderId) {
+  const container = document.getElementById('rule-builder-' + builderId);
+  const rules = [];
+  // Correctly select rows by searching for children that contain '-row-' in their ID
+  container.querySelectorAll('div[id*="-row-"]').forEach(row => {
+    const rule = {
+      indicator: row.querySelector('.ind-select').value,
+      operator: row.querySelector('.op-select').value,
+      openBrackets: row.querySelector('.open-br-select').value,
+      closeBrackets: row.querySelector('.close-br-select').value
+    };
+    row.querySelectorAll('.param-input').forEach(input => {
+      rule[input.dataset.key] = input.value;
+    });
+    rules.push(rule);
+  });
+  return rules;
+}
+
+function unpackRules(builderId, rules) {
+  const container = document.getElementById('rule-builder-' + builderId);
+  container.innerHTML = '';
+  if (rules && Array.isArray(rules)) {
+    rules.forEach(r => addRuleRow(builderId, r));
+  }
+  updateRulePreview(builderId);
+}
+
+async function loadStrategy() {
+  try {
+    const r = await fetch('/api/strategy');
+    strategyData = await r.json();
+    initAll(strategyData);
+
+    const instr = document.getElementById('instr-selector').value;
+    const lookup = strategyData[instr] ? instr : 'NIFTY';
+    const data = strategyData[lookup];
+
+    unpackRules('entry-beg', getNestedValue(data, 'sell.v3.entry_rules_beginning'));
+    unpackRules('entry-re', getNestedValue(data, 'sell.v3.entry_rules_reentry'));
+    unpackRules('exit', getNestedValue(data, 'sell.v3.exit_rules'));
+
+  } catch(e) {
+    showToast('Failed to load strategy config', 'error');
+  }
+}
+
+async function saveAll() {
+  const instr = document.getElementById('instr-selector').value;
+
+  // Clones NIFTY defaults if symbol is not yet present
+  if (!strategyData[instr]) {
+      strategyData[instr] = JSON.parse(JSON.stringify(strategyData['NIFTY'] || {}));
+  }
+
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    setNestedValue(strategyData, `${instr}.${btn.dataset.path}`, btn.dataset.value === 'true');
+  });
+
+  setNestedValue(strategyData, `${instr}.sell.v3.entry_rules_beginning`, packRules('entry-beg'));
+  setNestedValue(strategyData, `${instr}.sell.v3.entry_rules_reentry`, packRules('entry-re'));
+  setNestedValue(strategyData, `${instr}.sell.v3.exit_rules`, packRules('exit'));
+
+  document.querySelectorAll('[data-path]:not(.toggle-btn)').forEach(el => {
+    let val = el.value;
+    if (el.type === 'number') {
+      const n = parseFloat(val);
+      if (!isNaN(n)) val = n;
+    }
+    if (el.dataset.pct === 'true' && typeof val === 'number') val = val / 100;
+    setNestedValue(strategyData, `${instr}.${el.dataset.path}`, val);
+  });
+  if (getNestedValue(strategyData, `${instr}.v3_mode`) === true) {
+    setNestedValue(strategyData, `${instr}.buy.enabled`, false);
+    setNestedValue(strategyData, `${instr}.sell.enabled`, false);
+  }
+  try {
+    const r = await fetch('/api/strategy', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({data: strategyData})
+    });
+    const d = await r.json();
+    showToast(d.message || 'Saved!', d.success ? 'success' : 'error');
+  } catch(e) {
+    showToast('Failed to save', 'error');
+  }
+}
+
+loadStrategy();
+</script>
+{% endblock %}

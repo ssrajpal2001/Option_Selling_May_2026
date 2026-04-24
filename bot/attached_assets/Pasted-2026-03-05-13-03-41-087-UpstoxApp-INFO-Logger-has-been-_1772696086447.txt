@@ -1,0 +1,96 @@
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Initializing API Client Manager for data providers...
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_1]
+2026-03-05 13:03:41,087 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_1]
+2026-03-05 13:03:41,169 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_1].
+2026-03-05 13:03:41,172 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_2]
+2026-03-05 13:03:41,174 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_2]
+2026-03-05 13:03:41,223 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_2].
+2026-03-05 13:03:41,227 - UpstoxApp - INFO - API client pool initialized with 2 clients. Active client is set.
+2026-03-05 13:03:41,229 - UpstoxApp - ERROR - Failed to connect to database: [Errno 111] Connect call failed ('127.0.0.1', 5432)
+2026-03-05 13:03:41,229 - UpstoxApp - WARNING - DATABASE WARNING: Connection failed ([Errno 111] Connect call failed ('127.0.0.1', 5432)). Proceeding in legacy mode (INI only).
+2026-03-05 13:03:41,232 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-03-05 13:03:41,233 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-03-05 13:03:41,778 - UpstoxApp - INFO - Starting Zerodha authentication for section: Zerodha_Client_Live_1...
+2026-03-05 13:03:41,781 - UpstoxApp - INFO - Validating Zerodha access token for Zerodha_Client_Live_1...
+2026-03-05 13:03:41,818 - UpstoxApp - INFO - Zerodha access token for Zerodha_Client_Live_1 is valid.
+2026-03-05 13:03:41,838 - UpstoxApp - INFO - Zerodha authentication successful for user: SA5770 [Zerodha_Client_Live_1].
+2026-03-05 13:03:41,844 - UpstoxApp - INFO - Successfully loaded broker: Zerodha_Client_Live_1 (Client: Zerodha)
+2026-03-05 13:03:41,844 - UpstoxApp - INFO - Live mode enabled. Selected data provider: upstox
+2026-03-05 13:03:41,854 - UpstoxApp - INFO - WebSocket listener task created.
+2026-03-05 13:03:41,854 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-05 13:03:41,886 - UpstoxApp - INFO - Initialized data recorder: /home/ec2-user/environment/Option_buying_March/market_data_NIFTY_2026-03-05.csv
+2026-03-05 13:03:41,886 - UpstoxApp - INFO - Message handler handle_message registered.
+2026-03-05 13:03:41,887 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-03-05 13:03:41,904 - UpstoxApp - INFO - WebSocketManager starting connection loop.
+2026-03-05 13:03:41,904 - UpstoxApp - INFO - Attempting to authorize and connect... (Attempt 1)
+2026-03-05 13:03:41,904 - UpstoxApp - INFO - Authorizing WebSocket feed...
+2026-03-05 13:03:41,904 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize...
+2026-03-05 13:03:41,904 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-03-05 13:03:41,945 - UpstoxApp - INFO - WebSocket authorization successful.
+2026-03-05 13:03:41,956 - UpstoxApp - INFO - Opening WebSocket connection to wss://wsfeeder-api.upstox.com/market-data-feeder/v...
+2026-03-05 13:03:42,005 - UpstoxApp - INFO - WebSocket connection established successfully.
+2026-03-05 13:03:42,008 - UpstoxApp - WARNING - V2 WebSocket: No existing instruments to re-subscribe to.
+2026-03-05 13:03:42,009 - UpstoxApp - INFO - WebSocket message processor started.
+2026-03-05 13:03:42,009 - UpstoxApp - INFO - First market data packet processed from queue. Data feed is active.
+2026-03-05 13:03:42,400 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-03-05) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-03-05 13:03:42,430 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-03-05
+2026-03-05 13:03:42,455 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-03-05 13:03:42,455 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-03-05 (key=NSE_INDEX|Nifty 50)
+2026-03-05 13:03:42,455 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-03-05 13:03:42,455 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-10 (day=Tuesday)
+2026-03-05 13:03:42,462 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-10 (CURRENT_WEEK), trade=2026-03-10 (WEEKLY)
+2026-03-05 13:03:42,468 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-05 13:03:42,469 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-05 13:03:42,470 - UpstoxApp - INFO - UserSession Initialized: User=default_user@local | Instrument=NIFTY
+2026-03-05 13:03:42,470 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-03-05 13:03:42,470 - UpstoxApp - INFO - Trading bot is now live.
+2026-03-05 13:03:42,470 - UpstoxApp - INFO - [EngineManager] NIFTY sell start time 09:20:00 reached — building candidates.
+2026-03-05 13:03:42,470 - UpstoxApp - ERROR - [SellManager] ATM or strike interval unavailable — cannot build candidates.
+2026-03-05 13:03:42,473 - UpstoxApp - INFO - V2: First FUTURES price received for NIFTY: 24742.9
+2026-03-05 13:03:42,473 - UpstoxApp - INFO - V2: First INDEX price (Spot) received for NIFTY: 24651.15
+2026-03-05 13:03:42,473 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.0s | Worker: ALIVE | Exchange: 2026-03-05 13:03:42.471000+05:30 | Sessions: Global:Idle
+2026-03-05 13:03:47,471 - UpstoxApp - INFO - [EngineManager] NIFTY sell start time 09:20:00 reached — building candidates.
+2026-03-05 13:03:47,474 - UpstoxApp - INFO - [SellManager] Fetching option chain: NSE_INDEX|Nifty 50 expiry=2026-03-10 INDEX=24650.10 → ATM=24650
+2026-03-05 13:03:47,526 - UpstoxApp - INFO - [SellManager] CE candidates (ATM=24650, ITM=2): [(24650, 'NSE_FO|45515'), (24600, 'NSE_FO|45513'), (24550, 'NSE_FO|45509')]
+2026-03-05 13:03:47,531 - UpstoxApp - INFO - [SellManager] PE candidates (ATM=24650, ITM=2): [(24650, 'NSE_FO|45516'), (24700, 'NSE_FO|45518'), (24750, 'NSE_FO|45520')]
+2026-03-05 13:03:47,531 - UpstoxApp - INFO - [SellManager] Subscribed 6 candidate keys to WS.
+2026-03-05 13:03:47,531 - UpstoxApp - INFO - [SellManager] Pre-subscribed 6 BUY execution keys at ATM=24650 ± 50 (expiry=2026-03-10)
+2026-03-05 13:03:47,531 - UpstoxApp - INFO - [SellManager] Forced _relevant_keys_cache rebuild to include BUY execution keys.
+2026-03-05 13:03:47,531 - UpstoxApp - INFO - [SellManager] Ready — CE searching=True PE searching=True
+2026-03-05 13:03:47,704 - UpstoxApp - INFO - [SellManager] vwap_slope sticky latched for PE
+2026-03-05 13:03:47,707 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0014% PE=-0.0718% side=PE ENTRY count=1/3
+2026-03-05 13:03:47,737 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0014% PE=-0.0718% side=PE ENTRY count=2/3
+2026-03-05 13:03:47,939 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0014% PE=-0.0718% side=PE ENTRY count=3/3
+2026-03-05 13:03:47,965 - UpstoxApp - INFO - [SellManager] Sold PE 24650 order_id=260305191215455 LTP=219.40
+2026-03-05 13:03:47,968 - UpstoxApp - INFO - [SellManager] ✔ PE leg entered: strike=24650 LTP=219.40 key=NSE_FO|45516 product=NRML
+2026-03-05 13:03:49,681 - UpstoxApp - INFO - V2: [CE] [BUY] Status [24700]: slope(Initializing...)=False | LTP: 193.25 | Formula: vwap_slope
+2026-03-05 13:03:49,683 - UpstoxApp - INFO - V2: [PE] [BUY] Status [24700]: slope(Initializing...)=False | LTP: 241.70 | Formula: vwap_slope
+2026-03-05 13:03:49,685 - UpstoxApp - INFO - V2: [CE] [SELL] Status [24700]: slope(Initializing...)=False | LTP: 193.25 | Formula: vwap_slope AND cross_slope_comparison
+2026-03-05 13:03:49,685 - UpstoxApp - INFO - V2: [PE] [SELL] Status [24700]: slope(Initializing...)=False | LTP: 241.70 | Formula: vwap_slope AND cross_slope_comparison
+2026-03-05 13:03:49,685 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24700 (SWITCHED) | Index: 24649.70 | CE: slope(Initializing...):False (LTP: 193.25) | PE: slope(Initializing...):False (LTP: 241.70) | SOLD PE 24650@219.35
+2026-03-05 13:03:49,729 - UpstoxApp - INFO - [Task 139822114368000] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-03-05 13:03:49,730 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24649.70) → 24650 [Futures/signal strike was: 24700]
+2026-03-05 13:03:49,733 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 13:03:49,734 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 13:03:49,758 - UpstoxApp - INFO - Successfully placed BUY (CALL) order for NIFTY2631024650CE with order_id: 260305191215554
+2026-03-05 13:03:49,759 - UpstoxApp - INFO - [NIFTY] Trade confirmed for CALL on NIFTY2631024650CE (User: None)
+2026-03-05 13:03:49,918 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45515. Monitoring strike 24700 for crossover exit.
+2026-03-05 13:03:50,467 - UpstoxApp - INFO - [Task 139822114368416] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-03-05 13:03:50,467 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24649.35) → 24650 [Futures/signal strike was: 24700]
+2026-03-05 13:03:50,467 - UpstoxApp - INFO - V2: PUT entry triggered, but NOT closing CALL because 'reversal' is not in its exit formula.
+2026-03-05 13:03:50,469 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 13:03:50,469 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 13:03:50,495 - UpstoxApp - INFO - Successfully placed BUY (PUT) order for NIFTY2631024650PE with order_id: 260305191215611
+2026-03-05 13:03:50,496 - UpstoxApp - INFO - [NIFTY] Trade confirmed for PUT on NIFTY2631024650PE (User: None)
+2026-03-05 13:03:50,664 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45516. Monitoring strike 24700 for crossover exit.
+2026-03-05 13:04:00,526 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: -289.25 | LTP: 217.05 | VWAP: 189.91 (Peak: 189.91) | Initializing...
+2026-03-05 13:04:00,530 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 172.25 | LTP: 222.00 | VWAP: 270.96 (Peak: 270.99) | Initializing...
+2026-03-05 13:04:00,534 - UpstoxApp - INFO - Initialized ATP recorder: /home/ec2-user/environment/Option_buying_March/atp_data_NIFTY_2026-03-05.csv
+2026-03-05 13:04:05,600 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 189.91 vs Peak 189.91 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 13:04:05,615 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 270.94 vs Peak 270.94 | Drawdown: 0.00% | Threshold: -0.03% → HOLD

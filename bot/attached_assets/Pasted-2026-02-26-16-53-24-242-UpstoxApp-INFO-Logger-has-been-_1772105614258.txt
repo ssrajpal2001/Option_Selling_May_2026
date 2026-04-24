@@ -1,0 +1,1028 @@
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - Initializing API Client Manager for data providers...
+2026-02-26 16:53:24,242 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_1]
+2026-02-26 16:53:24,243 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_1]
+2026-02-26 16:53:24,353 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_1].
+2026-02-26 16:53:24,353 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_2]
+2026-02-26 16:53:24,354 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_2]
+2026-02-26 16:53:24,420 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_2].
+2026-02-26 16:53:24,421 - UpstoxApp - INFO - API client pool initialized with 2 clients. Active client is set.
+2026-02-26 16:53:24,425 - UpstoxApp - ERROR - Failed to connect to database: [Errno 111] Connect call failed ('127.0.0.1', 5432)
+2026-02-26 16:53:24,425 - UpstoxApp - WARNING - DATABASE WARNING: Connection failed ([Errno 111] Connect call failed ('127.0.0.1', 5432)). Proceeding in legacy mode (INI only).
+2026-02-26 16:53:24,425 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-02-26 16:53:24,425 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-02-26 16:53:24,617 - UpstoxApp - INFO - Starting Zerodha authentication for section: Zerodha_Client_Live_1...
+2026-02-26 16:53:24,618 - UpstoxApp - INFO - Validating Zerodha access token for Zerodha_Client_Live_1...
+2026-02-26 16:53:24,667 - UpstoxApp - INFO - Zerodha access token for Zerodha_Client_Live_1 is valid.
+2026-02-26 16:53:24,686 - UpstoxApp - INFO - Zerodha authentication successful for user: SA5770 [Zerodha_Client_Live_1].
+2026-02-26 16:53:24,686 - UpstoxApp - INFO - Successfully loaded broker: Zerodha_Client_Live_1 (Client: Zerodha)
+2026-02-26 16:53:24,686 - UpstoxApp - INFO - Backtest mode enabled. Using CSVDataFeeder for WebSocket and enabling REST client for historical data.
+2026-02-26 16:53:24,687 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/AlgoSoft_March/utils/../config/strategy_logic.json
+2026-02-26 16:53:24,696 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-02-26 16:53:24,701 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-02-26 16:53:25,133 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-02-26) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-02-26 16:53:25,162 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-02-26
+2026-02-26 16:53:25,190 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-02-26 16:53:25,190 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-02-26 (key=NSE_INDEX|Nifty 50)
+2026-02-26 16:53:25,190 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-02-26 16:53:25,191 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-02 (day=Monday)
+2026-02-26 16:53:25,194 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-02 (CURRENT_WEEK), trade=2026-03-02 (WEEKLY)
+2026-02-26 16:53:25,196 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-02 (WEEKLY), trade=2026-03-02 (WEEKLY)
+2026-02-26 16:53:25,197 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-02 (WEEKLY), trade=2026-03-02 (WEEKLY)
+2026-02-26 16:53:25,197 - UpstoxApp - INFO - UserSession Initialized: User=backtest_user@local | Instrument=NIFTY
+2026-02-26 16:53:25,197 - UpstoxApp - INFO - StateManager: Backtest mode detected. Starting with a fresh state (skipping load).
+2026-02-26 16:53:25,197 - UpstoxApp - INFO - Trading bot is now live.
+2026-02-26 16:53:25,197 - UpstoxApp - INFO - Starting synchronous backtest loop...
+2026-02-26 16:53:25,197 - UpstoxApp - INFO - 
+==================== STARTING BACKTEST FOR DATE: 2026-02-26 ====================
+2026-02-26 16:53:25,197 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/AlgoSoft_March/utils/../config/strategy_logic.json
+2026-02-26 16:53:25,198 - UpstoxApp - WARNING - CSV file NOT FOUND or is a directory at /home/ec2-user/environment/AlgoSoft_March/tick_data_log.csv. Generating synthetic 1-minute timestamps for API-only backtest.
+2026-02-26 16:53:25,200 - UpstoxApp - INFO - Generated 376 synthetic timestamps for 2026-02-26
+2026-02-26 16:53:25,201 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/AlgoSoft_March/utils/../config/strategy_logic.json
+2026-02-26 16:53:25,685 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-02-26) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-02-26 16:53:25,725 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-02-26
+2026-02-26 16:53:25,752 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-02-26 16:53:25,752 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-02-26 (key=NSE_INDEX|Nifty 50)
+2026-02-26 16:53:25,752 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-02-26 16:53:25,753 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-02 (day=Monday)
+2026-02-26 16:53:25,757 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-02 (CURRENT_WEEK), trade=2026-03-02 (WEEKLY)
+2026-02-26 16:53:25,758 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-02 (WEEKLY), trade=2026-03-02 (WEEKLY)
+2026-02-26 16:53:25,759 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-02 (WEEKLY), trade=2026-03-02 (WEEKLY)
+2026-02-26 16:53:26,329 - UpstoxApp - INFO - [SellManager] Fetching option chain for NSE_INDEX|Nifty 50 expiry 2026-03-02
+2026-02-26 16:53:26,378 - UpstoxApp - INFO - [SellManager][Backtest] Fetching historical LTPs for 93 CE candidates at 2026-02-26 09:15:00+05:30...
+2026-02-26 16:53:33,388 - UpstoxApp - INFO - [SellManager][Backtest] Selected CE sell strike: 25600.0 (Historical LTP at 2026-02-26 09:15:00+05:30: 101.10, key: NSE_FO|54967)
+2026-02-26 16:53:33,388 - UpstoxApp - INFO - [SellManager][Backtest] Fetching historical LTPs for 93 PE candidates at 2026-02-26 09:15:00+05:30...
+2026-02-26 16:53:40,141 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55750/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55750/1minute'
+2026-02-26 16:53:40,142 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|55750/1minute...
+2026-02-26 16:53:40,143 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:41,156 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55750/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55750/1minute'
+2026-02-26 16:53:41,156 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55750/1minute'
+2026-02-26 16:53:41,172 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55752/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55752/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:41,172 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/NSE_FO|55752/1minute/2026-02-25/2026-02-22...
+2026-02-26 16:53:41,172 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_1]
+2026-02-26 16:53:42,186 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55752/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55752/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:42,187 - UpstoxApp - WARNING - Failed to fetch historical part of merged range: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55752/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:42,196 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55752/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55752/1minute'
+2026-02-26 16:53:42,196 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|55752/1minute...
+2026-02-26 16:53:42,196 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:43,207 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55752/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55752/1minute'
+2026-02-26 16:53:43,207 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55752/1minute'
+2026-02-26 16:53:43,219 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55808/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55808/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:43,219 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/NSE_FO|55808/1minute/2026-02-25/2026-02-22...
+2026-02-26 16:53:43,219 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_1]
+2026-02-26 16:53:44,229 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55808/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55808/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:44,230 - UpstoxApp - WARNING - Failed to fetch historical part of merged range: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55808/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:44,242 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55808/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55808/1minute'
+2026-02-26 16:53:44,242 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|55808/1minute...
+2026-02-26 16:53:44,242 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:45,254 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55808/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55808/1minute'
+2026-02-26 16:53:45,254 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55808/1minute'
+2026-02-26 16:53:45,263 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55810/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55810/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:45,263 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/NSE_FO|55810/1minute/2026-02-25/2026-02-22...
+2026-02-26 16:53:45,264 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_1]
+2026-02-26 16:53:46,274 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55810/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55810/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:46,274 - UpstoxApp - WARNING - Failed to fetch historical part of merged range: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55810/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:46,285 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55810/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55810/1minute'
+2026-02-26 16:53:46,285 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|55810/1minute...
+2026-02-26 16:53:46,285 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:47,317 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55810/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55810/1minute'
+2026-02-26 16:53:47,317 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55810/1minute'
+2026-02-26 16:53:47,327 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55812/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55812/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:47,327 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/NSE_FO|55812/1minute/2026-02-25/2026-02-22...
+2026-02-26 16:53:47,328 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_1]
+2026-02-26 16:53:48,336 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55812/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55812/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:48,337 - UpstoxApp - WARNING - Failed to fetch historical part of merged range: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55812/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:48,363 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55812/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55812/1minute'
+2026-02-26 16:53:48,363 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|55812/1minute...
+2026-02-26 16:53:48,363 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:49,380 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55812/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55812/1minute'
+2026-02-26 16:53:49,380 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55812/1minute'
+2026-02-26 16:53:49,392 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55814/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55814/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:49,392 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/NSE_FO|55814/1minute/2026-02-25/2026-02-22...
+2026-02-26 16:53:49,392 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_1]
+2026-02-26 16:53:50,407 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|55814/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55814/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:50,408 - UpstoxApp - WARNING - Failed to fetch historical part of merged range: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C55814/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:50,419 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55814/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55814/1minute'
+2026-02-26 16:53:50,420 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|55814/1minute...
+2026-02-26 16:53:50,420 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:51,430 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|55814/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55814/1minute'
+2026-02-26 16:53:51,430 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C55814/1minute'
+2026-02-26 16:53:51,431 - UpstoxApp - INFO - [SellManager][Backtest] Selected PE sell strike: 25450.0 (Historical LTP at 2026-02-26 09:15:00+05:30: 118.00, key: NSE_FO|54962)
+2026-02-26 16:53:51,432 - UpstoxApp - INFO - [SellManager][PAPER SELL NRML] CE: 25600.0 qty=650 | PE: 25450.0 qty=650
+2026-02-26 16:53:51,432 - UpstoxApp - INFO - [SellManager] Subscribed all 4 strangle keys to websocket: ['NSE_FO|54967', 'NSE_FO|54962', 'NSE_FO|54971', 'NSE_FO|54910']
+2026-02-26 16:53:51,432 - UpstoxApp - INFO - [SellManager] Short strangle placed: SELL CE 25600.0 (key:NSE_FO|54967) | SELL PE 25450.0 (key:NSE_FO|54962) | Hedge CE key:NSE_FO|54971 | Hedge PE key:NSE_FO|54910 | Expiry: 2026-03-02
+2026-02-26 16:53:51,441 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:15:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:53:51,457 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 9999s since last switch): None -> 25650 (User: backtest_user)
+2026-02-26 16:53:51,811 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(Waiting for data (V1:None, V0:None))=False | LTP: 100.50 | Formula: vwap_slope
+2026-02-26 16:53:51,818 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(Waiting for data (V1:None, V0:None))=False | LTP: 154.00 | Formula: vwap_slope
+2026-02-26 16:53:51,818 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 (SWITCHED) | Index: 25540.70 | CE: slope(Waiting for data (V1:None, V0:None)):False (LTP: 100.50) | PE: slope(Waiting for data (V1:None, V0:None)):False (LTP: 154.00) | SOLD CE 25600@0.00 | SOLD PE 25450@0.00
+2026-02-26 16:53:51,836 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:16:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:53:51,878 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:94.64 > V0:95.78 (Pct:-1.20%, Cons:0/1))=False | LTP: 90.30 | Formula: vwap_slope
+2026-02-26 16:53:51,890 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:169.39 > V0:168.62 (Pct:0.46%, Cons:1/1))=True | LTP: 177.30 | Formula: vwap_slope
+2026-02-26 16:53:51,891 - UpstoxApp - INFO - [Task 140681909068672] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-02-26 16:53:51,891 - UpstoxApp - INFO - [NIFTY] Hedge override: 25650 -> 25350.0 (sell_hedge_PUT) | qty x2
+2026-02-26 16:53:51,891 - UpstoxApp - INFO - V2 Hybrid [Backtest]: Fetching execution price for NSE_FO|54910 @ 2026-02-26 09:17:00+05:30
+2026-02-26 16:53:51,892 - UpstoxApp - INFO - V2 Hybrid [Backtest]: Discovered execution price: 59.75
+2026-02-26 16:53:51,893 - UpstoxApp - INFO - [NIFTY] Entered PUT trade on NSE_FO|54910 at 59.75
+2026-02-26 16:53:51,902 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|54910/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C54910/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:51,902 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/NSE_FO|54910/1minute/2026-02-25/2026-02-22...
+2026-02-26 16:53:51,902 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_1]
+2026-02-26 16:53:52,928 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|54910/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C54910/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:52,928 - UpstoxApp - WARNING - Failed to fetch historical part of merged range: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C54910/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:52,968 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|54910/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C54910/1minute'
+2026-02-26 16:53:52,968 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|54910/1minute...
+2026-02-26 16:53:52,968 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:53,979 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|54910/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C54910/1minute'
+2026-02-26 16:53:53,979 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C54910/1minute'
+2026-02-26 16:53:53,980 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|54910. Monitoring strike 25350.0 for crossover exit.
+2026-02-26 16:53:53,987 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 0.00 (Peak: 0.00) | Initializing...
+2026-02-26 16:53:53,987 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:17:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:54,292 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:93.74 > V0:94.64 (Pct:-0.95%, Cons:0/1))=False | LTP: 92.00 | Formula: vwap_slope
+2026-02-26 16:53:54,299 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25528.55 | CE: slope(V1:93.74 > V0:94.64 (Pct:-0.95%, Cons:0/1)):False (LTP: 92.00) | PE: (In Trade) [V:0.0, VP:0.0, LP:59.8] (LTP: 172.20) | SOLD CE 25600@114.70 | SOLD PE 25450@0.00
+2026-02-26 16:53:54,304 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 0.00 (Peak: 0.00) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:54,304 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:18:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:54,612 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:92.95 > V0:93.74 (Pct:-0.84%, Cons:0/1))=False | LTP: 86.35 | Formula: vwap_slope
+2026-02-26 16:53:54,624 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 0.00 (Peak: 0.00) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:54,624 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:19:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:54,647 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:92.56 > V0:92.95 (Pct:-0.43%, Cons:0/1))=False | LTP: 87.45 | Formula: vwap_slope
+2026-02-26 16:53:54,657 - UpstoxApp - INFO - V2 MGMT: [PUT] Target strike switch: 25350.0 -> 25650. Performing Hot Handover.
+2026-02-26 16:53:54,661 - UpstoxApp - INFO - V2: Hot Handover [PUT] Peak Price updated to 187.75 (Duration: 09:17:00 - 09:20:00)
+2026-02-26 16:53:54,663 - UpstoxApp - INFO - V2: Hot Handover [PUT] VWAP Peak updated to 173.31 (Calculated from 3 finalized candles between 2026-02-26 09:17:00+05:30 and 2026-02-26 09:19:00+05:30)
+2026-02-26 16:53:54,665 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 173.54 (Peak: 173.54) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:54,665 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:20:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:54,969 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:92.19 > V0:92.56 (Pct:-0.40%, Cons:0/1))=False | LTP: 86.45 | Formula: vwap_slope
+2026-02-26 16:53:54,976 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25508.30 | CE: slope(V1:92.19 > V0:92.56 (Pct:-0.40%, Cons:0/1)):False (LTP: 86.45) | PE: (In Trade) [V:173.5, VP:173.5, LP:59.8] (LTP: 178.25) | SOLD CE 25600@108.60 | SOLD PE 25450@0.00
+2026-02-26 16:53:54,988 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 173.54 vs Peak 173.54 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:54,989 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 177.56 (Peak: 177.56) | V1:173.54 < Ref:173.54 (Pct:0.00%)
+2026-02-26 16:53:54,989 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:21:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,007 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 360s since last switch): 25650 -> 25600 (User: backtest_user)
+2026-02-26 16:53:55,008 - UpstoxApp - INFO - V2: Switching monitoring strike 25650 -> 25600
+2026-02-26 16:53:55,336 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:113.44 > V0:114.77 (Pct:-1.16%, Cons:0/1))=False | LTP: 101.75 | Formula: vwap_slope
+2026-02-26 16:53:55,343 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25501.75 | CE: slope(V1:113.44 > V0:114.77 (Pct:-1.16%, Cons:0/1)):False (LTP: 101.75) | PE: (In Trade) [V:177.6, VP:177.6, LP:59.8] (LTP: 167.05) | SOLD CE 25600@101.75 | SOLD PE 25450@0.00
+2026-02-26 16:53:55,347 - UpstoxApp - INFO - V2 MGMT: [PUT] Target strike switch: 25650 -> 25600. Performing Hot Handover.
+2026-02-26 16:53:55,350 - UpstoxApp - INFO - V2: Hot Handover [PUT] Peak Price updated to 179.80 (Duration: 09:17:00 - 09:22:00)
+2026-02-26 16:53:55,351 - UpstoxApp - INFO - V2: Hot Handover [PUT] VWAP Peak updated to 150.00 (Calculated from 5 finalized candles between 2026-02-26 09:17:00+05:30 and 2026-02-26 09:21:00+05:30)
+2026-02-26 16:53:55,352 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 154.07 (Peak: 154.07) | V1:173.54 < Ref:173.54 (Pct:0.00%)
+2026-02-26 16:53:55,353 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:22:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,378 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:111.93 > V0:113.44 (Pct:-1.33%, Cons:0/1))=False | LTP: 101.50 | Formula: vwap_slope
+2026-02-26 16:53:55,397 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 154.70 (Peak: 154.70) | V1:173.54 < Ref:173.54 (Pct:0.00%)
+2026-02-26 16:53:55,398 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:23:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,417 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:111.33 > V0:111.93 (Pct:-0.53%, Cons:0/1))=False | LTP: 103.45 | Formula: vwap_slope
+2026-02-26 16:53:55,422 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25498.45 | CE: slope(V1:111.33 > V0:111.93 (Pct:-0.53%, Cons:0/1)):False (LTP: 103.45) | PE: (In Trade) [V:154.7, VP:154.7, LP:59.8] (LTP: 162.75) | SOLD CE 25600@103.45 | SOLD PE 25450@0.00
+2026-02-26 16:53:55,431 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 154.70 vs Peak 154.70 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:55,431 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 155.65 (Peak: 155.65) | V1:154.70 < Ref:154.70 (Pct:0.00%)
+2026-02-26 16:53:55,431 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:24:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,454 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:110.57 > V0:111.33 (Pct:-0.69%, Cons:0/1))=False | LTP: 96.90 | Formula: vwap_slope
+2026-02-26 16:53:55,469 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 157.05 (Peak: 157.05) | V1:154.70 < Ref:154.70 (Pct:0.00%)
+2026-02-26 16:53:55,469 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:25:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,493 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:109.55 > V0:110.57 (Pct:-0.92%, Cons:0/1))=False | LTP: 94.40 | Formula: vwap_slope
+2026-02-26 16:53:55,504 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 157.66 (Peak: 157.66) | V1:154.70 < Ref:154.70 (Pct:0.00%)
+2026-02-26 16:53:55,504 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:26:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,527 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:109.10 > V0:109.55 (Pct:-0.41%, Cons:0/1))=False | LTP: 99.85 | Formula: vwap_slope
+2026-02-26 16:53:55,533 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25515.55 | CE: slope(V1:109.10 > V0:109.55 (Pct:-0.41%, Cons:0/1)):False (LTP: 99.85) | PE: (In Trade) [V:157.7, VP:157.7, LP:59.8] (LTP: 169.65) | SOLD CE 25600@99.85 | SOLD PE 25450@0.00
+2026-02-26 16:53:55,545 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 157.66 vs Peak 157.66 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:55,546 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 157.93 (Peak: 157.93) | V1:157.66 < Ref:157.66 (Pct:0.00%)
+2026-02-26 16:53:55,546 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:27:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,570 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:108.80 > V0:109.10 (Pct:-0.27%, Cons:0/1))=False | LTP: 103.50 | Formula: vwap_slope
+2026-02-26 16:53:55,582 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 158.29 (Peak: 158.29) | V1:157.66 < Ref:157.66 (Pct:0.00%)
+2026-02-26 16:53:55,582 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:28:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,606 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:108.40 > V0:108.80 (Pct:-0.37%, Cons:0/1))=False | LTP: 100.60 | Formula: vwap_slope
+2026-02-26 16:53:55,617 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 158.83 (Peak: 158.83) | V1:157.66 < Ref:157.66 (Pct:0.00%)
+2026-02-26 16:53:55,617 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:29:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,643 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:108.10 > V0:108.40 (Pct:-0.28%, Cons:0/1))=False | LTP: 100.20 | Formula: vwap_slope
+2026-02-26 16:53:55,650 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25513.95 | CE: slope(V1:108.10 > V0:108.40 (Pct:-0.28%, Cons:0/1)):False (LTP: 100.20) | PE: (In Trade) [V:158.8, VP:158.8, LP:59.8] (LTP: 166.05) | SOLD CE 25600@100.20 | SOLD PE 25450@0.00
+2026-02-26 16:53:55,660 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 158.83 vs Peak 158.83 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:55,660 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 159.03 (Peak: 159.03) | V1:158.83 < Ref:158.83 (Pct:0.00%)
+2026-02-26 16:53:55,660 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:30:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,684 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.84 > V0:108.10 (Pct:-0.24%, Cons:0/1))=False | LTP: 100.90 | Formula: vwap_slope
+2026-02-26 16:53:55,696 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 159.55 (Peak: 159.55) | V1:158.83 < Ref:158.83 (Pct:0.00%)
+2026-02-26 16:53:55,696 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:31:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,721 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.39 > V0:107.84 (Pct:-0.42%, Cons:0/1))=False | LTP: 96.85 | Formula: vwap_slope
+2026-02-26 16:53:55,734 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 159.87 (Peak: 159.87) | V1:158.83 < Ref:158.83 (Pct:0.00%)
+2026-02-26 16:53:55,734 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:32:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,757 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.18 > V0:107.39 (Pct:-0.20%, Cons:0/1))=False | LTP: 99.25 | Formula: vwap_slope
+2026-02-26 16:53:55,763 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25511.50 | CE: slope(V1:107.18 > V0:107.39 (Pct:-0.20%, Cons:0/1)):False (LTP: 99.25) | PE: (In Trade) [V:159.9, VP:159.9, LP:59.8] (LTP: 169.35) | SOLD CE 25600@99.25 | SOLD PE 25450@0.00
+2026-02-26 16:53:55,772 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 159.87 vs Peak 159.87 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:55,772 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 160.02 (Peak: 160.02) | V1:159.87 < Ref:159.87 (Pct:0.00%)
+2026-02-26 16:53:55,773 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:33:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,796 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.02 > V0:107.18 (Pct:-0.15%, Cons:0/1))=False | LTP: 100.90 | Formula: vwap_slope
+2026-02-26 16:53:55,808 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 160.06 (Peak: 160.06) | V1:159.87 < Ref:159.87 (Pct:0.00%)
+2026-02-26 16:53:55,809 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:34:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:55,832 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:106.87 > V0:107.02 (Pct:-0.14%, Cons:0/1))=False | LTP: 103.10 | Formula: vwap_slope
+2026-02-26 16:53:55,844 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 160.00 (Peak: 160.06) | V1:159.87 < Ref:159.87 (Pct:0.00%)
+2026-02-26 16:53:55,844 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:35:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:56,161 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:106.73 > V0:106.87 (Pct:-0.13%, Cons:0/1))=False | LTP: 104.55 | Formula: vwap_slope
+2026-02-26 16:53:56,167 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25531.60 | CE: slope(V1:106.73 > V0:106.87 (Pct:-0.13%, Cons:0/1)):False (LTP: 104.55) | PE: (In Trade) [V:160.0, VP:160.1, LP:59.8] (LTP: 156.40) | SOLD CE 25600@104.55 | SOLD PE 25450@0.00
+2026-02-26 16:53:56,177 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 160.00 vs Peak 160.00 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:56,178 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 159.82 (Peak: 160.06) | V1:160.00 < Ref:160.00 (Pct:0.00%)
+2026-02-26 16:53:56,178 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:36:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:56,201 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 900s since last switch): 25600 -> 25650 (User: backtest_user)
+2026-02-26 16:53:56,202 - UpstoxApp - INFO - V2: Switching monitoring strike 25600 -> 25650
+2026-02-26 16:53:56,541 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.86 > V0:85.90 (Pct:-0.04%, Cons:0/1))=False | LTP: 86.10 | Formula: vwap_slope
+2026-02-26 16:53:56,548 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 (SWITCHED) | Index: 25535.50 | CE: slope(V1:85.86 > V0:85.90 (Pct:-0.04%, Cons:0/1)):False (LTP: 86.10) | PE: (In Trade) [V:159.8, VP:160.1, LP:59.8] (LTP: 180.55) | SOLD CE 25600@107.70 | SOLD PE 25450@0.00
+2026-02-26 16:53:56,554 - UpstoxApp - INFO - V2 MGMT: [PUT] Target strike switch: 25600 -> 25650. Performing Hot Handover.
+2026-02-26 16:53:56,556 - UpstoxApp - INFO - V2: Hot Handover [PUT] Peak Price updated to 211.55 (Duration: 09:17:00 - 09:37:00)
+2026-02-26 16:53:56,559 - UpstoxApp - INFO - V2: Hot Handover [PUT] VWAP Peak updated to 190.09 (Calculated from 20 finalized candles between 2026-02-26 09:17:00+05:30 and 2026-02-26 09:36:00+05:30)
+2026-02-26 16:53:56,560 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 189.47 (Peak: 190.09) | V1:160.00 < Ref:160.00 (Pct:0.00%)
+2026-02-26 16:53:56,560 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:37:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:56,585 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.92 > V0:85.86 (Pct:0.06%, Cons:1/1))=True | LTP: 88.25 | Formula: vwap_slope
+2026-02-26 16:53:56,585 - UpstoxApp - INFO - [Task 140681909068672] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-02-26 16:53:56,585 - UpstoxApp - INFO - [NIFTY] Hedge override: 25650 -> 25700.0 (sell_hedge_CALL) | qty x2
+2026-02-26 16:53:56,586 - UpstoxApp - INFO - V2: CALL entry triggered, but NOT closing PUT because 'reversal' is not in its exit formula.
+2026-02-26 16:53:56,587 - UpstoxApp - INFO - V2 Hybrid [Backtest]: Fetching execution price for NSE_FO|54971 @ 2026-02-26 09:38:00+05:30
+2026-02-26 16:53:56,588 - UpstoxApp - INFO - V2 Hybrid [Backtest]: Discovered execution price: 69.75
+2026-02-26 16:53:56,589 - UpstoxApp - INFO - [NIFTY] Entered CALL trade on NSE_FO|54971 at 69.75
+2026-02-26 16:53:56,614 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|54971/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C54971/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:56,614 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/NSE_FO|54971/1minute/2026-02-25/2026-02-22...
+2026-02-26 16:53:56,614 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_1]
+2026-02-26 16:53:57,629 - UpstoxApp - WARNING - API call to /historical-candle/NSE_FO|54971/1minute/2026-02-25/2026-02-22 failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C54971/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:57,629 - UpstoxApp - WARNING - Failed to fetch historical part of merged range: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/NSE_FO%7C54971/1minute/2026-02-25/2026-02-22'
+2026-02-26 16:53:57,638 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|54971/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C54971/1minute'
+2026-02-26 16:53:57,638 - UpstoxApp - INFO - Attempting to switch client and retry API call to /historical-candle/intraday/NSE_FO|54971/1minute...
+2026-02-26 16:53:57,638 - UpstoxApp - WARNING - Switching active data provider. New active client corresponds to section: [upstox_2]
+2026-02-26 16:53:58,658 - UpstoxApp - WARNING - API call to /historical-candle/intraday/NSE_FO|54971/1minute failed (Status: 429). Reason: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C54971/1minute'
+2026-02-26 16:53:58,658 - UpstoxApp - ERROR - Error fetching intraday candle data: 429, message='Too Many Requests', url='https://api.upstox.com/v2/historical-candle/intraday/NSE_FO%7C54971/1minute'
+2026-02-26 16:53:58,660 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|54971. Monitoring strike 25700.0 for crossover exit.
+2026-02-26 16:53:58,674 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 0.00 (Peak: 0.00) | Initializing...
+2026-02-26 16:53:58,676 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 188.77 (Peak: 190.09) | V1:160.00 < Ref:160.00 (Pct:0.00%)
+2026-02-26 16:53:58,676 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:38:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,707 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25545.00 | CE: (In Trade) [V:0.0, VP:0.0] (LTP: 92.90) | PE: (In Trade) [V:188.8, VP:190.1, LP:59.8] (LTP: 168.25) | SOLD CE 25600@107.70 | SOLD PE 25450@0.00
+2026-02-26 16:53:58,712 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 0.00 (Peak: 0.00) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:58,717 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 188.77 vs Peak 188.77 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:58,718 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 188.02 (Peak: 190.09) | V1:188.77 < Ref:188.77 (Pct:0.00%)
+2026-02-26 16:53:58,718 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:39:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,755 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 0.00 (Peak: 0.00) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:58,757 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 187.02 (Peak: 190.09) | V1:188.77 < Ref:188.77 (Pct:0.00%)
+2026-02-26 16:53:58,757 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:40:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,790 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 0.00 (Peak: 0.00) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:58,791 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 186.45 (Peak: 190.09) | V1:188.77 < Ref:188.77 (Pct:0.00%)
+2026-02-26 16:53:58,791 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:41:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,821 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25543.05 | CE: (In Trade) [V:0.0, VP:0.0] (LTP: 89.15) | PE: (In Trade) [V:186.5, VP:190.1, LP:59.8] (LTP: 171.95) | SOLD CE 25600@107.70 | SOLD PE 25450@0.00
+2026-02-26 16:53:58,827 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 0.00 (Peak: 0.00) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:58,832 - UpstoxApp - INFO - V2 MGMT: [PUT] EXIT CRITERIA MET (VWAP Slope): Current VWAP 186.45 vs Ref 188.77 (Drawdown: -1.23%, Threshold: -1.00%)
+2026-02-26 16:53:58,832 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 59.75 | VWAP: 186.18 (Peak: 190.09) | V1:186.45 < Ref:188.77 (Pct:-1.23%)
+2026-02-26 16:53:58,832 - UpstoxApp - INFO - V2 MGMT: [PUT] EXIT TRIGGERED: Structural Exit: VWAP Slope < (CLOSE)
+2026-02-26 16:53:58,832 - UpstoxApp - INFO - V2: Requesting EXIT for PUT at 59.75. Reason: Structural Exit: VWAP Slope < (CLOSE)
+2026-02-26 16:53:58,832 - UpstoxApp - INFO - V2 MGMT: [PUT] Exit (Structural Exit: VWAP Slope < (CLOSE)). Preserving 9:15 Breach flags for potential re-entry.
+2026-02-26 16:53:58,833 - UpstoxApp - INFO - [NIFTY] Exited PUT trade on NSE_FO|54910 at 59.75. PnL: 0.00. Reason: Structural Exit: VWAP Slope < (CLOSE)
+2026-02-26 16:53:58,833 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:42:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,860 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:186.18 > V0:186.45 (Pct:-0.15%, Cons:0/1))=False | LTP: 170.25 | Formula: vwap_slope
+2026-02-26 16:53:58,868 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 0.00 (Peak: 0.00) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:58,868 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:43:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,896 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:185.69 > V0:186.18 (Pct:-0.27%, Cons:0/1))=False | LTP: 160.25 | Formula: vwap_slope
+2026-02-26 16:53:58,904 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25700.0 -> 25650. Performing Hot Handover.
+2026-02-26 16:53:58,907 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 97.75 (Duration: 09:38:00 - 09:44:00)
+2026-02-26 16:53:58,908 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 87.60 (Calculated from 6 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 09:43:00+05:30)
+2026-02-26 16:53:58,909 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.83 (Peak: 87.83) | Waiting for data (V:None, Ref:None)
+2026-02-26 16:53:58,910 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:44:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,937 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:185.29 > V0:185.69 (Pct:-0.21%, Cons:0/1))=False | LTP: 161.15 | Formula: vwap_slope
+2026-02-26 16:53:58,938 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25564.50 | CE: (In Trade) [V:87.8, VP:87.8] (LTP: 95.65) | PE: slope(V1:185.29 > V0:185.69 (Pct:-0.21%, Cons:0/1)):False (LTP: 161.15) | SOLD CE 25600@107.70 | SOLD PE 25450@0.00
+2026-02-26 16:53:58,948 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 87.83 vs Peak 87.83 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:58,948 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.38 (Peak: 88.38) | V1:87.83 < Ref:87.83 (Pct:0.00%)
+2026-02-26 16:53:58,948 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:45:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:58,974 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:184.28 > V0:185.29 (Pct:-0.54%, Cons:0/1))=False | LTP: 157.35 | Formula: vwap_slope
+2026-02-26 16:53:58,983 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.57 (Peak: 88.57) | V1:87.83 < Ref:87.83 (Pct:0.00%)
+2026-02-26 16:53:58,983 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:46:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,011 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:183.28 > V0:184.28 (Pct:-0.54%, Cons:0/1))=False | LTP: 166.60 | Formula: vwap_slope
+2026-02-26 16:53:59,019 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.66 (Peak: 88.66) | V1:87.83 < Ref:87.83 (Pct:0.00%)
+2026-02-26 16:53:59,019 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:47:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,047 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:182.85 > V0:183.28 (Pct:-0.24%, Cons:0/1))=False | LTP: 166.45 | Formula: vwap_slope
+2026-02-26 16:53:59,048 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25561.40 | CE: (In Trade) [V:88.7, VP:88.7] (LTP: 92.10) | PE: slope(V1:182.85 > V0:183.28 (Pct:-0.24%, Cons:0/1)):False (LTP: 166.45) | SOLD CE 25600@107.70 | SOLD PE 25450@0.00
+2026-02-26 16:53:59,058 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.66 vs Peak 88.66 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:59,059 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.87 (Peak: 88.87) | V1:88.66 < Ref:88.66 (Pct:0.00%)
+2026-02-26 16:53:59,059 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:48:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,085 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:182.45 > V0:182.85 (Pct:-0.22%, Cons:0/1))=False | LTP: 157.65 | Formula: vwap_slope
+2026-02-26 16:53:59,093 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 89.01 (Peak: 89.01) | V1:88.66 < Ref:88.66 (Pct:0.00%)
+2026-02-26 16:53:59,094 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:49:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,121 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:182.10 > V0:182.45 (Pct:-0.19%, Cons:0/1))=False | LTP: 161.30 | Formula: vwap_slope
+2026-02-26 16:53:59,129 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 89.09 (Peak: 89.09) | V1:88.66 < Ref:88.66 (Pct:0.00%)
+2026-02-26 16:53:59,129 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:50:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,159 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:181.69 > V0:182.10 (Pct:-0.22%, Cons:0/1))=False | LTP: 164.25 | Formula: vwap_slope
+2026-02-26 16:53:59,159 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25544.60 | CE: (In Trade) [V:89.1, VP:89.1] (LTP: 92.60) | PE: slope(V1:181.69 > V0:182.10 (Pct:-0.22%, Cons:0/1)):False (LTP: 164.25) | SOLD CE 25600@107.70 | SOLD PE 25450@0.00
+2026-02-26 16:53:59,170 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 89.09 vs Peak 89.09 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:59,170 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 89.12 (Peak: 89.12) | V1:89.09 < Ref:89.09 (Pct:0.00%)
+2026-02-26 16:53:59,170 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:51:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,198 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:181.28 > V0:181.69 (Pct:-0.23%, Cons:0/1))=False | LTP: 167.45 | Formula: vwap_slope
+2026-02-26 16:53:59,206 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 89.14 (Peak: 89.14) | V1:89.09 < Ref:89.09 (Pct:0.00%)
+2026-02-26 16:53:59,206 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:52:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,234 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:181.06 > V0:181.28 (Pct:-0.12%, Cons:0/1))=False | LTP: 167.80 | Formula: vwap_slope
+2026-02-26 16:53:59,242 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.99 (Peak: 89.14) | V1:89.09 < Ref:89.09 (Pct:0.00%)
+2026-02-26 16:53:59,242 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:53:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,514 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25650]: slope(V1:180.79 > V0:181.06 (Pct:-0.15%, Cons:0/1))=False | LTP: 175.20 | Formula: vwap_slope
+2026-02-26 16:53:59,515 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25510.60 | CE: (In Trade) [V:89.0, VP:89.1] (LTP: 84.15) | PE: slope(V1:180.79 > V0:181.06 (Pct:-0.15%, Cons:0/1)):False (LTP: 175.20) | SOLD CE 25600@105.95 | SOLD PE 25450@0.00
+2026-02-26 16:53:59,526 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.99 vs Peak 89.09 | Drawdown: -0.11% | Threshold: -1.00% → HOLD
+2026-02-26 16:53:59,526 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.57 (Peak: 89.14) | V1:88.99 < Ref:89.09 (Pct:-0.11%)
+2026-02-26 16:53:59,527 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:54:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:53:59,545 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 1080s since last switch): 25650 -> 25600 (User: backtest_user)
+2026-02-26 16:53:59,546 - UpstoxApp - INFO - V2: Switching monitoring strike 25650 -> 25600
+2026-02-26 16:53:59,902 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25600]: slope(V1:152.84 > V0:152.38 (Pct:0.30%, Cons:1/1))=True | LTP: 166.75 | Formula: vwap_slope
+2026-02-26 16:53:59,903 - UpstoxApp - INFO - [Task 140681909068672] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-02-26 16:53:59,903 - UpstoxApp - INFO - [NIFTY] Hedge override: 25600 -> 25350.0 (sell_hedge_PUT) | qty x2
+2026-02-26 16:53:59,903 - UpstoxApp - INFO - V2: PUT entry triggered, but NOT closing CALL because 'reversal' is not in its exit formula.
+2026-02-26 16:53:59,906 - UpstoxApp - INFO - V2 Hybrid [Backtest]: Fetching execution price for NSE_FO|54910 @ 2026-02-26 09:55:00+05:30
+2026-02-26 16:53:59,906 - UpstoxApp - ERROR - [Backtest] Could not find LTP for instrument NSE_FO|54910 at entry 2026-02-26 09:55:00+05:30. Aborting trade.
+2026-02-26 16:53:59,906 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25510.65 | CE: (In Trade) [V:88.6, VP:89.1] (LTP: 95.20) | PE: slope(V1:152.84 > V0:152.38 (Pct:0.30%, Cons:1/1)):True (LTP: 166.75) | SOLD CE 25600@95.20 | SOLD PE 25450@0.00
+2026-02-26 16:53:59,918 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25650 -> 25600. Performing Hot Handover.
+2026-02-26 16:53:59,925 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 124.00 (Duration: 09:38:00 - 09:55:00)
+2026-02-26 16:53:59,927 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 110.77 (Calculated from 17 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 09:54:00+05:30)
+2026-02-26 16:53:59,930 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.65 (Peak: 110.77) | V1:88.99 < Ref:89.09 (Pct:-0.11%)
+2026-02-26 16:53:59,930 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:55:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,005 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.37 (Peak: 110.77) | V1:88.99 < Ref:89.09 (Pct:-0.11%)
+2026-02-26 16:54:00,005 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:56:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,037 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25515.60 | CE: (In Trade) [V:109.4, VP:110.8] (LTP: 96.65) | PE: slope(V1:153.98 > V0:153.73 (Pct:0.16%, Cons:1/1)):True (LTP: 163.45) | SOLD CE 25600@96.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:00,047 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 109.37 vs Peak 109.37 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:00,047 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.20 (Peak: 110.77) | V1:109.37 < Ref:109.37 (Pct:0.00%)
+2026-02-26 16:54:00,047 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:57:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,087 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.02 (Peak: 110.77) | V1:109.37 < Ref:109.37 (Pct:0.00%)
+2026-02-26 16:54:00,088 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:58:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,127 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.85 (Peak: 110.77) | V1:109.37 < Ref:109.37 (Pct:0.00%)
+2026-02-26 16:54:00,128 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 09:59:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,157 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25522.45 | CE: (In Trade) [V:108.9, VP:110.8] (LTP: 97.45) | PE: slope(V1:154.60 > V0:154.37 (Pct:0.15%, Cons:1/1)):True (LTP: 160.75) | SOLD CE 25600@97.45 | SOLD PE 25450@0.00
+2026-02-26 16:54:00,167 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 108.85 vs Peak 109.37 | Drawdown: -0.47% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:00,167 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.71 (Peak: 110.77) | V1:108.85 < Ref:109.37 (Pct:-0.47%)
+2026-02-26 16:54:00,167 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:00:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,204 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.55 (Peak: 110.77) | V1:108.85 < Ref:109.37 (Pct:-0.47%)
+2026-02-26 16:54:00,205 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:01:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,239 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.44 (Peak: 110.77) | V1:108.85 < Ref:109.37 (Pct:-0.47%)
+2026-02-26 16:54:00,239 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:02:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,524 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25538.80 | CE: (In Trade) [V:108.4, VP:110.8] (LTP: 101.55) | PE: slope(V1:154.62 > V0:154.65 (Pct:-0.02%, Cons:0/1)):False (LTP: 153.85) | SOLD CE 25600@101.55 | SOLD PE 25450@0.00
+2026-02-26 16:54:00,534 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 108.44 vs Peak 109.37 | Drawdown: -0.85% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:00,534 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.37 (Peak: 110.77) | V1:108.44 < Ref:109.37 (Pct:-0.85%)
+2026-02-26 16:54:00,534 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:03:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:00,554 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 540s since last switch): 25600 -> 25650 (User: backtest_user)
+2026-02-26 16:54:00,555 - UpstoxApp - INFO - V2: Switching monitoring strike 25600 -> 25650
+2026-02-26 16:54:00,943 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 (SWITCHED) | Index: 25543.80 | CE: (In Trade) [V:108.4, VP:110.8] (LTP: 82.85) | PE: slope(V1:183.12 > V0:183.21 (Pct:-0.05%, Cons:0/1)):False (LTP: 176.00) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:00,957 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25600 -> 25650. Performing Hot Handover.
+2026-02-26 16:54:00,968 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 99.60 (Duration: 09:38:00 - 10:04:00)
+2026-02-26 16:54:00,970 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 89.14 (Calculated from 26 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 10:03:00+05:30)
+2026-02-26 16:54:00,975 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 86.94 (Peak: 89.14) | V1:108.44 < Ref:109.37 (Pct:-0.85%)
+2026-02-26 16:54:00,975 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:04:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,055 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 86.98 (Peak: 89.14) | V1:108.44 < Ref:109.37 (Pct:-0.85%)
+2026-02-26 16:54:01,056 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:05:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,085 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25560.30 | CE: (In Trade) [V:87.0, VP:89.1] (LTP: 90.45) | PE: slope(V1:182.69 > V0:182.94 (Pct:-0.14%, Cons:0/1)):False (LTP: 162.60) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,098 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 86.98 vs Peak 86.98 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,098 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.18 (Peak: 89.14) | V1:86.98 < Ref:86.98 (Pct:0.00%)
+2026-02-26 16:54:01,098 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:06:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,136 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.38 (Peak: 89.14) | V1:86.98 < Ref:86.98 (Pct:0.00%)
+2026-02-26 16:54:01,137 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:07:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,172 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.50 (Peak: 89.14) | V1:86.98 < Ref:86.98 (Pct:0.00%)
+2026-02-26 16:54:01,173 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:08:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,202 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25563.30 | CE: (In Trade) [V:87.5, VP:89.1] (LTP: 94.75) | PE: slope(V1:181.54 > V0:181.95 (Pct:-0.23%, Cons:0/1)):False (LTP: 157.45) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,212 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 87.50 vs Peak 87.50 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,212 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.62 (Peak: 89.14) | V1:87.50 < Ref:87.50 (Pct:0.00%)
+2026-02-26 16:54:01,213 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:09:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,249 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.00 (Peak: 89.14) | V1:87.50 < Ref:87.50 (Pct:0.00%)
+2026-02-26 16:54:01,251 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:10:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,285 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.29 (Peak: 89.14) | V1:87.50 < Ref:87.50 (Pct:0.00%)
+2026-02-26 16:54:01,288 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:11:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,322 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25561.70 | CE: (In Trade) [V:88.3, VP:89.1] (LTP: 93.65) | PE: slope(V1:179.35 > V0:180.34 (Pct:-0.55%, Cons:0/1)):False (LTP: 158.65) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,332 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.29 vs Peak 88.29 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,332 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.41 (Peak: 89.14) | V1:88.29 < Ref:88.29 (Pct:0.00%)
+2026-02-26 16:54:01,332 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:12:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,364 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.47 (Peak: 89.14) | V1:88.29 < Ref:88.29 (Pct:0.00%)
+2026-02-26 16:54:01,364 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:13:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,401 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.51 (Peak: 89.14) | V1:88.29 < Ref:88.29 (Pct:0.00%)
+2026-02-26 16:54:01,401 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:14:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,449 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25553.90 | CE: (In Trade) [V:88.5, VP:89.1] (LTP: 94.95) | PE: slope(V1:178.65 > V0:178.80 (Pct:-0.09%, Cons:0/1)):False (LTP: 157.35) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,472 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.51 vs Peak 88.51 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,475 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.56 (Peak: 89.14) | V1:88.51 < Ref:88.51 (Pct:0.00%)
+2026-02-26 16:54:01,476 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:15:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,512 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.59 (Peak: 89.14) | V1:88.51 < Ref:88.51 (Pct:0.00%)
+2026-02-26 16:54:01,513 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:16:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,549 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.62 (Peak: 89.14) | V1:88.51 < Ref:88.51 (Pct:0.00%)
+2026-02-26 16:54:01,549 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:17:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,576 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25559.75 | CE: (In Trade) [V:88.6, VP:89.1] (LTP: 91.05) | PE: slope(V1:177.86 > V0:178.02 (Pct:-0.09%, Cons:0/1)):False (LTP: 161.85) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,586 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.62 vs Peak 88.62 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,587 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.65 (Peak: 89.14) | V1:88.62 < Ref:88.62 (Pct:0.00%)
+2026-02-26 16:54:01,587 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:18:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,621 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.69 (Peak: 89.14) | V1:88.62 < Ref:88.62 (Pct:0.00%)
+2026-02-26 16:54:01,623 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:19:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,658 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.71 (Peak: 89.14) | V1:88.62 < Ref:88.62 (Pct:0.00%)
+2026-02-26 16:54:01,658 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:20:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,686 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25543.90 | CE: (In Trade) [V:88.7, VP:89.1] (LTP: 88.35) | PE: slope(V1:177.12 > V0:177.28 (Pct:-0.09%, Cons:0/1)):False (LTP: 164.80) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,697 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.71 vs Peak 88.71 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,697 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.68 (Peak: 89.14) | V1:88.71 < Ref:88.71 (Pct:0.00%)
+2026-02-26 16:54:01,697 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:21:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,730 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.65 (Peak: 89.14) | V1:88.71 < Ref:88.71 (Pct:0.00%)
+2026-02-26 16:54:01,732 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:22:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,769 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.63 (Peak: 89.14) | V1:88.71 < Ref:88.71 (Pct:0.00%)
+2026-02-26 16:54:01,769 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:23:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,798 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25538.40 | CE: (In Trade) [V:88.6, VP:89.1] (LTP: 87.80) | PE: slope(V1:176.65 > V0:176.83 (Pct:-0.10%, Cons:0/1)):False (LTP: 163.75) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,809 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.63 vs Peak 88.71 | Drawdown: -0.08% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,809 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.60 (Peak: 89.14) | V1:88.63 < Ref:88.71 (Pct:-0.08%)
+2026-02-26 16:54:01,809 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:24:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,843 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.56 (Peak: 89.14) | V1:88.63 < Ref:88.71 (Pct:-0.08%)
+2026-02-26 16:54:01,844 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:25:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,880 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.53 (Peak: 89.14) | V1:88.63 < Ref:88.71 (Pct:-0.08%)
+2026-02-26 16:54:01,880 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:26:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,908 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25547.65 | CE: (In Trade) [V:88.5, VP:89.1] (LTP: 85.45) | PE: slope(V1:176.44 > V0:176.53 (Pct:-0.05%, Cons:0/1)):False (LTP: 166.75) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:01,919 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.53 vs Peak 88.71 | Drawdown: -0.19% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:01,919 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.51 (Peak: 89.14) | V1:88.53 < Ref:88.71 (Pct:-0.19%)
+2026-02-26 16:54:01,919 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:27:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,955 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.42 (Peak: 89.14) | V1:88.53 < Ref:88.71 (Pct:-0.19%)
+2026-02-26 16:54:01,955 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:28:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:01,991 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.28 (Peak: 89.14) | V1:88.53 < Ref:88.71 (Pct:-0.19%)
+2026-02-26 16:54:01,992 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:29:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:02,021 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25527.70 | CE: (In Trade) [V:88.3, VP:89.1] (LTP: 79.30) | PE: slope(V1:176.51 > V0:176.36 (Pct:0.09%, Cons:1/1)):True (LTP: 179.95) | SOLD CE 25600@104.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:02,035 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.28 vs Peak 88.71 | Drawdown: -0.48% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:02,035 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.22 (Peak: 89.14) | V1:88.28 < Ref:88.71 (Pct:-0.48%)
+2026-02-26 16:54:02,035 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:30:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:02,068 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.17 (Peak: 89.14) | V1:88.28 < Ref:88.71 (Pct:-0.48%)
+2026-02-26 16:54:02,070 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:31:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:02,364 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.13 (Peak: 89.14) | V1:88.28 < Ref:88.71 (Pct:-0.48%)
+2026-02-26 16:54:02,366 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:32:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:02,686 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25535.45 | CE: (In Trade) [V:88.1, VP:89.1] (LTP: 79.30) | PE: slope(V1:176.57 > V0:176.56 (Pct:0.01%, Cons:1/1)):True (LTP: 180.25) | SOLD CE 25600@101.45 | SOLD PE 25450@0.00
+2026-02-26 16:54:02,696 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 88.13 vs Peak 88.71 | Drawdown: -0.65% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:02,696 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.10 (Peak: 89.14) | V1:88.13 < Ref:88.71 (Pct:-0.65%)
+2026-02-26 16:54:02,696 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:33:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:02,729 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 88.03 (Peak: 89.14) | V1:88.13 < Ref:88.71 (Pct:-0.65%)
+2026-02-26 16:54:02,730 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:34:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:02,763 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.97 (Peak: 89.14) | V1:88.13 < Ref:88.71 (Pct:-0.65%)
+2026-02-26 16:54:02,764 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:35:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:03,050 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25529.45 | CE: (In Trade) [V:88.0, VP:89.1] (LTP: 80.05) | PE: slope(V1:176.52 > V0:176.52 (Pct:0.00%, Cons:1/1)):True (LTP: 178.85) | SOLD CE 25600@101.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:03,060 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 87.97 vs Peak 88.71 | Drawdown: -0.83% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:03,061 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.94 (Peak: 89.14) | V1:87.97 < Ref:88.71 (Pct:-0.83%)
+2026-02-26 16:54:03,061 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:36:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:03,348 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.88 (Peak: 89.14) | V1:87.97 < Ref:88.71 (Pct:-0.83%)
+2026-02-26 16:54:03,349 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:37:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:03,687 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.81 (Peak: 89.14) | V1:87.97 < Ref:88.71 (Pct:-0.83%)
+2026-02-26 16:54:03,688 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:38:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:03,706 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 2100s since last switch): 25650 -> 25600 (User: backtest_user)
+2026-02-26 16:54:03,706 - UpstoxApp - INFO - V2: Switching monitoring strike 25650 -> 25600
+2026-02-26 16:54:04,122 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25529.30 | CE: (In Trade) [V:87.8, VP:89.1] (LTP: 98.65) | PE: slope(V1:149.19 > V0:149.16 (Pct:0.02%, Cons:1/1)):True (LTP: 154.35) | SOLD CE 25600@98.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:04,133 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25650 -> 25600. Performing Hot Handover.
+2026-02-26 16:54:04,138 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 128.80 (Duration: 09:38:00 - 10:39:00)
+2026-02-26 16:54:04,141 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 110.77 (Calculated from 61 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 10:38:00+05:30)
+2026-02-26 16:54:04,150 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 109.84 vs Peak 109.84 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:04,151 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.80 (Peak: 110.77) | V1:109.84 < Ref:109.84 (Pct:0.00%)
+2026-02-26 16:54:04,152 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:39:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:04,203 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.77 (Peak: 110.77) | V1:109.84 < Ref:109.84 (Pct:0.00%)
+2026-02-26 16:54:04,203 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:40:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:04,239 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.73 (Peak: 110.77) | V1:109.84 < Ref:109.84 (Pct:0.00%)
+2026-02-26 16:54:04,241 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:41:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:04,548 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25535.35 | CE: (In Trade) [V:109.7, VP:110.8] (LTP: 98.65) | PE: slope(V1:149.30 > V0:149.26 (Pct:0.03%, Cons:1/1)):True (LTP: 153.70) | SOLD CE 25600@98.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:04,563 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 109.73 vs Peak 109.84 | Drawdown: -0.10% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:04,563 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.69 (Peak: 110.77) | V1:109.73 < Ref:109.84 (Pct:-0.10%)
+2026-02-26 16:54:04,563 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:42:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:04,584 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 240s since last switch): 25600 -> 25650 (User: backtest_user)
+2026-02-26 16:54:04,586 - UpstoxApp - INFO - V2: Switching monitoring strike 25600 -> 25650
+2026-02-26 16:54:05,051 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 (SWITCHED) | Index: 25537.35 | CE: (In Trade) [V:109.7, VP:110.8] (LTP: 80.85) | PE: slope(V1:176.73 > V0:176.71 (Pct:0.01%, Cons:1/1)):True (LTP: 175.45) | SOLD CE 25600@102.55 | SOLD PE 25450@0.00
+2026-02-26 16:54:05,057 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25600 -> 25650. Performing Hot Handover.
+2026-02-26 16:54:05,060 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 103.70 (Duration: 09:38:00 - 10:43:00)
+2026-02-26 16:54:05,063 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 89.14 (Calculated from 65 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 10:42:00+05:30)
+2026-02-26 16:54:05,064 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.62 (Peak: 89.14) | V1:109.73 < Ref:109.84 (Pct:-0.10%)
+2026-02-26 16:54:05,064 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:43:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:05,372 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.60 (Peak: 89.14) | V1:109.73 < Ref:109.84 (Pct:-0.10%)
+2026-02-26 16:54:05,373 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:44:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:05,390 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 120s since last switch): 25650 -> 25600 (User: backtest_user)
+2026-02-26 16:54:05,390 - UpstoxApp - INFO - V2: Switching monitoring strike 25650 -> 25600
+2026-02-26 16:54:05,821 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25531.10 | CE: (In Trade) [V:87.6, VP:89.1] (LTP: 98.95) | PE: slope(V1:149.31 > V0:149.31 (Pct:0.00%, Cons:1/1)):True (LTP: 151.75) | SOLD CE 25600@98.95 | SOLD PE 25450@0.00
+2026-02-26 16:54:05,832 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25650 -> 25600. Performing Hot Handover.
+2026-02-26 16:54:05,837 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 128.80 (Duration: 09:38:00 - 10:45:00)
+2026-02-26 16:54:05,843 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 110.77 (Calculated from 67 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 10:44:00+05:30)
+2026-02-26 16:54:05,855 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 109.62 vs Peak 109.62 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:05,855 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.59 (Peak: 110.77) | V1:109.62 < Ref:109.62 (Pct:0.00%)
+2026-02-26 16:54:05,855 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:45:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:05,892 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.56 (Peak: 110.77) | V1:109.62 < Ref:109.62 (Pct:0.00%)
+2026-02-26 16:54:05,893 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:46:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:06,202 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.52 (Peak: 110.77) | V1:109.62 < Ref:109.62 (Pct:0.00%)
+2026-02-26 16:54:06,203 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:47:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:06,223 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 180s since last switch): 25600 -> 25650 (User: backtest_user)
+2026-02-26 16:54:06,224 - UpstoxApp - INFO - V2: Switching monitoring strike 25600 -> 25650
+2026-02-26 16:54:06,640 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 (SWITCHED) | Index: 25544.90 | CE: (In Trade) [V:109.5, VP:110.8] (LTP: 82.90) | PE: slope(V1:176.70 > V0:176.75 (Pct:-0.03%, Cons:0/1)):False (LTP: 169.50) | SOLD CE 25600@105.10 | SOLD PE 25450@0.00
+2026-02-26 16:54:06,652 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25600 -> 25650. Performing Hot Handover.
+2026-02-26 16:54:06,661 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 103.70 (Duration: 09:38:00 - 10:48:00)
+2026-02-26 16:54:06,664 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 89.14 (Calculated from 70 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 10:47:00+05:30)
+2026-02-26 16:54:06,677 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 87.50 vs Peak 87.50 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:06,677 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.46 (Peak: 89.14) | V1:87.50 < Ref:87.50 (Pct:0.00%)
+2026-02-26 16:54:06,677 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:48:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:06,712 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.43 (Peak: 89.14) | V1:87.50 < Ref:87.50 (Pct:0.00%)
+2026-02-26 16:54:06,713 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:49:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:06,759 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.41 (Peak: 89.14) | V1:87.50 < Ref:87.50 (Pct:0.00%)
+2026-02-26 16:54:06,760 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:50:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:06,787 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25539.70 | CE: (In Trade) [V:87.4, VP:89.1] (LTP: 82.90) | PE: slope(V1:176.55 > V0:176.58 (Pct:-0.02%, Cons:0/1)):False (LTP: 167.95) | SOLD CE 25600@105.10 | SOLD PE 25450@0.00
+2026-02-26 16:54:06,798 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 87.41 vs Peak 87.50 | Drawdown: -0.10% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:06,798 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.38 (Peak: 89.14) | V1:87.41 < Ref:87.50 (Pct:-0.10%)
+2026-02-26 16:54:06,799 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:51:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:06,835 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.32 (Peak: 89.14) | V1:87.41 < Ref:87.50 (Pct:-0.10%)
+2026-02-26 16:54:06,836 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:52:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:06,871 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.27 (Peak: 89.14) | V1:87.41 < Ref:87.50 (Pct:-0.10%)
+2026-02-26 16:54:06,872 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:53:00+05:30 | ATM: 25700 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,168 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25525.75 | CE: (In Trade) [V:87.3, VP:89.1] (LTP: 77.00) | PE: slope(V1:176.53 > V0:176.52 (Pct:0.00%, Cons:1/1)):True (LTP: 177.00) | SOLD CE 25600@98.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:07,179 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 87.27 vs Peak 87.50 | Drawdown: -0.26% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:07,180 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 87.22 (Peak: 89.14) | V1:87.27 < Ref:87.50 (Pct:-0.26%)
+2026-02-26 16:54:07,180 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:54:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,196 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 420s since last switch): 25650 -> 25600 (User: backtest_user)
+2026-02-26 16:54:07,197 - UpstoxApp - INFO - V2: Switching monitoring strike 25650 -> 25600
+2026-02-26 16:54:07,650 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25519.65 | CE: (In Trade) [V:87.2, VP:89.1] (LTP: 96.00) | PE: slope(V1:149.08 > V0:149.07 (Pct:0.01%, Cons:1/1)):True (LTP: 152.15) | SOLD CE 25600@96.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:07,660 - UpstoxApp - INFO - V2 MGMT: [CALL] Target strike switch: 25650 -> 25600. Performing Hot Handover.
+2026-02-26 16:54:07,663 - UpstoxApp - INFO - V2: Hot Handover [CALL] Peak Price updated to 128.80 (Duration: 09:38:00 - 10:55:00)
+2026-02-26 16:54:07,665 - UpstoxApp - INFO - V2: Hot Handover [CALL] VWAP Peak updated to 110.77 (Calculated from 77 finalized candles between 2026-02-26 09:38:00+05:30 and 2026-02-26 10:54:00+05:30)
+2026-02-26 16:54:07,666 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 109.11 (Peak: 110.77) | V1:87.27 < Ref:87.50 (Pct:-0.26%)
+2026-02-26 16:54:07,666 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:55:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,701 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.87 (Peak: 110.77) | V1:87.27 < Ref:87.50 (Pct:-0.26%)
+2026-02-26 16:54:07,705 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:56:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,740 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25517.40 | CE: (In Trade) [V:108.9, VP:110.8] (LTP: 89.50) | PE: slope(V1:149.43 > V0:149.16 (Pct:0.18%, Cons:1/1)):True (LTP: 165.95) | SOLD CE 25600@89.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:07,751 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 108.87 vs Peak 108.87 | Drawdown: 0.00% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:07,752 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.76 (Peak: 110.77) | V1:108.87 < Ref:108.87 (Pct:0.00%)
+2026-02-26 16:54:07,752 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:57:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,787 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.68 (Peak: 110.77) | V1:108.87 < Ref:108.87 (Pct:0.00%)
+2026-02-26 16:54:07,787 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:58:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,821 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.59 (Peak: 110.77) | V1:108.87 < Ref:108.87 (Pct:0.00%)
+2026-02-26 16:54:07,822 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 10:59:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,850 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25499.70 | CE: (In Trade) [V:108.6, VP:110.8] (LTP: 89.60) | PE: slope(V1:149.73 > V0:149.59 (Pct:0.09%, Cons:1/1)):True (LTP: 166.45) | SOLD CE 25600@89.60 | SOLD PE 25450@0.00
+2026-02-26 16:54:07,860 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 108.59 vs Peak 108.87 | Drawdown: -0.26% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:07,861 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.45 (Peak: 110.77) | V1:108.59 < Ref:108.87 (Pct:-0.26%)
+2026-02-26 16:54:07,861 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:00:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,897 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.22 (Peak: 110.77) | V1:108.59 < Ref:108.87 (Pct:-0.26%)
+2026-02-26 16:54:07,897 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:01:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,931 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 108.09 (Peak: 110.77) | V1:108.59 < Ref:108.87 (Pct:-0.26%)
+2026-02-26 16:54:07,932 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:02:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:07,966 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25518.35 | CE: (In Trade) [V:108.1, VP:110.8] (LTP: 89.00) | PE: slope(V1:150.52 > V0:150.38 (Pct:0.09%, Cons:1/1)):True (LTP: 166.40) | SOLD CE 25600@89.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:07,977 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 108.09 vs Peak 108.87 | Drawdown: -0.71% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:07,977 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 107.97 (Peak: 110.77) | V1:108.09 < Ref:108.87 (Pct:-0.71%)
+2026-02-26 16:54:07,978 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:03:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:08,016 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 107.85 (Peak: 110.77) | V1:108.09 < Ref:108.87 (Pct:-0.71%)
+2026-02-26 16:54:08,017 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:04:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:08,052 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 107.78 (Peak: 110.77) | V1:108.09 < Ref:108.87 (Pct:-0.71%)
+2026-02-26 16:54:08,053 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:05:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:08,082 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25515.15 | CE: (In Trade) [V:107.8, VP:110.8] (LTP: 91.25) | PE: slope(V1:150.68 > V0:150.64 (Pct:0.03%, Cons:1/1)):True (LTP: 160.05) | SOLD CE 25600@91.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:08,093 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 107.78 vs Peak 108.87 | Drawdown: -0.99% | Threshold: -1.00% → HOLD
+2026-02-26 16:54:08,093 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 107.74 (Peak: 110.77) | V1:107.78 < Ref:108.87 (Pct:-0.99%)
+2026-02-26 16:54:08,093 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:06:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:08,129 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 107.70 (Peak: 110.77) | V1:107.78 < Ref:108.87 (Pct:-0.99%)
+2026-02-26 16:54:08,130 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:07:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:08,165 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 107.68 (Peak: 110.77) | V1:107.78 < Ref:108.87 (Pct:-0.99%)
+2026-02-26 16:54:08,165 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:08:00+05:30 | ATM: 25650 | Status: RUNNING | P&L: 0.00
+2026-02-26 16:54:08,195 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25513.55 | CE: (In Trade) [V:107.7, VP:110.8] (LTP: 92.20) | PE: slope(V1:150.75 > V0:150.73 (Pct:0.01%, Cons:1/1)):True (LTP: 155.80) | SOLD CE 25600@92.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:08,205 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT CRITERIA MET (VWAP Slope): Current VWAP 107.68 vs Ref 108.87 (Drawdown: -1.09%, Threshold: -1.00%)
+2026-02-26 16:54:08,206 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 0.00 | LTP: 69.75 | VWAP: 107.63 (Peak: 110.77) | V1:107.68 < Ref:108.87 (Pct:-1.09%)
+2026-02-26 16:54:08,206 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT TRIGGERED: Structural Exit: VWAP Slope < (CLOSE)
+2026-02-26 16:54:08,206 - UpstoxApp - INFO - V2: Requesting EXIT for CALL at 69.75. Reason: Structural Exit: VWAP Slope < (CLOSE)
+2026-02-26 16:54:08,206 - UpstoxApp - INFO - V2 MGMT: [CALL] Exit (Structural Exit: VWAP Slope < (CLOSE)). Preserving 9:15 Breach flags for potential re-entry.
+2026-02-26 16:54:08,206 - UpstoxApp - INFO - [NIFTY] Exited CALL trade on NSE_FO|54971 at 69.75. PnL: 0.00. Reason: Structural Exit: VWAP Slope < (CLOSE)
+2026-02-26 16:54:08,206 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:09:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,227 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.63 > V0:107.68 (Pct:-0.05%, Cons:0/1))=False | LTP: 90.45 | Formula: vwap_slope
+2026-02-26 16:54:08,240 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:10:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,263 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.57 > V0:107.63 (Pct:-0.05%, Cons:0/1))=False | LTP: 93.90 | Formula: vwap_slope
+2026-02-26 16:54:08,276 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:11:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,299 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.49 > V0:107.57 (Pct:-0.07%, Cons:0/1))=False | LTP: 92.90 | Formula: vwap_slope
+2026-02-26 16:54:08,306 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25518.95 | CE: slope(V1:107.49 > V0:107.57 (Pct:-0.07%, Cons:0/1)):False (LTP: 92.90) | PE: slope(V1:150.80 > V0:150.79 (Pct:0.00%, Cons:1/1)):True (LTP: 152.10) | SOLD CE 25600@92.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:08,312 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:12:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,334 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.45 > V0:107.49 (Pct:-0.04%, Cons:0/1))=False | LTP: 92.25 | Formula: vwap_slope
+2026-02-26 16:54:08,348 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:13:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,374 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.42 > V0:107.45 (Pct:-0.02%, Cons:0/1))=False | LTP: 94.00 | Formula: vwap_slope
+2026-02-26 16:54:08,400 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:14:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,426 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.35 > V0:107.42 (Pct:-0.07%, Cons:0/1))=False | LTP: 92.90 | Formula: vwap_slope
+2026-02-26 16:54:08,433 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25523.70 | CE: slope(V1:107.35 > V0:107.42 (Pct:-0.07%, Cons:0/1)):False (LTP: 92.90) | PE: slope(V1:150.79 > V0:150.80 (Pct:-0.00%, Cons:0/1)):False (LTP: 151.60) | SOLD CE 25600@92.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:08,439 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:15:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,460 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.32 > V0:107.35 (Pct:-0.03%, Cons:0/1))=False | LTP: 93.85 | Formula: vwap_slope
+2026-02-26 16:54:08,472 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:16:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,494 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.28 > V0:107.32 (Pct:-0.04%, Cons:0/1))=False | LTP: 92.70 | Formula: vwap_slope
+2026-02-26 16:54:08,506 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:17:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,802 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25600]: slope(V1:107.24 > V0:107.28 (Pct:-0.04%, Cons:0/1))=False | LTP: 96.00 | Formula: vwap_slope
+2026-02-26 16:54:08,809 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25536.95 | CE: slope(V1:107.24 > V0:107.28 (Pct:-0.04%, Cons:0/1)):False (LTP: 96.00) | PE: slope(V1:150.78 > V0:150.79 (Pct:-0.01%, Cons:0/1)):False (LTP: 145.45) | SOLD CE 25600@96.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:08,815 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:18:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:08,838 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 1440s since last switch): 25600 -> 25650 (User: backtest_user)
+2026-02-26 16:54:08,839 - UpstoxApp - INFO - V2: Switching monitoring strike 25600 -> 25650
+2026-02-26 16:54:09,286 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.49 > V0:85.56 (Pct:-0.08%, Cons:0/1))=False | LTP: 77.05 | Formula: vwap_slope
+2026-02-26 16:54:09,299 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 (SWITCHED) | Index: 25534.45 | CE: slope(V1:85.49 > V0:85.56 (Pct:-0.08%, Cons:0/1)):False (LTP: 77.05) | PE: slope(V1:178.44 > V0:178.50 (Pct:-0.03%, Cons:0/1)):False (LTP: 170.30) | SOLD CE 25600@98.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:09,317 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:19:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:09,342 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.46 > V0:85.49 (Pct:-0.03%, Cons:0/1))=False | LTP: 76.85 | Formula: vwap_slope
+2026-02-26 16:54:09,355 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:20:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:09,650 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.43 > V0:85.46 (Pct:-0.04%, Cons:0/1))=False | LTP: 76.00 | Formula: vwap_slope
+2026-02-26 16:54:09,658 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25532.20 | CE: slope(V1:85.43 > V0:85.46 (Pct:-0.04%, Cons:0/1)):False (LTP: 76.00) | PE: slope(V1:178.40 > V0:178.42 (Pct:-0.01%, Cons:0/1)):False (LTP: 173.55) | SOLD CE 25600@97.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:09,663 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:21:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:09,952 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.39 > V0:85.43 (Pct:-0.05%, Cons:0/1))=False | LTP: 75.60 | Formula: vwap_slope
+2026-02-26 16:54:09,965 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:22:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:09,985 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.35 > V0:85.39 (Pct:-0.04%, Cons:0/1))=False | LTP: 78.20 | Formula: vwap_slope
+2026-02-26 16:54:09,997 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:23:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,019 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.33 > V0:85.35 (Pct:-0.03%, Cons:0/1))=False | LTP: 77.85 | Formula: vwap_slope
+2026-02-26 16:54:10,028 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25540.65 | CE: slope(V1:85.33 > V0:85.35 (Pct:-0.03%, Cons:0/1)):False (LTP: 77.85) | PE: slope(V1:178.35 > V0:178.37 (Pct:-0.01%, Cons:0/1)):False (LTP: 170.25) | SOLD CE 25600@97.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:10,033 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:24:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,056 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.30 > V0:85.33 (Pct:-0.03%, Cons:0/1))=False | LTP: 79.25 | Formula: vwap_slope
+2026-02-26 16:54:10,069 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:25:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,091 - UpstoxApp - INFO - V2: [CE] [BUY] Status [25650]: slope(V1:85.33 > V0:85.30 (Pct:0.03%, Cons:1/1))=True | LTP: 90.20 | Formula: vwap_slope
+2026-02-26 16:54:10,092 - UpstoxApp - INFO - [Task 140681909068672] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-02-26 16:54:10,092 - UpstoxApp - INFO - [NIFTY] Hedge override: 25650 -> 25700.0 (sell_hedge_CALL) | qty x2
+2026-02-26 16:54:10,092 - UpstoxApp - INFO - V2 Hybrid [Backtest]: Fetching execution price for NSE_FO|54971 @ 2026-02-26 11:26:00+05:30
+2026-02-26 16:54:10,093 - UpstoxApp - ERROR - [Backtest] Could not find LTP for instrument NSE_FO|54971 at entry 2026-02-26 11:26:00+05:30. Aborting trade.
+2026-02-26 16:54:10,105 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:26:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,131 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25554.60 | CE: slope(V1:85.48 > V0:85.33 (Pct:0.18%, Cons:1/1)):True (LTP: 92.70) | PE: slope(V1:177.61 > V0:178.01 (Pct:-0.22%, Cons:0/1)):False (LTP: 150.35) | SOLD CE 25600@97.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:10,139 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:27:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,171 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:28:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,206 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:29:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,233 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25528.50 | CE: slope(V1:85.48 > V0:85.51 (Pct:-0.04%, Cons:0/1)):False (LTP: 79.60) | PE: slope(V1:177.08 > V0:177.15 (Pct:-0.04%, Cons:0/1)):False (LTP: 168.05) | SOLD CE 25600@97.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:10,246 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:30:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,279 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:31:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,588 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:32:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:10,881 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25650 | Index: 25524.65 | CE: slope(V1:85.33 > V0:85.40 (Pct:-0.07%, Cons:0/1)):False (LTP: 75.75) | PE: slope(V1:176.95 > V0:176.97 (Pct:-0.01%, Cons:0/1)):False (LTP: 175.05) | SOLD CE 25600@99.15 | SOLD PE 25450@0.00
+2026-02-26 16:54:10,886 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:33:00+05:30 | ATM: 25700 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,214 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:34:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,233 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 960s since last switch): 25650 -> 25600 (User: backtest_user)
+2026-02-26 16:54:11,233 - UpstoxApp - INFO - V2: Switching monitoring strike 25650 -> 25600
+2026-02-26 16:54:11,756 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25518.65 | CE: slope(V1:106.97 > V0:107.02 (Pct:-0.05%, Cons:0/1)):False (LTP: 92.40) | PE: slope(V1:149.37 > V0:149.37 (Pct:-0.00%, Cons:0/1)):False (LTP: 149.85) | SOLD CE 25600@92.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:11,760 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:35:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,793 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25513.85 | CE: slope(V1:106.93 > V0:106.97 (Pct:-0.03%, Cons:0/1)):False (LTP: 92.80) | PE: slope(V1:149.37 > V0:149.37 (Pct:0.00%, Cons:1/1)):True (LTP: 150.20) | SOLD CE 25600@92.80 | SOLD PE 25450@0.00
+2026-02-26 16:54:11,798 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:36:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,829 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:37:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,864 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:38:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,892 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25502.75 | CE: slope(V1:106.72 > V0:106.80 (Pct:-0.08%, Cons:0/1)):False (LTP: 88.85) | PE: slope(V1:149.46 > V0:149.40 (Pct:0.04%, Cons:1/1)):True (LTP: 157.90) | SOLD CE 25600@88.85 | SOLD PE 25450@0.00
+2026-02-26 16:54:11,896 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:39:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,929 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:40:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:11,964 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:41:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:12,305 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25466.50 | CE: slope(V1:106.23 > V0:106.43 (Pct:-0.19%, Cons:0/1)):False (LTP: 81.65) | PE: slope(V1:150.16 > V0:149.82 (Pct:0.23%, Cons:1/1)):True (LTP: 179.05) | SOLD CE 25600@81.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:12,310 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:42:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:12,325 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 480s since last switch): 25600 -> 25550 (User: backtest_user)
+2026-02-26 16:54:12,325 - UpstoxApp - INFO - V2: Switching monitoring strike 25600 -> 25550
+2026-02-26 16:54:12,699 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25463.10 | CE: slope(V1:130.52 > V0:130.88 (Pct:-0.27%, Cons:0/1)):False (LTP: 100.50) | PE: slope(V1:126.12 > V0:125.78 (Pct:0.27%, Cons:1/1)):True (LTP: 153.65) | SOLD CE 25600@80.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:12,707 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:43:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:12,771 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:44:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:12,806 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25466.50 | CE: slope(V1:130.22 > V0:130.34 (Pct:-0.10%, Cons:0/1)):False (LTP: 97.05) | PE: slope(V1:126.57 > V0:126.33 (Pct:0.19%, Cons:1/1)):True (LTP: 162.90) | SOLD CE 25600@77.55 | SOLD PE 25450@0.00
+2026-02-26 16:54:12,810 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:45:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:12,845 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:46:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:12,880 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:47:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:13,194 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25488.25 | CE: slope(V1:129.66 > V0:129.76 (Pct:-0.08%, Cons:0/1)):False (LTP: 100.30) | PE: slope(V1:127.28 > V0:127.21 (Pct:0.06%, Cons:1/1)):True (LTP: 154.50) | SOLD CE 25600@79.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:13,198 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:48:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:13,216 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 360s since last switch): 25550 -> 25600 (User: backtest_user)
+2026-02-26 16:54:13,216 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25600
+2026-02-26 16:54:13,701 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25483.35 | CE: slope(V1:105.00 > V0:105.16 (Pct:-0.15%, Cons:0/1)):False (LTP: 79.35) | PE: slope(V1:152.13 > V0:151.94 (Pct:0.13%, Cons:1/1)):True (LTP: 180.05) | SOLD CE 25600@79.35 | SOLD PE 25450@0.00
+2026-02-26 16:54:13,708 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:49:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:13,746 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:50:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:14,094 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25486.20 | CE: slope(V1:104.83 > V0:104.90 (Pct:-0.07%, Cons:0/1)):False (LTP: 79.75) | PE: slope(V1:152.40 > V0:152.27 (Pct:0.09%, Cons:1/1)):True (LTP: 182.90) | SOLD CE 25600@79.75 | SOLD PE 25450@0.00
+2026-02-26 16:54:14,099 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:51:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:14,408 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:52:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:14,753 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:53:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:14,786 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 300s since last switch): 25600 -> 25550 (User: backtest_user)
+2026-02-26 16:54:14,787 - UpstoxApp - INFO - V2: Switching monitoring strike 25600 -> 25550
+2026-02-26 16:54:15,205 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25469.65 | CE: slope(V1:129.06 > V0:129.18 (Pct:-0.10%, Cons:0/1)):False (LTP: 97.05) | PE: slope(V1:127.88 > V0:127.72 (Pct:0.12%, Cons:1/1)):True (LTP: 160.75) | SOLD CE 25600@77.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:15,216 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:54:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,275 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:55:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,316 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:56:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,348 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25451.65 | CE: slope(V1:128.76 > V0:128.89 (Pct:-0.11%, Cons:0/1)):False (LTP: 92.35) | PE: slope(V1:128.26 > V0:128.11 (Pct:0.12%, Cons:1/1)):True (LTP: 169.10) | SOLD CE 25600@73.45 | SOLD PE 25450@0.00
+2026-02-26 16:54:15,353 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:57:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,391 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:58:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,428 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 11:59:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,458 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25457.80 | CE: slope(V1:128.45 > V0:128.51 (Pct:-0.05%, Cons:0/1)):False (LTP: 92.45) | PE: slope(V1:128.76 > V0:128.66 (Pct:0.08%, Cons:1/1)):True (LTP: 169.80) | SOLD CE 25600@73.55 | SOLD PE 25450@0.00
+2026-02-26 16:54:15,464 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:00:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,498 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:01:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,536 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:02:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,572 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25461.95 | CE: slope(V1:128.21 > V0:128.32 (Pct:-0.08%, Cons:0/1)):False (LTP: 94.65) | PE: slope(V1:129.13 > V0:128.95 (Pct:0.13%, Cons:1/1)):True (LTP: 163.00) | SOLD CE 25600@75.05 | SOLD PE 25450@0.00
+2026-02-26 16:54:15,576 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:03:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,613 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:04:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,647 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:05:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,678 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25476.60 | CE: slope(V1:127.96 > V0:128.04 (Pct:-0.06%, Cons:0/1)):False (LTP: 94.90) | PE: slope(V1:129.40 > V0:129.35 (Pct:0.04%, Cons:1/1)):True (LTP: 158.45) | SOLD CE 25600@75.05 | SOLD PE 25450@0.00
+2026-02-26 16:54:15,683 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:06:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,718 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:07:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,752 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:08:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,784 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25472.55 | CE: slope(V1:127.73 > V0:127.78 (Pct:-0.04%, Cons:0/1)):False (LTP: 95.95) | PE: slope(V1:129.55 > V0:129.52 (Pct:0.03%, Cons:1/1)):True (LTP: 157.85) | SOLD CE 25600@75.95 | SOLD PE 25450@0.00
+2026-02-26 16:54:15,789 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:09:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,823 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:10:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,858 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:11:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,892 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25473.10 | CE: slope(V1:127.61 > V0:127.65 (Pct:-0.03%, Cons:0/1)):False (LTP: 93.55) | PE: slope(V1:129.70 > V0:129.64 (Pct:0.05%, Cons:1/1)):True (LTP: 163.60) | SOLD CE 25600@74.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:15,898 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:12:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,932 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:13:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,967 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:14:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:15,996 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25466.60 | CE: slope(V1:127.47 > V0:127.53 (Pct:-0.04%, Cons:0/1)):False (LTP: 91.60) | PE: slope(V1:129.87 > V0:129.79 (Pct:0.06%, Cons:1/1)):True (LTP: 169.05) | SOLD CE 25600@72.85 | SOLD PE 25450@0.00
+2026-02-26 16:54:16,002 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:15:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,035 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:16:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,069 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:17:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,098 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25456.75 | CE: slope(V1:127.33 > V0:127.36 (Pct:-0.02%, Cons:0/1)):False (LTP: 93.05) | PE: slope(V1:130.02 > V0:129.98 (Pct:0.03%, Cons:1/1)):True (LTP: 166.50) | SOLD CE 25600@74.05 | SOLD PE 25450@0.00
+2026-02-26 16:54:16,105 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:18:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,139 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:19:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,175 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:20:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,208 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25428.00 | CE: slope(V1:127.00 > V0:127.13 (Pct:-0.11%, Cons:0/1)):False (LTP: 87.15) | PE: slope(V1:130.62 > V0:130.30 (Pct:0.24%, Cons:1/1)):True (LTP: 182.20) | SOLD CE 25600@69.60 | SOLD PE 25450@0.00
+2026-02-26 16:54:16,213 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:21:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,587 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:22:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:16,617 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 1740s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:16,617 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:17,085 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25416.55 | CE: slope(V1:151.04 > V0:151.56 (Pct:-0.34%, Cons:0/1)):False (LTP: 99.20) | PE: slope(V1:112.79 > V0:112.24 (Pct:0.49%, Cons:1/1)):True (LTP: 173.40) | SOLD CE 25600@63.35 | SOLD PE 25450@0.00
+2026-02-26 16:54:17,090 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:23:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:17,450 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25432.40 | CE: slope(V1:150.46 > V0:151.04 (Pct:-0.39%, Cons:0/1)):False (LTP: 99.45) | PE: slope(V1:113.41 > V0:112.79 (Pct:0.55%, Cons:1/1)):True (LTP: 167.25) | SOLD CE 25600@63.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:17,460 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:24:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:17,503 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 120s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:17,503 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:17,946 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25441.55 | CE: slope(V1:125.97 > V0:126.20 (Pct:-0.19%, Cons:0/1)):False (LTP: 82.35) | PE: slope(V1:132.14 > V0:131.98 (Pct:0.13%, Cons:1/1)):True (LTP: 188.40) | SOLD CE 25600@65.30 | SOLD PE 25450@0.00
+2026-02-26 16:54:17,952 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:25:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:17,986 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:26:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:18,016 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25436.65 | CE: slope(V1:125.75 > V0:125.86 (Pct:-0.09%, Cons:0/1)):False (LTP: 83.05) | PE: slope(V1:132.36 > V0:132.24 (Pct:0.09%, Cons:1/1)):True (LTP: 186.75) | SOLD CE 25600@65.95 | SOLD PE 25450@0.00
+2026-02-26 16:54:18,021 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:27:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:18,396 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:28:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:18,435 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 240s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:18,435 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:18,907 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25430.70 | CE: slope(V1:149.31 > V0:149.48 (Pct:-0.11%, Cons:0/1)):False (LTP: 101.60) | PE: slope(V1:114.26 > V0:114.11 (Pct:0.13%, Cons:1/1)):True (LTP: 159.50) | SOLD CE 25600@64.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:18,912 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:29:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:19,276 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25441.40 | CE: slope(V1:149.20 > V0:149.31 (Pct:-0.07%, Cons:0/1)):False (LTP: 101.15) | PE: slope(V1:114.34 > V0:114.26 (Pct:0.07%, Cons:1/1)):True (LTP: 160.10) | SOLD CE 25600@64.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:19,285 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:30:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:19,335 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 120s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:19,335 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:19,815 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25442.15 | CE: slope(V1:125.44 > V0:125.53 (Pct:-0.07%, Cons:0/1)):False (LTP: 83.15) | PE: slope(V1:132.65 > V0:132.57 (Pct:0.06%, Cons:1/1)):True (LTP: 184.75) | SOLD CE 25600@65.95 | SOLD PE 25450@0.00
+2026-02-26 16:54:19,820 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:31:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:20,207 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:32:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:20,245 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 120s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:20,245 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:20,721 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25437.00 | CE: slope(V1:148.79 > V0:148.91 (Pct:-0.08%, Cons:0/1)):False (LTP: 100.60) | PE: slope(V1:114.64 > V0:114.54 (Pct:0.09%, Cons:1/1)):True (LTP: 159.60) | SOLD CE 25600@63.30 | SOLD PE 25450@0.00
+2026-02-26 16:54:20,726 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:33:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:20,766 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:34:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,224 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:35:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,269 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 180s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:21,269 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:21,766 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25441.60 | CE: slope(V1:125.01 > V0:125.08 (Pct:-0.06%, Cons:0/1)):False (LTP: 82.00) | PE: slope(V1:132.94 > V0:132.90 (Pct:0.03%, Cons:1/1)):True (LTP: 184.05) | SOLD CE 25600@64.85 | SOLD PE 25450@0.00
+2026-02-26 16:54:21,772 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:36:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,809 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:37:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,843 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:38:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,879 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25445.40 | CE: slope(V1:124.82 > V0:124.87 (Pct:-0.04%, Cons:0/1)):False (LTP: 83.45) | PE: slope(V1:133.09 > V0:133.05 (Pct:0.03%, Cons:1/1)):True (LTP: 179.70) | SOLD CE 25600@65.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:21,884 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:39:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,918 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:40:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,956 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:41:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:21,989 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25456.50 | CE: slope(V1:124.66 > V0:124.73 (Pct:-0.06%, Cons:0/1)):False (LTP: 86.90) | PE: slope(V1:133.21 > V0:133.15 (Pct:0.04%, Cons:1/1)):True (LTP: 171.35) | SOLD CE 25600@68.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:21,993 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:42:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,034 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:43:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,070 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:44:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,105 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25449.75 | CE: slope(V1:124.38 > V0:124.47 (Pct:-0.08%, Cons:0/1)):False (LTP: 87.25) | PE: slope(V1:133.35 > V0:133.32 (Pct:0.02%, Cons:1/1)):True (LTP: 170.00) | SOLD CE 25600@68.85 | SOLD PE 25450@0.00
+2026-02-26 16:54:22,111 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:45:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,158 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:46:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,223 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:47:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,255 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25451.40 | CE: slope(V1:124.20 > V0:124.24 (Pct:-0.03%, Cons:0/1)):False (LTP: 87.25) | PE: slope(V1:133.50 > V0:133.47 (Pct:0.02%, Cons:1/1)):True (LTP: 172.50) | SOLD CE 25600@69.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:22,260 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:48:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,297 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:49:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,331 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:50:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,362 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25446.90 | CE: slope(V1:124.07 > V0:124.11 (Pct:-0.03%, Cons:0/1)):False (LTP: 85.90) | PE: slope(V1:133.62 > V0:133.58 (Pct:0.03%, Cons:1/1)):True (LTP: 175.80) | SOLD CE 25600@67.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:22,367 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:51:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,411 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:52:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,454 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:53:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,485 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25430.75 | CE: slope(V1:123.97 > V0:124.01 (Pct:-0.03%, Cons:0/1)):False (LTP: 83.55) | PE: slope(V1:133.69 > V0:133.66 (Pct:0.02%, Cons:1/1)):True (LTP: 179.85) | SOLD CE 25600@66.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:22,490 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:54:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,877 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:55:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:22,920 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 1200s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:22,920 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:23,418 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25416.45 | CE: slope(V1:146.36 > V0:146.48 (Pct:-0.08%, Cons:0/1)):False (LTP: 102.30) | PE: slope(V1:116.21 > V0:116.08 (Pct:0.12%, Cons:1/1)):True (LTP: 157.60) | SOLD CE 25600@64.80 | SOLD PE 25450@0.00
+2026-02-26 16:54:23,424 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:56:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:23,460 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25422.15 | CE: slope(V1:146.18 > V0:146.36 (Pct:-0.12%, Cons:0/1)):False (LTP: 99.90) | PE: slope(V1:116.38 > V0:116.21 (Pct:0.14%, Cons:1/1)):True (LTP: 161.40) | SOLD CE 25600@63.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:23,475 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:57:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:23,520 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:58:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:23,559 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 12:59:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:23,592 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25428.15 | CE: slope(V1:145.85 > V0:145.97 (Pct:-0.09%, Cons:0/1)):False (LTP: 99.80) | PE: slope(V1:116.75 > V0:116.60 (Pct:0.12%, Cons:1/1)):True (LTP: 162.10) | SOLD CE 25600@63.30 | SOLD PE 25450@0.00
+2026-02-26 16:54:23,597 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:00:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:23,633 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:01:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,037 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:02:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,077 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 420s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:24,078 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:24,521 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25438.00 | CE: slope(V1:123.33 > V0:123.39 (Pct:-0.04%, Cons:0/1)):False (LTP: 80.40) | PE: slope(V1:134.44 > V0:134.40 (Pct:0.02%, Cons:1/1)):True (LTP: 182.60) | SOLD CE 25600@63.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:24,526 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:03:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,562 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:04:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,601 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:05:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,631 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25446.95 | CE: slope(V1:123.07 > V0:123.15 (Pct:-0.06%, Cons:0/1)):False (LTP: 84.50) | PE: slope(V1:134.57 > V0:134.54 (Pct:0.02%, Cons:1/1)):True (LTP: 173.30) | SOLD CE 25600@66.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:24,637 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:06:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,673 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:07:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,708 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:08:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,738 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25436.60 | CE: slope(V1:122.88 > V0:122.92 (Pct:-0.03%, Cons:0/1)):False (LTP: 80.90) | PE: slope(V1:134.71 > V0:134.68 (Pct:0.03%, Cons:1/1)):True (LTP: 181.85) | SOLD CE 25600@63.80 | SOLD PE 25450@0.00
+2026-02-26 16:54:24,745 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:09:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:24,780 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:10:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:25,165 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:11:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:25,207 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 540s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:25,207 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:25,700 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25435.05 | CE: slope(V1:144.57 > V0:144.68 (Pct:-0.07%, Cons:0/1)):False (LTP: 99.80) | PE: slope(V1:117.53 > V0:117.44 (Pct:0.07%, Cons:1/1)):True (LTP: 158.00) | SOLD CE 25600@62.60 | SOLD PE 25450@0.00
+2026-02-26 16:54:25,708 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:12:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,129 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:13:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,529 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:14:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,559 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25429.90 | CE: slope(V1:144.39 > V0:144.46 (Pct:-0.05%, Cons:0/1)):False (LTP: 98.10) | PE: slope(V1:117.64 > V0:117.60 (Pct:0.03%, Cons:1/1)):True (LTP: 158.75) | SOLD CE 25600@61.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:26,565 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:15:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,600 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:16:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,636 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:17:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,668 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25419.20 | CE: slope(V1:143.77 > V0:144.07 (Pct:-0.21%, Cons:0/1)):False (LTP: 92.15) | PE: slope(V1:118.12 > V0:117.83 (Pct:0.25%, Cons:1/1)):True (LTP: 171.50) | SOLD CE 25600@57.95 | SOLD PE 25450@0.00
+2026-02-26 16:54:26,674 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:18:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,708 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:19:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,744 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:20:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,774 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25417.00 | CE: slope(V1:143.38 > V0:143.46 (Pct:-0.06%, Cons:0/1)):False (LTP: 94.90) | PE: slope(V1:118.37 > V0:118.32 (Pct:0.05%, Cons:1/1)):True (LTP: 165.90) | SOLD CE 25600@59.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:26,779 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:21:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,813 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:22:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,849 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:23:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,881 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25438.05 | CE: slope(V1:142.99 > V0:143.14 (Pct:-0.11%, Cons:0/1)):False (LTP: 99.25) | PE: slope(V1:118.62 > V0:118.55 (Pct:0.06%, Cons:1/1)):True (LTP: 158.25) | SOLD CE 25600@62.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:26,886 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:24:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:26,922 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:25:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:27,332 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:26:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:27,376 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 900s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:27,376 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:27,817 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25450.25 | CE: slope(V1:121.58 > V0:121.67 (Pct:-0.08%, Cons:0/1)):False (LTP: 82.75) | PE: slope(V1:135.92 > V0:135.86 (Pct:0.04%, Cons:1/1)):True (LTP: 180.00) | SOLD CE 25600@65.10 | SOLD PE 25450@0.00
+2026-02-26 16:54:27,823 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:27:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:28,227 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:28:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:28,271 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 120s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:28,271 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:28,804 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25438.00 | CE: slope(V1:142.24 > V0:142.42 (Pct:-0.13%, Cons:0/1)):False (LTP: 100.70) | PE: slope(V1:118.96 > V0:118.86 (Pct:0.08%, Cons:1/1)):True (LTP: 159.40) | SOLD CE 25600@63.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:28,810 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:29:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:28,844 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25440.05 | CE: slope(V1:142.12 > V0:142.24 (Pct:-0.09%, Cons:0/1)):False (LTP: 101.20) | PE: slope(V1:119.06 > V0:118.96 (Pct:0.08%, Cons:1/1)):True (LTP: 160.25) | SOLD CE 25600@63.85 | SOLD PE 25450@0.00
+2026-02-26 16:54:28,850 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:30:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:29,288 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:31:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:29,323 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 180s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:29,324 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:29,817 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25443.10 | CE: slope(V1:121.21 > V0:121.26 (Pct:-0.05%, Cons:0/1)):False (LTP: 83.50) | PE: slope(V1:136.25 > V0:136.19 (Pct:0.04%, Cons:1/1)):True (LTP: 183.75) | SOLD CE 25600@66.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:29,823 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:32:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:30,241 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25435.80 | CE: slope(V1:121.14 > V0:121.21 (Pct:-0.06%, Cons:0/1)):False (LTP: 82.25) | PE: slope(V1:136.30 > V0:136.25 (Pct:0.03%, Cons:1/1)):True (LTP: 185.80) | SOLD CE 25600@65.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:30,248 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:33:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:30,286 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 120s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:30,286 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:30,780 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25432.85 | CE: slope(V1:141.77 > V0:141.85 (Pct:-0.05%, Cons:0/1)):False (LTP: 101.40) | PE: slope(V1:119.27 > V0:119.22 (Pct:0.04%, Cons:1/1)):True (LTP: 159.55) | SOLD CE 25600@63.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:30,785 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:34:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:30,820 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:35:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:30,853 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25442.70 | CE: slope(V1:141.69 > V0:141.73 (Pct:-0.03%, Cons:0/1)):False (LTP: 102.10) | PE: slope(V1:119.35 > V0:119.31 (Pct:0.03%, Cons:1/1)):True (LTP: 158.35) | SOLD CE 25600@64.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:30,858 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:36:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:31,335 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:37:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:31,754 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:38:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:31,785 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25439.35 | CE: slope(V1:141.48 > V0:141.55 (Pct:-0.05%, Cons:0/1)):False (LTP: 102.15) | PE: slope(V1:119.47 > V0:119.42 (Pct:0.04%, Cons:1/1)):True (LTP: 157.00) | SOLD CE 25600@64.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:31,791 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:39:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:31,824 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:40:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:32,241 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:41:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:32,287 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 480s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:32,287 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:32,737 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25441.70 | CE: slope(V1:120.78 > V0:120.82 (Pct:-0.04%, Cons:0/1)):False (LTP: 84.40) | PE: slope(V1:136.62 > V0:136.59 (Pct:0.02%, Cons:1/1)):True (LTP: 178.70) | SOLD CE 25600@66.70 | SOLD PE 25450@0.00
+2026-02-26 16:54:32,744 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:42:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:32,781 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:43:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:32,816 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:44:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:32,848 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25443.55 | CE: slope(V1:120.70 > V0:120.72 (Pct:-0.01%, Cons:0/1)):False (LTP: 83.10) | PE: slope(V1:136.67 > V0:136.66 (Pct:0.01%, Cons:1/1)):True (LTP: 180.70) | SOLD CE 25600@65.60 | SOLD PE 25450@0.00
+2026-02-26 16:54:32,853 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:45:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:33,267 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:46:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:33,305 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 300s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:33,305 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:33,794 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25419.50 | CE: slope(V1:140.99 > V0:141.09 (Pct:-0.07%, Cons:0/1)):False (LTP: 101.15) | PE: slope(V1:119.76 > V0:119.69 (Pct:0.06%, Cons:1/1)):True (LTP: 158.75) | SOLD CE 25600@64.10 | SOLD PE 25450@0.00
+2026-02-26 16:54:33,799 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:47:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:33,829 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25425.60 | CE: slope(V1:140.86 > V0:140.99 (Pct:-0.09%, Cons:0/1)):False (LTP: 100.40) | PE: slope(V1:119.89 > V0:119.76 (Pct:0.11%, Cons:1/1)):True (LTP: 161.35) | SOLD CE 25600@63.80 | SOLD PE 25450@0.00
+2026-02-26 16:54:33,834 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:48:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:33,870 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:49:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:33,904 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:50:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:33,936 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25416.90 | CE: slope(V1:140.60 > V0:140.71 (Pct:-0.08%, Cons:0/1)):False (LTP: 99.15) | PE: slope(V1:120.10 > V0:120.01 (Pct:0.08%, Cons:1/1)):True (LTP: 162.20) | SOLD CE 25600@63.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:33,941 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:51:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:34,373 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:52:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:34,409 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 360s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:34,412 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:34,922 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25440.70 | CE: slope(V1:120.25 > V0:120.31 (Pct:-0.05%, Cons:0/1)):False (LTP: 80.45) | PE: slope(V1:137.13 > V0:137.07 (Pct:0.05%, Cons:1/1)):True (LTP: 180.85) | SOLD CE 25600@63.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:34,927 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:53:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:34,956 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25441.95 | CE: slope(V1:120.17 > V0:120.25 (Pct:-0.07%, Cons:0/1)):False (LTP: 80.05) | PE: slope(V1:137.18 > V0:137.13 (Pct:0.04%, Cons:1/1)):True (LTP: 178.15) | SOLD CE 25600@63.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:34,962 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:54:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:34,998 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:55:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:35,034 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:56:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:35,066 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25442.05 | CE: slope(V1:120.01 > V0:120.06 (Pct:-0.04%, Cons:0/1)):False (LTP: 79.95) | PE: slope(V1:137.34 > V0:137.30 (Pct:0.04%, Cons:1/1)):True (LTP: 178.25) | SOLD CE 25600@62.85 | SOLD PE 25450@0.00
+2026-02-26 16:54:35,072 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:57:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:35,522 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:58:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:35,545 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 360s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:35,546 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:36,099 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25440.80 | CE: slope(V1:139.74 > V0:139.86 (Pct:-0.08%, Cons:0/1)):False (LTP: 97.10) | PE: slope(V1:120.58 > V0:120.53 (Pct:0.04%, Cons:1/1)):True (LTP: 155.15) | SOLD CE 25600@60.55 | SOLD PE 25450@0.00
+2026-02-26 16:54:36,107 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 13:59:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,138 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25442.95 | CE: slope(V1:139.64 > V0:139.74 (Pct:-0.07%, Cons:0/1)):False (LTP: 99.00) | PE: slope(V1:120.65 > V0:120.58 (Pct:0.05%, Cons:1/1)):True (LTP: 152.50) | SOLD CE 25600@61.70 | SOLD PE 25450@0.00
+2026-02-26 16:54:36,143 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:00:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,185 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:01:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,220 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:02:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,252 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25425.95 | CE: slope(V1:139.45 > V0:139.52 (Pct:-0.05%, Cons:0/1)):False (LTP: 96.65) | PE: slope(V1:120.75 > V0:120.71 (Pct:0.03%, Cons:1/1)):True (LTP: 157.25) | SOLD CE 25600@60.50 | SOLD PE 25450@0.00
+2026-02-26 16:54:36,257 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:03:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,296 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:04:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,336 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:05:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,368 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25414.10 | CE: slope(V1:139.10 > V0:139.19 (Pct:-0.06%, Cons:0/1)):False (LTP: 91.85) | PE: slope(V1:121.01 > V0:120.93 (Pct:0.07%, Cons:1/1)):True (LTP: 167.05) | SOLD CE 25600@57.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:36,373 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:06:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,407 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:07:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,443 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:08:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,867 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25439.95 | CE: slope(V1:138.70 > V0:138.87 (Pct:-0.13%, Cons:0/1)):False (LTP: 97.75) | PE: slope(V1:121.37 > V0:121.25 (Pct:0.10%, Cons:1/1)):True (LTP: 154.85) | SOLD CE 25600@61.15 | SOLD PE 25450@0.00
+2026-02-26 16:54:36,877 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:09:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:36,918 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 660s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:36,919 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:37,434 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25449.10 | CE: slope(V1:119.22 > V0:119.31 (Pct:-0.07%, Cons:0/1)):False (LTP: 79.25) | PE: slope(V1:138.39 > V0:138.32 (Pct:0.05%, Cons:1/1)):True (LTP: 178.55) | SOLD CE 25600@62.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:37,439 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:10:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,477 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:11:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,507 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25455.45 | CE: slope(V1:119.05 > V0:119.12 (Pct:-0.05%, Cons:0/1)):False (LTP: 80.25) | PE: slope(V1:138.47 > V0:138.43 (Pct:0.03%, Cons:1/1)):True (LTP: 177.60) | SOLD CE 25600@63.25 | SOLD PE 25450@0.00
+2026-02-26 16:54:37,512 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:12:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,549 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:13:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,583 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:14:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,615 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25461.55 | CE: slope(V1:118.77 > V0:118.83 (Pct:-0.05%, Cons:0/1)):False (LTP: 83.80) | PE: slope(V1:138.60 > V0:138.58 (Pct:0.02%, Cons:1/1)):True (LTP: 170.45) | SOLD CE 25600@65.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:37,621 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:15:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,657 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:16:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,691 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:17:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,723 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25445.25 | CE: slope(V1:118.48 > V0:118.56 (Pct:-0.07%, Cons:0/1)):False (LTP: 83.90) | PE: slope(V1:138.75 > V0:138.69 (Pct:0.04%, Cons:1/1)):True (LTP: 169.55) | SOLD CE 25600@66.30 | SOLD PE 25450@0.00
+2026-02-26 16:54:37,728 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:18:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,763 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:19:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:37,799 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:20:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:38,224 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25434.80 | CE: slope(V1:118.35 > V0:118.39 (Pct:-0.03%, Cons:0/1)):False (LTP: 81.00) | PE: slope(V1:138.83 > V0:138.81 (Pct:0.02%, Cons:1/1)):True (LTP: 173.85) | SOLD CE 25600@63.75 | SOLD PE 25450@0.00
+2026-02-26 16:54:38,234 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:21:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:38,270 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 720s since last switch): 25550 -> 25500 (User: backtest_user)
+2026-02-26 16:54:38,270 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25500
+2026-02-26 16:54:38,859 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 (SWITCHED) | Index: 25433.95 | CE: slope(V1:137.01 > V0:137.17 (Pct:-0.11%, Cons:0/1)):False (LTP: 96.85) | PE: slope(V1:121.96 > V0:121.89 (Pct:0.06%, Cons:1/1)):True (LTP: 150.55) | SOLD CE 25600@60.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:38,864 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:22:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:38,899 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:23:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:38,929 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25430.15 | CE: slope(V1:136.88 > V0:136.94 (Pct:-0.04%, Cons:0/1)):False (LTP: 97.70) | PE: slope(V1:122.05 > V0:122.01 (Pct:0.03%, Cons:1/1)):True (LTP: 149.90) | SOLD CE 25600@61.05 | SOLD PE 25450@0.00
+2026-02-26 16:54:38,934 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:24:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:39,383 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:25:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:39,798 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:26:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:39,830 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25500 | Index: 25428.45 | CE: slope(V1:136.60 > V0:136.67 (Pct:-0.05%, Cons:0/1)):False (LTP: 96.30) | PE: slope(V1:122.20 > V0:122.16 (Pct:0.03%, Cons:1/1)):True (LTP: 148.65) | SOLD CE 25600@60.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:39,835 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:27:00+05:30 | ATM: 25550 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:40,284 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:28:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:40,315 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 420s since last switch): 25500 -> 25550 (User: backtest_user)
+2026-02-26 16:54:40,316 - UpstoxApp - INFO - V2: Switching monitoring strike 25500 -> 25550
+2026-02-26 16:54:40,844 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 (SWITCHED) | Index: 25442.15 | CE: slope(V1:117.88 > V0:117.96 (Pct:-0.07%, Cons:0/1)):False (LTP: 78.70) | PE: slope(V1:139.34 > V0:139.22 (Pct:0.08%, Cons:1/1)):True (LTP: 171.70) | SOLD CE 25600@61.75 | SOLD PE 25450@0.00
+2026-02-26 16:54:40,850 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:29:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:40,880 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25441.70 | CE: slope(V1:117.83 > V0:117.88 (Pct:-0.04%, Cons:0/1)):False (LTP: 78.25) | PE: slope(V1:139.38 > V0:139.34 (Pct:0.03%, Cons:1/1)):True (LTP: 172.70) | SOLD CE 25600@61.60 | SOLD PE 25450@0.00
+2026-02-26 16:54:40,885 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:30:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:40,920 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:31:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:40,957 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:32:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:40,994 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25448.55 | CE: slope(V1:117.67 > V0:117.74 (Pct:-0.06%, Cons:0/1)):False (LTP: 80.90) | PE: slope(V1:139.56 > V0:139.46 (Pct:0.07%, Cons:1/1)):True (LTP: 167.40) | SOLD CE 25600@63.60 | SOLD PE 25450@0.00
+2026-02-26 16:54:41,000 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:33:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,038 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:34:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,076 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:35:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,108 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25466.85 | CE: slope(V1:117.33 > V0:117.49 (Pct:-0.14%, Cons:0/1)):False (LTP: 85.35) | PE: slope(V1:139.75 > V0:139.71 (Pct:0.03%, Cons:1/1)):True (LTP: 157.30) | SOLD CE 25600@67.05 | SOLD PE 25450@0.00
+2026-02-26 16:54:41,113 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:36:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,161 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:37:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,231 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:38:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,266 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25550 | Index: 25471.25 | CE: slope(V1:117.02 > V0:117.11 (Pct:-0.07%, Cons:0/1)):False (LTP: 88.85) | PE: slope(V1:139.81 > V0:139.79 (Pct:0.01%, Cons:1/1)):True (LTP: 148.45) | SOLD CE 25600@70.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:41,271 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:39:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,310 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:40:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,654 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:41:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:41,674 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 780s since last switch): 25550 -> 25600 (User: backtest_user)
+2026-02-26 16:54:41,674 - UpstoxApp - INFO - V2: Switching monitoring strike 25550 -> 25600
+2026-02-26 16:54:42,252 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 (SWITCHED) | Index: 25494.55 | CE: slope(V1:92.88 > V0:93.00 (Pct:-0.12%, Cons:0/1)):False (LTP: 77.20) | PE: slope(V1:168.72 > V0:168.72 (Pct:-0.00%, Cons:0/1)):False (LTP: 165.25) | SOLD CE 25600@77.20 | SOLD PE 25450@0.00
+2026-02-26 16:54:42,257 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:42:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,294 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:43:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,328 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:44:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,357 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25505.60 | CE: slope(V1:92.64 > V0:92.73 (Pct:-0.10%, Cons:0/1)):False (LTP: 84.85) | PE: slope(V1:168.64 > V0:168.70 (Pct:-0.04%, Cons:0/1)):False (LTP: 150.70) | SOLD CE 25600@84.85 | SOLD PE 25450@0.00
+2026-02-26 16:54:42,362 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:45:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,395 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:46:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,430 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:47:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,461 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25510.85 | CE: slope(V1:92.41 > V0:92.46 (Pct:-0.06%, Cons:0/1)):False (LTP: 80.65) | PE: slope(V1:168.48 > V0:168.51 (Pct:-0.02%, Cons:0/1)):False (LTP: 157.75) | SOLD CE 25600@80.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:42,466 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:48:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,501 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:49:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,537 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:50:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,567 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25497.95 | CE: slope(V1:92.29 > V0:92.33 (Pct:-0.05%, Cons:0/1)):False (LTP: 78.10) | PE: slope(V1:168.40 > V0:168.42 (Pct:-0.02%, Cons:0/1)):False (LTP: 163.00) | SOLD CE 25600@78.10 | SOLD PE 25450@0.00
+2026-02-26 16:54:42,572 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:51:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,608 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:52:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,641 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:53:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,670 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25504.55 | CE: slope(V1:92.07 > V0:92.13 (Pct:-0.06%, Cons:0/1)):False (LTP: 80.00) | PE: slope(V1:168.35 > V0:168.37 (Pct:-0.01%, Cons:0/1)):False (LTP: 157.90) | SOLD CE 25600@80.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:42,677 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:54:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,710 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:55:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,742 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:56:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,770 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25503.05 | CE: slope(V1:91.97 > V0:92.01 (Pct:-0.04%, Cons:0/1)):False (LTP: 74.30) | PE: slope(V1:168.31 > V0:168.32 (Pct:-0.00%, Cons:0/1)):False (LTP: 168.10) | SOLD CE 25600@74.30 | SOLD PE 25450@0.00
+2026-02-26 16:54:42,775 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:57:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,809 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:58:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,844 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 14:59:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,873 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25522.15 | CE: slope(V1:91.88 > V0:91.90 (Pct:-0.03%, Cons:0/1)):False (LTP: 77.90) | PE: slope(V1:168.29 > V0:168.30 (Pct:-0.00%, Cons:0/1)):False (LTP: 163.40) | SOLD CE 25600@77.90 | SOLD PE 25450@0.00
+2026-02-26 16:54:42,877 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:00:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:42,912 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:01:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,361 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:02:00+05:30 | ATM: 25600 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,730 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25495.65 | CE: slope(V1:91.67 > V0:91.76 (Pct:-0.10%, Cons:0/1)):False (LTP: 72.55) | PE: slope(V1:168.23 > V0:168.24 (Pct:-0.00%, Cons:0/1)):False (LTP: 170.90) | SOLD CE 25600@72.55 | SOLD PE 25450@0.00
+2026-02-26 16:54:43,736 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:03:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,769 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:04:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,804 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:05:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,833 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25503.75 | CE: slope(V1:91.53 > V0:91.55 (Pct:-0.03%, Cons:0/1)):False (LTP: 78.40) | PE: slope(V1:168.22 > V0:168.23 (Pct:-0.00%, Cons:0/1)):False (LTP: 161.85) | SOLD CE 25600@78.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:43,840 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:06:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,875 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:07:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,909 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:08:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,937 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25503.30 | CE: slope(V1:91.43 > V0:91.47 (Pct:-0.04%, Cons:0/1)):False (LTP: 80.70) | PE: slope(V1:168.20 > V0:168.21 (Pct:-0.00%, Cons:0/1)):False (LTP: 163.15) | SOLD CE 25600@80.70 | SOLD PE 25450@0.00
+2026-02-26 16:54:43,944 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:09:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:43,977 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:10:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,009 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:11:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,040 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25500.50 | CE: slope(V1:91.35 > V0:91.38 (Pct:-0.03%, Cons:0/1)):False (LTP: 77.65) | PE: slope(V1:168.19 > V0:168.19 (Pct:-0.00%, Cons:0/1)):False (LTP: 168.10) | SOLD CE 25600@77.65 | SOLD PE 25450@0.00
+2026-02-26 16:54:44,045 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:12:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,078 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:13:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,112 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:14:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,142 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25500.45 | CE: slope(V1:91.25 > V0:91.30 (Pct:-0.06%, Cons:0/1)):False (LTP: 77.40) | PE: slope(V1:168.20 > V0:168.19 (Pct:0.01%, Cons:1/1)):True (LTP: 169.05) | SOLD CE 25600@77.40 | SOLD PE 25450@0.00
+2026-02-26 16:54:44,147 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:15:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,179 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:16:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,215 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:17:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,246 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25491.15 | CE: slope(V1:91.14 > V0:91.17 (Pct:-0.03%, Cons:0/1)):False (LTP: 80.00) | PE: slope(V1:168.20 > V0:168.20 (Pct:-0.00%, Cons:0/1)):False (LTP: 168.40) | SOLD CE 25600@80.00 | SOLD PE 25450@0.00
+2026-02-26 16:54:44,250 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:18:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,285 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:19:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,317 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:20:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,348 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25496.90 | CE: slope(V1:91.08 > V0:91.09 (Pct:-0.02%, Cons:0/1)):False (LTP: 82.15) | PE: slope(V1:168.19 > V0:168.19 (Pct:-0.00%, Cons:0/1)):False (LTP: 165.60) | SOLD CE 25600@82.15 | SOLD PE 25450@0.00
+2026-02-26 16:54:44,353 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:21:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,386 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:22:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,419 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:23:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,450 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25498.60 | CE: slope(V1:91.01 > V0:91.03 (Pct:-0.02%, Cons:0/1)):False (LTP: 81.05) | PE: slope(V1:168.18 > V0:168.18 (Pct:-0.00%, Cons:0/1)):False (LTP: 165.20) | SOLD CE 25600@81.05 | SOLD PE 25450@0.00
+2026-02-26 16:54:44,456 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:24:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,488 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:25:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,524 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:26:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,554 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25492.90 | CE: slope(V1:90.94 > V0:90.97 (Pct:-0.04%, Cons:0/1)):False (LTP: 75.75) | PE: slope(V1:168.17 > V0:168.17 (Pct:-0.00%, Cons:0/1)):False (LTP: 167.30) | SOLD CE 25600@75.75 | SOLD PE 25450@0.00
+2026-02-26 16:54:44,559 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:27:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,594 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:28:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,627 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:29:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,653 - UpstoxApp - INFO - V2 MONITORING Status [backtest_user]: Strike 25600 | Index: 25493.30 | CE: slope(V1:90.83 > V0:90.88 (Pct:-0.05%, Cons:0/1)):False (LTP: 79.30) | PE: slope(V1:168.16 > V0:168.17 (Pct:-0.01%, Cons:0/1)):False (LTP: 162.80) | SOLD CE 25600@79.30 | SOLD PE 25450@0.00
+2026-02-26 16:54:44,657 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-02-26 15:30:00+05:30 | ATM: 25650 | Status: IDLE | P&L: 0.00
+2026-02-26 16:54:44,658 - UpstoxApp - INFO - [SellManager][PAPER BUY NRML CLOSE] CE: 25600.0 qty=650 | PE: 25450.0 qty=650
+2026-02-26 16:54:44,658 - UpstoxApp - INFO - [SellManager] Short strangle closed: CE 25600.0 | PE 25450.0
+2026-02-26 16:54:44,660 - UpstoxApp - INFO - [SellManager] SELL STRANGLE PnL at close: CE 25600 entry=101.10 exit=79.30 PnL/share=+21.80 | PE 25450 entry=118.00 exit=89.75 PnL/share=+28.25 | Combined PnL/share=+50.05
+2026-02-26 16:54:44,660 - UpstoxApp - INFO - --- Detailed Backtest Trade Log for 2026-02-26 ---
+2026-02-26 16:54:44,660 - UpstoxApp - INFO - Symbol: NIFTY2630225350PE, Side: PUT, Entry Time: 2026-02-26 09:17:00+05:30, Entry Price: 59.75, Exit Time: 2026-02-26 09:42:00+05:30, Exit Price: 59.75, PnL: 0.00
+2026-02-26 16:54:44,660 - UpstoxApp - INFO - Symbol: NIFTY2630225700CE, Side: CALL, Entry Time: 2026-02-26 09:38:00+05:30, Entry Price: 69.75, Exit Time: 2026-02-26 11:09:00+05:30, Exit Price: 69.75, PnL: 0.00
+2026-02-26 16:54:44,660 - UpstoxApp - INFO - Symbol: NIFTY2630225600CE, Side: CALL, Entry Time: 2026-02-26 09:15:00+05:30, Entry Price: 101.10, Exit Time: 2026-02-26 15:30:00+05:30, Exit Price: 79.30, PnL: 21.80
+2026-02-26 16:54:44,661 - UpstoxApp - INFO - Symbol: NIFTY2630225450PE, Side: PUT, Entry Time: 2026-02-26 09:15:00+05:30, Entry Price: 118.00, Exit Time: 2026-02-26 15:30:00+05:30, Exit Price: 89.75, PnL: 28.25
+2026-02-26 16:54:44,661 - UpstoxApp - INFO - --- End of Detailed Log for 2026-02-26 ---
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - 
+--- Backtest Summary Report for NIFTY ---
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Total Trades: 4
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Total PnL: 50.05
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Win Rate: 50.00%
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Average Profit per Winning Trade: 25.02
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Average Loss per Losing Trade: 0.00
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - --- End of Report ---
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Backtest loop finished.
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Shutting down all application components...
+2026-02-26 16:54:44,664 - UpstoxApp - INFO - Closing all data provider client sessions...

@@ -1,0 +1,28 @@
+2026-03-16 09:15:00,146 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-03-16 09:15:01,636 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-03-16 09:15:02,311 - UpstoxApp - INFO - Starting Zerodha authentication for section: Zerodha_Client_Live_1...
+2026-03-16 09:15:02,317 - UpstoxApp - INFO - Validating Zerodha access token for Zerodha_Client_Live_1...
+2026-03-16 09:15:02,378 - UpstoxApp - WARNING - Zerodha access token validation failed for Zerodha_Client_Live_1: Incorrect `api_key` or `access_token`.. Proceeding to login.
+2026-03-16 09:15:02,383 - UpstoxApp - INFO - No valid Zerodha access token for Zerodha_Client_Live_1. Starting login flow.
+2026-03-16 09:15:02,383 - UpstoxApp - CRITICAL - AUTHENTICATION FAILED for Zerodha account [Zerodha_Client_Live_1]. Reason: EOF when reading a line
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_buying_March/brokers/zerodha_client.py", line 19, in __init__
+    self.kite = handle_zerodha_login(credentials_section, self.config_manager)
+  File "/home/ec2-user/environment/Option_buying_March/utils/auth_manager_zerodha.py", line 41, in handle_zerodha_login
+    request_token = input("Enter the request_token from the redirect URL: ")
+EOFError: EOF when reading a line
+2026-03-16 09:15:02,385 - UpstoxApp - INFO - Shutting down all application components...
+2026-03-16 09:15:02,385 - UpstoxApp - INFO - Closing all data provider client sessions...
+2026-03-16 09:15:03,766 - UpstoxApp - INFO - Starting Zerodha authentication for section: Zerodha_Client_Live_1...
+2026-03-16 09:15:03,770 - UpstoxApp - INFO - Validating Zerodha access token for Zerodha_Client_Live_1...
+2026-03-16 09:15:03,840 - UpstoxApp - WARNING - Zerodha access token validation failed for Zerodha_Client_Live_1: Incorrect `api_key` or `access_token`.. Proceeding to login.
+2026-03-16 09:15:03,846 - UpstoxApp - INFO - No valid Zerodha access token for Zerodha_Client_Live_1. Starting login flow.
+2026-03-16 09:15:03,847 - UpstoxApp - CRITICAL - AUTHENTICATION FAILED for Zerodha account [Zerodha_Client_Live_1]. Reason: EOF when reading a line
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_buying_March/brokers/zerodha_client.py", line 19, in __init__
+    self.kite = handle_zerodha_login(credentials_section, self.config_manager)
+  File "/home/ec2-user/environment/Option_buying_March/utils/auth_manager_zerodha.py", line 41, in handle_zerodha_login
+    request_token = input("Enter the request_token from the redirect URL: ")
+EOFError: EOF when reading a line
+2026-03-16 09:15:03,848 - UpstoxApp - INFO - Shutting down all application components...
+2026-03-16 09:15:03,848 - UpstoxApp - INFO - Closing all data provider client sessions...

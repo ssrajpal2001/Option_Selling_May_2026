@@ -1,0 +1,1653 @@
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Initializing API Client Manager for data providers...
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_1]
+2026-03-05 10:36:58,558 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_1]
+2026-03-05 10:36:58,605 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_1].
+2026-03-05 10:36:58,608 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_2]
+2026-03-05 10:36:58,610 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_2]
+2026-03-05 10:36:58,661 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_2].
+2026-03-05 10:36:58,663 - UpstoxApp - INFO - API client pool initialized with 2 clients. Active client is set.
+2026-03-05 10:36:58,667 - UpstoxApp - ERROR - Failed to connect to database: [Errno 111] Connect call failed ('127.0.0.1', 5432)
+2026-03-05 10:36:58,667 - UpstoxApp - WARNING - DATABASE WARNING: Connection failed ([Errno 111] Connect call failed ('127.0.0.1', 5432)). Proceeding in legacy mode (INI only).
+2026-03-05 10:36:58,667 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-03-05 10:36:58,667 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-03-05 10:36:58,854 - UpstoxApp - INFO - Starting Zerodha authentication for section: Zerodha_Client_Live_1...
+2026-03-05 10:36:58,858 - UpstoxApp - INFO - Validating Zerodha access token for Zerodha_Client_Live_1...
+2026-03-05 10:36:58,896 - UpstoxApp - INFO - Zerodha access token for Zerodha_Client_Live_1 is valid.
+2026-03-05 10:36:58,916 - UpstoxApp - INFO - Zerodha authentication successful for user: SA5770 [Zerodha_Client_Live_1].
+2026-03-05 10:36:58,919 - UpstoxApp - INFO - Successfully loaded broker: Zerodha_Client_Live_1 (Client: Zerodha)
+2026-03-05 10:36:58,919 - UpstoxApp - INFO - Live mode enabled. Selected data provider: upstox
+2026-03-05 10:36:58,925 - UpstoxApp - INFO - WebSocket listener task created.
+2026-03-05 10:36:58,925 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-05 10:36:58,945 - UpstoxApp - INFO - Initialized data recorder: /home/ec2-user/environment/Option_buying_March/market_data_NIFTY_2026-03-05.csv
+2026-03-05 10:36:58,945 - UpstoxApp - INFO - Message handler handle_message registered.
+2026-03-05 10:36:58,945 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-03-05 10:36:58,957 - UpstoxApp - INFO - WebSocketManager starting connection loop.
+2026-03-05 10:36:58,957 - UpstoxApp - INFO - Attempting to authorize and connect... (Attempt 1)
+2026-03-05 10:36:58,957 - UpstoxApp - INFO - Authorizing WebSocket feed...
+2026-03-05 10:36:58,957 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize...
+2026-03-05 10:36:58,957 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-03-05 10:36:59,000 - UpstoxApp - INFO - WebSocket authorization successful.
+2026-03-05 10:36:59,011 - UpstoxApp - INFO - Opening WebSocket connection to wss://wsfeeder-api.upstox.com/market-data-feeder/v...
+2026-03-05 10:36:59,035 - UpstoxApp - INFO - WebSocket connection established successfully.
+2026-03-05 10:36:59,038 - UpstoxApp - WARNING - V2 WebSocket: No existing instruments to re-subscribe to.
+2026-03-05 10:36:59,038 - UpstoxApp - INFO - WebSocket message processor started.
+2026-03-05 10:36:59,038 - UpstoxApp - INFO - First market data packet processed from queue. Data feed is active.
+2026-03-05 10:36:59,322 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-03-05) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-03-05 10:36:59,348 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-03-05
+2026-03-05 10:36:59,370 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-03-05 10:36:59,371 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-03-05 (key=NSE_INDEX|Nifty 50)
+2026-03-05 10:36:59,371 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-03-05 10:36:59,371 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-10 (day=Tuesday)
+2026-03-05 10:36:59,380 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-10 (CURRENT_WEEK), trade=2026-03-10 (WEEKLY)
+2026-03-05 10:36:59,383 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-05 10:36:59,385 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-05 10:36:59,387 - UpstoxApp - INFO - UserSession Initialized: User=default_user@local | Instrument=NIFTY
+2026-03-05 10:36:59,389 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-03-05 10:36:59,390 - UpstoxApp - INFO - Trading bot is now live.
+2026-03-05 10:36:59,390 - UpstoxApp - INFO - [EngineManager] NIFTY sell start time 09:20:00 reached — building candidates.
+2026-03-05 10:36:59,390 - UpstoxApp - ERROR - [SellManager] ATM or strike interval unavailable — cannot build candidates.
+2026-03-05 10:36:59,392 - UpstoxApp - INFO - V2: First FUTURES price received for NIFTY: 24691.8
+2026-03-05 10:36:59,392 - UpstoxApp - INFO - V2: First INDEX price (Spot) received for NIFTY: 24594.55
+2026-03-05 10:36:59,393 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.0s | Worker: ALIVE | Exchange: 2026-03-05 10:36:59.390000+05:30 | Sessions: Global:Idle
+2026-03-05 10:37:04,391 - UpstoxApp - INFO - [EngineManager] NIFTY sell start time 09:20:00 reached — building candidates.
+2026-03-05 10:37:04,391 - UpstoxApp - INFO - [SellManager] Fetching option chain: NSE_INDEX|Nifty 50 expiry=2026-03-10 INDEX=24596.05 → ATM=24600
+2026-03-05 10:37:04,436 - UpstoxApp - INFO - [SellManager] CE candidates (ATM=24600, ITM=2): [(24600, 'NSE_FO|45513'), (24550, 'NSE_FO|45509'), (24500, 'NSE_FO|45499')]
+2026-03-05 10:37:04,436 - UpstoxApp - INFO - [SellManager] PE candidates (ATM=24600, ITM=2): [(24600, 'NSE_FO|45514'), (24650, 'NSE_FO|45516'), (24700, 'NSE_FO|45518')]
+2026-03-05 10:37:04,436 - UpstoxApp - INFO - [SellManager] Subscribed 6 candidate keys to WS.
+2026-03-05 10:37:04,436 - UpstoxApp - INFO - [SellManager] Pre-subscribed 6 BUY execution keys at ATM=24600 ± 50 (expiry=2026-03-10)
+2026-03-05 10:37:04,436 - UpstoxApp - INFO - [SellManager] Ready — CE searching=True PE searching=True
+2026-03-05 10:37:09,221 - UpstoxApp - INFO - [SellManager] vwap_slope sticky latched for PE
+2026-03-05 10:37:09,271 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.4126% side=PE ENTRY count=1/3
+2026-03-05 10:37:09,515 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.4126% side=PE ENTRY count=2/3
+2026-03-05 10:37:09,716 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.4126% side=PE ENTRY count=3/3
+2026-03-05 10:37:09,755 - UpstoxApp - INFO - [SellManager] Sold PE 24700 order_id=260305190619476 LTP=272.95
+2026-03-05 10:37:09,759 - UpstoxApp - INFO - [SellManager] ✔ PE leg entered: strike=24700 LTP=272.95 key=NSE_FO|45518 product=NRML
+2026-03-05 10:37:11,648 - UpstoxApp - INFO - V2: [CE] [BUY] Status [24650]: slope(V1:214.42 > V0:209.99 (Pct:2.11%, Cons:1/1))=True | LTP: 206.15 | Formula: vwap_slope
+2026-03-05 10:37:11,651 - UpstoxApp - INFO - [Task 140385801558320] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-03-05 10:37:11,652 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24601.00) → 24600 [Futures/signal strike was: 24650]
+2026-03-05 10:37:12,686 - UpstoxApp - WARNING - V2: Price discovery still failing for NSE_FO|45513. Final wait...
+2026-03-05 10:37:15,715 - UpstoxApp - WARNING - V2: Still no price for 24600. Forcing wait for first market tick...
+2026-03-05 10:37:20,751 - UpstoxApp - WARNING - V2: NO PRICE DISCOVERED for STRIKE 24600 after initial checks. Falling back to signal price.
+2026-03-05 10:37:20,756 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 10:37:20,756 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 10:37:20,783 - UpstoxApp - INFO - Successfully placed BUY (CALL) order for NIFTY2631024600CE with order_id: 260305190620648
+2026-03-05 10:37:20,784 - UpstoxApp - INFO - [NIFTY] Trade confirmed for CALL on NIFTY2631024600CE (User: None)
+2026-03-05 10:37:20,908 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45513. Monitoring strike 24650 for crossover exit.
+2026-03-05 10:37:20,920 - UpstoxApp - INFO - V2: [PE] [BUY] Status [24650]: slope(V1:260.17 > V0:259.86 (Pct:0.12%, Cons:1/1))=True | LTP: 251.30 | Formula: vwap_slope
+2026-03-05 10:37:20,922 - UpstoxApp - INFO - [Task 140385801558320] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-03-05 10:37:20,923 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24600.45) → 24600 [Futures/signal strike was: 24650]
+2026-03-05 10:37:20,923 - UpstoxApp - INFO - V2: PUT entry triggered, but NOT closing CALL because 'reversal' is not in its exit formula.
+2026-03-05 10:37:21,957 - UpstoxApp - WARNING - V2: Price discovery still failing for NSE_FO|45514. Final wait...
+2026-03-05 10:37:24,984 - UpstoxApp - WARNING - V2: Still no price for 24600. Forcing wait for first market tick...
+2026-03-05 10:37:29,981 - UpstoxApp - INFO - V2: Updated entry price and RESET peak_price for CALL from first real tick: 232.90
+2026-03-05 10:37:30,027 - UpstoxApp - WARNING - V2: NO PRICE DISCOVERED for STRIKE 24600 after initial checks. Falling back to signal price.
+2026-03-05 10:37:30,028 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 10:37:30,028 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 10:37:30,057 - UpstoxApp - INFO - Successfully placed BUY (PUT) order for NIFTY2631024600PE with order_id: 260305190621442
+2026-03-05 10:37:30,057 - UpstoxApp - INFO - [NIFTY] Trade confirmed for PUT on NIFTY2631024600PE (User: None)
+2026-03-05 10:37:30,239 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45514. Monitoring strike 24650 for crossover exit.
+2026-03-05 10:37:30,263 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 (SWITCHED) | Index: 24597.30 | CE: (In Trade) [V:214.4, VP:0.0] (LTP: 204.55) | PE: (In Trade) [V:260.2, VP:0.0] (LTP: 251.10) | SOLD PE 24700@275.10
+2026-03-05 10:37:30,522 - UpstoxApp - INFO - [SellManager] vwap_slope sticky latched for CE
+2026-03-05 10:37:30,531 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.4230% side=CE ENTRY count=0/3
+2026-03-05 10:37:30,631 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:30,739 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:30,939 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:31,141 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:31,343 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:31,556 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:31,746 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:31,947 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:32,149 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:32,350 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:32,563 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:32,754 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:32,955 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:33,158 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:33,359 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:33,571 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:33,761 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:33,962 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:34,163 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:34,363 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:34,577 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:34,765 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:34,967 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:35,168 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:35,371 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1112% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:35,611 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:35,772 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:35,972 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:36,174 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:36,375 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:36,586 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:36,777 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:36,982 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3799% side=CE ENTRY count=0/3
+2026-03-05 10:37:37,188 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:37,384 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:37,597 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:37,787 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:37,987 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:38,189 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:38,389 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:38,616 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:38,790 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:38,991 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:39,192 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:39,393 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:39,604 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:39,794 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:39,895 - UpstoxApp - INFO - V2: Updated entry price and RESET peak_price for PUT from first real tick: 227.10
+2026-03-05 10:37:39,995 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:40,196 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:40,397 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:40,676 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:40,799 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:41,001 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:41,201 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:41,402 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:41,616 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:41,805 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:42,005 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:42,206 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:42,411 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:42,618 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:42,810 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:43,010 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:43,210 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:43,411 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:43,646 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:43,812 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:44,014 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3833% side=CE ENTRY count=0/3
+2026-03-05 10:37:44,220 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3903% side=CE ENTRY count=0/3
+2026-03-05 10:37:44,416 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3903% side=CE ENTRY count=0/3
+2026-03-05 10:37:44,628 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3903% side=CE ENTRY count=0/3
+2026-03-05 10:37:44,818 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3903% side=CE ENTRY count=0/3
+2026-03-05 10:37:45,020 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3903% side=CE ENTRY count=0/3
+2026-03-05 10:37:45,220 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1154% PE=-0.3903% side=CE ENTRY count=0/3
+2026-03-05 10:37:45,426 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3903% side=CE ENTRY count=0/3
+2026-03-05 10:37:45,651 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:45,823 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:46,025 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:46,225 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:46,426 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:46,638 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:46,828 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:47,029 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3937% side=CE ENTRY count=0/3
+2026-03-05 10:37:47,233 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:47,431 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:47,659 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:47,834 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:48,036 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:48,237 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:48,438 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:48,682 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:48,841 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.3972% side=CE ENTRY count=0/3
+2026-03-05 10:37:49,046 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:49,243 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:49,444 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:49,655 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:49,846 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:50,047 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:50,250 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:50,451 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4041% side=CE ENTRY count=0/3
+2026-03-05 10:37:50,672 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:50,854 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:51,055 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:51,256 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:51,457 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:51,670 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:51,860 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:52,061 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:52,262 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4076% side=CE ENTRY count=0/3
+2026-03-05 10:37:52,466 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:52,690 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:52,864 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:53,065 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:53,267 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:53,468 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:53,712 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:53,871 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1196% PE=-0.4110% side=CE ENTRY count=0/3
+2026-03-05 10:37:54,080 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:54,272 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:54,473 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:54,684 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:54,875 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:55,075 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:55,276 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:55,477 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4180% side=CE ENTRY count=0/3
+2026-03-05 10:37:55,692 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:55,879 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:56,080 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:56,281 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:56,482 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:56,694 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:56,885 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:57,086 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4214% side=CE ENTRY count=0/3
+2026-03-05 10:37:57,292 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:57,488 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:57,718 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:57,890 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:58,091 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:58,293 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:58,494 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:58,705 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4249% side=CE ENTRY count=0/3
+2026-03-05 10:37:58,899 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4283% side=CE ENTRY count=0/3
+2026-03-05 10:37:59,096 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4283% side=CE ENTRY count=0/3
+2026-03-05 10:37:59,302 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4283% side=CE ENTRY count=0/3
+2026-03-05 10:37:59,498 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4283% side=CE ENTRY count=0/3
+2026-03-05 10:37:59,718 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4283% side=CE ENTRY count=0/3
+2026-03-05 10:37:59,901 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.1237% PE=-0.4283% side=CE ENTRY count=0/3
+2026-03-05 10:38:00,111 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:00,216 - UpstoxApp - INFO - Initialized ATP recorder: /home/ec2-user/environment/Option_buying_March/atp_data_NIFTY_2026-03-05.csv
+2026-03-05 10:38:00,304 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:00,505 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:00,706 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 370.50 | LTP: 238.60 | VWAP: 214.36 (Peak: 214.39) | Initializing...
+2026-03-05 10:38:00,706 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: -380.25 | LTP: 221.25 | VWAP: 260.09 (Peak: 260.17) | Initializing...
+2026-03-05 10:38:00,707 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:00,906 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:01,108 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:01,309 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:01,509 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:01,711 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:01,911 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:02,112 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:38:02,313 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:02,514 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:02,715 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:02,915 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:03,115 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:03,317 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:03,517 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:03,718 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:38:03,918 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:04,118 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:04,319 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:04,521 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:04,723 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:04,923 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:05,124 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:05,324 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:05,526 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:38:05,753 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 214.35 vs Peak 214.35 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 10:38:05,756 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 260.07 vs Peak 260.07 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 10:38:05,758 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:05,929 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:06,130 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:06,331 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:06,531 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:06,732 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:06,933 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:07,134 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:07,334 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:07,535 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:07,736 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:07,937 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:08,138 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:08,339 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:08,540 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:08,750 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:08,942 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:09,142 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:09,343 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:09,544 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:09,745 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:09,946 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:10,147 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:10,347 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:10,548 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:38:10,759 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:10,951 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:11,152 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:11,353 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:11,554 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:11,755 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:11,955 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:12,157 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:38:12,358 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:12,558 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:12,760 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:12,960 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:13,161 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:13,361 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:13,562 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:13,771 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:13,962 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:14,165 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:14,364 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:14,565 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:14,766 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:14,966 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:15,167 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:15,367 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:15,569 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:15,772 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:15,972 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:16,173 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:16,374 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:16,576 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:16,777 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:16,977 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:38:17,178 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:17,379 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:17,579 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:17,780 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:17,980 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:18,181 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:18,382 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:18,583 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:18,793 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:18,984 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:19,185 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:19,386 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:19,587 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:19,790 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:19,990 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:20,191 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:20,391 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:38:20,592 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:20,794 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:20,994 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:21,194 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:21,395 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:21,596 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:21,797 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:21,998 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:22,199 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:22,401 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:22,602 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:22,803 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:23,003 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:23,204 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:23,404 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:23,605 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0243% side=CE ENTRY count=0/3
+2026-03-05 10:38:23,815 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:24,006 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:24,208 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:24,408 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:24,609 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:24,811 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:25,012 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:25,213 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:25,414 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:25,615 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:25,817 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:26,016 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:26,219 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:26,420 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:26,621 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:26,823 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:27,022 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:27,223 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:27,423 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:27,625 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:27,825 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:28,027 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:28,227 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:28,428 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:28,629 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:28,847 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:38:29,031 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:29,231 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:29,431 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:29,632 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:29,833 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:30,035 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:30,236 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:30,437 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:30,638 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:30,839 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:31,040 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:31,241 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:31,442 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:31,643 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:31,843 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:32,044 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:32,244 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:38:32,445 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:32,646 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:32,848 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:33,048 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:33,249 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:33,450 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:33,650 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:33,863 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:34,053 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:34,255 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:34,455 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:34,656 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:34,857 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:35,057 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:35,259 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:35,461 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:38:35,662 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:35,863 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:36,063 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:36,264 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:36,464 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:36,665 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:36,875 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:37,067 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:37,267 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:37,468 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:37,669 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:37,870 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:38,070 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:38,271 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:38,472 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:38,673 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:38,874 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:39,076 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:39,276 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:39,477 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:39,678 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:39,878 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:40,078 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:40,280 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:38:40,480 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:40,681 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:40,883 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:41,083 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:41,284 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:41,485 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:41,685 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:41,887 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:42,087 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:42,288 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:42,489 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:42,690 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:42,892 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:43,091 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:43,293 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:43,493 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:43,695 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0417% side=CE ENTRY count=0/3
+2026-03-05 10:38:43,905 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:44,097 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:44,298 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:44,499 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:44,700 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:44,902 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:45,103 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:45,303 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:45,504 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0487% side=CE ENTRY count=0/3
+2026-03-05 10:38:45,705 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:45,915 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:46,107 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:46,307 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:46,508 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:46,709 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:46,928 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:47,111 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:47,313 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:47,514 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:47,715 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:47,916 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:48,117 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:48,318 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:48,518 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:48,719 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:48,921 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:49,121 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:49,322 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:49,523 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:49,723 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:49,924 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:50,125 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:50,327 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:50,528 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:50,728 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:50,939 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:51,130 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:51,331 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:51,531 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:51,732 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:51,934 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:52,135 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:52,336 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:52,537 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:52,738 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:52,939 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:53,140 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:53,340 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:53,541 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:53,742 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:38:53,943 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:54,143 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:54,344 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:54,545 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:54,745 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:54,946 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:55,146 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:55,347 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:55,548 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:55,748 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:55,949 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:56,151 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:56,354 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:56,554 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:56,755 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:56,964 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:57,157 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:57,357 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:57,557 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:57,758 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:57,960 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:58,160 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:58,360 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:58,562 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:58,763 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:58,964 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:59,165 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:59,366 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:59,567 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:59,767 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:38:59,969 - UpstoxApp - INFO - [SellManager] cross_slope CE=-0.0042% PE=-0.0556% side=CE ENTRY count=0/3
+2026-03-05 10:39:00,171 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:00,371 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:00,571 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:00,773 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:00,973 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 | Index: 24615.85 | CE: (In Trade) [V:214.3, VP:214.4] (LTP: 211.60) | PE: (In Trade) [V:260.0, VP:260.2] (LTP: 242.75) | SOLD PE 24700@266.45
+2026-03-05 10:39:00,973 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 490.75 | LTP: 240.45 | VWAP: 214.31 (Peak: 214.39) | V1:214.35 < Ref:214.35 (Pct:0.00%)
+2026-03-05 10:39:00,973 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: -422.50 | LTP: 220.60 | VWAP: 259.96 (Peak: 260.17) | V1:260.07 < Ref:260.07 (Pct:0.00%)
+2026-03-05 10:39:00,974 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:01,173 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:01,374 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:01,575 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:01,777 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:01,979 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:39:02,180 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:02,381 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:02,582 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:02,782 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:02,984 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:03,186 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:03,386 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:03,587 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:39:03,788 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:03,989 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:04,189 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:04,389 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:04,590 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:04,790 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:04,992 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:05,192 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:05,393 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:05,594 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:05,795 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:06,007 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 214.30 vs Peak 214.35 | Drawdown: -0.02% | Threshold: -0.03% → HOLD
+2026-03-05 10:39:06,010 - UpstoxApp - INFO - V2 MGMT: [PUT] EXIT CRITERIA MET (VWAP Slope): Current VWAP 259.93 vs Ref 260.07 (Drawdown: -0.05%, Threshold: -0.03%)
+2026-03-05 10:39:06,011 - UpstoxApp - INFO - V2 MGMT: [PUT] EXIT TRIGGERED: Structural Exit: VWAP Slope < (CLOSE)
+2026-03-05 10:39:06,011 - UpstoxApp - INFO - V2: Requesting EXIT for PUT at 219.45. Reason: Structural Exit: VWAP Slope < (CLOSE)
+2026-03-05 10:39:06,011 - UpstoxApp - INFO - V2 MGMT: [PUT] Exit (Structural Exit: VWAP Slope < (CLOSE)). Preserving 9:15 Breach flags for potential re-entry.
+2026-03-05 10:39:06,011 - UpstoxApp - INFO - V2 MGMT: [PUT] Re-entry cooldown active until 10:40:05 (60s)
+2026-03-05 10:39:06,015 - UpstoxApp - INFO - Executing exit on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 10:39:06,043 - UpstoxApp - INFO - Successfully placed SELL order to close PUT position for NIFTY2631024600PE with order_id: 260305190630608
+2026-03-05 10:39:06,044 - UpstoxApp - INFO - Closed PUT trade. Final PNL: -497.25, Total Session PNL: -497.25
+2026-03-05 10:39:06,044 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:06,197 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:06,397 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:06,598 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:06,799 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:07,000 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 59s remaining (until 10:40:05)
+2026-03-05 10:39:07,003 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 59s remaining (until 10:40:05)
+2026-03-05 10:39:07,004 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:39:07,201 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:07,402 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:07,603 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:07,804 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:08,005 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 58s remaining (until 10:40:05)
+2026-03-05 10:39:08,007 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 58s remaining (until 10:40:05)
+2026-03-05 10:39:08,008 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:08,205 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:08,406 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:08,607 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:08,807 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:09,008 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 57s remaining (until 10:40:05)
+2026-03-05 10:39:09,011 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 57s remaining (until 10:40:05)
+2026-03-05 10:39:09,013 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:09,209 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:09,409 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:09,610 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:09,811 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:10,012 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 56s remaining (until 10:40:05)
+2026-03-05 10:39:10,016 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 56s remaining (until 10:40:05)
+2026-03-05 10:39:10,016 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:10,213 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:39:10,415 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:10,615 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:10,817 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:11,017 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 55s remaining (until 10:40:05)
+2026-03-05 10:39:11,020 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 55s remaining (until 10:40:05)
+2026-03-05 10:39:11,024 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:11,218 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:11,420 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:11,620 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:11,821 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:12,023 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 54s remaining (until 10:40:05)
+2026-03-05 10:39:12,025 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 54s remaining (until 10:40:05)
+2026-03-05 10:39:12,025 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:39:12,223 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:12,425 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:12,626 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:12,827 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:13,028 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 53s remaining (until 10:40:05)
+2026-03-05 10:39:13,028 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 53s remaining (until 10:40:05)
+2026-03-05 10:39:13,028 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:13,228 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:13,429 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:13,629 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:13,830 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:14,031 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 52s remaining (until 10:40:05)
+2026-03-05 10:39:14,033 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 52s remaining (until 10:40:05)
+2026-03-05 10:39:14,035 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:14,231 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:14,432 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:14,632 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:14,834 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:15,036 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 51s remaining (until 10:40:05)
+2026-03-05 10:39:15,039 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 51s remaining (until 10:40:05)
+2026-03-05 10:39:15,041 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:15,236 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:15,438 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:15,638 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:15,839 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:16,040 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 50s remaining (until 10:40:05)
+2026-03-05 10:39:16,044 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 50s remaining (until 10:40:05)
+2026-03-05 10:39:16,045 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:16,241 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:16,442 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:16,643 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:16,844 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:17,044 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 49s remaining (until 10:40:05)
+2026-03-05 10:39:17,045 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 49s remaining (until 10:40:05)
+2026-03-05 10:39:17,045 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:17,245 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:17,446 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:17,647 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:17,847 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:18,048 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 48s remaining (until 10:40:05)
+2026-03-05 10:39:18,051 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 48s remaining (until 10:40:05)
+2026-03-05 10:39:18,053 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:18,249 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:18,449 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:18,649 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:39:18,850 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:19,051 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 47s remaining (until 10:40:05)
+2026-03-05 10:39:19,055 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 47s remaining (until 10:40:05)
+2026-03-05 10:39:19,055 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:19,251 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:19,454 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:19,654 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:19,856 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:20,056 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 46s remaining (until 10:40:05)
+2026-03-05 10:39:20,057 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 46s remaining (until 10:40:05)
+2026-03-05 10:39:20,057 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:20,257 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:20,458 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:20,659 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:20,859 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:21,061 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 45s remaining (until 10:40:05)
+2026-03-05 10:39:21,066 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 45s remaining (until 10:40:05)
+2026-03-05 10:39:21,066 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:21,263 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:21,463 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:21,664 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:21,865 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:22,066 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 44s remaining (until 10:40:05)
+2026-03-05 10:39:22,070 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 44s remaining (until 10:40:05)
+2026-03-05 10:39:22,071 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:22,266 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:22,467 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:22,669 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:22,871 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:23,072 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 43s remaining (until 10:40:05)
+2026-03-05 10:39:23,074 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 43s remaining (until 10:40:05)
+2026-03-05 10:39:23,076 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:23,272 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:23,473 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:23,673 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:23,875 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:24,076 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 42s remaining (until 10:40:05)
+2026-03-05 10:39:24,079 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 42s remaining (until 10:40:05)
+2026-03-05 10:39:24,082 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:24,277 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:24,478 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:24,680 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:24,880 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:25,081 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 41s remaining (until 10:40:05)
+2026-03-05 10:39:25,081 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 41s remaining (until 10:40:05)
+2026-03-05 10:39:25,081 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:39:25,282 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:25,483 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:25,685 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:25,886 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:26,087 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 40s remaining (until 10:40:05)
+2026-03-05 10:39:26,088 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 40s remaining (until 10:40:05)
+2026-03-05 10:39:26,088 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:26,288 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:26,489 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:26,690 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:26,891 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0278% side=CE ENTRY count=0/3
+2026-03-05 10:39:27,093 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 39s remaining (until 10:40:05)
+2026-03-05 10:39:27,093 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 39s remaining (until 10:40:05)
+2026-03-05 10:39:27,093 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:27,293 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:27,493 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:27,695 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:27,895 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:28,095 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 38s remaining (until 10:40:05)
+2026-03-05 10:39:28,099 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 38s remaining (until 10:40:05)
+2026-03-05 10:39:28,099 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:28,296 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:28,496 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:28,697 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:28,897 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:29,098 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 37s remaining (until 10:40:05)
+2026-03-05 10:39:29,100 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 37s remaining (until 10:40:05)
+2026-03-05 10:39:29,103 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:29,299 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:29,500 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:29,702 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:29,902 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:30,103 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 36s remaining (until 10:40:05)
+2026-03-05 10:39:30,106 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 36s remaining (until 10:40:05)
+2026-03-05 10:39:30,108 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:30,304 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:39:30,505 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:30,706 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:30,906 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:31,107 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 35s remaining (until 10:40:05)
+2026-03-05 10:39:31,109 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 35s remaining (until 10:40:05)
+2026-03-05 10:39:31,110 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:31,307 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:31,507 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:31,709 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:31,909 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:32,110 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 34s remaining (until 10:40:05)
+2026-03-05 10:39:32,112 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 34s remaining (until 10:40:05)
+2026-03-05 10:39:32,113 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:39:32,310 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:32,511 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:32,712 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:32,912 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:33,113 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 33s remaining (until 10:40:05)
+2026-03-05 10:39:33,115 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 33s remaining (until 10:40:05)
+2026-03-05 10:39:33,117 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:33,314 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:33,515 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:33,715 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:39:33,915 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:39:34,115 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 32s remaining (until 10:40:05)
+2026-03-05 10:39:34,120 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 32s remaining (until 10:40:05)
+2026-03-05 10:39:34,120 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:39:34,316 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:39:34,519 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:39:34,720 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:39:34,921 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:39:35,122 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 31s remaining (until 10:40:05)
+2026-03-05 10:39:35,124 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 31s remaining (until 10:40:05)
+2026-03-05 10:39:35,127 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:39:35,323 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:35,523 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:35,724 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:35,925 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:36,127 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 30s remaining (until 10:40:05)
+2026-03-05 10:39:36,131 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 30s remaining (until 10:40:05)
+2026-03-05 10:39:36,131 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:36,327 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:36,529 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:36,729 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:36,930 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:37,130 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 29s remaining (until 10:40:05)
+2026-03-05 10:39:37,130 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 29s remaining (until 10:40:05)
+2026-03-05 10:39:37,131 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:37,331 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:37,531 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:37,732 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:37,934 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:38,136 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 28s remaining (until 10:40:05)
+2026-03-05 10:39:38,139 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 28s remaining (until 10:40:05)
+2026-03-05 10:39:38,140 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:38,337 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:38,538 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:38,739 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:38,940 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:39,140 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 27s remaining (until 10:40:05)
+2026-03-05 10:39:39,143 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 27s remaining (until 10:40:05)
+2026-03-05 10:39:39,144 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:39,341 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:39,543 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:39,743 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:39,944 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:40,144 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 26s remaining (until 10:40:05)
+2026-03-05 10:39:40,149 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 26s remaining (until 10:40:05)
+2026-03-05 10:39:40,149 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:40,345 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:40,546 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:40,747 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:40,947 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:41,148 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 25s remaining (until 10:40:05)
+2026-03-05 10:39:41,151 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 25s remaining (until 10:40:05)
+2026-03-05 10:39:41,151 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:41,349 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:41,550 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:41,750 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:41,952 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:39:42,152 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 24s remaining (until 10:40:05)
+2026-03-05 10:39:42,153 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 24s remaining (until 10:40:05)
+2026-03-05 10:39:42,153 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:42,353 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:42,554 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:42,754 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:42,955 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:43,155 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 23s remaining (until 10:40:05)
+2026-03-05 10:39:43,159 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 23s remaining (until 10:40:05)
+2026-03-05 10:39:43,159 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:43,357 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:43,558 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:43,759 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:43,959 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:44,161 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 22s remaining (until 10:40:05)
+2026-03-05 10:39:44,161 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 22s remaining (until 10:40:05)
+2026-03-05 10:39:44,162 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:44,365 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:44,566 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:44,767 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:44,969 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:45,171 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 21s remaining (until 10:40:05)
+2026-03-05 10:39:45,171 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 21s remaining (until 10:40:05)
+2026-03-05 10:39:45,172 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:39:46,578 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0626% side=CE ENTRY count=0/3
+2026-03-05 10:39:46,778 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0626% side=CE ENTRY count=0/3
+2026-03-05 10:39:46,979 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0626% side=CE ENTRY count=0/3
+2026-03-05 10:39:47,180 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 19s remaining (until 10:40:05)
+2026-03-05 10:39:47,180 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 19s remaining (until 10:40:05)
+2026-03-05 10:39:47,180 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:47,380 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:47,581 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:47,781 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:47,981 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:48,182 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 18s remaining (until 10:40:05)
+2026-03-05 10:39:48,185 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 18s remaining (until 10:40:05)
+2026-03-05 10:39:48,185 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:48,383 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:48,584 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:48,785 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:48,986 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:49,188 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 17s remaining (until 10:40:05)
+2026-03-05 10:39:49,191 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 17s remaining (until 10:40:05)
+2026-03-05 10:39:49,192 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:49,389 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:49,590 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:49,791 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:49,991 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:50,192 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 16s remaining (until 10:40:05)
+2026-03-05 10:39:50,193 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 16s remaining (until 10:40:05)
+2026-03-05 10:39:50,193 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0696% side=CE ENTRY count=0/3
+2026-03-05 10:39:50,393 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:50,594 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:50,796 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:50,996 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:51,196 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 15s remaining (until 10:40:05)
+2026-03-05 10:39:51,196 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 15s remaining (until 10:40:05)
+2026-03-05 10:39:51,197 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:51,396 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:51,597 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:51,798 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:51,999 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:39:52,199 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 14s remaining (until 10:40:05)
+2026-03-05 10:39:52,200 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 14s remaining (until 10:40:05)
+2026-03-05 10:39:52,200 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:52,400 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:52,602 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:52,804 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:53,005 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:53,206 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 13s remaining (until 10:40:05)
+2026-03-05 10:39:53,209 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 13s remaining (until 10:40:05)
+2026-03-05 10:39:53,211 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:53,407 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:53,608 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:53,808 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:54,008 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:54,210 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 12s remaining (until 10:40:05)
+2026-03-05 10:39:54,214 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 12s remaining (until 10:40:05)
+2026-03-05 10:39:54,214 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:54,411 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:54,613 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:54,815 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:55,016 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:55,217 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 11s remaining (until 10:40:05)
+2026-03-05 10:39:55,217 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 11s remaining (until 10:40:05)
+2026-03-05 10:39:55,217 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:39:55,417 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:55,618 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:55,819 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:56,020 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:56,221 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 10s remaining (until 10:40:05)
+2026-03-05 10:39:56,222 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 10s remaining (until 10:40:05)
+2026-03-05 10:39:56,222 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:56,422 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0042% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:56,622 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:56,823 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:57,024 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0800% side=CE ENTRY count=0/3
+2026-03-05 10:39:57,226 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 9s remaining (until 10:40:05)
+2026-03-05 10:39:57,226 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 9s remaining (until 10:40:05)
+2026-03-05 10:39:57,227 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:57,426 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:57,627 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:57,828 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:58,028 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:58,229 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 8s remaining (until 10:40:05)
+2026-03-05 10:39:58,232 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 8s remaining (until 10:40:05)
+2026-03-05 10:39:58,232 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:58,430 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:58,630 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0835% side=CE ENTRY count=0/3
+2026-03-05 10:39:58,831 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0870% side=CE ENTRY count=0/3
+2026-03-05 10:39:59,032 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0870% side=CE ENTRY count=0/3
+2026-03-05 10:39:59,234 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 7s remaining (until 10:40:05)
+2026-03-05 10:39:59,237 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 7s remaining (until 10:40:05)
+2026-03-05 10:39:59,238 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0870% side=CE ENTRY count=0/3
+2026-03-05 10:39:59,436 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0870% side=CE ENTRY count=0/3
+2026-03-05 10:39:59,636 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0870% side=CE ENTRY count=0/3
+2026-03-05 10:39:59,838 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0870% side=CE ENTRY count=0/3
+2026-03-05 10:40:00,039 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0083% PE=-0.0870% side=CE ENTRY count=0/3
+2026-03-05 10:40:00,244 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 6s remaining (until 10:40:05)
+2026-03-05 10:40:00,244 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 6s remaining (until 10:40:05)
+2026-03-05 10:40:00,244 - UpstoxApp - INFO - V2 MGMT: [CALL] PnL: 682.50 | LTP: 243.40 | VWAP: 214.29 (Peak: 214.39) | V1:214.30 < Ref:214.35 (Pct:-0.02%)
+2026-03-05 10:40:00,248 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:40:00,442 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:00,643 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:00,844 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:01,046 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:01,246 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 5s remaining (until 10:40:05)
+2026-03-05 10:40:01,249 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 5s remaining (until 10:40:05)
+2026-03-05 10:40:01,249 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:01,447 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:01,648 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:01,849 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:02,050 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:02,251 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 4s remaining (until 10:40:05)
+2026-03-05 10:40:02,251 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 4s remaining (until 10:40:05)
+2026-03-05 10:40:02,251 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:02,452 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:02,654 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:02,855 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:03,056 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:03,256 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 3s remaining (until 10:40:05)
+2026-03-05 10:40:03,259 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 3s remaining (until 10:40:05)
+2026-03-05 10:40:03,261 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:03,456 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:03,657 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:40:03,858 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:04,058 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:04,260 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 2s remaining (until 10:40:05)
+2026-03-05 10:40:04,264 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 2s remaining (until 10:40:05)
+2026-03-05 10:40:04,266 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:04,461 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:04,662 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:04,863 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:05,064 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:05,265 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 1s remaining (until 10:40:05)
+2026-03-05 10:40:05,267 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 1s remaining (until 10:40:05)
+2026-03-05 10:40:05,290 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT CRITERIA MET (VWAP Slope): Current VWAP 214.29 vs Ref 214.35 (Drawdown: -0.03%, Threshold: -0.03%)
+2026-03-05 10:40:05,295 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT TRIGGERED: Structural Exit: VWAP Slope < (CLOSE)
+2026-03-05 10:40:05,295 - UpstoxApp - INFO - V2: Requesting EXIT for CALL at 244.60. Reason: Structural Exit: VWAP Slope < (CLOSE)
+2026-03-05 10:40:05,295 - UpstoxApp - INFO - V2 MGMT: [CALL] Exit (Structural Exit: VWAP Slope < (CLOSE)). Preserving 9:15 Breach flags for potential re-entry.
+2026-03-05 10:40:05,295 - UpstoxApp - INFO - V2 MGMT: [CALL] Re-entry cooldown active until 10:41:05 (60s)
+2026-03-05 10:40:05,295 - UpstoxApp - INFO - Executing exit on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 10:40:05,322 - UpstoxApp - INFO - Successfully placed SELL order to close CALL position for NIFTY2631024600CE with order_id: 260305190635912
+2026-03-05 10:40:05,322 - UpstoxApp - INFO - Closed CALL trade. Final PNL: 760.50, Total Session PNL: 263.25
+2026-03-05 10:40:05,324 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:40:05,465 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:05,666 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:05,867 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:06,067 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:06,269 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 59s remaining (until 10:41:05)
+2026-03-05 10:40:06,271 - UpstoxApp - INFO - V2: [PE] [BUY] Status [24650]: slope(V1:259.71 > V0:259.96 (Pct:-0.10%, Cons:0/1))=False | LTP: 235.50 | Formula: vwap_slope
+2026-03-05 10:40:06,273 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 59s remaining (until 10:41:05)
+2026-03-05 10:40:06,273 - UpstoxApp - INFO - V2: [PE] [SELL] Status [24650]: slope(V1:259.71 < V0:259.77 (Pct:-0.02%, Cons:1/1))=False | LTP: 235.50 | Formula: vwap_slope AND cross_slope_comparison
+2026-03-05 10:40:06,273 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:06,470 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:06,671 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:06,872 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:07,073 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0104% side=CE ENTRY count=0/3
+2026-03-05 10:40:07,273 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 58s remaining (until 10:41:05)
+2026-03-05 10:40:07,273 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 58s remaining (until 10:41:05)
+2026-03-05 10:40:07,274 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:07,474 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:07,675 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:07,876 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:08,077 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:08,278 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 57s remaining (until 10:41:05)
+2026-03-05 10:40:08,282 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 57s remaining (until 10:41:05)
+2026-03-05 10:40:08,282 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:08,478 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:08,679 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:08,879 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:09,080 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:09,280 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 56s remaining (until 10:41:05)
+2026-03-05 10:40:09,280 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 56s remaining (until 10:41:05)
+2026-03-05 10:40:09,281 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:09,481 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:09,682 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:09,882 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:10,084 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:10,284 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 55s remaining (until 10:41:05)
+2026-03-05 10:40:10,287 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 55s remaining (until 10:41:05)
+2026-03-05 10:40:10,290 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:40:10,485 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:10,685 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:10,886 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:11,087 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:11,288 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 54s remaining (until 10:41:05)
+2026-03-05 10:40:11,288 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 54s remaining (until 10:41:05)
+2026-03-05 10:40:11,289 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:11,489 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:11,689 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:11,890 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:12,090 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0174% side=CE ENTRY count=0/3
+2026-03-05 10:40:12,291 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 53s remaining (until 10:41:05)
+2026-03-05 10:40:12,292 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 53s remaining (until 10:41:05)
+2026-03-05 10:40:12,292 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:12,492 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:12,694 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:12,895 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:13,096 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:13,297 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 52s remaining (until 10:41:05)
+2026-03-05 10:40:13,302 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 52s remaining (until 10:41:05)
+2026-03-05 10:40:13,302 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:13,497 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:13,697 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:40:13,898 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:14,098 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:14,300 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 51s remaining (until 10:41:05)
+2026-03-05 10:40:14,302 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 51s remaining (until 10:41:05)
+2026-03-05 10:40:14,305 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:14,500 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:14,701 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:14,902 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:15,103 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:15,305 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 50s remaining (until 10:41:05)
+2026-03-05 10:40:15,307 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 50s remaining (until 10:41:05)
+2026-03-05 10:40:15,310 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:15,506 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:15,706 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:15,907 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:16,109 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:16,310 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 10:41:05)
+2026-03-05 10:40:16,310 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 10:41:05)
+2026-03-05 10:40:16,310 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:16,511 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:16,712 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:16,912 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:17,114 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0313% side=CE ENTRY count=0/3
+2026-03-05 10:40:17,315 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 48s remaining (until 10:41:05)
+2026-03-05 10:40:17,315 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 48s remaining (until 10:41:05)
+2026-03-05 10:40:17,315 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:17,516 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:17,716 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:17,917 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:18,118 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:18,320 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 47s remaining (until 10:41:05)
+2026-03-05 10:40:18,322 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 47s remaining (until 10:41:05)
+2026-03-05 10:40:18,324 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:18,521 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:18,722 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0348% side=CE ENTRY count=0/3
+2026-03-05 10:40:18,923 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:19,124 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:19,326 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 10:41:05)
+2026-03-05 10:40:19,329 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 10:41:05)
+2026-03-05 10:40:19,333 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:19,526 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:19,727 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:19,928 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:20,129 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:20,329 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 45s remaining (until 10:41:05)
+2026-03-05 10:40:20,332 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 45s remaining (until 10:41:05)
+2026-03-05 10:40:20,336 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:20,530 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:20,730 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:20,931 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:21,132 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:21,333 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 44s remaining (until 10:41:05)
+2026-03-05 10:40:21,336 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 44s remaining (until 10:41:05)
+2026-03-05 10:40:21,336 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:21,534 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:21,735 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:21,936 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:22,137 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:40:22,339 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 43s remaining (until 10:41:05)
+2026-03-05 10:40:22,339 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 43s remaining (until 10:41:05)
+2026-03-05 10:40:22,339 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:22,540 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:22,741 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:22,942 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:23,143 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:23,344 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 42s remaining (until 10:41:05)
+2026-03-05 10:40:23,347 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 42s remaining (until 10:41:05)
+2026-03-05 10:40:23,349 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:23,545 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:23,747 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:40:23,948 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:24,149 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:24,350 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 41s remaining (until 10:41:05)
+2026-03-05 10:40:24,352 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 41s remaining (until 10:41:05)
+2026-03-05 10:40:24,355 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:24,550 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:24,751 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:24,951 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:25,152 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:25,354 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 40s remaining (until 10:41:05)
+2026-03-05 10:40:25,357 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 40s remaining (until 10:41:05)
+2026-03-05 10:40:25,360 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:40:25,554 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:25,755 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:25,956 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:26,157 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:26,357 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 39s remaining (until 10:41:05)
+2026-03-05 10:40:26,361 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 39s remaining (until 10:41:05)
+2026-03-05 10:40:26,362 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:26,557 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:26,759 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:26,960 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:27,161 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:27,363 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 38s remaining (until 10:41:05)
+2026-03-05 10:40:27,363 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 38s remaining (until 10:41:05)
+2026-03-05 10:40:27,363 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:27,563 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:27,764 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:27,964 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:28,165 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:28,367 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 37s remaining (until 10:41:05)
+2026-03-05 10:40:28,369 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 37s remaining (until 10:41:05)
+2026-03-05 10:40:28,371 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:28,567 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:28,769 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:28,971 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:29,171 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:29,372 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 36s remaining (until 10:41:05)
+2026-03-05 10:40:29,375 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 36s remaining (until 10:41:05)
+2026-03-05 10:40:29,376 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:29,573 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:29,775 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:29,976 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:30,177 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:30,377 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 35s remaining (until 10:41:05)
+2026-03-05 10:40:30,380 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 35s remaining (until 10:41:05)
+2026-03-05 10:40:30,382 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:30,578 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:30,779 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:30,980 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:31,181 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:31,382 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 34s remaining (until 10:41:05)
+2026-03-05 10:40:31,384 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 34s remaining (until 10:41:05)
+2026-03-05 10:40:31,388 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:31,582 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:31,783 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:31,985 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:40:32,186 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:32,387 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 33s remaining (until 10:41:05)
+2026-03-05 10:40:32,389 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 33s remaining (until 10:41:05)
+2026-03-05 10:40:32,393 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:32,587 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:32,788 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:32,989 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:33,190 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:33,390 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 32s remaining (until 10:41:05)
+2026-03-05 10:40:33,393 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 32s remaining (until 10:41:05)
+2026-03-05 10:40:33,394 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:33,590 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:33,792 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:33,993 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:34,194 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:34,394 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 31s remaining (until 10:41:05)
+2026-03-05 10:40:34,397 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 31s remaining (until 10:41:05)
+2026-03-05 10:40:34,398 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:34,594 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:34,795 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:34,995 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:35,197 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:35,397 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 30s remaining (until 10:41:05)
+2026-03-05 10:40:35,400 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 30s remaining (until 10:41:05)
+2026-03-05 10:40:35,400 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:35,598 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:35,799 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:36,000 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:36,201 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:36,403 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 29s remaining (until 10:41:05)
+2026-03-05 10:40:36,403 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 29s remaining (until 10:41:05)
+2026-03-05 10:40:36,404 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:36,604 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:36,805 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0522% side=CE ENTRY count=0/3
+2026-03-05 10:40:37,007 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:37,208 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:37,409 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 28s remaining (until 10:41:05)
+2026-03-05 10:40:37,413 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 28s remaining (until 10:41:05)
+2026-03-05 10:40:37,413 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:37,610 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:37,811 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:38,011 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:38,211 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:38,412 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 27s remaining (until 10:41:05)
+2026-03-05 10:40:38,415 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 27s remaining (until 10:41:05)
+2026-03-05 10:40:38,419 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:38,612 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:38,814 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:39,015 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:39,215 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:39,415 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 26s remaining (until 10:41:05)
+2026-03-05 10:40:39,418 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 26s remaining (until 10:41:05)
+2026-03-05 10:40:39,420 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:39,617 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:39,817 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:40,018 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:40,220 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:40,421 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 25s remaining (until 10:41:05)
+2026-03-05 10:40:40,422 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 25s remaining (until 10:41:05)
+2026-03-05 10:40:40,422 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:40,622 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:40,823 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:41,023 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:41,225 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:41,427 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 24s remaining (until 10:41:05)
+2026-03-05 10:40:41,427 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 24s remaining (until 10:41:05)
+2026-03-05 10:40:41,428 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:41,628 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:41,829 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:42,030 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0557% side=CE ENTRY count=0/3
+2026-03-05 10:40:42,232 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:42,431 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 23s remaining (until 10:41:05)
+2026-03-05 10:40:42,432 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 23s remaining (until 10:41:05)
+2026-03-05 10:40:42,432 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:42,632 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:42,834 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:43,035 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:43,236 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:43,437 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 22s remaining (until 10:41:05)
+2026-03-05 10:40:43,440 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 22s remaining (until 10:41:05)
+2026-03-05 10:40:43,440 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:43,638 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:43,839 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:44,040 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:44,241 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:44,442 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 21s remaining (until 10:41:05)
+2026-03-05 10:40:44,442 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 21s remaining (until 10:41:05)
+2026-03-05 10:40:44,442 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:44,643 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:44,844 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:45,044 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0592% side=CE ENTRY count=0/3
+2026-03-05 10:40:45,244 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:45,446 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 20s remaining (until 10:41:05)
+2026-03-05 10:40:45,450 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 20s remaining (until 10:41:05)
+2026-03-05 10:40:45,450 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:45,647 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:45,847 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:46,048 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:46,249 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:46,449 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 19s remaining (until 10:41:05)
+2026-03-05 10:40:46,450 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 19s remaining (until 10:41:05)
+2026-03-05 10:40:46,450 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:46,650 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:46,853 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0731% side=CE ENTRY count=0/3
+2026-03-05 10:40:47,055 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:47,255 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:47,456 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 18s remaining (until 10:41:05)
+2026-03-05 10:40:47,458 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 18s remaining (until 10:41:05)
+2026-03-05 10:40:47,459 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:47,656 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:47,856 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:48,058 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:48,259 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:48,460 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 17s remaining (until 10:41:05)
+2026-03-05 10:40:48,463 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 17s remaining (until 10:41:05)
+2026-03-05 10:40:48,465 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:48,661 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:48,862 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:49,062 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:49,264 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:49,464 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 16s remaining (until 10:41:05)
+2026-03-05 10:40:49,464 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 16s remaining (until 10:41:05)
+2026-03-05 10:40:49,465 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:49,665 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:49,866 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:50,066 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:50,267 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:50,467 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 15s remaining (until 10:41:05)
+2026-03-05 10:40:50,470 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 15s remaining (until 10:41:05)
+2026-03-05 10:40:50,471 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:50,669 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:50,871 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:51,071 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:51,272 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:51,473 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 14s remaining (until 10:41:05)
+2026-03-05 10:40:51,475 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 14s remaining (until 10:41:05)
+2026-03-05 10:40:51,477 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:51,674 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:51,875 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:52,076 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0766% side=CE ENTRY count=0/3
+2026-03-05 10:40:52,277 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0801% side=CE ENTRY count=0/3
+2026-03-05 10:40:52,477 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 13s remaining (until 10:41:05)
+2026-03-05 10:40:52,477 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 13s remaining (until 10:41:05)
+2026-03-05 10:40:52,478 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0801% side=CE ENTRY count=0/3
+2026-03-05 10:40:52,678 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0801% side=CE ENTRY count=0/3
+2026-03-05 10:40:52,879 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0801% side=CE ENTRY count=0/3
+2026-03-05 10:40:53,080 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0801% side=CE ENTRY count=0/3
+2026-03-05 10:40:53,281 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0801% side=CE ENTRY count=0/3
+2026-03-05 10:40:53,482 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 12s remaining (until 10:41:05)
+2026-03-05 10:40:53,485 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 12s remaining (until 10:41:05)
+2026-03-05 10:40:53,486 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0801% side=CE ENTRY count=0/3
+2026-03-05 10:40:53,682 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:53,883 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:54,084 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:54,285 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:54,485 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 11s remaining (until 10:41:05)
+2026-03-05 10:40:54,486 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 11s remaining (until 10:41:05)
+2026-03-05 10:40:54,486 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:54,686 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:54,888 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:55,089 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:55,290 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:55,490 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 10s remaining (until 10:41:05)
+2026-03-05 10:40:55,493 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 10s remaining (until 10:41:05)
+2026-03-05 10:40:55,496 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:55,691 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:55,893 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:56,094 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:56,295 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:56,495 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 9s remaining (until 10:41:05)
+2026-03-05 10:40:56,498 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 9s remaining (until 10:41:05)
+2026-03-05 10:40:56,500 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:56,696 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:56,897 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0836% side=CE ENTRY count=0/3
+2026-03-05 10:40:57,098 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:57,298 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:57,500 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 8s remaining (until 10:41:05)
+2026-03-05 10:40:57,500 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 8s remaining (until 10:41:05)
+2026-03-05 10:40:57,500 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:57,700 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:57,901 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:58,102 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:58,303 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:58,504 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 7s remaining (until 10:41:05)
+2026-03-05 10:40:58,508 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 7s remaining (until 10:41:05)
+2026-03-05 10:40:58,509 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:58,706 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:58,906 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:59,107 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:59,309 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:59,509 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 6s remaining (until 10:41:05)
+2026-03-05 10:40:59,512 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 6s remaining (until 10:41:05)
+2026-03-05 10:40:59,513 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:59,709 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:40:59,910 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0871% side=CE ENTRY count=0/3
+2026-03-05 10:41:00,113 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:00,311 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:00,512 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 5s remaining (until 10:41:05)
+2026-03-05 10:41:00,513 - UpstoxApp - INFO - [Task 140385801558320] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-03-05 10:41:00,513 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24626.45) → 24650 [Futures/signal strike was: 24650]
+2026-03-05 10:41:00,515 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 10:41:00,515 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 10:41:00,551 - UpstoxApp - INFO - Successfully placed BUY (PUT) order for NIFTY2631024650PE with order_id: 260305190640620
+2026-03-05 10:41:00,552 - UpstoxApp - INFO - [NIFTY] Trade confirmed for PUT on NIFTY2631024650PE (User: None)
+2026-03-05 10:41:00,726 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45516. Monitoring strike 24650 for crossover exit.
+2026-03-05 10:41:00,730 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 5s remaining (until 10:41:05)
+2026-03-05 10:41:00,730 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 0.00 | LTP: 237.70 | VWAP: 259.45 (Peak: 259.45) | Initializing...
+2026-03-05 10:41:00,735 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:00,735 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:00,936 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:01,138 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:01,339 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:01,540 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 4s remaining (until 10:41:05)
+2026-03-05 10:41:01,540 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 4s remaining (until 10:41:05)
+2026-03-05 10:41:01,541 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:01,741 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:01,942 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=0.0000% side=CE ENTRY count=0/3
+2026-03-05 10:41:02,142 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:02,343 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:02,544 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 3s remaining (until 10:41:05)
+2026-03-05 10:41:02,544 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 3s remaining (until 10:41:05)
+2026-03-05 10:41:02,546 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:02,745 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:02,946 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:03,146 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:03,347 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:03,548 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 2s remaining (until 10:41:05)
+2026-03-05 10:41:03,553 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 2s remaining (until 10:41:05)
+2026-03-05 10:41:03,553 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0035% side=CE ENTRY count=0/3
+2026-03-05 10:41:03,749 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:03,950 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:04,152 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:04,354 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:04,555 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 1s remaining (until 10:41:05)
+2026-03-05 10:41:04,558 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 1s remaining (until 10:41:05)
+2026-03-05 10:41:04,560 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:04,756 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:04,957 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:05,158 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0070% side=CE ENTRY count=0/3
+2026-03-05 10:41:05,359 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:05,560 - UpstoxApp - INFO - V2: [CE] [BUY] Status [24650]: slope(V1:214.32 > V0:214.29 (Pct:0.01%, Cons:1/1))=False | LTP: 216.00 | Formula: vwap_slope
+2026-03-05 10:41:05,563 - UpstoxApp - INFO - V2: [CE] [SELL] Status [24650]: slope(V1:214.32 < V0:214.32 (Pct:0.00%, Cons:0/1))=False | LTP: 216.00 | Formula: vwap_slope AND cross_slope_comparison
+2026-03-05 10:41:05,575 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:05,761 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:05,961 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:06,161 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:06,362 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:06,576 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:06,763 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:06,964 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:07,164 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:07,365 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:07,576 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:07,766 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:07,966 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:08,167 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:08,368 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:08,582 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:08,770 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:08,970 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:09,171 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:09,372 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:09,583 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:09,774 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:09,976 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:10,177 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0139% side=CE ENTRY count=0/3
+2026-03-05 10:41:10,378 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:10,589 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:10,779 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:10,980 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:11,181 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:11,381 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:11,593 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:11,783 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:11,984 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:12,185 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:12,385 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:12,597 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:12,787 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:12,987 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:13,189 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:13,389 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:13,602 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0209% side=CE ENTRY count=0/3
+2026-03-05 10:41:13,791 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:13,992 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:14,193 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:14,394 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:14,604 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:14,795 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:14,996 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:15,197 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:15,398 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:15,609 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:15,799 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:16,000 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:16,201 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:16,403 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:16,614 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:16,805 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0244% side=CE ENTRY count=0/3
+2026-03-05 10:41:17,006 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:17,206 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:17,406 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:17,620 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:17,808 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:18,009 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:18,210 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:18,413 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:18,624 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:18,815 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:19,015 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:19,216 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:19,417 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:19,629 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:19,818 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:20,019 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:20,220 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0279% side=CE ENTRY count=0/3
+2026-03-05 10:41:20,420 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:20,631 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:20,822 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:21,022 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:21,223 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:21,424 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:21,635 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:21,826 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0314% side=CE ENTRY count=0/3
+2026-03-05 10:41:22,026 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:22,227 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:22,428 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:22,639 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:22,829 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:23,030 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:23,230 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:23,431 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:23,632 - UpstoxApp - INFO - [Task 140385801558944] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-03-05 10:41:23,635 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24634.55) → 24650 [Futures/signal strike was: 24650]
+2026-03-05 10:41:23,635 - UpstoxApp - INFO - V2: CALL entry triggered, but NOT closing PUT because 'reversal' is not in its exit formula.
+2026-03-05 10:41:23,639 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 10:41:23,639 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 10:41:23,664 - UpstoxApp - INFO - Successfully placed BUY (CALL) order for NIFTY2631024650CE with order_id: 260305190642598
+2026-03-05 10:41:23,664 - UpstoxApp - INFO - [NIFTY] Trade confirmed for CALL on NIFTY2631024650CE (User: None)
+2026-03-05 10:41:23,845 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45515. Monitoring strike 24650 for crossover exit.
+2026-03-05 10:41:23,860 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0349% side=CE ENTRY count=0/3
+2026-03-05 10:41:23,863 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:41:24,063 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:41:24,264 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:41:24,466 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:41:24,677 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:41:24,867 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:41:25,069 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0383% side=CE ENTRY count=0/3
+2026-03-05 10:41:25,269 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:25,470 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:25,682 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:25,872 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:26,073 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:26,274 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:26,475 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:26,687 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:26,877 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:27,078 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:27,279 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:27,480 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:27,692 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:27,883 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:28,109 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:28,309 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:28,510 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:28,712 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 257s since last switch): 24650 -> 24700 (User: Global)
+2026-03-05 10:41:28,714 - UpstoxApp - INFO - V2: Switching monitoring strike 24650 -> 24700
+2026-03-05 10:41:28,942 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24700 (SWITCHED) | Index: 24635.95 | CE: (In Trade) [V:214.4, VP:214.4] (LTP: 193.25) | PE: (In Trade) [V:259.3, VP:259.4] (LTP: 256.30) | SOLD PE 24700@256.30
+2026-03-05 10:41:28,955 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0418% side=CE ENTRY count=0/3
+2026-03-05 10:41:28,958 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:29,158 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:29,359 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:29,560 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:29,761 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:29,962 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:30,162 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:30,363 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0453% side=CE ENTRY count=0/3
+2026-03-05 10:41:30,564 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:30,765 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:30,966 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:31,167 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:31,368 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:31,569 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:31,770 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:31,971 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:32,172 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:32,373 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:32,575 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:32,777 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:32,978 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:33,179 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:33,380 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:33,581 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:33,783 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:33,984 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:34,185 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:34,386 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:34,586 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:34,788 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:34,988 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:35,189 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0488% side=CE ENTRY count=0/3
+2026-03-05 10:41:35,389 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:35,590 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:35,791 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:35,992 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:36,193 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:36,395 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:36,596 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:36,797 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0523% side=CE ENTRY count=0/3
+2026-03-05 10:41:36,997 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:37,198 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:37,399 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:37,599 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:37,801 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:38,001 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:38,202 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:38,404 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0558% side=CE ENTRY count=0/3
+2026-03-05 10:41:38,604 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:38,806 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:39,006 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:39,207 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:39,408 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:39,609 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:39,811 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:40,011 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0593% side=CE ENTRY count=0/3
+2026-03-05 10:41:40,265 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:40,466 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:40,666 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:40,868 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:41,069 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:41,270 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:41,471 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:41,672 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:41,873 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:42,073 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:42,274 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:42,475 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:42,675 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:42,877 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:43,077 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:43,277 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:43,478 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0628% side=CE ENTRY count=0/3
+2026-03-05 10:41:43,679 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:43,881 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:44,080 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:44,281 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:44,482 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:44,683 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:44,884 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:45,085 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:45,285 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:45,486 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:45,688 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:45,889 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:46,090 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:46,291 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:46,492 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:46,693 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:46,895 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:47,096 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3
+2026-03-05 10:41:47,296 - UpstoxApp - INFO - [SellManager] cross_slope CE=0.0000% PE=-0.0662% side=CE ENTRY count=0/3

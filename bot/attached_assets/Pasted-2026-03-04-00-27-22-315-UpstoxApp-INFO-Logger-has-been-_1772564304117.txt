@@ -1,0 +1,62 @@
+2026-03-04 00:27:22,315 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - Initializing API Client Manager for data providers...
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_1]
+2026-03-04 00:27:22,319 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_1]
+2026-03-04 00:27:22,368 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_1].
+2026-03-04 00:27:22,371 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_2]
+2026-03-04 00:27:22,371 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_2]
+2026-03-04 00:27:22,411 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_2].
+2026-03-04 00:27:22,411 - UpstoxApp - INFO - API client pool initialized with 2 clients. Active client is set.
+2026-03-04 00:27:22,412 - UpstoxApp - ERROR - Failed to connect to database: [Errno 111] Connect call failed ('127.0.0.1', 5432)
+2026-03-04 00:27:22,412 - UpstoxApp - WARNING - DATABASE WARNING: Connection failed ([Errno 111] Connect call failed ('127.0.0.1', 5432)). Proceeding in legacy mode (INI only).
+2026-03-04 00:27:22,412 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-03-04 00:27:22,412 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-03-04 00:27:22,419 - UpstoxApp - INFO - PaperTrade initialized for instruments: ['NIFTY']
+2026-03-04 00:27:22,420 - UpstoxApp - INFO - Successfully loaded broker: PaperTrade (Client: PaperTrade)
+2026-03-04 00:27:22,420 - UpstoxApp - INFO - Backtest mode enabled. Using CSVDataFeeder for WebSocket and enabling REST client for historical data.
+2026-03-04 00:27:22,420 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-04 00:27:22,434 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-03-04 00:27:22,437 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-03-04 00:27:22,827 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-03-04) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-03-04 00:27:22,858 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-03-04
+2026-03-04 00:27:22,889 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-03-04 00:27:22,892 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-03-04 (key=NSE_INDEX|Nifty 50)
+2026-03-04 00:27:22,892 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-03-04 00:27:22,892 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-10 (day=Tuesday)
+2026-03-04 00:27:22,932 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-10 (CURRENT_WEEK), trade=2026-03-10 (WEEKLY)
+2026-03-04 00:27:22,935 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-04 00:27:22,939 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-04 00:27:22,945 - UpstoxApp - INFO - UserSession Initialized: User=backtest_user@local | Instrument=NIFTY
+2026-03-04 00:27:22,945 - UpstoxApp - INFO - StateManager: Backtest mode detected. Starting with a fresh state (skipping load).
+2026-03-04 00:27:22,945 - UpstoxApp - INFO - Trading bot is now live.
+2026-03-04 00:27:22,945 - UpstoxApp - INFO - Starting synchronous backtest loop...
+2026-03-04 00:27:22,945 - UpstoxApp - INFO - 
+==================== STARTING BACKTEST FOR DATE: 2026-03-02 ====================
+2026-03-04 00:27:22,945 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-04 00:27:22,945 - UpstoxApp - WARNING - CSV file NOT FOUND or is a directory at /home/ec2-user/environment/Option_buying_March/tick_data_log.csv. Generating synthetic 1-minute timestamps for API-only backtest.
+2026-03-04 00:27:22,947 - UpstoxApp - INFO - Generated 376 synthetic timestamps for 2026-03-02
+2026-03-04 00:27:22,948 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-04 00:27:23,356 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-03-04) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-03-04 00:27:23,395 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-03-04
+2026-03-04 00:27:23,416 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-03-04 00:27:23,416 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-03-04 (key=NSE_INDEX|Nifty 50)
+2026-03-04 00:27:23,416 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-03-04 00:27:23,417 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-10 (day=Tuesday)
+2026-03-04 00:27:23,421 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-10 (CURRENT_WEEK), trade=2026-03-10 (WEEKLY)
+2026-03-04 00:27:23,426 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-04 00:27:23,427 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-04 00:27:23,502 - UpstoxApp - WARNING - [Backtest] ATP file not found: /home/ec2-user/environment/Option_buying_March/atp_data_NIFTY_2026-03-02.csv. Slope will use synthetic OHLC VWAP.
+2026-03-04 00:27:23,778 - UpstoxApp - INFO - [TRADE_SUMMARY] Timestamp: 2026-03-02 09:15:00+05:30 | ATM: 25000 | Status: IDLE | P&L: 0.00
+[TRADE_SUMMARY] Timestamp: 2026-03-02 09:15:00+05:30 | ATM: 25000 | Status: IDLE | P&L: 0.00
+2026-03-04 00:27:23,794 - UpstoxApp - ERROR - Error processing backtest data for timestamp 2026-03-02 09:16:00+05:30: 'SellManager' object has no attribute 'execute_short_strangle'
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_buying_March/hub/lifecycle_manager.py", line 94, in _run_backtest_loop
+    await self.trade_orchestrator.run_backtest_strategy_for_timestamp(
+  File "/home/ec2-user/environment/Option_buying_March/hub/backtest_orchestrator.py", line 70, in run_backtest_strategy_for_timestamp
+    await self.sell_manager.execute_short_strangle(timestamp)
+AttributeError: 'SellManager' object has no attribute 'execute_short_strangle'

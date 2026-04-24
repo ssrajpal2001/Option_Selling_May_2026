@@ -2,26 +2,54 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+pnpm workspace monorepo (TypeScript node services) + Python/FastAPI algorithmic trading bot.
 
-## Stack
+## AlgoSoft Bot (Primary Project)
+
+- **Location**: `bot/` directory
+- **Runtime**: Python 3.12, FastAPI + Uvicorn on port 5000
+- **Database**: SQLite at `bot/config/algosoft.db`
+- **Config**: `bot/config/credentials.ini` — source of truth for broker credentials
+- **Default admin**: `admin` / `Admin@123`
+- **Workflow**: "AlgoSoft Bot" — `cd bot && python -m uvicorn web.server:app --host 0.0.0.0 --port 5000`
+
+### Bot Architecture
+
+- `bot/web/server.py` — FastAPI app, startup seeder, route registration
+- `bot/web/admin_api.py` — All admin REST API endpoints (clients, plans, data providers)
+- `bot/web/db.py` — SQLite schema: users, data_providers, subscription_plans, brokers, strategies
+- `bot/hub/dual_feed_manager.py` — Dual WebSocket feed (Upstox + Dhan simultaneous)
+- `bot/hub/provider_factory.py` — Creates provider instances from DB credentials
+- `bot/utils/auth_manager_upstox.py` — Automated TOTP login for Upstox
+- `bot/utils/auth_manager_dhan.py` — Token validation for Dhan (30-day tokens)
+
+### Key API Endpoints
+
+- `GET /api/admin/clients` — list all clients
+- `GET/POST/PUT/DELETE /api/admin/plans` — subscription plans CRUD
+- `GET /api/admin/data-providers/health` — feeder token health (days_remaining, expires_in, warn_expiry)
+- `POST /api/admin/data-providers/{provider}/connect` — trigger background automated login
+
+### Subscription Plans
+
+Three default plans seeded in DB: FREE (1 broker), PREMIUM (3 brokers), PRO (5 brokers). Full CRUD at `/admin/subscription-plans`. Tier changes validated against `subscription_plans` table in DB.
+
+### Global Data Feeders
+
+- **Upstox**: Daily access token via TOTP automation. Auto-renews at 09:01 AM IST via scheduler. Status: `not_configured` until first automated login.
+- **Dhan**: 30-day access token from credentials.ini. Status: `configured` when token is present and valid.
+
+---
+
+## TypeScript Monorepo (Secondary)
 
 - **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
 
-## Key Commands
+### Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+See the `pnpm-workspace` skill for workspace structure details.

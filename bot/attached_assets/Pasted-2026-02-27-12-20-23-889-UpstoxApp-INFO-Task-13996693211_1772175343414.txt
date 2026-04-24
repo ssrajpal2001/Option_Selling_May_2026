@@ -1,0 +1,83 @@
+2026-02-27 12:20:23,889 - UpstoxApp - INFO - [Task 139966932118640] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-02-27 12:20:23,890 - UpstoxApp - INFO - [NIFTY] Hedge override: signal strike 25400 → hedge 25450.0 (key: NSE_FO|54913) | qty ×1
+2026-02-27 12:20:23,891 - UpstoxApp - ERROR - V2: Error during tick processing for NIFTY: enter_trade() got an unexpected keyword argument 'quantity_multiplier'
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/price_feed_handler.py", line 371, in _tick_worker
+    await asyncio.wait_for(self.trade_orchestrator.process_tick(), timeout=60.0)
+  File "/usr/lib64/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/base_orchestrator.py", line 211, in process_tick
+    await self.tick_processor.process_tick(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/AlgoSoft_March/utils/profiler.py", line 15, in async_wrapper
+    result = await func(*args, **kwargs)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/tick_processor.py", line 85, in process_tick
+    await self.process_tick_v2(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/tick_processor.py", line 212, in process_tick_v2
+    await session.signal_monitor.check_crossover_breach(
+  File "/home/ec2-user/environment/AlgoSoft_March/utils/profiler.py", line 15, in async_wrapper
+    result = await func(*args, **kwargs)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 380, in check_crossover_breach
+    await self._update_tick_criteria_and_evaluate(timestamp, active_modes)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 452, in _update_tick_criteria_and_evaluate
+    await self.evaluator.evaluate_tick_criteria(timestamp, active_modes)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_evaluator.py", line 337, in evaluate_tick_criteria
+    await self.monitor._confirm_entry(side, data, inst_key,
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 855, in _confirm_entry
+    await self.orchestrator.broadcast_signal(
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/base_orchestrator.py", line 189, in broadcast_signal
+    await asyncio.gather(*tasks)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/user_session.py", line 87, in evaluate_signal
+    await self.orchestrator.trade_executor.execute_trade_v2(
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 172, in execute_trade_v2
+    existing_pos = await self._finalize_trade_entry(direction, trade_instrument_key, trade_ltp, trade_strike, timestamp, signal_strike, strategy_log, user_id, entry_type, quantity_multiplier)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 209, in _finalize_trade_entry
+    return await self._finalize_trade_entry_unlocked(direction, trade_instrument_key, trade_ltp, trade_strike, timestamp, signal_strike, strategy_log, user_id, entry_type, quantity_multiplier)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 235, in _finalize_trade_entry_unlocked
+    existing_pos = await state_manager.enter_trade(
+TypeError: enter_trade() got an unexpected keyword argument 'quantity_multiplier'
+2026-02-27 12:20:23,914 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25400]: slope(V1:136.66 > V0:146.79 (Pct:-6.90%, Cons:0/1))=False | LTP: 162.75 | Formula: vwap_slope
+2026-02-27 12:21:00,313 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 25400 | Index: 25296.65 | CE: slope(V1:84.52 > V0:79.64 (Pct:6.13%, Cons:1/1)):True (LTP: 68.25) | PE: slope(V1:136.70 > V0:146.91 (Pct:-6.95%, Cons:0/1)):False (LTP: 162.00) | SOLD CE 25300@112.50 | SOLD PE 25300@106.70
+2026-02-27 12:21:23,691 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25400]: slope(V1:136.72 > V0:146.91 (Pct:-6.94%, Cons:0/1))=False | LTP: 164.65 | Formula: vwap_slope
+2026-02-27 12:21:42,950 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 80s since last switch): 25400 -> 25350 (User: Global)
+2026-02-27 12:21:42,952 - UpstoxApp - INFO - V2: Switching monitoring strike 25400 -> 25350
+2026-02-27 12:21:43,433 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 25350 (SWITCHED) | Index: 25287.00 | CE: slope(V1:101.39 > V0:102.09 (Pct:-0.69%, Cons:0/1)):False (LTP: 83.80) | PE: slope(V1:115.60 > V0:119.41 (Pct:-3.19%, Cons:0/1)):False (LTP: 139.45) | SOLD CE 25300@107.60 | SOLD PE 25300@112.80
+2026-02-27 12:22:24,249 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25350]: slope(V1:115.68 > V0:115.55 (Pct:0.11%, Cons:1/1))=False | LTP: 144.15 | Formula: vwap_slope
+2026-02-27 12:23:24,520 - UpstoxApp - INFO - V2: [PE] [BUY] Status [25350]: slope(V1:115.85 > V0:115.62 (Pct:0.20%, Cons:1/1))=False | LTP: 148.10 | Formula: vwap_slope
+2026-02-27 12:23:51,635 - UpstoxApp - INFO - [Task 139967022764304] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-02-27 12:23:51,637 - UpstoxApp - INFO - [NIFTY] Hedge override: signal strike 25350 → hedge 25150.0 (key: NSE_FO|54902) | qty ×1
+2026-02-27 12:23:51,639 - UpstoxApp - ERROR - V2: Error during tick processing for NIFTY: enter_trade() got an unexpected keyword argument 'quantity_multiplier'
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/price_feed_handler.py", line 371, in _tick_worker
+    await asyncio.wait_for(self.trade_orchestrator.process_tick(), timeout=60.0)
+  File "/usr/lib64/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/base_orchestrator.py", line 211, in process_tick
+    await self.tick_processor.process_tick(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/AlgoSoft_March/utils/profiler.py", line 15, in async_wrapper
+    result = await func(*args, **kwargs)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/tick_processor.py", line 85, in process_tick
+    await self.process_tick_v2(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/tick_processor.py", line 212, in process_tick_v2
+    await session.signal_monitor.check_crossover_breach(
+  File "/home/ec2-user/environment/AlgoSoft_March/utils/profiler.py", line 15, in async_wrapper
+    result = await func(*args, **kwargs)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 380, in check_crossover_breach
+    await self._update_tick_criteria_and_evaluate(timestamp, active_modes)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 452, in _update_tick_criteria_and_evaluate
+    await self.evaluator.evaluate_tick_criteria(timestamp, active_modes)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_evaluator.py", line 337, in evaluate_tick_criteria
+    await self.monitor._confirm_entry(side, data, inst_key,
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/signal_monitor.py", line 855, in _confirm_entry
+    await self.orchestrator.broadcast_signal(
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/base_orchestrator.py", line 189, in broadcast_signal
+    await asyncio.gather(*tasks)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/user_session.py", line 87, in evaluate_signal
+    await self.orchestrator.trade_executor.execute_trade_v2(
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 172, in execute_trade_v2
+    existing_pos = await self._finalize_trade_entry(direction, trade_instrument_key, trade_ltp, trade_strike, timestamp, signal_strike, strategy_log, user_id, entry_type, quantity_multiplier)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 209, in _finalize_trade_entry
+    return await self._finalize_trade_entry_unlocked(direction, trade_instrument_key, trade_ltp, trade_strike, timestamp, signal_strike, strategy_log, user_id, entry_type, quantity_multiplier)
+  File "/home/ec2-user/environment/AlgoSoft_March/hub/trade_executor.py", line 235, in _finalize_trade_entry_unlocked
+    existing_pos = await state_manager.enter_trade(
+TypeError: enter_trade() got an unexpected keyword argument 'quantity_multiplier'
+2026-02-27 12:24:00,878 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 25350 | Index: 25272.70 | CE: slope(V1:101.07 > V0:101.21 (Pct:-0.14%, Cons:0/1)):False (LTP: 78.60) | PE: slope(V1:115.92 > V0:115.77 (Pct:0.13%, Cons:1/1)):False (LTP: 148.60) | SOLD CE 25300@100.90 | SOLD PE 25300@120.40

@@ -1,0 +1,228 @@
+{% extends "admin_base.html" %}
+{% set active_page = "plans" %}
+{% block title %}Subscription Plans{% endblock %}
+
+{% block content %}
+<style>
+  .modal-overlay { position: fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:1000; }
+  .modal-overlay.open { display:flex; }
+  .plan-card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:24px; transition:border-color 0.2s; }
+  .plan-card:hover { border-color:#475569; }
+  .broker-badge { display:inline-flex; align-items:center; gap:6px; background:#0f172a; border:1px solid #334155; border-radius:20px; padding:4px 12px; font-size:13px; font-weight:700; color:#00d4aa; }
+</style>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-white">Subscription Plans</h1>
+    <p class="text-sm mt-1" style="color:#64748b">Manage tier limits and broker allocations per plan</p>
+  </div>
+  <button onclick="openCreateModal()" class="btn-primary px-5 py-2.5 text-sm font-bold">+ New Plan</button>
+</div>
+
+<!-- Plans Grid -->
+<div id="plans-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+  <div class="col-span-3 text-center py-12 text-slate-500">Loading plans...</div>
+</div>
+
+<!-- Info Card -->
+<div class="card p-5 border-blue-500/20 bg-blue-500/5">
+  <div class="flex items-start gap-3">
+    <div class="text-blue-400 text-lg mt-0.5">ℹ</div>
+    <div>
+      <p class="text-sm font-semibold text-blue-300 mb-1">How Plans Work</p>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Plans define how many simultaneous broker connections a client can run. When you update a plan's broker limit,
+        all clients currently on that plan are automatically updated. The <strong class="text-slate-300">set-tier</strong> action
+        on the Clients page now looks up the broker limit from this table — add as many tiers as needed.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Plan Create/Edit Modal -->
+<div id="plan-modal" class="modal-overlay">
+  <div style="background:#1e293b;border:1px solid #475569;border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);">
+    <div class="flex justify-between items-center mb-5">
+      <h3 id="modal-title" class="text-lg font-bold text-white">New Plan</h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+    </div>
+    <form id="plan-form" class="space-y-4">
+      <input type="hidden" id="edit-plan-id">
+      <div>
+        <label class="field-label">Plan Slug (uppercase, no spaces)</label>
+        <input type="text" id="f-plan-name" class="input-field w-full uppercase" placeholder="e.g. PREMIUM" required>
+        <p class="text-xs text-slate-500 mt-1">Used internally. Existing clients with this tier name will be linked.</p>
+      </div>
+      <div>
+        <label class="field-label">Display Name</label>
+        <input type="text" id="f-display-name" class="input-field w-full" placeholder="e.g. Premium" required>
+      </div>
+      <div>
+        <label class="field-label">Max Broker Connections</label>
+        <input type="number" id="f-max-brokers" class="input-field w-full" min="1" max="20" value="1" required>
+        <p class="text-xs text-slate-500 mt-1">How many brokers this plan allows per client account simultaneously.</p>
+      </div>
+      <div>
+        <label class="field-label">Description</label>
+        <input type="text" id="f-description" class="input-field w-full" placeholder="Brief description for admin reference">
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="f-active" checked class="w-4 h-4 accent-emerald-500">
+        <label for="f-active" class="text-sm text-slate-300">Plan is active (clients can be assigned to it)</label>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="closeModal()" class="btn-ghost px-5 py-2.5 text-sm">Cancel</button>
+        <button type="submit" id="save-btn" class="btn-primary px-7 py-2.5 text-sm font-bold">Save Plan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="del-modal" class="modal-overlay">
+  <div style="background:#1e293b;border:1px solid #dc2626;border-radius:16px;padding:28px;width:100%;max-width:400px;text-align:center;">
+    <h3 class="text-lg font-bold text-white mb-2">Delete Plan?</h3>
+    <p id="del-msg" class="text-sm text-slate-400 mb-5"></p>
+    <div class="flex justify-center gap-3">
+      <button onclick="closeDelModal()" class="btn-ghost px-5 py-2.5 text-sm">Cancel</button>
+      <button id="confirm-del-btn" class="btn-danger px-5 py-2.5 text-sm font-bold">Delete</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let _plans = [];
+let _deletingId = null;
+
+async function loadPlans() {
+  try {
+    const r = await fetch('/api/admin/plans');
+    _plans = await r.json();
+    renderPlans();
+  } catch(e) {
+    document.getElementById('plans-grid').innerHTML = '<div class="col-span-3 text-center py-8 text-rose-500">Failed to load plans.</div>';
+  }
+}
+
+function renderPlans() {
+  const grid = document.getElementById('plans-grid');
+  if (!_plans || _plans.length === 0) {
+    grid.innerHTML = '<div class="col-span-3 text-center py-12 text-slate-500">No plans created yet. Click "+ New Plan" to add one.</div>';
+    return;
+  }
+
+  const colors = { 1: '#64748b', 2: '#3b82f6', 3: '#8b5cf6', 4: '#f59e0b', 5: '#10b981' };
+
+  grid.innerHTML = _plans.map(p => {
+    const color = colors[Math.min(p.max_broker_instances, 5)] || '#00d4aa';
+    const active = p.is_active ? '' : ' opacity-50';
+    const badge = p.is_active
+      ? `<span class="badge-ok text-xs">Active</span>`
+      : `<span class="badge-warn text-xs">Inactive</span>`;
+    return `
+      <div class="plan-card${active}">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-widest mb-1" style="color:${color}">${escapeHtml(p.plan_name)}</div>
+            <div class="text-xl font-bold text-white">${escapeHtml(p.display_name)}</div>
+          </div>
+          ${badge}
+        </div>
+        <div class="my-4 flex items-center justify-center">
+          <div class="broker-badge" style="border-color:${color}40; color:${color}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4M5 12l4 4"/></svg>
+            ${p.max_broker_instances} Broker${p.max_broker_instances > 1 ? 's' : ''}
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mb-4 min-h-8">${escapeHtml(p.description || '')}</p>
+        <div class="flex items-center justify-between pt-3 border-t border-slate-700/50">
+          <span class="text-xs text-slate-500">${p.client_count || 0} client${(p.client_count||0) !== 1 ? 's' : ''}</span>
+          <div class="flex gap-2">
+            <button onclick="openEditModal(${p.id})" class="btn-ghost px-3 py-1.5 text-xs">Edit</button>
+            <button onclick="openDelModal(${p.id}, '${escapeHtml(p.plan_name)}')" class="btn-danger px-3 py-1.5 text-xs">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openCreateModal() {
+  document.getElementById('edit-plan-id').value = '';
+  document.getElementById('modal-title').textContent = 'New Plan';
+  document.getElementById('plan-form').reset();
+  document.getElementById('f-active').checked = true;
+  document.getElementById('plan-modal').classList.add('open');
+}
+
+function openEditModal(planId) {
+  const p = _plans.find(x => x.id === planId);
+  if (!p) return;
+  document.getElementById('edit-plan-id').value = p.id;
+  document.getElementById('modal-title').textContent = 'Edit Plan';
+  document.getElementById('f-plan-name').value = p.plan_name;
+  document.getElementById('f-display-name').value = p.display_name;
+  document.getElementById('f-max-brokers').value = p.max_broker_instances;
+  document.getElementById('f-description').value = p.description || '';
+  document.getElementById('f-active').checked = !!p.is_active;
+  document.getElementById('plan-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('plan-modal').classList.remove('open');
+}
+
+function openDelModal(planId, planName) {
+  _deletingId = planId;
+  document.getElementById('del-msg').textContent = `Are you sure you want to delete the "${planName}" plan? This cannot be undone.`;
+  document.getElementById('del-modal').classList.add('open');
+}
+
+function closeDelModal() {
+  document.getElementById('del-modal').classList.remove('open');
+  _deletingId = null;
+}
+
+document.getElementById('confirm-del-btn').addEventListener('click', async () => {
+  if (!_deletingId) return;
+  const btn = document.getElementById('confirm-del-btn');
+  btn.disabled = true; btn.textContent = 'Deleting...';
+  try {
+    const r = await fetch(`/api/admin/plans/${_deletingId}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.success) { showToast(d.message, 'success'); closeDelModal(); await loadPlans(); }
+    else showToast(d.detail || d.message || 'Delete failed', 'error');
+  } catch(e) { showToast('Network error', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Delete'; }
+});
+
+document.getElementById('plan-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-plan-id').value;
+  const isEdit = !!id;
+  const body = {
+    plan_name: document.getElementById('f-plan-name').value.trim().toUpperCase(),
+    display_name: document.getElementById('f-display-name').value.trim(),
+    max_broker_instances: parseInt(document.getElementById('f-max-brokers').value),
+    description: document.getElementById('f-description').value.trim(),
+    is_active: document.getElementById('f-active').checked ? 1 : 0,
+  };
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const url = isEdit ? `/api/admin/plans/${id}` : '/api/admin/plans';
+    const method = isEdit ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) { showToast(d.message, 'success'); closeModal(); await loadPlans(); }
+    else showToast(d.detail || d.message || 'Save failed', 'error');
+  } catch(e) { showToast('Network error', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Plan'; }
+});
+
+loadPlans();
+</script>
+{% endblock %}
