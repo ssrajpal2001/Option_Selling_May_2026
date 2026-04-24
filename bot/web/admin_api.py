@@ -237,6 +237,20 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                 except Exception as _rf_err:
                     logger.warning(f"[Admin] Could not signal live feed refresh for {provider}: {_rf_err}")
 
+                # Sync to credentials.ini for legacy compatibility (same as single-provider connect path)
+                if provider == "dhan":
+                    try:
+                        _dhan_creds = configparser.ConfigParser()
+                        _dhan_creds.read(_CREDENTIALS_PATH)
+                        if not _dhan_creds.has_section('dhan_global'):
+                            _dhan_creds.add_section('dhan_global')
+                        _dhan_creds.set('dhan_global', 'client_id', decrypt_secret(dp["api_key_encrypted"]))
+                        _dhan_creds.set('dhan_global', 'access_token', token)
+                        with open(_CREDENTIALS_PATH, 'w') as _f:
+                            _dhan_creds.write(_f)
+                    except Exception as _ini_err:
+                        logger.warning(f"[Admin] Could not sync Dhan token to credentials.ini: {_ini_err}")
+
                 results[provider] = {"success": True, "message": f"{provider.capitalize()} connected."}
             else:
                 results[provider] = {"success": False, "message": f"{provider.capitalize()} login returned no token."}
