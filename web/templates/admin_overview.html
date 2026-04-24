@@ -1,0 +1,217 @@
+{% extends "admin_base.html" %}
+{% set active_page = "overview" %}
+{% block title %}Overview{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-white">Admin Overview</h1>
+  <p class="text-sm mt-1" style="color:#64748b">Real-time platform status</p>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Total Clients</div>
+    <div id="o-total" class="text-2xl font-bold text-white">--</div>
+  </div>
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Active</div>
+    <div id="o-active" class="text-2xl font-bold" style="color:#34d399">--</div>
+  </div>
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Pending</div>
+    <div id="o-pending" class="text-2xl font-bold" style="color:#fb923c">--</div>
+  </div>
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Running Bots</div>
+    <div id="o-running" class="text-2xl font-bold" style="color:#818cf8">--</div>
+  </div>
+  <div class="stat-card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Failures (24h)</div>
+    <div id="o-failures" class="text-2xl font-bold" style="color:#f87171">--</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 gap-4 mb-6">
+  <div class="card p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Live Bot Instances</div>
+    <div id="live-list" style="color:#64748b;font-size:13px">Loading...</div>
+  </div>
+</div>
+
+<div class="card p-4 mb-6" id="live-bots-detail" style="display:none">
+  <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Running Bots — Live Status</div>
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr>
+        <th>Client</th><th>Broker</th><th>Instrument</th><th>Mode</th><th>Qty</th><th>P&L</th><th>Trades</th><th>Heartbeat</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="live-bots-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="broker-requests-panel" class="card p-4 mb-6" style="display:none">
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Pending Broker Change Requests</span>
+    <span id="bcr-count" class="text-xs px-2 py-0.5 rounded" style="background:#3b1f00;color:#fb923c">0</span>
+  </div>
+  <div id="bcr-list" style="color:#64748b;font-size:13px">No pending requests.</div>
+</div>
+
+<div class="card p-4">
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">All Clients</span>
+    <a href="/admin/clients" class="text-xs" style="color:#00d4aa">View all →</a>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Username</th><th>Email</th><th>Status</th><th>Tier</th><th>Bots Running</th><th>Actions</th>
+    </tr></thead>
+    <tbody id="clients-table"><tr><td colspan="6" class="text-center" style="color:#475569">Loading...</td></tr></tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadOverview() {
+  const r = await fetch('/api/admin/overview');
+  const d = await r.json();
+  document.getElementById('o-total').textContent = d.total_clients;
+  document.getElementById('o-active').textContent = d.active_clients;
+  document.getElementById('o-pending').textContent = d.pending_clients;
+  document.getElementById('o-running').textContent = d.running_instances;
+  document.getElementById('o-failures').textContent = d.failures_today;
+
+  const liveList = document.getElementById('live-list');
+  const detailPanel = document.getElementById('live-bots-detail');
+  const liveBody = document.getElementById('live-bots-body');
+  if (d.live_instances && d.live_instances.length > 0) {
+    liveList.innerHTML = d.live_instances.map(i => {
+      const pnl = i.session_pnl || 0;
+      const pnlColor = pnl > 0 ? '#34d399' : pnl < 0 ? '#f87171' : '#94a3b8';
+      const dot = i.stale ? '<span style="color:#fb923c">●</span>' : '<span style="color:#34d399">●</span>';
+      return `<div class="flex items-center justify-between py-1.5" style="border-bottom:1px solid #1e293b">
+        <span>${dot} <a href="/admin/clients/${i.client_id}" style="color:#93c5fd">${escapeHtml(i.username||'')}</a> · ${escapeHtml(i.broker||'')} · ${escapeHtml(i.instrument||'')}</span>
+        <span style="color:${pnlColor};font-weight:700">\u20B9${parseFloat(pnl).toFixed(0)}</span>
+      </div>`;
+    }).join('');
+
+    detailPanel.style.display = 'block';
+    liveBody.innerHTML = d.live_instances.map(i => {
+      const pnl = i.session_pnl || 0;
+      const pnlColor = pnl > 0 ? '#34d399' : pnl < 0 ? '#f87171' : '#94a3b8';
+      const hb = i.heartbeat ? new Date(i.heartbeat * 1000).toLocaleTimeString() : '--';
+      const hbColor = i.stale ? '#fb923c' : '#34d399';
+      const modeColor = (i.trading_mode === 'live') ? '#34d399' : '#60a5fa';
+      return `<tr>
+        <td><a href="/admin/clients/${i.client_id}" style="color:#93c5fd;font-weight:600">${escapeHtml(i.username||'')}</a></td>
+        <td class="text-white">${escapeHtml((i.broker||'').toUpperCase())}</td>
+        <td class="text-white">${escapeHtml(i.instrument||'')}</td>
+        <td style="color:${modeColor};font-weight:700">${(i.trading_mode||'').toUpperCase()}</td>
+        <td class="text-white">${i.quantity || '--'}</td>
+        <td style="color:${pnlColor};font-weight:700">\u20B9${parseFloat(pnl).toFixed(0)}</td>
+        <td class="text-white">${i.trade_count || 0}</td>
+        <td style="color:${hbColor}">${hb}</td>
+        <td><a href="/admin/clients/${i.client_id}" class="btn-ghost px-2 py-1 text-xs">Monitor</a></td>
+      </tr>`;
+    }).join('');
+  } else {
+    liveList.textContent = 'No bots running.';
+    detailPanel.style.display = 'none';
+  }
+
+  const bcrPanel = document.getElementById('broker-requests-panel');
+  const bcrList = document.getElementById('bcr-list');
+  const bcrCount = document.getElementById('bcr-count');
+  const reqs = d.pending_broker_requests || [];
+  if (reqs.length > 0) {
+    bcrPanel.style.display = 'block';
+    bcrCount.textContent = reqs.length;
+    bcrList.innerHTML = reqs.map(r => `
+      <div class="flex items-center justify-between py-2" style="border-bottom:1px solid #1e293b">
+        <div>
+          <a href="/admin/clients/${r.client_id}" style="color:#93c5fd;font-weight:600">${escapeHtml(r.username)}</a>
+          <span class="text-xs" style="color:#64748b">wants to switch from</span>
+          <span class="text-white font-bold">${escapeHtml((r.current_broker||'').toUpperCase())}</span>
+          <span class="text-xs" style="color:#64748b">to</span>
+          <span class="text-white font-bold">${escapeHtml((r.requested_broker||'').toUpperCase())}</span>
+          ${r.reason ? '<span class="text-xs ml-2" style="color:#94a3b8">"' + escapeHtml(r.reason) + '"</span>' : ''}
+        </div>
+        <div class="flex gap-2">
+          <button onclick="approveBCR(${r.id})" class="btn-primary px-3 py-1 text-xs">Approve</button>
+          <button onclick="denyBCR(${r.id})" class="btn-ghost px-3 py-1 text-xs">Deny</button>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    bcrPanel.style.display = 'none';
+  }
+
+  await loadClients();
+}
+
+async function loadClients() {
+  const r = await fetch('/api/admin/clients');
+  const clients = await r.json();
+  const tbody = document.getElementById('clients-table');
+  if (!clients.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:#475569">No clients yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = clients.slice(0, 10).map(c => {
+    const statusBadge = c.is_active
+      ? '<span class="badge-ok">Active</span>'
+      : '<span class="badge-warn">Pending</span>';
+    const btn = c.is_active
+      ? `<button onclick="deactivate(${c.id})" class="btn-ghost px-2 py-1 text-xs">Deactivate</button>`
+      : `<button onclick="activate(${c.id})" class="btn-primary px-2 py-1 text-xs">Activate</button>`;
+    return `<tr>
+      <td class="text-white font-medium">${escapeHtml(c.username)}</td>
+      <td style="color:#64748b">${escapeHtml(c.email)}</td>
+      <td>${statusBadge}</td>
+      <td><span class="badge-idle">${c.subscription_tier}</span></td>
+      <td style="color:#818cf8">${c.running_count || 0}</td>
+      <td class="flex gap-2">
+        ${btn}
+        <a href="/admin/clients/${c.id}" class="btn-ghost px-2 py-1 text-xs">View</a>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function activate(id) {
+  const r = await fetch(`/api/admin/clients/${id}/activate`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message || 'Done', d.success ? 'success' : 'error');
+  loadOverview();
+}
+
+async function deactivate(id) {
+  if (!confirm('Deactivate this client?')) return;
+  const r = await fetch(`/api/admin/clients/${id}/deactivate`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message || 'Done', d.success ? 'success' : 'error');
+  loadOverview();
+}
+
+async function approveBCR(id) {
+  if (!confirm('Approve this broker change? The old broker instance will be removed.')) return;
+  const r = await fetch(`/api/admin/broker-requests/${id}/approve`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message || 'Done', d.success ? 'success' : 'error');
+  loadOverview();
+}
+
+async function denyBCR(id) {
+  if (!confirm('Deny this broker change request?')) return;
+  const r = await fetch(`/api/admin/broker-requests/${id}/deny`, {method:'POST'});
+  const d = await r.json();
+  showToast(d.message || 'Done', d.success ? 'success' : 'error');
+  loadOverview();
+}
+
+loadOverview();
+setInterval(loadOverview, 10000);
+</script>
+{% endblock %}

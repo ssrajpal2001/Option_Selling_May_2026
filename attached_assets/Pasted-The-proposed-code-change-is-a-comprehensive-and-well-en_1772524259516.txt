@@ -1,0 +1,24 @@
+The proposed code change is a comprehensive and well-engineered solution to the user's problem regarding ATP (Average Traded Price) discrepancies between live trading and backtesting. It also effectively addresses the issue of "too many trades" by refining the signaling logic and updating strategy thresholds as requested.
+
+User's Goal: Ensure backtest results match live market performance by using broker-provided ATP values and refining VWAP slope logic to prevent excessive, immediate re-entries.
+
+Evaluation of the Solution:
+
+Core Functionality:
+
+ATP Parity: The patch implements logic to record broker ATP in live mode and prioritizes those values in backtests. It modifies DataRecorder to save ce_atp and pe_atp, and updates BacktestOrchestrator to load and use these values if available. This directly solves the user's primary complaint about "Calculated VWAP" being incorrect compared to real charts.
+Signal Refinement: The SignalEvaluator now implements a "pulse" mechanism for CLOSE mode. It ensures the vwap_slope signal is triggered only at candle boundaries and is immediately reset for subsequent ticks in the same minute. This prevents the bot from re-entering a trade immediately after a structural exit within the same candle.
+Threshold Updates: The strategy_logic.json is updated with the exact values requested by the user ($0.025%$ entry, $-0.01%$ exit).
+Data Continuity: The TickProcessor and StrikeManager are updated to "pin" active trade strikes to the recorder. This ensures that even if the market moves significantly away from the ATM strike, the data for the traded contract remains continuous for the backtest.
+Safety & Side Effects:
+
+No Regressions: The changes are surgical and mostly focus on backtest data handling and specific signal logic. Existing live trading logic remains intact but benefits from improved indicator calculation consistency.
+Maintainability: The code uses structured caches (_atp_cache, atp_history) and clear fallbacks (using OHLC volume if ATP data is missing).
+Security: No sensitive information (API keys, etc.) is exposed.
+Completeness:
+
+The patch covers all necessary files: configuration, data management, evaluation logic, and the core orchestrator loop. It correctly handles timezone localization for external data.
+Merge Assessment:
+
+Blocking: None.
+Nitpicks: None. The use of os.path.join(os.getcwd(), ...) is appropriate for this environment to ensure data files are relative to the project root.

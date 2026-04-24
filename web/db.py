@@ -1,0 +1,213 @@
+import os
+import sqlite3
+from pathlib import Path
+from utils.logger import logger
+
+_BASE_DIR = Path(__file__).parent.parent
+DB_PATH = os.environ.get("ALGOSOFT_DB_PATH", str(_BASE_DIR / "config" / "algosoft.db"))
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'client',
+    is_active INTEGER DEFAULT 0,
+    subscription_tier TEXT DEFAULT 'FREE',
+    max_broker_instances INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    activated_at TEXT,
+    activated_by INTEGER,
+    full_name TEXT,
+    phone_number TEXT
+);
+
+CREATE TABLE IF NOT EXISTS data_providers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    provider TEXT NOT NULL UNIQUE,
+    api_key_encrypted TEXT,
+    api_secret_encrypted TEXT,
+    access_token_encrypted TEXT,
+    status TEXT DEFAULT 'not_configured',
+    updated_at TEXT DEFAULT (datetime('now')),
+    updated_by INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS client_broker_instances (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER NOT NULL REFERENCES users(id),
+    broker TEXT NOT NULL,
+    instance_label TEXT,
+    api_key_encrypted TEXT,
+    api_secret_encrypted TEXT,
+    access_token_encrypted TEXT,
+    token_updated_at TEXT,
+    trading_mode TEXT DEFAULT 'paper',
+    instrument TEXT DEFAULT 'NIFTY',
+    quantity INTEGER DEFAULT 25,
+    strategy_version TEXT DEFAULT 'V3',
+    status TEXT DEFAULT 'idle',
+    bot_pid INTEGER,
+    last_heartbeat TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(client_id, broker)
+);
+
+CREATE TABLE IF NOT EXISTS trade_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance_id INTEGER NOT NULL REFERENCES client_broker_instances(id),
+    client_id INTEGER NOT NULL REFERENCES users(id),
+    trade_type TEXT,
+    direction TEXT,
+    strike INTEGER,
+    entry_price REAL,
+    exit_price REAL,
+    pnl_pts REAL,
+    pnl_rs REAL,
+    quantity INTEGER,
+    broker TEXT,
+    exit_reason TEXT,
+    instrument TEXT,
+    trading_mode TEXT,
+    opened_at TEXT,
+    closed_at TEXT DEFAULT (datetime('now')),
+    entry_index_price REAL
+);
+
+CREATE TABLE IF NOT EXISTS order_failures (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    instance_id INTEGER NOT NULL REFERENCES client_broker_instances(id),
+    client_id INTEGER NOT NULL REFERENCES users(id),
+    order_side TEXT,
+    broker_error TEXT,
+    failure_reason TEXT,
+    retry_attempt INTEGER DEFAULT 0,
+    paired_leg_closed INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_id INTEGER,
+    actor_role TEXT,
+    action TEXT,
+    target_type TEXT,
+    target_id INTEGER,
+    details TEXT,
+    ip_address TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS broker_change_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER NOT NULL REFERENCES users(id),
+    current_broker TEXT NOT NULL,
+    requested_broker TEXT NOT NULL,
+    reason TEXT DEFAULT '',
+    status TEXT DEFAULT 'pending',
+    created_at TEXT DEFAULT (datetime('now')),
+    resolved_at TEXT,
+    resolved_by_id INTEGER
+);
+"""
+
+_conn = None
+
+
+def get_db() -> sqlite3.Connection:
+    global _conn
+    if _conn is None:
+        Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
+        _conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        _conn.row_factory = sqlite3.Row
+        _conn.execute("PRAGMA journal_mode=WAL")
+        _conn.execute("PRAGMA foreign_keys=ON")
+        _migrate(_conn)
+        _seed(_conn)
+        logger.info(f"[DB] SQLite connected: {DB_PATH}")
+    return _conn
+
+
+def _migrate(conn: sqlite3.Connection):
+    conn.executescript(SCHEMA)
+    user_cols = [row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "full_name" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN full_name TEXT")
+    if "phone_number" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN phone_number TEXT")
+
+    dp_cols = [row[1] for row in conn.execute("PRAGMA table_info(data_providers)").fetchall()]
+    if "api_secret_encrypted" not in dp_cols:
+        conn.execute("ALTER TABLE data_providers ADD COLUMN api_secret_encrypted TEXT")
+    if "user_id_encrypted" not in dp_cols:
+        conn.execute("ALTER TABLE data_providers ADD COLUMN user_id_encrypted TEXT")
+    if "password_encrypted" not in dp_cols:
+        conn.execute("ALTER TABLE data_providers ADD COLUMN password_encrypted TEXT")
+    if "totp_encrypted" not in dp_cols:
+        conn.execute("ALTER TABLE data_providers ADD COLUMN totp_encrypted TEXT")
+
+    existing = [row[1] for row in conn.execute("PRAGMA table_info(client_broker_instances)").fetchall()]
+    if "api_secret_encrypted" not in existing:
+        conn.execute("ALTER TABLE client_broker_instances ADD COLUMN api_secret_encrypted TEXT")
+    if "token_updated_at" not in existing:
+        conn.execute("ALTER TABLE client_broker_instances ADD COLUMN token_updated_at TEXT")
+    if "password_encrypted" not in existing:
+        conn.execute("ALTER TABLE client_broker_instances ADD COLUMN password_encrypted TEXT")
+    if "totp_encrypted" not in existing:
+        conn.execute("ALTER TABLE client_broker_instances ADD COLUMN totp_encrypted TEXT")
+    if "broker_user_id_encrypted" not in existing:
+        conn.execute("ALTER TABLE client_broker_instances ADD COLUMN broker_user_id_encrypted TEXT")
+
+    trade_cols = [row[1] for row in conn.execute("PRAGMA table_info(trade_history)").fetchall()]
+    if "entry_index_price" not in trade_cols:
+        conn.execute("ALTER TABLE trade_history ADD COLUMN entry_index_price REAL")
+    if "entry_indicators" not in trade_cols:
+        conn.execute("ALTER TABLE trade_history ADD COLUMN entry_indicators TEXT")
+    if "exit_indicators" not in trade_cols:
+        conn.execute("ALTER TABLE trade_history ADD COLUMN exit_indicators TEXT")
+
+    conn.commit()
+
+
+def _seed(conn: sqlite3.Connection):
+    from web.auth import hash_password
+    existing = conn.execute("SELECT id FROM users WHERE role='admin'").fetchone()
+    if not existing:
+        ph = hash_password("Admin@123")
+        conn.execute(
+            "INSERT INTO users (username, email, password_hash, role, is_active) VALUES (?,?,?,?,?)",
+            ("admin", "admin@algosoft.com", ph, "admin", 1)
+        )
+        conn.commit()
+        logger.info("[DB] Default admin created (admin / Admin@123)")
+
+    conn.execute(
+        "INSERT OR IGNORE INTO data_providers (provider, status) VALUES ('upstox', 'not_configured')"
+    )
+    conn.execute(
+        "INSERT OR IGNORE INTO data_providers (provider, status) VALUES ('dhan', 'not_configured')"
+    )
+    conn.commit()
+
+
+def db_fetchone(sql: str, params=()):
+    row = get_db().execute(sql, params).fetchone()
+    return dict(row) if row else None
+
+
+def db_fetchall(sql: str, params=()):
+    rows = get_db().execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def db_execute(sql: str, params=()):
+    conn = get_db()
+    try:
+        cur = conn.execute(sql, params)
+        conn.commit()
+        return cur.lastrowid
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"[DB] Execute failed: {sql} | Error: {e}")
+        raise

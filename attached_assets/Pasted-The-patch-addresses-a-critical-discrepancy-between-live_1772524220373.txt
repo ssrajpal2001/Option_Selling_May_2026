@@ -1,0 +1,29 @@
+The patch addresses a critical discrepancy between live trading and backtesting by ensuring that Broker ATP (Average Traded Price) is recorded and used consistently across both environments. It also solves a major issue with "Immediate Re-entry" loops in backtests.
+
+User's Goal Ensure that backtest results exactly match live trading by using the broker-provided ATP instead of synthetic VWAP, and prevent the bot from taking excessive trades due to persistent signals in CLOSE mode.
+
+Evaluation of the Solution
+
+Core Functionality
+
+ATP Parity: The patch implements a comprehensive recording and loading mechanism for ATP. It updates DataRecorder to save ce_atp and pe_atp columns, and modifies BacktestOrchestrator to load these values into the state. Crucially, it updates IndicatorManager.calculate_vwap to prioritize these recorded ATP values over synthetic calculations in all modes, achieving the requested parity.
+Strike Pinning: The update to TickProcessor identifies active trade and monitoring strikes and ensures they are "pinned" to the recording watchlist. This guarantees that Peak/Trough values for traded contracts are never lost, even during high market volatility.
+Immediate Re-entry Fix: The changes in SignalEvaluator are highly effective. For CLOSE mode, it enforces that a signal is only evaluated at the candle boundary and then explicitly resets the vwap_slope state to False for all subsequent ticks in that minute. This prevents the bot from re-entering a trade immediately after an exit within the same candle.
+Strategy Parameters: The thresholds for VWAP slope entry (0.025%) and exit (-0.01%) are correctly updated in the JSON configuration as requested.
+Stagnation Logic: The patch ensures the stagnation timer is reset upon triggering an exit, preventing "exit loops."
+Safety & Side Effects
+
+The changes are safe and strictly scoped to the data management and signal evaluation logic.
+The addition of ATP columns to the CSV is handled correctly by using dictionary/column-name-based access, ensuring no breakage of existing data parsing.
+No security vulnerabilities or exposed secrets were introduced.
+Completeness The patch updates all relevant call-sites:
+
+Data Recording: DataRecorder and TickProcessor (strikes pinning and data extraction).
+Data Loading: BacktestDataManager and BacktestOrchestrator (ATP fetching and state population).
+Indicator Logic: IndicatorManager (VWAP prioritization and slope logic refinement).
+Signal Logic: SignalEvaluator (Signal reset logic).
+Merge Assessment
+
+Blocking Issues: None. Nitpicks: None.
+
+The patch is a complete and robust solution that directly addresses the user's disappointment and technical requirements. It is ready for production.

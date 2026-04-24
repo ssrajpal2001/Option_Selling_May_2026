@@ -1,0 +1,1855 @@
+2026-03-05 09:33:14,749 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-03-05 09:33:14,752 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-03-05 09:33:14,754 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-03-05 09:33:14,754 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-03-05 09:33:14,754 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-03-05 09:33:14,754 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-03-05 09:33:14,754 - UpstoxApp - INFO - Initializing API Client Manager for data providers...
+2026-03-05 09:33:14,754 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_1]
+2026-03-05 09:33:14,754 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_1]
+2026-03-05 09:33:14,809 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_1].
+2026-03-05 09:33:14,809 - UpstoxApp - INFO - Initializing data provider client from section: [upstox_2]
+2026-03-05 09:33:14,809 - UpstoxApp - INFO - Attempting to authenticate Upstox account: [upstox_2]
+2026-03-05 09:33:14,849 - UpstoxApp - INFO - Authentication successful and token verified for [upstox_2].
+2026-03-05 09:33:14,849 - UpstoxApp - INFO - API client pool initialized with 2 clients. Active client is set.
+2026-03-05 09:33:14,850 - UpstoxApp - ERROR - Failed to connect to database: [Errno 111] Connect call failed ('127.0.0.1', 5432)
+2026-03-05 09:33:14,850 - UpstoxApp - WARNING - DATABASE WARNING: Connection failed ([Errno 111] Connect call failed ('127.0.0.1', 5432)). Proceeding in legacy mode (INI only).
+2026-03-05 09:33:14,851 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-03-05 09:33:14,851 - UpstoxApp - WARNING - Database broker discovery skipped or failed: 'NoneType' object has no attribute 'acquire'. Falling back to .ini
+2026-03-05 09:33:15,482 - UpstoxApp - INFO - Starting Zerodha authentication for section: Zerodha_Client_Live_1...
+2026-03-05 09:33:15,482 - UpstoxApp - INFO - Validating Zerodha access token for Zerodha_Client_Live_1...
+2026-03-05 09:33:15,520 - UpstoxApp - INFO - Zerodha access token for Zerodha_Client_Live_1 is valid.
+2026-03-05 09:33:15,539 - UpstoxApp - INFO - Zerodha authentication successful for user: SA5770 [Zerodha_Client_Live_1].
+2026-03-05 09:33:15,539 - UpstoxApp - INFO - Successfully loaded broker: Zerodha_Client_Live_1 (Client: Zerodha)
+2026-03-05 09:33:15,539 - UpstoxApp - INFO - Live mode enabled. Selected data provider: upstox
+2026-03-05 09:33:15,561 - UpstoxApp - INFO - WebSocket listener task created.
+2026-03-05 09:33:15,561 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_buying_March/utils/../config/strategy_logic.json
+2026-03-05 09:33:15,590 - UpstoxApp - INFO - Initialized data recorder: /home/ec2-user/environment/Option_buying_March/market_data_NIFTY_2026-03-05.csv
+2026-03-05 09:33:15,590 - UpstoxApp - INFO - Message handler handle_message registered.
+2026-03-05 09:33:15,590 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-03-05 09:33:15,606 - UpstoxApp - INFO - WebSocketManager starting connection loop.
+2026-03-05 09:33:15,607 - UpstoxApp - INFO - Attempting to authorize and connect... (Attempt 1)
+2026-03-05 09:33:15,607 - UpstoxApp - INFO - Authorizing WebSocket feed...
+2026-03-05 09:33:15,607 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize...
+2026-03-05 09:33:15,610 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-03-05 09:33:15,654 - UpstoxApp - INFO - WebSocket authorization successful.
+2026-03-05 09:33:15,663 - UpstoxApp - INFO - Opening WebSocket connection to wss://wsfeeder-api.upstox.com/market-data-feeder/v...
+2026-03-05 09:33:15,716 - UpstoxApp - INFO - WebSocket connection established successfully.
+2026-03-05 09:33:15,719 - UpstoxApp - WARNING - V2 WebSocket: No existing instruments to re-subscribe to.
+2026-03-05 09:33:15,719 - UpstoxApp - INFO - WebSocket message processor started.
+2026-03-05 09:33:15,719 - UpstoxApp - INFO - First market data packet processed from queue. Data feed is active.
+2026-03-05 09:33:16,081 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-03-05) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-03-05 09:33:16,111 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-03-05
+2026-03-05 09:33:16,147 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-03-05 09:33:16,147 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-03-05 (key=NSE_INDEX|Nifty 50)
+2026-03-05 09:33:16,147 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-03-05 09:33:16,148 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-03-10 (day=Tuesday)
+2026-03-05 09:33:16,155 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-03-10 (CURRENT_WEEK), trade=2026-03-10 (WEEKLY)
+2026-03-05 09:33:16,156 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-05 09:33:16,157 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-03-10 (WEEKLY), trade=2026-03-10 (WEEKLY)
+2026-03-05 09:33:16,157 - UpstoxApp - INFO - UserSession Initialized: User=default_user@local | Instrument=NIFTY
+2026-03-05 09:33:16,157 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-03-05 09:33:16,161 - UpstoxApp - INFO - Trading bot is now live.
+2026-03-05 09:33:16,162 - UpstoxApp - INFO - [EngineManager] NIFTY sell start time 09:20:00 reached — building candidates.
+2026-03-05 09:33:16,162 - UpstoxApp - ERROR - [SellManager] ATM or strike interval unavailable — cannot build candidates.
+2026-03-05 09:33:16,163 - UpstoxApp - INFO - V2: First FUTURES price received for NIFTY: 24671.2
+2026-03-05 09:33:16,163 - UpstoxApp - INFO - V2: First INDEX price (Spot) received for NIFTY: 24577.9
+2026-03-05 09:33:16,164 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.0s | Worker: ALIVE | Exchange: 2026-03-05 09:33:16.162000+05:30 | Sessions: Global:Idle
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:15
+
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:16
+
+[NIFTY] FUTURES: 24671.20 | INDEX: 24577.90 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24650*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:17
+
+[NIFTY] FUTURES: 24671.20 | INDEX: 24575.90 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24650*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:18
+
+[NIFTY] FUTURES: 24665.10 | INDEX: 24577.85 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24650*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:19
+
+[NIFTY] FUTURES: 24663.70 | INDEX: 24576.75 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24650*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:20
+
+[NIFTY] FUTURES: 24663.70 | INDEX: 24577.95 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24650*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:21
+
+[NIFTY] FUTURES: 24675.00 | INDEX: 24578.05 | ATM: 24700 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24750      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:22
+
+[NIFTY] FUTURES: 24675.00 | INDEX: 24577.25 | ATM: 24700 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24750      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:23
+
+[NIFTY] FUTURES: 24672.70 | INDEX: 24577.00 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24650*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:24
+
+[NIFTY] FUTURES: 24669.10 | INDEX: 24577.85 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24650*     | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:25
+
+[NIFTY] FUTURES: 24669.10 | INDEX: 24577.65 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  224.90    |  244.25    |  19.35   | PE       | ---             | 
+  24650*     |  198.45    |  268.15    |  69.70   | PE       | ---             | 
+  24700      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:26
+
+[NIFTY] FUTURES: 24670.00 | INDEX: 24578.20 | ATM: 24650 | TARGET: N/A
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  224.00    |  245.30    |  21.30   | PE       | ---             | 
+2026-03-05 09:33:27,321 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 9999s since last switch): None -> 24600 (User: Global)
+2026-03-05 09:33:27,594 - UpstoxApp - INFO - V2: [CE] [BUY] Status [24600]: slope(V1:243.70 > V0:240.57 (Pct:1.30%, Cons:1/1))=True | LTP: 224.00 | Formula: vwap_slope
+2026-03-05 09:33:27,596 - UpstoxApp - INFO - [Task 139978860047888] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-03-05 09:33:27,598 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24577.75) → 24600 [Futures/signal strike was: 24600]
+2026-03-05 09:33:27,599 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 09:33:27,599 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 09:33:27,626 - UpstoxApp - INFO - Successfully placed BUY (CALL) order for NIFTY2631024600CE with order_id: 260305190240002
+2026-03-05 09:33:27,626 - UpstoxApp - INFO - [NIFTY] Trade confirmed for CALL on NIFTY2631024600CE (User: None)
+2026-03-05 09:33:27,798 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45513. Monitoring strike 24600 for crossover exit.
+2026-03-05 09:33:27,811 - UpstoxApp - INFO - V2: [PE] [BUY] Status [24600]: slope(V1:251.62 > V0:250.57 (Pct:0.42%, Cons:1/1))=True | LTP: 245.30 | Formula: vwap_slope
+2026-03-05 09:33:27,813 - UpstoxApp - INFO - [Task 139978860047888] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-03-05 09:33:27,814 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24577.75) → 24600 [Futures/signal strike was: 24600]
+2026-03-05 09:33:27,814 - UpstoxApp - INFO - V2: PUT entry triggered, but NOT closing CALL because 'reversal' is not in its exit formula.
+2026-03-05 09:33:27,818 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 09:33:27,818 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 09:33:27,866 - UpstoxApp - INFO - Successfully placed BUY (PUT) order for NIFTY2631024600PE with order_id: 260305190240033
+2026-03-05 09:33:27,866 - UpstoxApp - INFO - [NIFTY] Trade confirmed for PUT on NIFTY2631024600PE (User: None)
+2026-03-05 09:33:27,992 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45514. Monitoring strike 24600 for crossover exit.
+2026-03-05 09:33:28,010 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 (SWITCHED) | Index: 24579.65 | CE: (In Trade) [V:243.7, VP:0.0] (LTP: 224.00) | PE: (In Trade) [V:251.6, VP:0.0] (LTP: 245.30)
+2026-03-05 09:33:28,214 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.70 vs Peak 243.70 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:28,218 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.62 vs Peak 251.62 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:28,460 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.69 vs Peak 243.70 | Drawdown: -0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:28,463 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.61 vs Peak 251.62 | Drawdown: -0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:29,432 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.69 vs Peak 243.70 | Drawdown: -0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:29,435 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.61 vs Peak 251.62 | Drawdown: -0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:30,452 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.68 vs Peak 243.70 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:30,457 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.61 vs Peak 251.62 | Drawdown: -0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:31,442 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.68 vs Peak 243.70 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:31,445 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.61 vs Peak 251.62 | Drawdown: -0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:32,477 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.67 vs Peak 243.70 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:32,480 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.60 vs Peak 251.62 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:33,469 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.67 vs Peak 243.70 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:33,472 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.59 vs Peak 251.62 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+  24650*     |  197.95    |  268.15    |  70.20   | PE       | ---             | 
+  24700      |  173.70    |  292.60    | 118.90   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 0
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:27
+
+[NIFTY] FUTURES: 24670.00 | INDEX: 24577.75 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  224.00    |  245.30    |  21.30   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.7
+  24650*     |  197.90    |  267.85    |  69.95   | PE       | ---             | 
+  24700      |  173.70    |  292.60    | 118.90   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 224.00, LTP: 224.00, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 224.00
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 0.00
+  NET SESSION PNL: 0.00 | Total Trades: 1
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:28
+
+[NIFTY] FUTURES: 24670.00 | INDEX: 24579.25 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.00    |  244.45    |  19.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.7 | PE_ATP:251.6
+  24650*     |  197.90    |  267.85    |  69.95   | PE       | ---             | 
+  24700      |  173.25    |  294.10    | 120.85   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 225.00, LTP: 225.00, Live PNL: 65.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 225.00
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 244.45, Live PNL: -55.25
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 244.45
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 9.75
+  NET SESSION PNL: 9.75 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:29
+
+[NIFTY] FUTURES: 24668.90 | INDEX: 24579.30 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.00    |  244.45    |  19.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.7 | PE_ATP:251.6
+  24650*     |  199.75    |  266.20    |  66.45   | PE       | ---             | 
+  24700      |  174.80    |  291.10    | 116.30   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 225.00, LTP: 225.00, Live PNL: 65.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 225.00
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 244.45, Live PNL: -55.25
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 244.45
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 9.75
+  NET SESSION PNL: 9.75 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:30
+
+[NIFTY] FUTURES: 24668.90 | INDEX: 24579.40 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  226.35    |  242.80    |  16.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.7 | PE_ATP:251.6
+  24650*     |  199.75    |  265.90    |  66.15   | PE       | ---             | 
+  24700      |  174.80    |  291.10    | 116.30   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 226.35, LTP: 226.35, Live PNL: 152.75
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 226.35
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 242.80, Live PNL: -162.50
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 242.80
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: -9.75
+  NET SESSION PNL: -9.75 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:31
+
+[NIFTY] FUTURES: 24670.30 | INDEX: 24579.95 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  227.00    |  242.20    |  15.20   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.7 | PE_ATP:251.6
+  24650*     |  199.90    |  265.90    |  66.00   | PE       | ---             | 
+  24700      |  175.40    |  291.35    | 115.95   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 226.35, LTP: 227.00, Live PNL: 195.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 227.00
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 242.20, Live PNL: -201.50
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 242.20
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: -6.50
+  NET SESSION PNL: -6.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:32
+
+[NIFTY] FUTURES: 24670.30 | INDEX: 24580.65 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  227.00    |  242.20    |  15.20   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.7 | PE_ATP:251.6
+  24650*     |  199.90    |  265.30    |  65.40   | PE       | ---             | 
+  24700      |  176.00    |  291.35    | 115.35   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 227.00, LTP: 227.00, Live PNL: 195.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 227.00
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 242.20, Live PNL: -201.50
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 242.20
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: -6.50
+  NET SESSION PNL: -6.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:33
+
+[NIFTY] FUTURES: 24672.70 | INDEX: 24579.95 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  228.00    |  241.45    |  13.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.7 | PE_ATP:251.6
+  24650*     |  199.90    |  265.30    |  65.40   | PE       | ---             | 
+  24700      |  176.00    |  291.25    | 115.25   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+2026-03-05 09:33:34,455 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.67 vs Peak 243.70 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:34,459 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.59 vs Peak 251.62 | Drawdown: -0.01% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:35,502 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.65 vs Peak 243.70 | Drawdown: -0.02% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:35,506 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.58 vs Peak 251.62 | Drawdown: -0.02% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:36,509 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT CRITERIA MET (VWAP Slope): Current VWAP 243.63 vs Ref 243.70 (Drawdown: -0.03%, Threshold: -0.03%)
+2026-03-05 09:33:36,513 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT TRIGGERED: Structural Exit: VWAP Slope < (TICK)
+2026-03-05 09:33:36,514 - UpstoxApp - INFO - V2: Requesting EXIT for CALL at 228.60. Reason: Structural Exit: VWAP Slope < (TICK)
+2026-03-05 09:33:36,514 - UpstoxApp - INFO - V2 MGMT: [CALL] Exit (Structural Exit: VWAP Slope < (TICK)). Preserving 9:15 Breach flags for potential re-entry.
+2026-03-05 09:33:36,514 - UpstoxApp - INFO - V2 MGMT: [CALL] Re-entry cooldown active until 09:34:36 (60s)
+2026-03-05 09:33:36,516 - UpstoxApp - INFO - Executing exit on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 09:33:36,538 - UpstoxApp - INFO - Successfully placed SELL order to close CALL position for NIFTY2631024600CE with order_id: 260305190241025
+2026-03-05 09:33:36,539 - UpstoxApp - INFO - Closed CALL trade. Final PNL: 299.00, Total Session PNL: 299.00
+2026-03-05 09:33:36,539 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.56 vs Peak 251.62 | Drawdown: -0.02% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:37,475 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 59s remaining (until 09:34:36)
+2026-03-05 09:33:37,475 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 59s remaining (until 09:34:36)
+2026-03-05 09:33:37,484 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.56 vs Peak 251.62 | Drawdown: -0.02% | Threshold: -0.03% → HOLD
+2026-03-05 09:33:38,478 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 58s remaining (until 09:34:36)
+2026-03-05 09:33:38,491 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 58s remaining (until 09:34:36)
+2026-03-05 09:33:38,512 - UpstoxApp - INFO - V2 MGMT: [PUT] EXIT CRITERIA MET (VWAP Slope): Current VWAP 251.55 vs Ref 251.62 (Drawdown: -0.03%, Threshold: -0.03%)
+2026-03-05 09:33:38,515 - UpstoxApp - INFO - V2 MGMT: [PUT] EXIT TRIGGERED: Structural Exit: VWAP Slope < (TICK)
+2026-03-05 09:33:38,515 - UpstoxApp - INFO - V2: Requesting EXIT for PUT at 243.00. Reason: Structural Exit: VWAP Slope < (TICK)
+2026-03-05 09:33:38,515 - UpstoxApp - INFO - V2 MGMT: [PUT] Exit (Structural Exit: VWAP Slope < (TICK)). Preserving 9:15 Breach flags for potential re-entry.
+2026-03-05 09:33:38,515 - UpstoxApp - INFO - V2 MGMT: [PUT] Re-entry cooldown active until 09:34:38 (60s)
+2026-03-05 09:33:38,516 - UpstoxApp - INFO - Executing exit on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 09:33:38,538 - UpstoxApp - INFO - Successfully placed SELL order to close PUT position for NIFTY2631024600PE with order_id: 260305190241310
+2026-03-05 09:33:38,538 - UpstoxApp - INFO - Closed PUT trade. Final PNL: -149.50, Total Session PNL: 149.50
+2026-03-05 09:33:39,483 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 57s remaining (until 09:34:36)
+2026-03-05 09:33:39,487 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 59s remaining (until 09:34:38)
+2026-03-05 09:33:39,487 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 57s remaining (until 09:34:36)
+2026-03-05 09:33:39,487 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 59s remaining (until 09:34:38)
+2026-03-05 09:33:40,487 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 56s remaining (until 09:34:36)
+2026-03-05 09:33:40,488 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 58s remaining (until 09:34:38)
+2026-03-05 09:33:40,488 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 56s remaining (until 09:34:36)
+2026-03-05 09:33:40,488 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 58s remaining (until 09:34:38)
+2026-03-05 09:33:41,495 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 55s remaining (until 09:34:36)
+2026-03-05 09:33:41,498 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 57s remaining (until 09:34:38)
+2026-03-05 09:33:41,499 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 55s remaining (until 09:34:36)
+2026-03-05 09:33:41,499 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 57s remaining (until 09:34:38)
+2026-03-05 09:33:42,522 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 54s remaining (until 09:34:36)
+2026-03-05 09:33:42,525 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 56s remaining (until 09:34:38)
+2026-03-05 09:33:42,535 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 54s remaining (until 09:34:36)
+2026-03-05 09:33:42,537 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 56s remaining (until 09:34:38)
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 228.00, LTP: 228.00, Live PNL: 260.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 228.00
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 241.45, Live PNL: -250.25
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 241.45
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 9.75
+  NET SESSION PNL: 9.75 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:34
+
+[NIFTY] FUTURES: 24680.00 | INDEX: 24582.90 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  201.95    |  264.00    |  62.05   | PE       | ---             | 
+  24700*     |  177.00    |  288.50    | 111.50   | PE       | ---             | 
+  24750      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 228.00, LTP: 228.00, Live PNL: 260.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 228.00
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 241.45, Live PNL: -250.25
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 241.45
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 9.75
+  NET SESSION PNL: 9.75 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:35
+
+[NIFTY] FUTURES: 24680.00 | INDEX: 24584.70 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  201.85    |  262.90    |  61.05   | PE       | ---             | 
+  24700*     |  177.00    |  288.50    | 111.50   | PE       | ---             | 
+  24750      | N/A        | N/A        | N/A      | N/A      | ---             | Waiting...
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024600CE (24600.0) | Entry: 224.00, Peak: 228.95, LTP: 228.95, Live PNL: 321.75
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 228.95
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 240.90, Live PNL: -286.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 240.90
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 0.00
+  Running PNL: 35.75
+  NET SESSION PNL: 35.75 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:36
+
+[NIFTY] FUTURES: 24681.50 | INDEX: 24583.00 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  201.85    |  262.90    |  61.05   | PE       | ---             | 
+  24700*     |  177.80    |  287.70    | 109.90   | PE       | ---             | 
+  24750      |  154.70    |  314.35    | 159.65   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 239.85, Live PNL: -354.25
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 239.85
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 299.00
+  Running PNL: -354.25
+  NET SESSION PNL: -55.25 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:37
+
+[NIFTY] FUTURES: 24681.50 | INDEX: 24582.65 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  201.00    |  264.50    |  63.50   | PE       | ---             | 
+  24700*     |  175.95    |  287.70    | 111.75   | PE       | ---             | 
+  24750      |  153.40    |  317.10    | 163.70   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    PUT:  IN TRADE | NIFTY2631024600PE (24600.0) | Entry: 245.30, Peak: 245.30, LTP: 239.85, Live PNL: -354.25
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 239.85
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 299.00
+  Running PNL: -354.25
+  NET SESSION PNL: -55.25 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:38
+
+[NIFTY] FUTURES: 24682.20 | INDEX: 24580.00 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  201.00    |  264.50    |  63.50   | PE       | ---             | 
+  24700*     |  175.95    |  290.40    | 114.45   | PE       | ---             | 
+  24750      |  153.40    |  317.10    | 163.70   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:39
+
+[NIFTY] FUTURES: 24677.10 | INDEX: 24581.30 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  201.15    |  264.75    |  63.60   | PE       | ---             | 
+  24700*     |  176.20    |  289.90    | 113.70   | PE       | ---             | 
+  24750      |  153.45    |  317.85    | 164.40   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:40
+
+[NIFTY] FUTURES: 24677.10 | INDEX: 24583.30 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  200.75    |  264.90    |  64.15   | PE       | ---             | 
+  24700*     |  176.20    |  289.90    | 113.70   | PE       | ---             | 
+  24750      |  153.45    |  317.85    | 164.40   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:41
+
+[NIFTY] FUTURES: 24677.00 | INDEX: 24582.20 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  200.75    |  264.90    |  64.15   | PE       | ---             | 
+  24700*     |  175.55    |  291.25    | 115.70   | PE       | ---             | 
+  24750      |  153.20    |  318.00    | 164.80   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:42
+
+[NIFTY] FUTURES: 24677.00 | INDEX: 24581.30 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+2026-03-05 09:33:43,721 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 53s remaining (until 09:34:36)
+2026-03-05 09:33:43,733 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 55s remaining (until 09:34:38)
+2026-03-05 09:33:43,741 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 53s remaining (until 09:34:36)
+2026-03-05 09:33:43,750 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 55s remaining (until 09:34:38)
+2026-03-05 09:33:44,718 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 52s remaining (until 09:34:36)
+2026-03-05 09:33:44,721 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 54s remaining (until 09:34:38)
+2026-03-05 09:33:44,722 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 52s remaining (until 09:34:36)
+2026-03-05 09:33:44,722 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 54s remaining (until 09:34:38)
+2026-03-05 09:33:45,780 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 51s remaining (until 09:34:36)
+2026-03-05 09:33:45,782 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 53s remaining (until 09:34:38)
+2026-03-05 09:33:45,791 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 51s remaining (until 09:34:36)
+2026-03-05 09:33:45,794 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 53s remaining (until 09:34:38)
+2026-03-05 09:33:46,783 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 50s remaining (until 09:34:36)
+2026-03-05 09:33:46,786 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 52s remaining (until 09:34:38)
+2026-03-05 09:33:46,795 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 50s remaining (until 09:34:36)
+2026-03-05 09:33:46,797 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 52s remaining (until 09:34:38)
+2026-03-05 09:33:47,780 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 09:34:36)
+2026-03-05 09:33:47,783 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 51s remaining (until 09:34:38)
+2026-03-05 09:33:47,785 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 09:34:36)
+2026-03-05 09:33:47,785 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 51s remaining (until 09:34:38)
+2026-03-05 09:33:48,792 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 48s remaining (until 09:34:36)
+2026-03-05 09:33:48,803 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 50s remaining (until 09:34:38)
+2026-03-05 09:33:48,812 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 48s remaining (until 09:34:36)
+2026-03-05 09:33:48,824 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 50s remaining (until 09:34:38)
+2026-03-05 09:33:49,789 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 47s remaining (until 09:34:36)
+2026-03-05 09:33:49,792 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 49s remaining (until 09:34:38)
+2026-03-05 09:33:49,794 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 47s remaining (until 09:34:36)
+2026-03-05 09:33:49,794 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 49s remaining (until 09:34:38)
+2026-03-05 09:33:50,801 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 09:34:36)
+2026-03-05 09:33:50,804 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 48s remaining (until 09:34:38)
+2026-03-05 09:33:50,814 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 09:34:36)
+2026-03-05 09:33:50,818 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 48s remaining (until 09:34:38)
+2026-03-05 09:33:51,859 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 45s remaining (until 09:34:36)
+2026-03-05 09:33:51,865 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 47s remaining (until 09:34:38)
+2026-03-05 09:33:51,876 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 45s remaining (until 09:34:36)
+2026-03-05 09:33:51,878 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 47s remaining (until 09:34:38)
+  24650      |  200.60    |  266.00    |  65.40   | PE       | ---             | 
+  24700*     |  176.70    |  291.25    | 114.55   | PE       | ---             | 
+  24750      |  153.70    |  318.25    | 164.55   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:43
+
+[NIFTY] FUTURES: 24671.00 | INDEX: 24582.00 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  228.00    |  242.85    |  14.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.6 | PE_ATP:251.6
+  24650*     |  200.60    |  266.00    |  65.40   | PE       | ---             | 
+  24700      |  176.70    |  291.80    | 115.10   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:44
+
+[NIFTY] FUTURES: 24671.00 | INDEX: 24582.70 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  228.00    |  242.85    |  14.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.6 | PE_ATP:251.5
+  24650*     |  200.70    |  267.10    |  66.40   | PE       | ---             | 
+  24700      |  175.25    |  292.45    | 117.20   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:45
+
+[NIFTY] FUTURES: 24671.00 | INDEX: 24579.30 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  227.15    |  243.55    |  16.40   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.6 | PE_ATP:251.5
+  24650*     |  200.70    |  266.70    |  66.00   | PE       | ---             | 
+  24700      |  175.25    |  292.45    | 117.20   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:46
+
+[NIFTY] FUTURES: 24671.00 | INDEX: 24583.80 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  227.40    |  243.30    |  15.90   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.6 | PE_ATP:251.5
+  24650*     |  200.70    |  266.70    |  66.00   | PE       | ---             | 
+  24700      |  176.50    |  291.00    | 114.50   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:47
+
+[NIFTY] FUTURES: 24671.00 | INDEX: 24581.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  227.40    |  243.30    |  15.90   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.6 | PE_ATP:251.5
+  24650*     |  200.55    |  265.85    |  65.30   | PE       | ---             | 
+  24700      |  175.35    |  293.05    | 117.70   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:48
+
+[NIFTY] FUTURES: 24672.00 | INDEX: 24581.35 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  226.90    |  242.95    |  16.05   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.6 | PE_ATP:251.5
+  24650*     |  200.55    |  265.85    |  65.30   | PE       | ---             | 
+  24700      |  175.35    |  293.05    | 117.70   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:49
+
+[NIFTY] FUTURES: 24670.20 | INDEX: 24579.75 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  226.90    |  242.95    |  16.05   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  200.25    |  266.60    |  66.35   | PE       | ---             | 
+  24700      |  175.55    |  292.60    | 117.05   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:50
+
+[NIFTY] FUTURES: 24670.20 | INDEX: 24582.00 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  227.25    |  243.25    |  16.00   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  199.80    |  266.85    |  67.05   | PE       | ---             | 
+  24700      |  175.55    |  292.60    | 117.05   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:51
+
+[NIFTY] FUTURES: 24675.30 | INDEX: 24578.15 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  199.80    |  266.85    |  67.05   | PE       | ---             | 
+  24700*     |  174.75    |  292.55    | 117.80   | PE       | ---             | 
+  24750      |  153.85    |  319.20    | 165.35   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:52
+
+[NIFTY] FUTURES: 24675.30 | INDEX: 24578.30 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  197.70    |  269.20    |  71.50   | PE       | ---             | 
+  24700*     |  174.75    |  292.55    | 117.80   | PE       | ---             | 
+  24750      |  153.85    |  319.20    | 165.35   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+2026-03-05 09:33:52,862 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 44s remaining (until 09:34:36)
+2026-03-05 09:33:52,867 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 46s remaining (until 09:34:38)
+2026-03-05 09:33:52,867 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 44s remaining (until 09:34:36)
+2026-03-05 09:33:52,867 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 46s remaining (until 09:34:38)
+2026-03-05 09:33:53,957 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 43s remaining (until 09:34:36)
+2026-03-05 09:33:53,967 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 45s remaining (until 09:34:38)
+2026-03-05 09:33:53,976 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 43s remaining (until 09:34:36)
+2026-03-05 09:33:53,985 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 45s remaining (until 09:34:38)
+2026-03-05 09:33:54,951 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 42s remaining (until 09:34:36)
+2026-03-05 09:33:54,954 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 44s remaining (until 09:34:38)
+2026-03-05 09:33:54,957 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 42s remaining (until 09:34:36)
+2026-03-05 09:33:54,957 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 44s remaining (until 09:34:38)
+2026-03-05 09:33:56,020 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 40s remaining (until 09:34:36)
+2026-03-05 09:33:56,022 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 42s remaining (until 09:34:38)
+2026-03-05 09:33:56,023 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 40s remaining (until 09:34:36)
+2026-03-05 09:33:56,023 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 42s remaining (until 09:34:38)
+2026-03-05 09:33:57,033 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 39s remaining (until 09:34:36)
+2026-03-05 09:33:57,036 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 41s remaining (until 09:34:38)
+2026-03-05 09:33:57,045 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 39s remaining (until 09:34:36)
+2026-03-05 09:33:57,050 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 41s remaining (until 09:34:38)
+2026-03-05 09:33:58,036 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 38s remaining (until 09:34:36)
+2026-03-05 09:33:58,047 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 40s remaining (until 09:34:38)
+2026-03-05 09:33:58,056 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 38s remaining (until 09:34:36)
+2026-03-05 09:33:58,066 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 40s remaining (until 09:34:38)
+2026-03-05 09:33:59,032 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 38s remaining (until 09:34:36)
+2026-03-05 09:33:59,034 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 39s remaining (until 09:34:38)
+2026-03-05 09:33:59,034 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 38s remaining (until 09:34:36)
+2026-03-05 09:33:59,034 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 39s remaining (until 09:34:38)
+2026-03-05 09:34:00,045 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 37s remaining (until 09:34:36)
+2026-03-05 09:34:00,048 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 39s remaining (until 09:34:38)
+2026-03-05 09:34:00,059 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 37s remaining (until 09:34:36)
+2026-03-05 09:34:00,060 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 39s remaining (until 09:34:38)
+2026-03-05 09:34:00,574 - UpstoxApp - INFO - Initialized ATP recorder: /home/ec2-user/environment/Option_buying_March/atp_data_NIFTY_2026-03-05.csv
+2026-03-05 09:34:01,041 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 35s remaining (until 09:34:36)
+2026-03-05 09:34:01,044 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 37s remaining (until 09:34:38)
+2026-03-05 09:34:01,044 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 35s remaining (until 09:34:36)
+2026-03-05 09:34:01,044 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 37s remaining (until 09:34:38)
+2026-03-05 09:34:02,045 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 35s remaining (until 09:34:36)
+2026-03-05 09:34:02,047 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 37s remaining (until 09:34:38)
+2026-03-05 09:34:02,051 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 35s remaining (until 09:34:36)
+2026-03-05 09:34:02,051 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 37s remaining (until 09:34:38)
+2026-03-05 09:34:03,049 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 33s remaining (until 09:34:36)
+2026-03-05 09:34:03,052 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 35s remaining (until 09:34:38)
+2026-03-05 09:34:03,056 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 33s remaining (until 09:34:36)
+2026-03-05 09:34:03,056 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 35s remaining (until 09:34:38)
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:53
+
+[NIFTY] FUTURES: 24666.00 | INDEX: 24578.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.85    |  244.50    |  18.65   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  197.70    |  269.20    |  71.50   | PE       | ---             | 
+  24700      |  173.60    |  294.10    | 120.50   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:54
+
+[NIFTY] FUTURES: 24667.70 | INDEX: 24579.60 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.85    |  244.50    |  18.65   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  198.55    |  267.75    |  69.20   | PE       | ---             | 
+  24700      |  173.60    |  293.40    | 119.80   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:55
+
+[NIFTY] FUTURES: 24667.70 | INDEX: 24578.50 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.05    |  245.30    |  20.25   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  198.25    |  269.90    |  71.65   | PE       | ---             | 
+  24700      |  174.65    |  293.40    | 118.75   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:56
+
+[NIFTY] FUTURES: 24672.20 | INDEX: 24578.75 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.30    |  244.75    |  19.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  198.25    |  269.90    |  71.65   | PE       | ---             | 
+  24700      |  173.80    |  294.80    | 121.00   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:57
+
+[NIFTY] FUTURES: 24672.20 | INDEX: 24577.15 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.30    |  244.75    |  19.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  197.95    |  268.75    |  70.80   | PE       | ---             | 
+  24700      |  173.00    |  294.80    | 121.80   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:58
+
+[NIFTY] FUTURES: 24667.00 | INDEX: 24576.05 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.30    |  246.70    |  23.40   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  197.95    |  268.75    |  70.80   | PE       | ---             | 
+  24700      |  173.00    |  296.00    | 123.00   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:33:59
+
+[NIFTY] FUTURES: 24671.90 | INDEX: 24575.15 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.30    |  246.70    |  23.40   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  197.55    |  269.65    |  72.10   | PE       | ---             | 
+  24700      |  172.75    |  295.70    | 122.95   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:00
+
+[NIFTY] FUTURES: 24671.90 | INDEX: 24575.15 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.55    |  246.40    |  22.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  198.00    |  269.05    |  71.05   | PE       | ---             | 
+  24700      |  172.75    |  295.70    | 122.95   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:01
+
+[NIFTY] FUTURES: 24671.90 | INDEX: 24580.75 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  226.40    |  244.10    |  17.70   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.5 | PE_ATP:251.5
+  24650*     |  198.00    |  269.05    |  71.05   | PE       | ---             | 
+  24700      |  174.70    |  292.75    | 118.05   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:02
+
+[NIFTY] FUTURES: 24671.90 | INDEX: 24580.30 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  226.40    |  244.10    |  17.70   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  199.80    |  266.45    |  66.65   | PE       | ---             | 
+  24700      |  174.80    |  292.75    | 117.95   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:03
+
+2026-03-05 09:34:04,053 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 32s remaining (until 09:34:36)
+2026-03-05 09:34:04,056 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 34s remaining (until 09:34:38)
+2026-03-05 09:34:04,056 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 32s remaining (until 09:34:36)
+2026-03-05 09:34:04,057 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 34s remaining (until 09:34:38)
+2026-03-05 09:34:05,217 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 31s remaining (until 09:34:36)
+2026-03-05 09:34:05,232 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 33s remaining (until 09:34:38)
+2026-03-05 09:34:05,236 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 31s remaining (until 09:34:36)
+2026-03-05 09:34:05,236 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 33s remaining (until 09:34:38)
+2026-03-05 09:34:05,279 - UpstoxApp - ERROR - Invalid characters in formula: vwap_slope AND cross_slope_comparison. Evaluated as: False and cross_slope_comparison
+2026-03-05 09:34:05,282 - UpstoxApp - ERROR - Invalid characters in formula: vwap_slope AND cross_slope_comparison. Evaluated as: False and cross_slope_comparison
+2026-03-05 09:34:06,312 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 30s remaining (until 09:34:36)
+2026-03-05 09:34:06,318 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 32s remaining (until 09:34:38)
+2026-03-05 09:34:06,318 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 30s remaining (until 09:34:36)
+2026-03-05 09:34:06,318 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 32s remaining (until 09:34:38)
+2026-03-05 09:34:07,326 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 29s remaining (until 09:34:36)
+2026-03-05 09:34:07,329 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 31s remaining (until 09:34:38)
+2026-03-05 09:34:07,330 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 29s remaining (until 09:34:36)
+2026-03-05 09:34:07,330 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 31s remaining (until 09:34:38)
+2026-03-05 09:34:08,330 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 28s remaining (until 09:34:36)
+2026-03-05 09:34:08,335 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 30s remaining (until 09:34:38)
+2026-03-05 09:34:08,335 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 28s remaining (until 09:34:36)
+2026-03-05 09:34:08,335 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 30s remaining (until 09:34:38)
+2026-03-05 09:34:09,327 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 27s remaining (until 09:34:36)
+2026-03-05 09:34:09,329 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 29s remaining (until 09:34:38)
+2026-03-05 09:34:09,331 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 27s remaining (until 09:34:36)
+2026-03-05 09:34:09,331 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 29s remaining (until 09:34:38)
+2026-03-05 09:34:10,342 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 26s remaining (until 09:34:36)
+2026-03-05 09:34:10,353 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 28s remaining (until 09:34:38)
+2026-03-05 09:34:10,357 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 26s remaining (until 09:34:36)
+2026-03-05 09:34:10,357 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 28s remaining (until 09:34:38)
+2026-03-05 09:34:11,337 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 25s remaining (until 09:34:36)
+2026-03-05 09:34:11,339 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 27s remaining (until 09:34:38)
+2026-03-05 09:34:11,342 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 25s remaining (until 09:34:36)
+2026-03-05 09:34:11,342 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 27s remaining (until 09:34:38)
+2026-03-05 09:34:12,427 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 24s remaining (until 09:34:36)
+2026-03-05 09:34:12,430 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 26s remaining (until 09:34:38)
+2026-03-05 09:34:12,433 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 24s remaining (until 09:34:36)
+2026-03-05 09:34:12,433 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 26s remaining (until 09:34:38)
+2026-03-05 09:34:13,432 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 23s remaining (until 09:34:36)
+2026-03-05 09:34:13,434 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 25s remaining (until 09:34:38)
+2026-03-05 09:34:13,436 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 23s remaining (until 09:34:36)
+2026-03-05 09:34:13,436 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 25s remaining (until 09:34:38)
+[NIFTY] FUTURES: 24672.00 | INDEX: 24577.80 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.90    |  242.90    |  17.00   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  199.80    |  266.45    |  66.65   | PE       | ---             | 
+  24700      |  174.80    |  291.40    | 116.60   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:04
+
+[NIFTY] FUTURES: 24676.60 | INDEX: 24579.95 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  199.45    |  266.40    |  66.95   | PE       | ---             | 
+  24700*     |  174.35    |  292.55    | 118.20   | PE       | ---             | 
+  24750      |  153.85    |  319.20    | 165.35   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:05
+
+[NIFTY] FUTURES: 24676.60 | INDEX: 24580.30 | ATM: 24700 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24650      |  198.75    |  266.80    |  68.05   | PE       | ---             | 
+  24700*     |  174.35    |  292.55    | 118.20   | PE       | ---             | 
+  24750      |  152.05    |  319.20    | 167.15   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:06
+
+[NIFTY] FUTURES: 24671.90 | INDEX: 24577.65 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.00    |  244.30    |  19.30   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  198.75    |  266.80    |  68.05   | PE       | ---             | 
+  24700      |  174.50    |  292.70    | 118.20   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:07
+
+[NIFTY] FUTURES: 24665.30 | INDEX: 24575.35 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.00    |  244.30    |  19.30   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  197.55    |  269.25    |  71.70   | PE       | ---             | 
+  24700      |  173.10    |  294.90    | 121.80   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:08
+
+[NIFTY] FUTURES: 24665.30 | INDEX: 24575.50 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.20    |  246.05    |  22.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  197.55    |  269.25    |  71.70   | PE       | ---             | 
+  24700      |  173.10    |  294.90    | 121.80   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:09
+
+[NIFTY] FUTURES: 24667.00 | INDEX: 24576.60 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.20    |  244.20    |  21.00   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  197.90    |  268.05    |  70.15   | PE       | ---             | 
+  24700      |  173.75    |  293.65    | 119.90   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:10
+
+[NIFTY] FUTURES: 24667.00 | INDEX: 24577.25 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  225.00    |  244.20    |  19.20   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  197.75    |  267.55    |  69.80   | PE       | ---             | 
+  24700      |  173.75    |  293.65    | 119.90   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:11
+
+[NIFTY] FUTURES: 24666.80 | INDEX: 24576.80 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  224.15    |  245.20    |  21.05   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  197.75    |  267.55    |  69.80   | PE       | ---             | 
+  24700      |  173.30    |  294.00    | 120.70   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:12
+
+[NIFTY] FUTURES: 24666.80 | INDEX: 24574.90 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  224.15    |  245.20    |  21.05   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  196.50    |  269.45    |  72.95   | PE       | ---             | 
+  24700      |  172.45    |  295.70    | 123.25   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:13
+
+[NIFTY] FUTURES: 24666.80 | INDEX: 24574.90 | ATM: 24650 | TARGET: 24600.0
+2026-03-05 09:34:14,426 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 22s remaining (until 09:34:36)
+2026-03-05 09:34:14,430 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 24s remaining (until 09:34:38)
+2026-03-05 09:34:14,431 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 22s remaining (until 09:34:36)
+2026-03-05 09:34:14,431 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 24s remaining (until 09:34:38)
+2026-03-05 09:34:15,438 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 21s remaining (until 09:34:36)
+2026-03-05 09:34:15,448 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 23s remaining (until 09:34:38)
+2026-03-05 09:34:15,451 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 21s remaining (until 09:34:36)
+2026-03-05 09:34:15,454 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 23s remaining (until 09:34:38)
+2026-03-05 09:34:16,435 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 20s remaining (until 09:34:36)
+2026-03-05 09:34:16,435 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 22s remaining (until 09:34:38)
+2026-03-05 09:34:16,435 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 20s remaining (until 09:34:36)
+2026-03-05 09:34:16,435 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 22s remaining (until 09:34:38)
+2026-03-05 09:34:17,448 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 19s remaining (until 09:34:36)
+2026-03-05 09:34:17,450 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 21s remaining (until 09:34:38)
+2026-03-05 09:34:17,452 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 19s remaining (until 09:34:36)
+2026-03-05 09:34:17,452 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 21s remaining (until 09:34:38)
+2026-03-05 09:34:18,446 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 18s remaining (until 09:34:36)
+2026-03-05 09:34:18,450 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 20s remaining (until 09:34:38)
+2026-03-05 09:34:18,450 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 18s remaining (until 09:34:36)
+2026-03-05 09:34:18,450 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 20s remaining (until 09:34:38)
+2026-03-05 09:34:19,450 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 17s remaining (until 09:34:36)
+2026-03-05 09:34:19,453 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 19s remaining (until 09:34:38)
+2026-03-05 09:34:19,454 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 17s remaining (until 09:34:36)
+2026-03-05 09:34:19,454 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 19s remaining (until 09:34:38)
+2026-03-05 09:34:20,461 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 16s remaining (until 09:34:36)
+2026-03-05 09:34:20,464 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 18s remaining (until 09:34:38)
+2026-03-05 09:34:20,466 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 16s remaining (until 09:34:36)
+2026-03-05 09:34:20,466 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 18s remaining (until 09:34:38)
+2026-03-05 09:34:21,481 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 15s remaining (until 09:34:36)
+2026-03-05 09:34:21,492 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 17s remaining (until 09:34:38)
+2026-03-05 09:34:21,493 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 15s remaining (until 09:34:36)
+2026-03-05 09:34:21,496 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 17s remaining (until 09:34:38)
+2026-03-05 09:34:22,476 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 14s remaining (until 09:34:36)
+2026-03-05 09:34:22,479 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 16s remaining (until 09:34:38)
+2026-03-05 09:34:22,479 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 14s remaining (until 09:34:36)
+2026-03-05 09:34:22,479 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 16s remaining (until 09:34:38)
+2026-03-05 09:34:23,489 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 13s remaining (until 09:34:36)
+2026-03-05 09:34:23,491 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 15s remaining (until 09:34:38)
+2026-03-05 09:34:23,494 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 13s remaining (until 09:34:36)
+2026-03-05 09:34:23,494 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 15s remaining (until 09:34:38)
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.40    |  246.30    |  22.90   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  196.50    |  269.45    |  72.95   | PE       | ---             | 
+  24700      |  172.45    |  295.70    | 123.25   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:14
+
+[NIFTY] FUTURES: 24669.50 | INDEX: 24574.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.40    |  247.00    |  23.60   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.5
+  24650*     |  197.25    |  269.80    |  72.55   | PE       | ---             | 
+  24700      |  172.75    |  295.70    | 122.95   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:15
+
+[NIFTY] FUTURES: 24669.50 | INDEX: 24574.75 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.00    |  247.00    |  24.00   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.4
+  24650*     |  196.80    |  270.35    |  73.55   | PE       | ---             | 
+  24700      |  172.75    |  295.70    | 122.95   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:16
+
+[NIFTY] FUTURES: 24665.00 | INDEX: 24574.90 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.95    |  245.40    |  21.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.4 | PE_ATP:251.4
+  24650*     |  196.80    |  270.35    |  73.55   | PE       | ---             | 
+  24700      |  172.10    |  296.30    | 124.20   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:17
+
+[NIFTY] FUTURES: 24669.70 | INDEX: 24574.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.95    |  245.40    |  21.45   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  197.10    |  270.30    |  73.20   | PE       | ---             | 
+  24700      |  172.30    |  296.15    | 123.85   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:18
+
+[NIFTY] FUTURES: 24669.70 | INDEX: 24574.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.15    |  247.65    |  24.50   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  197.10    |  270.30    |  73.20   | PE       | ---             | 
+  24700      |  172.30    |  296.15    | 123.85   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:19
+
+[NIFTY] FUTURES: 24666.20 | INDEX: 24573.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.15    |  246.50    |  23.35   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  195.50    |  271.20    |  75.70   | PE       | ---             | 
+  24700      |  171.85    |  295.50    | 123.65   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:20
+
+[NIFTY] FUTURES: 24666.20 | INDEX: 24574.70 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  222.75    |  246.50    |  23.75   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  196.50    |  269.75    |  73.25   | PE       | ---             | 
+  24700      |  171.85    |  295.50    | 123.65   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:21
+
+[NIFTY] FUTURES: 24668.70 | INDEX: 24574.60 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.60    |  246.40    |  22.80   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  196.50    |  269.75    |  73.25   | PE       | ---             | 
+  24700      |  171.90    |  295.80    | 123.90   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:22
+
+[NIFTY] FUTURES: 24668.60 | INDEX: 24571.50 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  223.60    |  246.40    |  22.80   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  196.20    |  269.85    |  73.65   | PE       | ---             | 
+  24700      |  171.90    |  296.70    | 124.80   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J2026-03-05 09:34:24,483 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 12s remaining (until 09:34:36)
+2026-03-05 09:34:24,486 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 14s remaining (until 09:34:38)
+2026-03-05 09:34:24,489 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 12s remaining (until 09:34:36)
+2026-03-05 09:34:24,489 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 14s remaining (until 09:34:38)
+2026-03-05 09:34:25,628 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 11s remaining (until 09:34:36)
+2026-03-05 09:34:25,630 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 13s remaining (until 09:34:38)
+2026-03-05 09:34:25,633 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 11s remaining (until 09:34:36)
+2026-03-05 09:34:25,633 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 13s remaining (until 09:34:38)
+2026-03-05 09:34:26,632 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 10s remaining (until 09:34:36)
+2026-03-05 09:34:26,645 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 12s remaining (until 09:34:38)
+2026-03-05 09:34:26,646 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 10s remaining (until 09:34:36)
+2026-03-05 09:34:26,648 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 12s remaining (until 09:34:38)
+2026-03-05 09:34:27,628 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 9s remaining (until 09:34:36)
+2026-03-05 09:34:27,631 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 11s remaining (until 09:34:38)
+2026-03-05 09:34:27,631 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 9s remaining (until 09:34:36)
+2026-03-05 09:34:27,631 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 11s remaining (until 09:34:38)
+2026-03-05 09:34:28,639 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 8s remaining (until 09:34:36)
+2026-03-05 09:34:28,644 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 10s remaining (until 09:34:38)
+2026-03-05 09:34:28,644 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 8s remaining (until 09:34:36)
+2026-03-05 09:34:28,644 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 10s remaining (until 09:34:38)
+2026-03-05 09:34:29,635 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 7s remaining (until 09:34:36)
+2026-03-05 09:34:29,637 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 9s remaining (until 09:34:38)
+2026-03-05 09:34:29,639 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 7s remaining (until 09:34:36)
+2026-03-05 09:34:29,639 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 9s remaining (until 09:34:38)
+2026-03-05 09:34:30,648 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 6s remaining (until 09:34:36)
+2026-03-05 09:34:30,651 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 8s remaining (until 09:34:38)
+2026-03-05 09:34:30,655 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 6s remaining (until 09:34:36)
+2026-03-05 09:34:30,655 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 8s remaining (until 09:34:38)
+2026-03-05 09:34:31,653 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 5s remaining (until 09:34:36)
+2026-03-05 09:34:31,656 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 7s remaining (until 09:34:38)
+2026-03-05 09:34:31,656 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 5s remaining (until 09:34:36)
+2026-03-05 09:34:31,657 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 7s remaining (until 09:34:38)
+2026-03-05 09:34:32,670 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 4s remaining (until 09:34:36)
+2026-03-05 09:34:32,672 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 6s remaining (until 09:34:38)
+2026-03-05 09:34:32,674 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 4s remaining (until 09:34:36)
+2026-03-05 09:34:32,675 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 6s remaining (until 09:34:38)
+--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:23
+
+[NIFTY] FUTURES: 24668.60 | INDEX: 24571.60 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  222.45    |  247.50    |  25.05   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  196.20    |  269.85    |  73.65   | PE       | ---             | 
+  24700      |  171.90    |  296.70    | 124.80   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:24
+
+[NIFTY] FUTURES: 24666.40 | INDEX: 24570.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.70    |  247.20    |  25.50   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  195.50    |  271.55    |  76.05   | PE       | ---             | 
+  24700      |  171.45    |  295.90    | 124.45   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:25
+
+[NIFTY] FUTURES: 24666.40 | INDEX: 24572.15 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.70    |  247.20    |  25.50   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  195.35    |  271.00    |  75.65   | PE       | ---             | 
+  24700      |  171.45    |  295.90    | 124.45   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:26
+
+[NIFTY] FUTURES: 24662.40 | INDEX: 24571.30 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.05    |  248.45    |  27.40   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  195.35    |  271.00    |  75.65   | PE       | ---             | 
+  24700      |  171.10    |  297.30    | 126.20   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:27
+
+[NIFTY] FUTURES: 24662.40 | INDEX: 24569.15 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.05    |  248.45    |  27.40   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  194.35    |  271.70    |  77.35   | PE       | ---             | 
+  24700      |  170.45    |  297.30    | 126.85   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:28
+
+[NIFTY] FUTURES: 24661.00 | INDEX: 24568.65 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.20    |  247.85    |  26.65   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  194.35    |  271.70    |  77.35   | PE       | ---             | 
+  24700      |  170.45    |  298.35    | 127.90   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:29
+
+[NIFTY] FUTURES: 24662.40 | INDEX: 24570.00 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.45    |  249.00    |  28.55   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.3 | PE_ATP:251.4
+  24650*     |  194.60    |  271.65    |  77.05   | PE       | ---             | 
+  24700      |  170.00    |  297.70    | 127.70   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:30
+
+[NIFTY] FUTURES: 24662.40 | INDEX: 24567.20 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.45    |  249.00    |  28.55   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  192.85    |  273.15    |  80.30   | PE       | ---             | 
+  24700      |  170.00    |  297.70    | 127.70   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:31
+
+[NIFTY] FUTURES: 24662.30 | INDEX: 24568.10 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.85    |  249.40    |  29.55   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  192.85    |  273.15    |  80.30   | PE       | ---             | 
+  24700      |  169.00    |  299.35    | 130.35   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:32
+
+[NIFTY] FUTURES: 24663.30 | INDEX: 24565.35 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.85    |  249.40    |  29.55   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.00    |  273.75    |  80.75   | PE       | ---             | 
+  24700      |  169.30    |  300.15    | 130.85   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+2026-03-05 09:34:33,682 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 3s remaining (until 09:34:36)
+2026-03-05 09:34:33,686 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 5s remaining (until 09:34:38)
+2026-03-05 09:34:33,686 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 3s remaining (until 09:34:36)
+2026-03-05 09:34:33,686 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 5s remaining (until 09:34:38)
+2026-03-05 09:34:34,678 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 2s remaining (until 09:34:36)
+2026-03-05 09:34:34,682 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 4s remaining (until 09:34:38)
+2026-03-05 09:34:34,682 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 2s remaining (until 09:34:36)
+2026-03-05 09:34:34,682 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 4s remaining (until 09:34:38)
+2026-03-05 09:34:35,684 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 1s remaining (until 09:34:36)
+2026-03-05 09:34:35,684 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 3s remaining (until 09:34:38)
+2026-03-05 09:34:35,684 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 1s remaining (until 09:34:36)
+2026-03-05 09:34:35,684 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 3s remaining (until 09:34:38)
+2026-03-05 09:34:36,698 - UpstoxApp - INFO - V2: [CE] [BUY] Status [24600]: slope(V1:243.15 > V0:239.63 (Pct:1.47%, Cons:1/1))=True | LTP: 220.35 | Formula: vwap_slope
+2026-03-05 09:34:36,702 - UpstoxApp - INFO - [Task 139978884164720] V2: SETTING entry_confirmed=True for CE (BUY)
+2026-03-05 09:34:36,702 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24566.00) → 24550 [Futures/signal strike was: 24600]
+2026-03-05 09:34:37,752 - UpstoxApp - WARNING - V2: Price discovery still failing for NSE_FO|45509. Final wait...
+2026-03-05 09:34:40,774 - UpstoxApp - WARNING - V2: Still no price for 24550. Forcing wait for first market tick...
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:33
+
+[NIFTY] FUTURES: 24663.30 | INDEX: 24563.50 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.00    |  250.55    |  31.55   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.00    |  273.75    |  80.75   | PE       | ---             | 
+  24700      |  169.30    |  300.15    | 130.85   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:34
+
+[NIFTY] FUTURES: 24659.40 | INDEX: 24563.10 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.00    |  252.15    |  33.15   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  192.20    |  275.95    |  83.75   | PE       | ---             | 
+  24700      |  168.65    |  301.40    | 132.75   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:35
+
+[NIFTY] FUTURES: 24659.40 | INDEX: 24564.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.00    |  252.15    |  33.15   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  192.75    |  275.55    |  82.80   | PE       | ---             | 
+  24700      |  168.65    |  301.40    | 132.75   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:36
+
+[NIFTY] FUTURES: 24660.70 | INDEX: 24565.85 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.35    |  250.40    |  30.05   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  192.75    |  275.55    |  82.80   | PE       | ---             | 
+  24700      |  169.15    |  300.65    | 131.50   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:37
+
+[NIFTY] FUTURES: 24657.10 | INDEX: 24563.70 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.35    |  250.40    |  30.05   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.55    |  274.15    |  80.60   | PE       | ---             | 
+  24700      |  169.15    |  300.65    | 131.50   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:38
+
+[NIFTY] FUTURES: 24657.10 | INDEX: 24565.20 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.35    |  251.55    |  32.20   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.55    |  274.15    |  80.60   | PE       | ---             | 
+  24700      |  169.15    |  300.65    | 131.50   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:39
+
+[NIFTY] FUTURES: 24657.10 | INDEX: 24565.70 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.35    |  250.65    |  30.30   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  194.00    |  274.35    |  80.35   | PE       | ---             | 
+  24700      |  170.10    |  299.85    | 129.75   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:40
+
+[NIFTY] FUTURES: 24657.10 | INDEX: 24565.65 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.35    |  250.65    |  30.30   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.90    |  274.35    |  80.45   | PE       | ---             | 
+  24700      |  170.10    |  299.85    | 129.75   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:41
+
+[NIFTY] FUTURES: 24660.00 | INDEX: 24564.75 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.60    |  251.10    |  31.50   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.90    |  274.35    |  80.45   | PE       | ---             | 
+  24700      |  169.15    |  301.15    | 132.00   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:42
+
+[NIFTY] FUTURES: 24660.00 | INDEX: 24564.15 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.60    |  251.10    |  31.50   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.25    |  275.40    |  82.15   | PE       | ---             | 
+2026-03-05 09:34:45,808 - UpstoxApp - WARNING - V2: NO PRICE DISCOVERED for STRIKE 24550 after initial checks. Falling back to signal price.
+2026-03-05 09:34:45,812 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 09:34:45,812 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 09:34:45,842 - UpstoxApp - INFO - Successfully placed BUY (CALL) order for NIFTY2631024550CE with order_id: 260305190248612
+2026-03-05 09:34:45,842 - UpstoxApp - INFO - [NIFTY] Trade confirmed for CALL on NIFTY2631024550CE (User: None)
+2026-03-05 09:34:46,088 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45509. Monitoring strike 24600 for crossover exit.
+2026-03-05 09:34:46,104 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 2s remaining (until 09:34:38)
+2026-03-05 09:34:46,107 - UpstoxApp - INFO - V2: [PE] Re-entry blocked by cooldown. 2s remaining (until 09:34:38)
+2026-03-05 09:34:46,109 - UpstoxApp - INFO - V2 MGMT: [CALL] VWAP EXIT CHECK: Current 243.09 vs Peak 243.09 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:34:46,123 - UpstoxApp - INFO - V2: [PE] [BUY] Status [24600]: slope(V1:251.42 > V0:250.94 (Pct:0.19%, Cons:1/1))=True | LTP: 249.95 | Formula: vwap_slope
+2026-03-05 09:34:46,126 - UpstoxApp - INFO - [Task 139978884164720] V2: SETTING entry_confirmed=True for PE (BUY)
+2026-03-05 09:34:46,129 - UpstoxApp - INFO - V2: BUY trade strike from INDEX (24567.00) → 24550 [Futures/signal strike was: 24600]
+2026-03-05 09:34:46,129 - UpstoxApp - INFO - V2: PUT entry triggered, but NOT closing CALL because 'reversal' is not in its exit formula.
+2026-03-05 09:34:47,164 - UpstoxApp - WARNING - V2: Price discovery still failing for NSE_FO|45510. Final wait...
+2026-03-05 09:34:50,188 - UpstoxApp - WARNING - V2: Still no price for 24550. Forcing wait for first market tick...
+  24700      |  169.00    |  301.15    | 132.15   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:43
+
+[NIFTY] FUTURES: 24660.00 | INDEX: 24565.05 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.20    |  251.70    |  32.50   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  193.25    |  275.40    |  82.15   | PE       | ---             | 
+  24700      |  169.00    |  301.30    | 132.30   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:44
+
+[NIFTY] FUTURES: 24662.40 | INDEX: 24565.25 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.10    |  249.95    |  28.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  194.40    |  273.95    |  79.55   | PE       | ---             | 
+  24700      |  170.05    |  299.70    | 129.65   | PE       | ---             | 
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 2
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:45
+
+[NIFTY] FUTURES: 24662.40 | INDEX: 24567.00 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.10    |  249.95    |  28.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.2 | PE_ATP:251.4
+  24650*     |  194.75    |  273.15    |  78.40   | PE       | ---             | 
+  24700      |  170.05    |  299.70    | 129.65   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 221.10
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:46
+
+[NIFTY] FUTURES: 24656.80 | INDEX: 24564.40 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.75    |  248.90    |  27.15   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.75    |  273.15    |  78.40   | PE       | ---             | 
+  24700      |  170.75    |  299.20    | 128.45   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 221.75
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:47
+
+[NIFTY] FUTURES: 24656.00 | INDEX: 24565.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.75    |  248.90    |  27.15   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.00    |  273.40    |  79.40   | PE       | ---             | 
+  24700      |  169.55    |  300.60    | 131.05   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 221.75
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:48
+
+[NIFTY] FUTURES: 24656.00 | INDEX: 24563.65 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.65    |  250.90    |  31.25   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.00    |  273.40    |  79.40   | PE       | ---             | 
+  24700      |  169.55    |  300.60    | 131.05   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 219.65
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:49
+
+[NIFTY] FUTURES: 24656.00 | INDEX: 24564.60 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.90    |  251.65    |  31.75   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  193.85    |  274.25    |  80.40   | PE       | ---             | 
+  24700      |  169.30    |  299.85    | 130.55   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 219.90
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:50
+
+[NIFTY] FUTURES: 24656.00 | INDEX: 24566.70 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.90    |  251.65    |  31.75   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.25    |  274.10    |  79.85   | PE       | ---             | 
+  24700      |  169.30    |  299.85    | 130.55   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 219.90
+--------------------------------------------------------------------------------------------------------------
+2026-03-05 09:34:55,229 - UpstoxApp - WARNING - V2: NO PRICE DISCOVERED for STRIKE 24550 after initial checks. Falling back to signal price.
+2026-03-05 09:34:55,234 - UpstoxApp - INFO - Executing trade on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 09:34:55,234 - UpstoxApp - INFO - Calculated trade quantity for Zerodha_Client_Live_1 on NIFTY: Broker Qty (10) * Lot Size (65) * Multiplier (2) = 1300
+2026-03-05 09:34:55,260 - UpstoxApp - INFO - Successfully placed BUY (PUT) order for NIFTY2631024550PE with order_id: 260305190249638
+2026-03-05 09:34:55,261 - UpstoxApp - INFO - [NIFTY] Trade confirmed for PUT on NIFTY2631024550PE (User: None)
+2026-03-05 09:34:55,486 - UpstoxApp - INFO - V2: Trade entered on NSE_FO|45510. Monitoring strike 24600 for crossover exit.
+2026-03-05 09:34:55,491 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT CRITERIA MET (VWAP Slope): Current VWAP 243.02 vs Ref 243.09 (Drawdown: -0.03%, Threshold: -0.03%)
+2026-03-05 09:34:55,491 - UpstoxApp - INFO - V2 MGMT: [CALL] EXIT TRIGGERED: Structural Exit: VWAP Slope < (TICK)
+2026-03-05 09:34:55,491 - UpstoxApp - INFO - V2: Requesting EXIT for CALL at 220.35. Reason: Structural Exit: VWAP Slope < (TICK)
+2026-03-05 09:34:55,491 - UpstoxApp - INFO - V2 MGMT: [CALL] Exit (Structural Exit: VWAP Slope < (TICK)). Preserving 9:15 Breach flags for potential re-entry.
+2026-03-05 09:34:55,491 - UpstoxApp - INFO - V2 MGMT: [CALL] Re-entry cooldown active until 09:35:46 (60s)
+2026-03-05 09:34:55,492 - UpstoxApp - INFO - Executing exit on broker 'Zerodha_Client_Live_1' (User: None)
+2026-03-05 09:34:55,520 - UpstoxApp - INFO - Successfully placed SELL order to close CALL position for NIFTY2631024550CE with order_id: 260305190249656
+2026-03-05 09:34:55,520 - UpstoxApp - INFO - Closed CALL trade. Final PNL: 0.00, Total Session PNL: 149.50
+2026-03-05 09:34:55,521 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:34:55,540 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 51s remaining (until 09:35:46)
+2026-03-05 09:34:55,542 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 51s remaining (until 09:35:46)
+2026-03-05 09:34:55,546 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:34:55,994 - UpstoxApp - INFO - V2: Updated entry price and RESET peak_price for PUT from first real tick: 229.00
+2026-03-05 09:34:56,531 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 09:35:46)
+2026-03-05 09:34:56,536 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 09:35:46)
+2026-03-05 09:34:56,536 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:34:57,530 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 09:35:46)
+2026-03-05 09:34:57,534 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 49s remaining (until 09:35:46)
+2026-03-05 09:34:57,537 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:34:58,543 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 48s remaining (until 09:35:46)
+2026-03-05 09:34:58,547 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 48s remaining (until 09:35:46)
+2026-03-05 09:34:58,547 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:51
+
+[NIFTY] FUTURES: 24656.00 | INDEX: 24565.30 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.00    |  250.40    |  29.40   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.25    |  274.10    |  79.85   | PE       | ---             | 
+  24700      |  170.55    |  299.85    | 129.30   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 221.00
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:52
+
+[NIFTY] FUTURES: 24656.20 | INDEX: 24562.15 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  221.00    |  250.40    |  29.40   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.35    |  273.95    |  79.60   | PE       | ---             | 
+  24700      |  169.70    |  300.20    | 130.50   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 221.00
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:53
+
+[NIFTY] FUTURES: 24656.20 | INDEX: 24562.40 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  219.90    |  251.40    |  31.50   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.35    |  273.95    |  79.60   | PE       | ---             | 
+  24700      |  169.70    |  300.20    | 130.50   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 219.90
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:54
+
+[NIFTY] FUTURES: 24655.70 | INDEX: 24563.40 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.65    |  250.50    |  29.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.1 | PE_ATP:251.4
+  24650*     |  194.65    |  273.40    |  78.75   | PE       | ---             | 
+  24700      |  170.50    |  299.20    | 128.70   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    CALL: IN TRADE | NIFTY2631024550CE (24550.0) | Entry: 220.35, Peak: 220.35, LTP: 220.35, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 220.65
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 3
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:55
+
+[NIFTY] FUTURES: 24655.70 | INDEX: 24566.45 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.65    |  250.50    |  29.85   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.0 | PE_ATP:251.4
+  24650*     |  194.05    |  274.70    |  80.65   | PE       | ---             | 
+  24700      |  170.50    |  299.20    | 128.70   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    PUT:  IN TRADE | NIFTY2631024550PE (24550.0) | Entry: 249.95, Peak: 249.95, LTP: 249.95, Live PNL: 0.00
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 250.50
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 0.00
+  NET SESSION PNL: 149.50 | Total Trades: 4
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:56
+
+[NIFTY] FUTURES: 24656.40 | INDEX: 24564.95 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.35    |  251.35    |  31.00   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.0 | PE_ATP:251.4
+  24650*     |  194.05    |  274.70    |  80.65   | PE       | ---             | 
+  24700      |  169.65    |  300.90    | 131.25   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    PUT:  IN TRADE | NIFTY2631024550PE (24550.0) | Entry: 229.00, Peak: 229.00, LTP: 229.10, Live PNL: 6.50
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 251.35
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 6.50
+  NET SESSION PNL: 156.00 | Total Trades: 4
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:57
+
+[NIFTY] FUTURES: 24655.30 | INDEX: 24563.80 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.35    |  251.35    |  31.00   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.0 | PE_ATP:251.4
+  24650*     |  194.00    |  275.00    |  81.00   | PE       | ---             | 
+  24700      |  169.10    |  300.40    | 131.30   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+    PUT:  IN TRADE | NIFTY2631024550PE (24550.0) | Entry: 229.00, Peak: 229.10, LTP: 229.10, Live PNL: 6.50
+      S1LOW (CHECKING:24600): 1m=N/A, 5m=N/A (Active:N/Am) | SIG_LTP(24600): 251.35
+--------------------------------------------------------------------------------------------------------------
+
+--- GLOBAL SESSION SUMMARY ---
+  Closed Trades PNL: 149.50
+  Running PNL: 6.50
+  NET SESSION PNL: 156.00 | Total Trades: 4
+[H[2J--- AlgoSoft Bot [Crossover Strategy | 1m / 1m / CROSSOVER + FLIP] --- 2026-03-05 09:34:58
+
+[NIFTY] FUTURES: 24655.30 | INDEX: 24564.10 | ATM: 24650 | TARGET: 24600.0
+  STRIKE     | CE_LTP     | PE_LTP     | DIFF     | HIGHER   | WAITING FOR     | STATUS
+  24600      |  220.80    |  251.35    |  30.55   | PE       | PE-CE/CE-PE     | TARGET | WATCHING | SEQ:[PE,PE,PE] | 1M_CLOSE(223.6v246.4) | CE_ATP:243.0 | PE_ATP:251.4
+  24650*     |  194.00    |  275.00    |  81.00   | PE       | ---             | 
+  24700      |  169.10    |  300.40    | 131.30   | PE       | ---             | 
+
+    --- ACTIVE POSITIONS ---
+2026-03-05 09:34:59,539 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 09:35:46)
+2026-03-05 09:34:59,542 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 09:35:46)
+2026-03-05 09:34:59,542 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:35:00,545 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 09:35:46)
+2026-03-05 09:35:00,548 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 46s remaining (until 09:35:46)
+2026-03-05 09:35:00,550 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD
+2026-03-05 09:35:00,550 - UpstoxApp - INFO - V2 MGMT: [PUT] PnL: 29.25 | LTP: 229.45 | VWAP: 251.42 (Peak: 251.42) | V1:251.42 < Ref:251.42 (Pct:0.00%)
+2026-03-05 09:35:01,550 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 45s remaining (until 09:35:46)
+2026-03-05 09:35:01,554 - UpstoxApp - INFO - V2: [CE] Re-entry blocked by cooldown. 45s remaining (until 09:35:46)
+2026-03-05 09:35:01,556 - UpstoxApp - INFO - V2 MGMT: [PUT] VWAP EXIT CHECK: Current 251.42 vs Peak 251.42 | Drawdown: 0.00% | Threshold: -0.03% → HOLD

@@ -1,0 +1,29 @@
+This code review evaluates the proposed patch intended to resolve discrepancies between live market ATP (Average Traded Price) and backtest synthetic VWAP, as well as several logic and structural bugs identified in the user's logs.
+
+User's Goal The objective is to achieve absolute parity between live trading and backtesting by using broker-provided tick-level ATP data, correctly anchoring trade selection to Spot prices while maintaining target monitoring on Futures, and refining signal logic to prevent excessive or premature trades.
+
+Evaluation of the Solution
+
+Core Functionality The patch provides a comprehensive solution to the ATP discrepancy and the "too many trades" issue:
+
+ATP Parity: It implements a mechanism to load actual broker ATP values from external CSV files during backtests (hub/backtest_data_manager.py). It also updates the IndicatorManager to prioritize these values over synthetic calculations.
+Look-Ahead Bias Prevention: In backtest mode, when synthetic VWAP is necessary, the patch now uses only the 'Open' price and a nominal volume for the current bar. This ensures that a signal at 09:18:00 does not "know" the High, Low, or Close of the 09:18 minute, accurately mimicking live market conditions.
+Refined Signal Logic:
+Boundary Reset: It implements a clever "Signal Reset" logic in hub/signal_evaluator.py. In CLOSE mode, the vwap_slope signal is only active for one tick at the candle boundary. This prevents the bot from immediately re-entering a trade in the same minute if an exit occurs.
+Start-of-Day Protection: It blocks buying and hedging signals until 09:18:00 (after the 09:17 candle completes), ensuring the slope calculation has at least two finalized data points as requested.
+Market Anchoring: It correctly implements the user's specific requirement to select Sell contracts and Hedges based on Spot (Index) price while keeping Target Strike monitoring anchored to Futures price.
+Safety & Side Effects
+
+Regressions: The patch removes the redundant evaluate_close_criteria function, merging its responsibilities into the tick evaluation loop. This is a positive refactoring that reduces code duplication and ensures consistent behavior across modes.
+Bug Fixes: The patch proactively fixes two critical errors seen in the user's logs:
+TypeError in PaperTradeClient regarding the login_required argument.
+NameError in backtest_orchestrator.py because datetime was not defined.
+Completeness: The update covers configuration (config_trader.ini), strategy definitions (strategy_logic.json), data recording, and the backtesting engine.
+Merge Assessment
+
+Blocking Issues:
+
+None. The patch is robust and directly addresses the reported failures.
+Nitpicks:
+
+The start-of-day protection minute <= 17 blocks signals until 09:18:00. While the user asked for a 09:17 start, waiting for the 09:17 candle to fully close is a safer interpretation of the requirement to wait for "2 close candles" (09:15 and 09:16). This is an acceptable implementation choice.

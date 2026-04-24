@@ -1,0 +1,20 @@
+ec2-user:~/environment/Option_buying_March (master) $ pip install bcrypt "python-jose[cryptography]"
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: bcrypt in /home/ec2-user/.local/lib/python3.9/site-packages (5.0.0)
+Requirement already satisfied: python-jose[cryptography] in /home/ec2-user/.local/lib/python3.9/site-packages (3.5.0)
+Requirement already satisfied: ecdsa!=0.15 in /home/ec2-user/.local/lib/python3.9/site-packages (from python-jose[cryptography]) (0.19.1)
+Requirement already satisfied: pyasn1>=0.5.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from python-jose[cryptography]) (0.6.2)
+Requirement already satisfied: rsa!=4.1.1,!=4.4,<5.0,>=4.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from python-jose[cryptography]) (4.9.1)
+Requirement already satisfied: cryptography>=3.4.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from python-jose[cryptography]) (46.0.5)
+Requirement already satisfied: cffi>=2.0.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from cryptography>=3.4.0->python-jose[cryptography]) (2.0.0)
+Requirement already satisfied: typing-extensions>=4.13.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from cryptography>=3.4.0->python-jose[cryptography]) (4.15.0)
+Requirement already satisfied: six>=1.9.0 in /usr/lib/python3.9/site-packages (from ecdsa!=0.15->python-jose[cryptography]) (1.15.0)
+Requirement already satisfied: pycparser in /usr/lib/python3.9/site-packages (from cffi>=2.0.0->cryptography>=3.4.0->python-jose[cryptography]) (2.20)
+Requirement already satisfied: ply==3.11 in /usr/lib/python3.9/site-packages (from pycparser->cffi>=2.0.0->cryptography>=3.4.0->python-jose[cryptography]) (3.11)
+ec2-user:~/environment/Option_buying_March (master) $ python -m uvicorn web.server:app --host 0.0.0.0 --port 5000 --reload
+bash: python: command not found
+ec2-user:~/environment/Option_buying_March (master) $ python3 -m uvicorn web.server:app --host 0.0.0.0 --port 5000 --reload                                                                        
+INFO:     Will watch for changes in these directories: ['/home/ec2-user/environment/Option_buying_March']
+ERROR:    [Errno 98] Address already in use
+ec2-user:~/environment/Option_buying_March (master) $ 
+

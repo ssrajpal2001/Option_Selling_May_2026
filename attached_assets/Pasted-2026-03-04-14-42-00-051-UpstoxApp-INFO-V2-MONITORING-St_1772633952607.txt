@@ -1,0 +1,109 @@
+2026-03-04 14:42:00,051 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 | Index: 24559.40 | CE: slope(V1:232.76 < V0:232.76 (Pct:0.00%, Cons:0/1)):False (LTP: 302.00) | PE: slope(V1:377.76 < V0:377.76 (Pct:0.00%, Cons:0/1)):False (LTP: 325.50)
+2026-03-04 14:42:01,055 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 | Index: 24562.65 | CE: slope(V1:232.76 < V0:232.76 (Pct:0.00%, Cons:0/1)):False (LTP: 302.60) | PE: slope(V1:377.76 < V0:377.76 (Pct:0.00%, Cons:0/1)):False (LTP: 325.80)
+2026-03-04 14:43:20,996 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 238s since last switch): 24600 -> 24650 (User: Global)
+2026-03-04 14:43:20,996 - UpstoxApp - INFO - V2: Switching monitoring strike 24600 -> 24650
+2026-03-04 14:43:21,187 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 (SWITCHED) | Index: 24573.55 | CE: slope(V1:207.73 < V0:207.44 (Pct:0.14%, Cons:0/1)):False (LTP: 281.90) | PE: slope(V1:407.17 < V0:407.33 (Pct:-0.04%, Cons:1/1)):True (LTP: 347.30)
+2026-03-04 14:44:33,721 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.1s | Worker: ALIVE | Exchange: 2026-03-04 14:44:33.621000+05:30 | Sessions: Global:Monitoring
+2026-03-04 14:45:00,703 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 | Index: 24579.10 | CE: slope(V1:209.06 < V0:209.06 (Pct:0.00%, Cons:0/1)):False (LTP: 290.35) | PE: slope(V1:406.21 < V0:406.21 (Pct:0.00%, Cons:0/1)):False (LTP: 346.25)
+2026-03-04 14:45:51,647 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 151s since last switch): 24650 -> 24600 (User: Global)
+2026-03-04 14:45:51,647 - UpstoxApp - INFO - V2: Switching monitoring strike 24650 -> 24600
+2026-03-04 14:45:51,841 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 (SWITCHED) | Index: 24570.10 | CE: slope(V1:236.36 < V0:234.23 (Pct:0.91%, Cons:0/1)):False (LTP: 311.20) | PE: slope(V1:375.56 < V0:376.96 (Pct:-0.37%, Cons:1/1)):True (LTP: 331.50)
+2026-03-04 14:46:49,905 - UpstoxApp - INFO - [OI_EXIT] CALL OI rose 24.4% (6,171,295 → 7,678,385) — exiting sell-PE and buy-CE
+2026-03-04 14:46:49,905 - UpstoxApp - INFO - [OI_EXIT] PUT OI rose 29.7% (4,232,995 → 5,492,110) — exiting sell-CE and buy-PE
+2026-03-04 14:47:36,731 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 105s since last switch): 24600 -> 24650 (User: Global)
+2026-03-04 14:47:36,731 - UpstoxApp - INFO - V2: Switching monitoring strike 24600 -> 24650
+2026-03-04 14:47:36,926 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 (SWITCHED) | Index: 24568.00 | CE: slope(V1:210.52 < V0:210.10 (Pct:0.20%, Cons:0/1)):False (LTP: 284.05) | PE: slope(V1:403.98 < V0:404.97 (Pct:-0.24%, Cons:1/1)):True (LTP: 352.80)
+2026-03-04 14:48:00,707 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 | Index: 24567.80 | CE: slope(V1:210.66 < V0:210.64 (Pct:0.01%, Cons:0/1)):False (LTP: 289.00) | PE: slope(V1:403.84 < V0:403.85 (Pct:-0.00%, Cons:1/1)):False (LTP: 351.00)
+2026-03-04 14:49:33,777 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.2s | Worker: ALIVE | Exchange: 2026-03-04 14:49:33.620000+05:30 | Sessions: Global:Monitoring
+2026-03-04 14:50:11,854 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 155s since last switch): 24650 -> 24600 (User: Global)
+2026-03-04 14:50:11,855 - UpstoxApp - INFO - V2: Switching monitoring strike 24650 -> 24600
+2026-03-04 14:50:12,052 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 (SWITCHED) | Index: 24577.25 | CE: slope(V1:237.75 < V0:237.75 (Pct:0.00%, Cons:0/1)):False (LTP: 321.75) | PE: slope(V1:374.15 < V0:374.15 (Pct:0.00%, Cons:0/1)):False (LTP: 327.40)
+2026-03-04 14:50:50,383 - UpstoxApp - INFO - [OI_EXIT] CALL OI rose 25.9% (6,022,380 → 7,582,445) — exiting sell-PE and buy-CE
+2026-03-04 14:50:50,383 - UpstoxApp - INFO - [OI_EXIT] PUT OI rose 31.7% (4,434,105 → 5,838,170) — exiting sell-CE and buy-PE
+2026-03-04 14:51:00,465 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 | Index: 24574.40 | CE: slope(V1:240.63 < V0:240.63 (Pct:0.00%, Cons:0/1)):False (LTP: 316.00) | PE: slope(V1:372.23 < V0:372.23 (Pct:0.00%, Cons:0/1)):False (LTP: 332.75)
+2026-03-04 14:51:11,899 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 60s since last switch): 24600 -> 24650 (User: Global)
+2026-03-04 14:51:11,899 - UpstoxApp - INFO - V2: Switching monitoring strike 24600 -> 24650
+2026-03-04 14:51:12,092 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 (SWITCHED) | Index: 24578.15 | CE: slope(V1:212.53 < V0:212.48 (Pct:0.02%, Cons:0/1)):False (LTP: 291.20) | PE: slope(V1:402.00 < V0:402.13 (Pct:-0.03%, Cons:1/1)):True (LTP: 351.85)
+2026-03-04 14:54:00,102 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 | Index: 24588.90 | CE: slope(V1:213.82 < V0:213.82 (Pct:0.00%, Cons:0/1)):False (LTP: 295.20) | PE: slope(V1:401.32 < V0:401.32 (Pct:0.00%, Cons:0/1)):False (LTP: 350.85)
+2026-03-04 14:54:33,862 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.1s | Worker: ALIVE | Exchange: 2026-03-04 14:54:33.772000+05:30 | Sessions: Global:Monitoring
+2026-03-04 14:57:01,010 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 | Index: 24594.65 | CE: slope(V1:215.01 < V0:215.01 (Pct:0.00%, Cons:0/1)):False (LTP: 297.20) | PE: slope(V1:400.59 < V0:400.59 (Pct:0.00%, Cons:0/1)):False (LTP: 346.20)
+2026-03-04 14:58:44,680 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 453s since last switch): 24650 -> 24600 (User: Global)
+2026-03-04 14:58:44,680 - UpstoxApp - INFO - V2: Switching monitoring strike 24650 -> 24600
+2026-03-04 14:58:44,879 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 (SWITCHED) | Index: 24579.10 | CE: slope(V1:241.24 < V0:241.24 (Pct:0.00%, Cons:0/1)):False (LTP: 319.20) | PE: slope(V1:371.80 < V0:371.80 (Pct:0.00%, Cons:0/1)):False (LTP: 332.40)
+2026-03-04 14:59:33,977 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.1s | Worker: ALIVE | Exchange: 2026-03-04 14:59:33.921000+05:30 | Sessions: Global:Monitoring
+2026-03-04 14:59:52,000 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 67s since last switch): 24600 -> 24650 (User: Global)
+2026-03-04 14:59:52,001 - UpstoxApp - INFO - V2: Switching monitoring strike 24600 -> 24650
+2026-03-04 14:59:52,201 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 (SWITCHED) | Index: 24582.50 | CE: slope(V1:215.92 < V0:215.69 (Pct:0.11%, Cons:0/1)):False (LTP: 294.05) | PE: slope(V1:399.39 < V0:399.81 (Pct:-0.11%, Cons:1/1)):True (LTP: 351.35)
+2026-03-04 15:00:00,227 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24650 | Index: 24582.95 | CE: slope(V1:215.96 < V0:215.96 (Pct:0.00%, Cons:0/1)):False (LTP: 291.00) | PE: slope(V1:399.31 < V0:399.31 (Pct:0.00%, Cons:0/1)):False (LTP: 353.00)
+2026-03-04 15:00:51,379 - UpstoxApp - INFO - [OI_EXIT] CALL OI rose 25.2% (5,975,450 → 7,482,540) — exiting sell-PE and buy-CE
+2026-03-04 15:00:51,379 - UpstoxApp - INFO - [OI_EXIT] PUT OI rose 25.9% (4,869,995 → 6,129,110) — exiting sell-CE and buy-PE
+2026-03-04 15:00:52,985 - UpstoxApp - INFO - V2: Target strike change confirmed (54 ticks, 61s since last switch): 24650 -> 24600 (User: Global)
+2026-03-04 15:00:52,985 - UpstoxApp - INFO - V2: Switching monitoring strike 24650 -> 24600
+2026-03-04 15:00:53,294 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 (SWITCHED) | Index: 24539.75 | CE: slope(V1:245.65 < V0:245.02 (Pct:0.26%, Cons:0/1)):False (LTP: 297.90) | PE: slope(V1:367.77 < V0:368.65 (Pct:-0.24%, Cons:1/1)):True (LTP: 348.20)
+2026-03-04 15:01:51,463 - UpstoxApp - INFO - [OI_EXIT] CALL OI rose 42.9% (7,482,540 → 10,690,095) — exiting sell-PE and buy-CE
+2026-03-04 15:01:51,464 - UpstoxApp - INFO - [OI_EXIT] PUT OI rose 63.6% (6,129,110 → 10,030,215) — exiting sell-CE and buy-PE
+2026-03-04 15:01:53,876 - UpstoxApp - INFO - V2: Target strike change confirmed (39 ticks, 61s since last switch): 24600 -> 24550 (User: Global)
+2026-03-04 15:01:53,876 - UpstoxApp - INFO - V2: Switching monitoring strike 24600 -> 24550
+2026-03-04 15:01:54,239 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 (SWITCHED) | Index: 24514.70 | CE: slope(V1:278.96 < V0:265.98 (Pct:4.88%, Cons:0/1)):False (LTP: 314.90) | PE: slope(V1:334.50 < V0:341.75 (Pct:-2.12%, Cons:1/1)):True (LTP: 334.35)
+2026-03-04 15:03:00,741 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 | Index: 24513.30 | CE: slope(V1:279.20 < V0:279.20 (Pct:0.00%, Cons:0/1)):False (LTP: 308.60) | PE: slope(V1:334.42 < V0:334.42 (Pct:0.00%, Cons:0/1)):False (LTP: 333.90)
+2026-03-04 15:04:34,040 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.1s | Worker: ALIVE | Exchange: 2026-03-04 15:04:33.923000+05:30 | Sessions: Global:Monitoring
+2026-03-04 15:05:18,668 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 205s since last switch): 24550 -> 24600 (User: Global)
+2026-03-04 15:05:18,668 - UpstoxApp - INFO - V2: Switching monitoring strike 24550 -> 24600
+2026-03-04 15:05:18,867 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 (SWITCHED) | Index: 24516.60 | CE: slope(V1:246.57 < V0:246.52 (Pct:0.02%, Cons:0/1)):False (LTP: 281.80) | PE: slope(V1:366.88 < V0:366.93 (Pct:-0.01%, Cons:1/1)):False (LTP: 348.75)
+2026-03-04 15:06:00,925 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24600 | Index: 24506.20 | CE: slope(V1:246.65 < V0:246.65 (Pct:0.00%, Cons:0/1)):False (LTP: 272.00) | PE: slope(V1:366.80 < V0:366.80 (Pct:0.00%, Cons:0/1)):False (LTP: 357.55)
+2026-03-04 15:06:19,010 - UpstoxApp - INFO - V2: Target strike change confirmed (59 ticks, 60s since last switch): 24600 -> 24550 (User: Global)
+2026-03-04 15:06:19,011 - UpstoxApp - INFO - V2: Switching monitoring strike 24600 -> 24550
+2026-03-04 15:06:19,313 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 (SWITCHED) | Index: 24503.15 | CE: slope(V1:279.62 < V0:279.59 (Pct:0.01%, Cons:0/1)):False (LTP: 299.80) | PE: slope(V1:334.37 < V0:334.37 (Pct:0.00%, Cons:0/1)):False (LTP: 334.50)
+2026-03-04 15:08:12,702 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 114s since last switch): 24550 -> 24500 (User: Global)
+2026-03-04 15:08:12,703 - UpstoxApp - INFO - V2: Switching monitoring strike 24550 -> 24500
+2026-03-04 15:08:12,902 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 (SWITCHED) | Index: 24475.20 | CE: slope(V1:267.10 < V0:267.10 (Pct:0.00%, Cons:0/1)):False (LTP: 298.70) | PE: slope(V1:344.59 < V0:344.59 (Pct:0.00%, Cons:0/1)):False (LTP: 314.35)
+2026-03-04 15:09:00,097 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 | Index: 24483.40 | CE: slope(V1:288.95 < V0:288.95 (Pct:0.00%, Cons:0/1)):False (LTP: 312.30) | PE: slope(V1:329.22 < V0:329.22 (Pct:0.00%, Cons:0/1)):False (LTP: 317.95)
+2026-03-04 15:09:13,170 - UpstoxApp - INFO - V2: Target strike change confirmed (59 ticks, 60s since last switch): 24500 -> 24550 (User: Global)
+2026-03-04 15:09:13,170 - UpstoxApp - INFO - V2: Switching monitoring strike 24500 -> 24550
+2026-03-04 15:09:13,473 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 (SWITCHED) | Index: 24483.30 | CE: slope(V1:279.76 < V0:279.75 (Pct:0.00%, Cons:0/1)):False (LTP: 287.95) | PE: slope(V1:334.65 < V0:334.62 (Pct:0.01%, Cons:0/1)):False (LTP: 340.75)
+2026-03-04 15:09:34,165 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.1s | Worker: ALIVE | Exchange: 2026-03-04 15:09:34.072000+05:30 | Sessions: Global:Monitoring
+2026-03-04 15:10:13,610 - UpstoxApp - INFO - V2: Target strike change confirmed (14 ticks, 60s since last switch): 24550 -> 24500 (User: Global)
+2026-03-04 15:10:13,610 - UpstoxApp - INFO - V2: Switching monitoring strike 24550 -> 24500
+2026-03-04 15:10:13,813 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 (SWITCHED) | Index: 24469.65 | CE: slope(V1:289.03 < V0:288.98 (Pct:0.02%, Cons:0/1)):False (LTP: 303.95) | PE: slope(V1:329.14 < V0:329.19 (Pct:-0.02%, Cons:1/1)):False (LTP: 324.50)
+2026-03-04 15:12:00,676 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 | Index: 24463.60 | CE: slope(V1:289.13 < V0:289.13 (Pct:0.00%, Cons:0/1)):False (LTP: 299.15) | PE: slope(V1:329.09 < V0:329.09 (Pct:0.00%, Cons:0/1)):False (LTP: 324.15)
+2026-03-04 15:12:28,453 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 135s since last switch): 24500 -> 24550 (User: Global)
+2026-03-04 15:12:28,454 - UpstoxApp - INFO - V2: Switching monitoring strike 24500 -> 24550
+2026-03-04 15:12:28,658 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 (SWITCHED) | Index: 24467.05 | CE: slope(V1:279.69 < V0:279.71 (Pct:-0.01%, Cons:1/1)):False (LTP: 275.35) | PE: slope(V1:334.97 < V0:334.92 (Pct:0.01%, Cons:0/1)):False (LTP: 345.15)
+2026-03-04 15:13:28,930 - UpstoxApp - INFO - V2: Target strike change confirmed (30 ticks, 60s since last switch): 24550 -> 24500 (User: Global)
+2026-03-04 15:13:28,930 - UpstoxApp - INFO - V2: Switching monitoring strike 24550 -> 24500
+2026-03-04 15:13:29,271 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 (SWITCHED) | Index: 24465.40 | CE: slope(V1:289.19 < V0:289.18 (Pct:0.00%, Cons:0/1)):False (LTP: 302.60) | PE: slope(V1:329.03 < V0:329.06 (Pct:-0.01%, Cons:1/1)):False (LTP: 323.00)
+2026-03-04 15:14:34,248 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.0s | Worker: ALIVE | Exchange: 2026-03-04 15:14:34.220000+05:30 | Sessions: Global:Monitoring
+2026-03-04 15:15:00,329 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 | Index: 24464.85 | CE: slope(V1:289.24 < V0:289.24 (Pct:0.00%, Cons:0/1)):False (LTP: 300.85) | PE: slope(V1:328.99 < V0:328.99 (Pct:0.00%, Cons:0/1)):False (LTP: 324.00)
+2026-03-04 15:16:51,712 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 203s since last switch): 24500 -> 24550 (User: Global)
+2026-03-04 15:16:51,713 - UpstoxApp - INFO - V2: Switching monitoring strike 24500 -> 24550
+2026-03-04 15:16:51,917 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 (SWITCHED) | Index: 24466.65 | CE: slope(V1:279.55 < V0:279.57 (Pct:-0.01%, Cons:1/1)):False (LTP: 273.60) | PE: slope(V1:335.22 < V0:335.18 (Pct:0.01%, Cons:0/1)):False (LTP: 338.90)
+2026-03-04 15:18:00,640 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 | Index: 24472.40 | CE: slope(V1:279.54 < V0:279.54 (Pct:0.00%, Cons:0/1)):False (LTP: 274.50) | PE: slope(V1:335.24 < V0:335.24 (Pct:0.00%, Cons:0/1)):False (LTP: 340.35)
+2026-03-04 15:18:59,915 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 128s since last switch): 24550 -> 24500 (User: Global)
+2026-03-04 15:18:59,915 - UpstoxApp - INFO - V2: Switching monitoring strike 24550 -> 24500
+2026-03-04 15:19:00,123 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 (SWITCHED) | Index: 24467.45 | CE: slope(V1:289.31 < V0:289.31 (Pct:0.00%, Cons:0/1)):False (LTP: 302.65) | PE: slope(V1:328.93 < V0:328.93 (Pct:0.00%, Cons:0/1)):False (LTP: 319.85)
+2026-03-04 15:19:34,327 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.3s | Worker: ALIVE | Exchange: 2026-03-04 15:19:34.069000+05:30 | Sessions: Global:Monitoring
+2026-03-04 15:20:38,646 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 99s since last switch): 24500 -> 24550 (User: Global)
+2026-03-04 15:20:38,646 - UpstoxApp - INFO - V2: Switching monitoring strike 24500 -> 24550
+2026-03-04 15:20:38,850 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 (SWITCHED) | Index: 24457.15 | CE: slope(V1:279.50 < V0:279.51 (Pct:-0.00%, Cons:1/1)):False (LTP: 273.85) | PE: slope(V1:335.34 < V0:335.31 (Pct:0.01%, Cons:0/1)):False (LTP: 346.40)
+2026-03-04 15:21:00,756 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 | Index: 24457.70 | CE: slope(V1:279.50 < V0:279.50 (Pct:0.00%, Cons:0/1)):False (LTP: 273.60) | PE: slope(V1:335.35 < V0:335.35 (Pct:0.00%, Cons:0/1)):False (LTP: 346.70)
+2026-03-04 15:21:54,144 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 75s since last switch): 24550 -> 24500 (User: Global)
+2026-03-04 15:21:54,145 - UpstoxApp - INFO - V2: Switching monitoring strike 24550 -> 24500
+2026-03-04 15:21:54,352 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 (SWITCHED) | Index: 24457.45 | CE: slope(V1:289.44 < V0:289.43 (Pct:0.00%, Cons:0/1)):False (LTP: 301.80) | PE: slope(V1:328.85 < V0:328.86 (Pct:-0.00%, Cons:1/1)):False (LTP: 325.05)
+2026-03-04 15:23:37,645 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 103s since last switch): 24500 -> 24550 (User: Global)
+2026-03-04 15:23:37,646 - UpstoxApp - INFO - V2: Switching monitoring strike 24500 -> 24550
+2026-03-04 15:23:37,848 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 (SWITCHED) | Index: 24463.30 | CE: slope(V1:279.46 < V0:279.46 (Pct:0.00%, Cons:0/1)):False (LTP: 275.40) | PE: slope(V1:335.39 < V0:335.39 (Pct:0.00%, Cons:0/1)):False (LTP: 341.60)
+2026-03-04 15:24:00,605 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24550 | Index: 24465.85 | CE: slope(V1:279.45 < V0:279.45 (Pct:0.00%, Cons:0/1)):False (LTP: 274.30) | PE: slope(V1:335.40 < V0:335.40 (Pct:0.00%, Cons:0/1)):False (LTP: 344.10)
+2026-03-04 15:24:34,453 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.1s | Worker: ALIVE | Exchange: 2026-03-04 15:24:34.384000+05:30 | Sessions: Global:Monitoring
+2026-03-04 15:24:53,822 - UpstoxApp - INFO - V2: Target strike change confirmed (2 ticks, 76s since last switch): 24550 -> 24500 (User: Global)
+2026-03-04 15:24:53,822 - UpstoxApp - INFO - V2: Switching monitoring strike 24550 -> 24500
+2026-03-04 15:24:54,027 - UpstoxApp - INFO - V2 MONITORING Status [Global]: Strike 24500 (SWITCHED) | Index: 24468.05 | CE: slope(V1:289.52 < V0:289.51 (Pct:0.00%, Cons:0/1)):False (LTP: 301.65) | PE: slope(V1:328.80 < V0:328.81 (Pct:-0.00%, Cons:1/1)):False (LTP: 320.40)
+2026-03-04 15:25:02,860 - UpstoxApp - INFO - [SellManager] close_all: no open legs to close.
+2026-03-04 15:25:02,860 - UpstoxApp - INFO - Initiating graceful shutdown...
+2026-03-04 15:25:02,861 - UpstoxApp - INFO - Stopping Orchestrator's components...
+2026-03-04 15:25:02,862 - UpstoxApp - WARNING - Cannot unsubscribe, WebSocket is not connected.
+2026-03-04 15:25:02,863 - UpstoxApp - INFO - WebSocket connection closed by client.
+2026-03-04 15:25:02,865 - UpstoxApp - WARNING - WebSocket connection issue: ConnectionClosedOK (sent 1000 (OK); then received 1000 (OK)). Attempting to reconnect...
+2026-03-04 15:25:02,865 - UpstoxApp - INFO - WebSocket manager stopped.
+2026-03-04 15:25:02,865 - UpstoxApp - INFO - Broadcasting 'close all positions' to all brokers.
+2026-03-04 15:25:02,865 - UpstoxApp - INFO - [Zerodha_Client_Live_1] Closing all open Zerodha positions (logic to be implemented).
+2026-03-04 15:25:02,935 - UpstoxApp - INFO - Shutdown complete.
