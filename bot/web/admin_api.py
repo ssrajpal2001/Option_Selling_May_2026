@@ -114,13 +114,21 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
 
         elif provider == 'dhan':
             from utils.auth_manager_dhan import generate_dhan_token
-            client_id  = decrypt_secret(dp.get("api_key_encrypted",  "") or "")
-            app_id     = decrypt_secret(dp.get("user_id_encrypted",   "") or "")
-            pin        = decrypt_secret(dp.get("password_encrypted",  "") or "")
-            totp_sec   = decrypt_secret(dp.get("totp_encrypted",      "") or "")
-            if not (client_id and app_id and pin):
+            client_id  = decrypt_secret(dp.get("api_key_encrypted",    "") or "")
+            app_id     = decrypt_secret(dp.get("user_id_encrypted",     "") or "")
+            api_secret = decrypt_secret(dp.get("api_secret_encrypted",  "") or "")
+            pin        = decrypt_secret(dp.get("password_encrypted",    "") or "")
+            totp_sec   = decrypt_secret(dp.get("totp_encrypted",        "") or "")
+            missing = [f for f, v in [
+                ("Client ID",    client_id),
+                ("API Key",      app_id),
+                ("API Secret",   api_secret),
+                ("PIN",          pin),
+                ("TOTP Secret",  totp_sec),
+            ] if not v]
+            if missing:
                 return {"success": False,
-                        "message": "Dhan credentials incomplete. Save all 5 fields first (Client ID, API Key, API Secret, PIN, TOTP)."}
+                        "message": f"Dhan credentials incomplete — missing: {', '.join(missing)}. Save all 5 fields first."}
             token = generate_dhan_token(
                 api_key=app_id,
                 client_id=client_id,
@@ -204,13 +212,21 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
 
             elif provider == "dhan":
                 from utils.auth_manager_dhan import generate_dhan_token
-                _client_id = decrypt_secret(dp.get("api_key_encrypted",  "") or "")
-                _app_id    = decrypt_secret(dp.get("user_id_encrypted",   "") or "")
-                _pin       = decrypt_secret(dp.get("password_encrypted",  "") or "")
-                _totp_sec  = decrypt_secret(dp.get("totp_encrypted",      "") or "")
-                if not (_client_id and _app_id and _pin):
+                _client_id  = decrypt_secret(dp.get("api_key_encrypted",   "") or "")
+                _app_id     = decrypt_secret(dp.get("user_id_encrypted",    "") or "")
+                _api_secret = decrypt_secret(dp.get("api_secret_encrypted", "") or "")
+                _pin        = decrypt_secret(dp.get("password_encrypted",   "") or "")
+                _totp_sec   = decrypt_secret(dp.get("totp_encrypted",       "") or "")
+                _missing = [f for f, v in [
+                    ("Client ID",   _client_id),
+                    ("API Key",     _app_id),
+                    ("API Secret",  _api_secret),
+                    ("PIN",         _pin),
+                    ("TOTP Secret", _totp_sec),
+                ] if not v]
+                if _missing:
                     results[provider] = {"success": False,
-                                         "message": "Dhan credentials incomplete — save all 5 fields first."}
+                                         "message": f"Dhan credentials incomplete — missing: {', '.join(_missing)}."}
                     continue
                 token = generate_dhan_token(
                     api_key=_app_id,
@@ -222,16 +238,10 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
             if token:
                 enc_token = encrypt_secret(token)
                 now = datetime.now(timezone.utc).isoformat()
-                if provider == "upstox":
-                    db_execute(
-                        "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
-                        (enc_token, now, now, provider)
-                    )
-                else:
-                    db_execute(
-                        "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=COALESCE(token_issued_at, ?) WHERE provider=?",
-                        (enc_token, now, now, provider)
-                    )
+                db_execute(
+                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
+                    (enc_token, now, now, provider)
+                )
                 # Signal any live feed to adopt new token immediately
                 try:
                     from hub.feed_registry import refresh_feed_credentials
