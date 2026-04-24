@@ -129,6 +129,9 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             if missing:
                 return {"success": False,
                         "message": f"Dhan credentials incomplete — missing: {', '.join(missing)}. Save all 5 fields first."}
+            # api_secret (UUID) is stored as a required credential and used by is_dhan_api_key_mode()
+            # to detect auto-login mode, but Dhan's token generation endpoint (POST /token) does
+            # not accept an api_secret parameter — only applicationId, loginId, password, and 2FA.
             token = generate_dhan_token(
                 api_key=app_id,
                 client_id=client_id,
@@ -228,6 +231,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     results[provider] = {"success": False,
                                          "message": f"Dhan credentials incomplete — missing: {', '.join(_missing)}."}
                     continue
+                # api_secret is validated/stored for mode detection; not sent to Dhan token API.
                 token = generate_dhan_token(
                     api_key=_app_id,
                     client_id=_client_id,
