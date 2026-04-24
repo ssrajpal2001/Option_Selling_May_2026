@@ -27,19 +27,22 @@ def is_dhan_api_key_mode(credentials: dict) -> bool:
 
 
 def generate_dhan_token(api_key: str, client_id: str, password: str,
-                        totp_secret: str = '') -> str | None:
+                        totp_secret: str = '') -> dict:
     """
     Generates a fresh Dhan access token using the official auth endpoint.
 
-    Endpoint: GET https://auth.dhan.co/app/generateAccessToken
-    Query params: dhanClientId, pin, totp
+    Endpoint: POST https://auth.dhan.co/app/generateAccessToken
+    Body (form-encoded): dhanClientId, pin, totp
     Requires TOTP to be enabled for the account.
 
-    Returns the new access token string, or None on failure.
+    Returns a dict: {'token': str, 'error': None} on success,
+                    {'token': None, 'error': '<Dhan error message>'} on failure.
 
-    NOTE: `api_key` parameter retained for API compatibility but is not sent to
-    this endpoint (client_id == dhanClientId is sufficient).
+    NOTE: `api_key` parameter retained for API compatibility — client_id is
+    used as dhanClientId.
     """
+    _fail = lambda msg: {'token': None, 'error': msg}
+
     totp_code = ''
     if totp_secret:
         try:
@@ -50,43 +53,48 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
 
     if not totp_code:
         logger.error("[Dhan] TOTP code is required for background token generation.")
-        return None
+        return _fail("TOTP code could not be generated. Check your TOTP secret.")
 
     login_id = client_id or api_key
-    params = {
-        'dhanClientId': login_id,
-        'pin': password,
-        'totp': totp_code,
-    }
 
     try:
         logger.info(f"[Dhan] Generating access token for client {login_id} …")
-        resp = requests.get(
+        resp = requests.post(
             'https://auth.dhan.co/app/generateAccessToken',
-            params=params,
-            headers={'Content-Type': 'application/json'},
+            data={
+                'dhanClientId': login_id,
+                'pin': password,
+                'totp': totp_code,
+            },
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
             timeout=15,
         )
+        try:
+            data = resp.json()
+        except Exception:
+            logger.error(f"[Dhan] Token response not JSON (HTTP {resp.status_code}): {resp.text[:300]}")
+            return _fail(f"Dhan returned an unexpected response (HTTP {resp.status_code}).")
+
         if resp.status_code == 200:
-            try:
-                data = resp.json()
-            except Exception:
-                logger.error(f"[Dhan] Token response not JSON: {resp.text[:300]}")
-                return None
             token = data.get('accessToken') or data.get('access_token')
             if token:
                 logger.info(f"[Dhan] Access token generated successfully for {login_id}.")
-                return token
+                return {'token': token, 'error': None}
+            # 200 but no token field — surface whatever message Dhan included
+            dhan_msg = data.get('message') or data.get('errorMessage') or str(data)
             logger.error(f"[Dhan] Token response missing accessToken field: {data}")
+            return _fail(dhan_msg)
         else:
+            dhan_msg = data.get('message') or data.get('errorMessage') or resp.text[:200]
             logger.error(
                 f"[Dhan] Token generation failed for {login_id}: "
-                f"HTTP {resp.status_code} — {resp.text[:300]}"
+                f"HTTP {resp.status_code} — {dhan_msg}"
             )
+            return _fail(dhan_msg)
+
     except Exception as e:
         logger.error(f"[Dhan] Token generation error for {login_id}: {e}")
-
-    return None
+        return _fail(f"Network error: {e}")
 
 
 def renew_dhan_token(access_token: str, client_id: str) -> str | None:

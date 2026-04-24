@@ -129,26 +129,22 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             if missing:
                 return {"success": False,
                         "message": f"Dhan credentials incomplete — missing: {', '.join(missing)}. Save all fields first."}
-            token = generate_dhan_token(
+            _dhan_result = generate_dhan_token(
                 api_key=client_id,
                 client_id=client_id,
                 password=pin,
                 totp_secret=totp_sec,
             )
+            token = _dhan_result['token']
+            _dhan_error = _dhan_result['error']
 
         if token:
             enc_token = encrypt_secret(token)
             now = datetime.now(timezone.utc).isoformat()
-            if provider == 'upstox':
-                db_execute(
-                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
-                    (enc_token, now, now, provider)
-                )
-            else:
-                db_execute(
-                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
-                    (enc_token, now, now, provider)
-                )
+            db_execute(
+                "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
+                (enc_token, now, now, provider)
+            )
 
             try:
                 from hub.feed_registry import refresh_feed_credentials
@@ -174,7 +170,8 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
         else:
             logger.warning(f"Background login for {provider} returned no token.")
             if provider == 'dhan':
-                msg = ("Dhan token generation failed. Verify your Client ID, API Key, PIN and TOTP secret are correct.")
+                dhan_detail = locals().get('_dhan_error') or ''
+                msg = f"Dhan: {dhan_detail}" if dhan_detail else "Dhan token generation failed. Verify your Client ID, PIN and TOTP secret."
             elif provider == 'upstox':
                 msg = "Upstox login failed. Check your User ID, Password, and TOTP secret in the configure panel."
             else:
@@ -224,12 +221,14 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     results[provider] = {"success": False,
                                          "message": f"Dhan credentials incomplete — missing: {', '.join(_missing)}."}
                     continue
-                token = generate_dhan_token(
+                _dhan_result = generate_dhan_token(
                     api_key=_client_id,
                     client_id=_client_id,
                     password=_pin,
                     totp_secret=_totp_sec,
                 )
+                token = _dhan_result['token']
+                _dhan_error = _dhan_result['error']
 
             if token:
                 enc_token = encrypt_secret(token)
@@ -262,7 +261,12 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
 
                 results[provider] = {"success": True, "message": f"{provider.capitalize()} connected."}
             else:
-                results[provider] = {"success": False, "message": f"{provider.capitalize()} login returned no token."}
+                if provider == "dhan":
+                    _err = locals().get('_dhan_error') or ''
+                    _fail_msg = f"Dhan: {_err}" if _err else "Dhan login returned no token."
+                else:
+                    _fail_msg = f"{provider.capitalize()} login returned no token."
+                results[provider] = {"success": False, "message": _fail_msg}
 
         except Exception as e:
             logger.error(f"[Admin] connect-all error for {provider}: {e}")
