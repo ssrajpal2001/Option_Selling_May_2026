@@ -20,7 +20,18 @@ CREATE TABLE IF NOT EXISTS users (
     activated_at TEXT,
     activated_by INTEGER,
     full_name TEXT,
-    phone_number TEXT
+    phone_number TEXT,
+    static_ip TEXT,
+    telegram_chat_id TEXT,
+    referral_code TEXT UNIQUE,
+    referred_by_id INTEGER REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS platform_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    updated_at TEXT DEFAULT (datetime('now')),
+    updated_by INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS data_providers (
@@ -204,6 +215,36 @@ def _migrate(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE users ADD COLUMN plan_id INTEGER REFERENCES subscription_plans(id)")
     if "plan_expiry_date" not in user_cols:
         conn.execute("ALTER TABLE users ADD COLUMN plan_expiry_date TEXT")
+
+    # Migration: user profile extensions
+    for col, defn in [
+        ("static_ip",       "TEXT"),
+        ("telegram_chat_id","TEXT"),
+        ("referral_code",   "TEXT"),
+        ("referred_by_id",  "INTEGER"),
+    ]:
+        if col not in user_cols:
+            conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
+
+    # Migration: broker instance risk/lock columns
+    inst_cols = {row[1] for row in conn.execute("PRAGMA table_info(client_broker_instances)")}
+    for col, defn in [
+        ("client_strategy_overrides", "TEXT"),
+        ("trading_locked_until",      "TEXT"),
+        ("daily_loss_limit",          "REAL DEFAULT 0"),
+    ]:
+        if col not in inst_cols:
+            conn.execute(f"ALTER TABLE client_broker_instances ADD COLUMN {col} {defn}")
+
+    # Ensure platform_settings table exists (created in SCHEMA but guard for old DBs)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS platform_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT,
+            updated_at TEXT DEFAULT (datetime('now')),
+            updated_by INTEGER
+        )
+    """)
 
     conn.commit()
 

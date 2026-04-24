@@ -141,6 +141,14 @@ async def admin_audit_redirect(request: Request):
     return RedirectResponse("/admin/audit-log", status_code=301)
 
 
+@app.get("/admin/platform-settings", response_class=HTMLResponse)
+async def admin_platform_settings_page(request: Request):
+    user = _get_user_from_request(request)
+    if not user or user["role"] != "admin":
+        return RedirectResponse("/login")
+    return templates.TemplateResponse(request, "admin_platform_settings.html")
+
+
 
 
 # ─── Client Pages ─────────────────────────────────────────────────────────────
@@ -563,6 +571,261 @@ async def _startup_auto_connect():
         logger.error(f"[Startup] Auto-connect task error: {e}")
 
 
+async def _subscription_expiry_scheduler():
+    """Run daily at 09:15 AM IST — send expiry alerts for plans expiring in 7 or 1 days."""
+    while True:
+        try:
+            now = datetime.now(IST)
+            target = now.replace(hour=9, minute=15, second=0, microsecond=0)
+            if now >= target:
+                target += timedelta(days=1)
+            await asyncio.sleep((target - now).total_seconds())
+
+            logger.info("[Scheduler] Running subscription expiry check...")
+            try:
+                clients = db_fetchall(
+                    "SELECT id, username, email, full_name, subscription_tier, "
+                    "plan_expiry_date, telegram_chat_id "
+                    "FROM users WHERE role='client' AND is_active=1 "
+                    "AND plan_expiry_date IS NOT NULL AND plan_expiry_date != ''"
+                )
+                from utils.emailer import send_subscription_expiry_alert
+                from utils.notifier import notify_subscription_expiry
+                admin_row = db_fetchone("SELECT email FROM users WHERE role='admin' LIMIT 1")
+                admin_email = admin_row["email"] if admin_row else None
+
+                for c in clients:
+                    try:
+                        exp = datetime.fromisoformat(c["plan_expiry_date"]).date()
+                        days_left = (exp - datetime.now(IST).date()).days
+                        if days_left in (7, 1):
+                            send_subscription_expiry_alert(c, days_left, admin_email)
+                            if c.get("telegram_chat_id"):
+                                notify_subscription_expiry(
+                                    c["telegram_chat_id"], c["username"],
+                                    c["subscription_tier"], days_left
+                                )
+                            logger.info(f"[Scheduler] Expiry alert sent for {c['username']} (expires in {days_left}d)")
+                    except Exception as _ce:
+                        logger.error(f"[Scheduler] Expiry check error for {c['username']}: {_ce}")
+            except Exception as e:
+                logger.error(f"[Scheduler] Expiry scheduler inner error: {e}")
+
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"[Scheduler] Expiry scheduler error: {e}")
+            await asyncio.sleep(60)
+
+
+async def _kill_switch_enforcer():
+    """
+    Runs every 5 minutes during market hours (9:15–15:30 IST).
+    Checks each running client instance's daily live PnL against their daily_loss_limit.
+    If the loss limit is exceeded, stops the bot and sets trading_locked_until.
+    """
+    while True:
+        try:
+            await asyncio.sleep(300)  # 5 minutes
+            now = datetime.now(IST)
+            weekday = now.weekday()
+            if weekday >= 5:
+                continue
+            market_open  = now.replace(hour=9,  minute=15, second=0, microsecond=0)
+            market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
+            if not (market_open <= now <= market_close):
+                continue
+
+            today = now.strftime("%Y-%m-%d")
+            try:
+                running_instances = db_fetchall(
+                    "SELECT id, client_id, daily_loss_limit, trading_locked_until "
+                    "FROM client_broker_instances "
+                    "WHERE status='running' AND daily_loss_limit > 0"
+                )
+                for inst in running_instances:
+                    try:
+                        # Already locked — skip
+                        if inst.get("trading_locked_until"):
+                            continue
+                        # Sum today's live losses
+                        row = db_fetchone(
+                            "SELECT COALESCE(SUM(pnl_rs), 0) as total_rs "
+                            "FROM trade_history WHERE instance_id=? AND trading_mode='live' "
+                            "AND date(closed_at)=?",
+                            (inst["id"], today)
+                        )
+                        daily_pnl_rs = row["total_rs"] if row else 0
+                        if daily_pnl_rs >= 0:
+                            continue  # profitable, nothing to do
+                        if abs(daily_pnl_rs) < inst["daily_loss_limit"]:
+                            continue  # within limit
+
+                        # KILL-SWITCH TRIGGERED
+                        logger.warning(
+                            f"[KillSwitch] Instance {inst['id']} (client {inst['client_id']}) "
+                            f"daily loss ₹{abs(daily_pnl_rs):.0f} exceeds limit ₹{inst['daily_loss_limit']:.0f}"
+                        )
+                        # Find next trading day 9:15 AM for unlock time
+                        unlock = now + timedelta(days=1)
+                        for _ in range(7):
+                            if unlock.weekday() < 5:
+                                break
+                            unlock += timedelta(days=1)
+                        unlock = unlock.replace(hour=9, minute=15, second=0, microsecond=0)
+
+                        # Stop the instance and lock
+                        from hub.instance_manager import instance_manager as _im
+                        _im.stop_instance(inst["id"])
+                        db_execute(
+                            "UPDATE client_broker_instances SET status='idle', bot_pid=NULL, "
+                            "trading_locked_until=? WHERE id=?",
+                            (unlock.isoformat(), inst["id"])
+                        )
+
+                        # Notify client via Telegram
+                        client_row = db_fetchone(
+                            "SELECT username, telegram_chat_id FROM users WHERE id=?",
+                            (inst["client_id"],)
+                        )
+                        if client_row and client_row.get("telegram_chat_id"):
+                            from utils.notifier import notify_kill_switch
+                            notify_kill_switch(
+                                client_row["telegram_chat_id"],
+                                client_row["username"],
+                                f"Daily loss limit ₹{inst['daily_loss_limit']:.0f} exceeded",
+                                daily_pnl_rs,
+                            )
+                        logger.info(f"[KillSwitch] Instance {inst['id']} stopped. Locked until {unlock.isoformat()}")
+                    except Exception as _ie:
+                        logger.error(f"[KillSwitch] Instance {inst.get('id')} error: {_ie}")
+            except Exception as e:
+                logger.error(f"[KillSwitch] Enforcer inner error: {e}")
+
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"[KillSwitch] Enforcer error: {e}")
+            await asyncio.sleep(60)
+
+
+async def _dhan_auto_renewal_scheduler():
+    """
+    Run every hour — check client Dhan instances in API Key mode.
+    If their token age > 22 hours (expires at 24h), auto-renew it.
+    """
+    while True:
+        try:
+            await asyncio.sleep(3600)  # check every hour
+            logger.info("[Scheduler] Running Dhan token auto-renewal check...")
+            try:
+                from web.auth import encrypt_secret, decrypt_secret
+                from utils.auth_manager_dhan import is_dhan_api_key_mode, generate_dhan_token
+
+                instances = db_fetchall("""
+                    SELECT cbi.id, cbi.client_id,
+                           cbi.api_key_encrypted, cbi.api_secret_encrypted,
+                           cbi.broker_user_id_encrypted, cbi.password_encrypted,
+                           cbi.totp_encrypted, cbi.token_updated_at
+                    FROM client_broker_instances cbi
+                    WHERE cbi.broker='dhan' AND cbi.status != 'removed'
+                      AND cbi.api_key_encrypted IS NOT NULL
+                      AND cbi.password_encrypted IS NOT NULL
+                """)
+
+                now = datetime.now(IST)
+                for inst in instances:
+                    try:
+                        api_secret = decrypt_secret(inst["api_secret_encrypted"]) if inst.get("api_secret_encrypted") else ""
+                        if not is_dhan_api_key_mode({"api_secret": api_secret}):
+                            continue  # skip non-API-Key-mode instances
+
+                        # Check token age
+                        ts_str = inst.get("token_updated_at") or ""
+                        if ts_str:
+                            ts = datetime.fromisoformat(ts_str).replace(tzinfo=IST)
+                            age_hours = (now - ts).total_seconds() / 3600
+                            if age_hours < 22:
+                                continue  # still fresh
+
+                        api_key    = decrypt_secret(inst["api_key_encrypted"])
+                        client_id  = decrypt_secret(inst["broker_user_id_encrypted"]) if inst.get("broker_user_id_encrypted") else ""
+                        password   = decrypt_secret(inst["password_encrypted"])
+                        totp_sec   = decrypt_secret(inst["totp_encrypted"]) if inst.get("totp_encrypted") else ""
+
+                        token = generate_dhan_token(api_key, client_id, password, totp_sec)
+                        if token:
+                            enc_token = encrypt_secret(token)
+                            now_ist   = now.isoformat()
+                            db_execute(
+                                "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+                                (enc_token, now_ist, inst["id"])
+                            )
+                            logger.info(f"[Dhan Renewal] Auto-renewed token for instance {inst['id']} (client {inst['client_id']})")
+                        else:
+                            logger.warning(f"[Dhan Renewal] Token renewal FAILED for instance {inst['id']}")
+                    except Exception as _ie:
+                        logger.error(f"[Dhan Renewal] Instance {inst.get('id')} error: {_ie}")
+            except Exception as e:
+                logger.error(f"[Dhan Renewal] Scheduler inner error: {e}")
+
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"[Dhan Renewal] Scheduler error: {e}")
+            await asyncio.sleep(60)
+
+
+async def _day_end_summary_scheduler():
+    """Run daily at 15:35 IST — send day-end PnL summary via Telegram."""
+    while True:
+        try:
+            now = datetime.now(IST)
+            target = now.replace(hour=15, minute=35, second=0, microsecond=0)
+            if now >= target:
+                target += timedelta(days=1)
+            await asyncio.sleep((target - now).total_seconds())
+
+            logger.info("[Scheduler] Sending day-end Telegram summaries...")
+            try:
+                today = datetime.now(IST).strftime("%Y-%m-%d")
+                clients = db_fetchall(
+                    "SELECT u.id, u.username, u.telegram_chat_id, "
+                    "cbi.broker, cbi.instrument "
+                    "FROM users u JOIN client_broker_instances cbi ON cbi.client_id=u.id "
+                    "WHERE u.role='client' AND u.is_active=1 AND u.telegram_chat_id IS NOT NULL "
+                    "AND u.telegram_chat_id != ''"
+                )
+                from utils.notifier import notify_day_end_summary
+                for c in clients:
+                    try:
+                        trades = db_fetchall(
+                            "SELECT pnl_pts, pnl_rs, direction FROM trade_history "
+                            "WHERE client_id=? AND date(closed_at)=? AND trading_mode='live'",
+                            (c["id"], today)
+                        )
+                        total_pts = sum(t.get("pnl_pts") or 0 for t in trades)
+                        total_rs  = sum(t.get("pnl_rs") or 0 for t in trades)
+                        wins   = sum(1 for t in trades if (t.get("pnl_pts") or 0) > 0)
+                        losses = sum(1 for t in trades if (t.get("pnl_pts") or 0) < 0)
+                        if trades:
+                            notify_day_end_summary(c["telegram_chat_id"], {
+                                "date": today, "broker": c.get("broker", ""),
+                                "total_trades": len(trades), "wins": wins, "losses": losses,
+                                "total_pnl_pts": total_pts, "total_pnl_rs": total_rs,
+                            })
+                    except Exception as _ce:
+                        logger.error(f"[Scheduler] Day-end error for {c['username']}: {_ce}")
+            except Exception as e:
+                logger.error(f"[Scheduler] Day-end scheduler inner error: {e}")
+
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"[Scheduler] Day-end scheduler error: {e}")
+            await asyncio.sleep(60)
+
+
 @app.on_event("startup")
 async def startup_event():
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
@@ -571,6 +834,14 @@ async def startup_event():
     asyncio.create_task(_startup_auto_connect())
     # Background morning scheduler (runs daily at 08:30 AM IST)
     asyncio.create_task(_global_provider_scheduler())
+    # Daily subscription expiry alerts (09:15 AM IST)
+    asyncio.create_task(_subscription_expiry_scheduler())
+    # Day-end Telegram summary (15:35 IST)
+    asyncio.create_task(_day_end_summary_scheduler())
+    # Dhan token auto-renewal (hourly, renews when token age > 22h)
+    asyncio.create_task(_dhan_auto_renewal_scheduler())
+    # Daily loss kill-switch enforcer (runs every 5 minutes during market hours)
+    asyncio.create_task(_kill_switch_enforcer())
 
 if __name__ == "__main__":
     import uvicorn

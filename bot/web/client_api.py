@@ -17,6 +17,20 @@ from utils.logger import logger
 router = APIRouter(prefix="/client", tags=["client"])
 
 IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def _audit_client(actor_id: int, action: str, details: dict | None = None):
+    """Write an audit log entry for client-initiated actions."""
+    try:
+        db_execute(
+            "INSERT INTO audit_log (actor_id, actor_role, action, target_type, target_id, details) "
+            "VALUES (?,?,?,?,?,?)",
+            (actor_id, "client", action, "user", actor_id, json.dumps(details or {})),
+        )
+    except Exception as _ae:
+        logger.warning(f"[Audit] Client audit failed: {_ae}")
+
+
 KITE_LOGIN_URL = "https://kite.trade/connect/login?v=3&api_key={api_key}"
 
 
@@ -267,6 +281,7 @@ async def save_broker_config(body: BrokerSetup, user=Depends(get_current_user)):
     if enc_pwd and enc_totp:
         msg += " One-Click Connect is enabled."
 
+    _audit_client(user["id"], "broker_save", {"broker": body.broker, "mode": body.trading_mode})
     return {"success": True, "message": msg}
 
 
@@ -505,6 +520,8 @@ async def toggle_trading(body: TradingToggleRequest, user=Depends(get_current_us
 
     msg = "Trading enabled." if body.enabled else "Trading disabled. Active trades will be closed."
     logger.info(f"[Client] User {user['id']} toggled trading to {body.enabled}")
+    action = "trading_start" if body.enabled else "trading_stop"
+    _audit_client(user["id"], action, {"broker": instance.get("broker")})
     return {"success": True, "message": msg}
 
 @router.post("/bot/square-off-all")
@@ -572,6 +589,27 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
         raise HTTPException(400, "Broker credentials missing. Please re-enter your credentials.")
 
     broker_name = instance["broker"]
+
+    # ── Kill-switch check ─────────────────────────────────────────────────
+    locked_until = instance.get("trading_locked_until")
+    if locked_until:
+        try:
+            locked_dt = datetime.fromisoformat(locked_until)
+            if locked_dt.tzinfo is None:
+                locked_dt = locked_dt.replace(tzinfo=IST)
+            if datetime.now(IST) < locked_dt:
+                raise HTTPException(
+                    423,
+                    f"Daily loss kill-switch is active. Bot is locked until "
+                    f"{locked_until[:16].replace('T', ' ')} IST. "
+                    "It will auto-unlock at the next trading session (9:15 AM)."
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+    # ─────────────────────────────────────────────────────────────────────
+
     has_auto_login = instance.get("password_encrypted") and instance.get("totp_encrypted")
 
     # ── Headless Login Integration ──
@@ -658,6 +696,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
     )
     if ok:
         db_execute("UPDATE client_broker_instances SET status='running', bot_pid=? WHERE id=?", (pid, instance["id"]))
+        _audit_client(user["id"], "bot_activate", {"broker": broker_name, "mode": instance.get("trading_mode")})
     response = {"success": ok, "message": msg}
     if _plan_expiry_warning:
         response["plan_warning"] = _plan_expiry_warning
@@ -673,6 +712,7 @@ async def stop_bot(user=Depends(get_current_user)):
     ok, msg = instance_manager.stop_instance(instance["id"])
     if ok:
         db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
+        _audit_client(user["id"], "bot_deactivate", {"broker": instance.get("broker")})
     return {"success": ok, "message": msg}
 
 
@@ -890,3 +930,242 @@ async def get_trades(user=Depends(get_current_user)):
         ORDER BY t.closed_at DESC LIMIT 100
     """, (user["id"],))
     return {"trades": trades}
+
+
+# ── Profile ───────────────────────────────────────────────────────────────────
+
+class ProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    telegram_chat_id: Optional[str] = None
+
+
+@router.get("/profile")
+async def get_profile(user=Depends(get_current_user)):
+    row = db_fetchone(
+        "SELECT id, username, email, full_name, phone_number, telegram_chat_id, "
+        "referral_code, referred_by_id, created_at FROM users WHERE id=?",
+        (user["id"],)
+    )
+    if not row:
+        raise HTTPException(404, "User not found.")
+    return dict(row)
+
+
+@router.patch("/profile")
+async def update_profile(body: ProfileUpdate, user=Depends(get_current_user)):
+    updates, params = [], []
+    if body.full_name is not None:
+        updates.append("full_name=?"); params.append(body.full_name.strip())
+    if body.phone_number is not None:
+        updates.append("phone_number=?"); params.append(body.phone_number.strip())
+    if body.telegram_chat_id is not None:
+        updates.append("telegram_chat_id=?"); params.append(body.telegram_chat_id.strip() or None)
+    if not updates:
+        return {"success": True, "message": "Nothing to update."}
+    params.append(user["id"])
+    db_execute(f"UPDATE users SET {', '.join(updates)} WHERE id=?", params)
+    _audit_client(user["id"], "profile_update", {
+        "fields": [u.split("=")[0] for u in updates]
+    })
+    return {"success": True, "message": "Profile updated."}
+
+
+# ── Referral ──────────────────────────────────────────────────────────────────
+
+def _ensure_referral_code(user_id: int) -> str:
+    """Auto-generate a referral code for user if not yet assigned."""
+    import secrets, string
+    row = db_fetchone("SELECT referral_code FROM users WHERE id=?", (user_id,))
+    if row and row.get("referral_code"):
+        return row["referral_code"]
+    alphabet = string.ascii_uppercase + string.digits
+    for _ in range(10):
+        code = "AS" + "".join(secrets.choice(alphabet) for _ in range(6))
+        try:
+            db_execute("UPDATE users SET referral_code=? WHERE id=?", (code, user_id))
+            return code
+        except Exception:
+            continue
+    return ""
+
+
+@router.get("/referral")
+async def get_referral(user=Depends(get_current_user)):
+    code = _ensure_referral_code(user["id"])
+    referred = db_fetchall(
+        "SELECT username, created_at FROM users WHERE referred_by_id=? ORDER BY created_at DESC",
+        (user["id"],)
+    )
+    return {
+        "referral_code": code,
+        "referred_count": len(referred),
+        "referred_users": [{"username": r["username"], "joined": r["created_at"][:10]} for r in referred],
+    }
+
+
+# ── Risk Parameters ───────────────────────────────────────────────────────────
+
+class RiskParamsUpdate(BaseModel):
+    daily_loss_limit: Optional[float] = None       # ₹ daily loss kill-switch
+    max_trades_per_day: Optional[int] = None
+    profit_target_pct: Optional[float] = None      # % of capital
+    guardrail_pnl_target: Optional[float] = None   # pts
+    guardrail_pnl_sl: Optional[float] = None       # pts
+    single_trade_target: Optional[float] = None    # pts
+    single_trade_sl: Optional[float] = None        # pts
+
+
+@router.get("/risk-params")
+async def get_risk_params(user=Depends(get_current_user)):
+    inst = db_fetchone(
+        "SELECT id, daily_loss_limit, client_strategy_overrides FROM client_broker_instances "
+        "WHERE client_id=? AND status!='removed' ORDER BY CASE WHEN status='running' THEN 0 ELSE 1 END, id DESC LIMIT 1",
+        (user["id"],)
+    )
+    if not inst:
+        return {"configured": False, "params": {}}
+    overrides = {}
+    try:
+        if inst.get("client_strategy_overrides"):
+            overrides = json.loads(inst["client_strategy_overrides"])
+    except Exception:
+        pass
+    return {
+        "configured": True,
+        "instance_id": inst["id"],
+        "daily_loss_limit": inst.get("daily_loss_limit") or 0,
+        "params": overrides,
+    }
+
+
+@router.post("/risk-params")
+async def save_risk_params(body: RiskParamsUpdate, user=Depends(get_current_user)):
+    inst = db_fetchone(
+        "SELECT id, client_strategy_overrides FROM client_broker_instances "
+        "WHERE client_id=? AND status!='removed' ORDER BY CASE WHEN status='running' THEN 0 ELSE 1 END, id DESC LIMIT 1",
+        (user["id"],)
+    )
+    if not inst:
+        raise HTTPException(400, "No broker configured. Set up a broker first.")
+
+    overrides = {}
+    try:
+        if inst.get("client_strategy_overrides"):
+            overrides = json.loads(inst["client_strategy_overrides"])
+    except Exception:
+        pass
+
+    if body.max_trades_per_day is not None:
+        overrides["max_trades_per_day"] = max(0, body.max_trades_per_day)
+    if body.profit_target_pct is not None:
+        overrides["profit_target_pct"] = body.profit_target_pct
+    if body.guardrail_pnl_target is not None:
+        overrides["guardrail_pnl_target"] = body.guardrail_pnl_target
+    if body.guardrail_pnl_sl is not None:
+        overrides["guardrail_pnl_sl"] = body.guardrail_pnl_sl
+    if body.single_trade_target is not None:
+        overrides["single_trade_target"] = body.single_trade_target
+    if body.single_trade_sl is not None:
+        overrides["single_trade_sl"] = body.single_trade_sl
+
+    db_execute(
+        "UPDATE client_broker_instances SET client_strategy_overrides=? "
+        + (", daily_loss_limit=?" if body.daily_loss_limit is not None else "")
+        + " WHERE id=?",
+        ([json.dumps(overrides)]
+         + ([body.daily_loss_limit] if body.daily_loss_limit is not None else [])
+         + [inst["id"]])
+    )
+    _audit_client(user["id"], "risk_params_save", overrides)
+    return {"success": True, "message": "Risk parameters saved."}
+
+
+# ── Market Status ─────────────────────────────────────────────────────────────
+
+_NSE_HOLIDAYS_2026 = {
+    "2026-01-26", "2026-03-02", "2026-03-20", "2026-04-02", "2026-04-14",
+    "2026-04-15", "2026-05-01", "2026-06-29", "2026-08-15", "2026-09-02",
+    "2026-10-02", "2026-10-21", "2026-10-22", "2026-11-04", "2026-11-25",
+    "2026-12-25",
+}
+_NSE_HOLIDAYS_2025 = {
+    "2025-01-26", "2025-02-26", "2025-03-14", "2025-03-31", "2025-04-10",
+    "2025-04-14", "2025-04-18", "2025-05-01", "2025-08-15", "2025-10-02",
+    "2025-10-02", "2025-10-20", "2025-10-21", "2025-11-05", "2025-12-25",
+}
+_NSE_HOLIDAYS = _NSE_HOLIDAYS_2025 | _NSE_HOLIDAYS_2026
+
+
+@router.get("/market-status")
+async def get_market_status(user=Depends(get_current_user)):
+    """Return NSE market open/closed status and timing info."""
+    now = datetime.now(IST)
+    today_str = now.strftime("%Y-%m-%d")
+    weekday = now.weekday()  # 0=Mon, 6=Sun
+
+    is_holiday = today_str in _NSE_HOLIDAYS
+    is_weekend = weekday >= 5
+    market_open_time  = now.replace(hour=9, minute=15, second=0, microsecond=0)
+    market_close_time = now.replace(hour=15, minute=30, second=0, microsecond=0)
+
+    if is_holiday or is_weekend:
+        status = "CLOSED"
+        reason = "Holiday" if is_holiday else "Weekend"
+        next_open = None
+        # Find next trading day
+        candidate = now + timedelta(days=1)
+        for _ in range(10):
+            c_str = candidate.strftime("%Y-%m-%d")
+            if candidate.weekday() < 5 and c_str not in _NSE_HOLIDAYS:
+                next_open = candidate.replace(hour=9, minute=15, second=0, microsecond=0).isoformat()
+                break
+            candidate += timedelta(days=1)
+        return {
+            "status": status,
+            "reason": reason,
+            "next_open": next_open,
+            "is_market_hours": False,
+            "minutes_to_open": None,
+            "minutes_to_close": None,
+            "server_time": now.isoformat(),
+        }
+
+    before_open  = now < market_open_time
+    after_close  = now > market_close_time
+    in_session   = not before_open and not after_close
+    pre_open     = (market_open_time - timedelta(minutes=15)) <= now < market_open_time
+
+    if before_open:
+        status = "PRE-OPEN" if pre_open else "CLOSED"
+        reason = "Before market open"
+        mins_to_open = max(0, int((market_open_time - now).total_seconds() / 60))
+        return {
+            "status": status, "reason": reason, "is_market_hours": False,
+            "minutes_to_open": mins_to_open, "minutes_to_close": None,
+            "next_open": market_open_time.isoformat(),
+            "server_time": now.isoformat(),
+        }
+    elif after_close:
+        # Find next trading day
+        candidate = now + timedelta(days=1)
+        next_open = None
+        for _ in range(10):
+            c_str = candidate.strftime("%Y-%m-%d")
+            if candidate.weekday() < 5 and c_str not in _NSE_HOLIDAYS:
+                next_open = candidate.replace(hour=9, minute=15, second=0, microsecond=0).isoformat()
+                break
+            candidate += timedelta(days=1)
+        return {
+            "status": "CLOSED", "reason": "Market closed for today",
+            "is_market_hours": False, "minutes_to_open": None, "minutes_to_close": None,
+            "next_open": next_open, "server_time": now.isoformat(),
+        }
+    else:
+        mins_to_close = max(0, int((market_close_time - now).total_seconds() / 60))
+        return {
+            "status": "OPEN", "reason": "Market is live",
+            "is_market_hours": True, "minutes_to_open": 0,
+            "minutes_to_close": mins_to_close,
+            "next_open": None, "server_time": now.isoformat(),
+        }

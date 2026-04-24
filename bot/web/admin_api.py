@@ -1245,3 +1245,116 @@ async def system_health(admin=Depends(require_admin)):
 
     info["timestamp"] = _dt.datetime.now(timezone.utc).isoformat()
     return info
+
+
+# ── Platform Settings (SMTP / Telegram) ──────────────────────────────────────
+
+class PlatformSettingsBatch(BaseModel):
+    settings: dict  # key → value
+
+
+@router.get("/platform-settings")
+async def get_platform_settings(admin=Depends(require_admin)):
+    """Return all platform_settings (masks sensitive values)."""
+    rows = db_fetchall("SELECT key, value FROM platform_settings ORDER BY key")
+    safe = {}
+    mask_keys = {"smtp_password", "telegram_bot_token"}
+    for r in rows:
+        k = r["key"]
+        safe[k] = "••••••••" if (k in mask_keys and r["value"]) else (r["value"] or "")
+    return {"settings": safe}
+
+
+@router.post("/platform-settings")
+async def save_platform_settings(body: PlatformSettingsBatch, admin=Depends(require_admin)):
+    """Upsert platform settings. Pass empty string to clear a key."""
+    now = _dt.datetime.now(timezone.utc).isoformat()
+    for k, v in body.settings.items():
+        # Do not overwrite password with mask placeholder
+        if v == "••••••••":
+            continue
+        db_execute(
+            "INSERT INTO platform_settings (key, value, updated_at, updated_by) VALUES (?,?,?,?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at, "
+            "updated_by=excluded.updated_by",
+            (k, v, now, admin["id"])
+        )
+    _audit(admin, "platform_settings_update", "system", 0, {
+        "keys": [k for k in body.settings if body.settings[k] != "••••••••"]
+    })
+    return {"success": True, "message": "Platform settings saved."}
+
+
+@router.post("/platform-settings/test-email")
+async def test_email(admin=Depends(require_admin)):
+    """Send a test email to the admin's registered email address."""
+    admin_row = db_fetchone("SELECT email, username FROM users WHERE id=?", (admin["id"],))
+    if not admin_row:
+        raise HTTPException(400, "Admin user not found.")
+
+    from utils.emailer import send_email
+    ok = send_email(
+        to=admin_row["email"],
+        subject="[AlgoSoft] Test Email — SMTP Working",
+        body_html="""
+        <div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;
+                    background:#0f172a;color:#e2e8f0;padding:32px;border-radius:12px;">
+          <h2 style="color:#00d4aa;margin-top:0">✅ Test Email Successful</h2>
+          <p>Hello <strong>{name}</strong>,</p>
+          <p>Your SMTP configuration is working correctly.
+             AlgoSoft will use these settings for all subscription expiry and
+             trade alert emails.</p>
+          <hr style="border-color:#334155;margin:24px 0">
+          <p style="font-size:12px;color:#64748b">AlgoSoft Automated Trading Platform</p>
+        </div>
+        """.replace("{name}", admin_row.get("username", "Admin")),
+    )
+    if ok:
+        return {"success": True, "message": f"Test email sent to {admin_row['email']}"}
+    raise HTTPException(500, "Failed to send test email. Check SMTP settings.")
+
+
+@router.get("/clients/{client_id}/static-ip")
+async def get_client_static_ip(client_id: int, admin=Depends(require_admin)):
+    row = db_fetchone("SELECT static_ip FROM users WHERE id=?", (client_id,))
+    if not row:
+        raise HTTPException(404, "Client not found.")
+    return {"static_ip": row.get("static_ip") or ""}
+
+
+class StaticIPBody(BaseModel):
+    static_ip: str = ""
+
+
+@router.patch("/clients/{client_id}/static-ip")
+async def update_client_static_ip(client_id: int, body: StaticIPBody,
+                                   admin=Depends(require_admin)):
+    row = db_fetchone("SELECT id FROM users WHERE id=?", (client_id,))
+    if not row:
+        raise HTTPException(404, "Client not found.")
+    db_execute("UPDATE users SET static_ip=? WHERE id=?", (body.static_ip.strip() or None, client_id))
+    _audit(admin, "client_static_ip_update", "user", client_id, {"static_ip": body.static_ip})
+    return {"success": True}
+
+
+@router.get("/clients/{client_id}/risk-overrides")
+async def get_client_risk_overrides(client_id: int, admin=Depends(require_admin)):
+    """Return client's strategy overrides and risk params from active broker instance."""
+    inst = db_fetchone(
+        "SELECT id, client_strategy_overrides, daily_loss_limit, trading_locked_until "
+        "FROM client_broker_instances WHERE client_id=? ORDER BY id DESC LIMIT 1",
+        (client_id,)
+    )
+    if not inst:
+        return {"overrides": {}, "daily_loss_limit": 0, "trading_locked_until": None}
+    overrides = {}
+    try:
+        if inst.get("client_strategy_overrides"):
+            overrides = json.loads(inst["client_strategy_overrides"])
+    except Exception:
+        pass
+    return {
+        "overrides": overrides,
+        "daily_loss_limit": inst.get("daily_loss_limit") or 0,
+        "trading_locked_until": inst.get("trading_locked_until"),
+    }
