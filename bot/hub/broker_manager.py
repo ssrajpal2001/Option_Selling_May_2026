@@ -107,6 +107,33 @@ class BrokerManager:
                 db_config=db_config,
                 login_required=True
             )
+        elif broker_name == 'fyers':
+            from brokers.fyers_client import FyersClient
+            broker_instance = FyersClient(
+                broker_instance_name=instance_name,
+                config_manager=self.config_manager,
+                user_id=client_cfg.client_id,
+                db_config=db_config,
+                login_required=True
+            )
+        elif broker_name == 'aliceblue':
+            from brokers.aliceblue_client import AliceblueClient
+            broker_instance = AliceblueClient(
+                broker_instance_name=instance_name,
+                config_manager=self.config_manager,
+                user_id=client_cfg.client_id,
+                db_config=db_config,
+                login_required=True
+            )
+        elif broker_name == 'groww':
+            from brokers.groww_client import GrowwClient
+            broker_instance = GrowwClient(
+                broker_instance_name=instance_name,
+                config_manager=self.config_manager,
+                user_id=client_cfg.client_id,
+                db_config=db_config,
+                login_required=True
+            )
         else:
             raise ValueError(f"Unsupported broker: {broker_name}")
 

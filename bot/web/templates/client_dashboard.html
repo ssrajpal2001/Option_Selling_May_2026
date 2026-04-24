@@ -1368,16 +1368,40 @@ async function refreshToken() {
   try {
     let d;
     switch (state.selectedBroker) {
-      case 'zerodha': d = await api('GET', '/zerodha/login-url'); break;
-      case 'dhan':    d = await api('GET', '/dhan/login-url');    break;
-      case 'upstox':  d = await api('GET', '/upstox/login-url');  break;
-      case 'angelone':d = await api('GET', '/angelone/login-url');break;
-      default:        toast('Manual OAuth not available for this broker yet.', 'warn'); return;
+      case 'zerodha':   d = await api('GET', '/zerodha/login-url');   break;
+      case 'dhan':      d = await api('GET', '/dhan/login-url');       break;
+      case 'upstox':    d = await api('GET', '/upstox/login-url');     break;
+      case 'angelone':  d = await api('GET', '/angelone/login-url');   break;
+      case 'aliceblue': d = await api('GET', '/aliceblue/login-url');  break;
+      case 'groww':     d = await api('GET', '/groww/login-url');      break;
+
+      case 'fyers': {
+        // Fyers OAuth: open login page, user pastes auth code from redirect URL
+        const urlData = await api('GET', '/fyers/login-url');
+        if (!urlData.login_url) { toast('Could not generate Fyers login URL', 'err'); break; }
+        window.open(urlData.login_url, '_blank', 'width=520,height=700');
+        toast('Complete login in the Fyers window, then paste the auth_code shown in the redirect URL.', 'ok');
+        const authCode = prompt(
+          'After logging in, copy the "auth_code" value from the redirect URL and paste it here:\n\n' +
+          '(URL looks like: ...?auth_code=XXXX&state=...)'
+        );
+        if (!authCode || !authCode.trim()) { toast('Auth code not provided.', 'warn'); break; }
+        d = await api('POST', '/fyers/exchange-token', { auth_code: authCode.trim() });
+        if (d.success) {
+          toast(d.message || 'Fyers connected!', 'ok');
+          await loadBrokerData();
+        }
+        break;
+      }
+
+      default:
+        toast('Token refresh not available for this broker.', 'warn');
+        break;
     }
-    if (d.automated) {
+    if (d && d.automated) {
       toast(d.message || 'Token refreshed!', 'ok');
       await loadBrokerData();
-    } else if (d.login_url) {
+    } else if (d && d.login_url) {
       const w = window.open(d.login_url, '_blank', 'width=500,height=700');
       toast('Login window opened. Complete OAuth and return here.', 'ok');
       const timer = setInterval(async () => {

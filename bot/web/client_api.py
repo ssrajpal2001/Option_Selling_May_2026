@@ -156,7 +156,7 @@ async def get_broker_config(user=Depends(get_current_user)):
 
 @router.delete("/broker/{broker}")
 async def delete_broker_config(broker: str, user=Depends(get_current_user)):
-    if broker not in ("zerodha", "dhan", "angelone", "upstox"):
+    if broker not in ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww"):
         raise HTTPException(400, "Invalid broker.")
 
     instance = db_fetchone(
@@ -194,8 +194,9 @@ async def delete_broker_config(broker: str, user=Depends(get_current_user)):
 
 @router.post("/broker")
 async def save_broker_config(body: BrokerSetup, user=Depends(get_current_user)):
-    if body.broker not in ("zerodha", "dhan", "angelone", "upstox"):
-        raise HTTPException(400, "Broker must be 'zerodha', 'dhan', 'angelone', or 'upstox'.")
+    VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+    if body.broker not in VALID_BROKERS:
+        raise HTTPException(400, f"Broker must be one of: {', '.join(VALID_BROKERS)}.")
 
     existing = db_fetchall(
         "SELECT id FROM client_broker_instances WHERE client_id=? AND status != 'removed'", (user["id"],)
@@ -564,7 +565,8 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
             "WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
             (user["id"],)
         )
-        requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox") else None
+        _all_brokers = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+        requested_broker = body.broker if body.broker and body.broker in _all_brokers else None
         if len(all_instances) > 1 and requested_broker:
             permitted_broker = all_instances[0]["broker"]
             if requested_broker != permitted_broker:
@@ -580,7 +582,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
         )
     # ─────────────────────────────────────────────────────────────────────
 
-    requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox") else None  # noqa (may duplicate from expiry block; safe)
+    requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww") else None  # noqa
     instance = _get_active_instance(user["id"], broker=requested_broker)
     if not instance:
         raise HTTPException(400, "No broker configured. Please set up your broker first.")
@@ -640,6 +642,12 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
             elif broker_name == 'upstox':
                 from utils.auth_manager_upstox import handle_upstox_login_automated
                 token = handle_upstox_login_automated(creds)
+            elif broker_name == 'aliceblue':
+                from utils.auth_manager_alice import handle_alice_login_automated
+                token = handle_alice_login_automated(creds)
+            elif broker_name == 'groww':
+                from utils.auth_manager_groww import handle_groww_login_automated
+                token = handle_groww_login_automated(creds)
 
             if token:
                 enc_token = encrypt_secret(token)
@@ -657,7 +665,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
     if not instance.get("access_token_encrypted"):
         raise HTTPException(400, f"Connection failed. Please provide Password/TOTP for One-Click Connect or manual access token in Settings.")
 
-    if broker_name in ("zerodha", "upstox", "angelone"):
+    if broker_name in ("zerodha", "upstox", "angelone", "fyers", "aliceblue"):
         if not _is_token_fresh(instance.get("token_updated_at")):
             raise HTTPException(400, f"{broker_name.capitalize()} session expired. Update Password/TOTP or reconnect in Settings.")
     elif broker_name == "dhan":
@@ -760,6 +768,132 @@ async def upstox_login_url(request: Request, user=Depends(get_current_user)):
     auth_dialog = "https://api.upstox.com/v2/login/authorization/dialog"
     url = f"{auth_dialog}?response_type=code&client_id={api_key}&redirect_uri={urllib.parse.quote(actual_redirect)}&state={urllib.parse.quote(state_encrypted)}"
     return {"success": True, "login_url": url}
+
+
+@router.get("/fyers/login-url")
+async def fyers_login_url(user=Depends(get_current_user)):
+    """
+    Returns the Fyers OAuth login URL.
+    The user opens it in a browser, logs in, and pastes the redirect URL back.
+    """
+    instance = db_fetchone(
+        "SELECT api_key_encrypted, api_secret_encrypted FROM client_broker_instances WHERE client_id=? AND broker='fyers' AND status != 'removed'",
+        (user["id"],)
+    )
+    if not instance:
+        raise HTTPException(400, "No Fyers broker configured.")
+    if not instance.get("api_key_encrypted"):
+        raise HTTPException(400, "Fyers App ID not configured.")
+
+    from utils.auth_manager_fyers import generate_fyers_auth_url
+    app_id = decrypt_secret(instance["api_key_encrypted"])
+    secret_id = decrypt_secret(instance.get("api_secret_encrypted") or "")
+    url = generate_fyers_auth_url(app_id=app_id, secret_id=secret_id)
+    if not url:
+        raise HTTPException(500, "Could not generate Fyers login URL.")
+    return {"success": True, "login_url": url}
+
+
+@router.post("/fyers/exchange-token")
+async def fyers_exchange_token(body: dict, user=Depends(get_current_user)):
+    """
+    Exchanges the Fyers auth code (extracted from the redirect URL) for an access token.
+    Body: { "auth_code": "..." }
+    """
+    from utils.auth_manager_fyers import exchange_fyers_auth_code
+    auth_code = (body.get("auth_code") or "").strip()
+    if not auth_code:
+        raise HTTPException(400, "auth_code is required.")
+
+    instance = db_fetchone(
+        "SELECT id, api_key_encrypted, api_secret_encrypted FROM client_broker_instances WHERE client_id=? AND broker='fyers' AND status != 'removed'",
+        (user["id"],)
+    )
+    if not instance:
+        raise HTTPException(400, "No Fyers broker configured.")
+
+    app_id = decrypt_secret(instance["api_key_encrypted"])
+    secret_id = decrypt_secret(instance.get("api_secret_encrypted") or "")
+    result = exchange_fyers_auth_code(app_id=app_id, secret_id=secret_id, auth_code=auth_code)
+    if result["error"]:
+        raise HTTPException(400, f"Fyers token exchange failed: {result['error']}")
+
+    enc_token = encrypt_secret(result["token"])
+    now_ist = datetime.now(IST).isoformat()
+    db_execute(
+        "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+        (enc_token, now_ist, instance["id"])
+    )
+    _audit(user_id=user["id"], action="BROKER_TOKEN_REFRESH", detail="Fyers access token updated via OAuth exchange.")
+    return {"success": True, "message": "Fyers connected successfully."}
+
+
+@router.get("/aliceblue/login-url")
+async def aliceblue_login_url(user=Depends(get_current_user)):
+    """
+    Alice Blue uses background (headless) login — no OAuth redirect URL.
+    Returns instructions to trigger One-Click Connect instead.
+    """
+    instance = db_fetchone(
+        "SELECT id, api_key_encrypted, broker_user_id_encrypted, password_encrypted, totp_encrypted FROM client_broker_instances WHERE client_id=? AND broker='aliceblue' AND status != 'removed'",
+        (user["id"],)
+    )
+    if not instance:
+        raise HTTPException(400, "No Alice Blue broker configured.")
+
+    from utils.auth_manager_alice import handle_alice_login_automated
+    creds = {
+        "broker_user_id": decrypt_secret(instance.get("broker_user_id_encrypted") or ""),
+        "api_key": decrypt_secret(instance["api_key_encrypted"]) if instance.get("api_key_encrypted") else "",
+        "password": decrypt_secret(instance.get("password_encrypted") or ""),
+        "totp": decrypt_secret(instance.get("totp_encrypted") or ""),
+    }
+    token = handle_alice_login_automated(creds)
+    if not token:
+        raise HTTPException(400, "Alice Blue automated login failed. Please verify your Client ID, API Key, PIN, and TOTP seed.")
+
+    enc_token = encrypt_secret(token)
+    now_ist = datetime.now(IST).isoformat()
+    db_execute(
+        "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+        (enc_token, now_ist, instance["id"])
+    )
+    _audit(user_id=user["id"], action="BROKER_TOKEN_REFRESH", detail="Alice Blue session refreshed via background login.")
+    return {"success": True, "automated": True, "message": "Alice Blue connected successfully."}
+
+
+@router.get("/groww/login-url")
+async def groww_login_url(user=Depends(get_current_user)):
+    """
+    Groww requires a manual Bearer access token from the Groww developer portal.
+    This endpoint validates the existing stored token.
+    """
+    instance = db_fetchone(
+        "SELECT id, broker_user_id_encrypted, access_token_encrypted, token_updated_at FROM client_broker_instances WHERE client_id=? AND broker='groww' AND status != 'removed'",
+        (user["id"],)
+    )
+    if not instance:
+        raise HTTPException(400, "No Groww broker configured.")
+    if not instance.get("access_token_encrypted"):
+        raise HTTPException(400, "No Groww access token stored. Please paste your Bearer token in Settings.")
+
+    from utils.auth_manager_groww import handle_groww_login
+    creds = {
+        "broker_user_id": decrypt_secret(instance.get("broker_user_id_encrypted") or ""),
+        "access_token": decrypt_secret(instance["access_token_encrypted"]),
+    }
+    token = handle_groww_login(creds)
+    if not token:
+        raise HTTPException(400, "Groww token is invalid or expired. Please update your access token in Settings.")
+
+    now_ist = datetime.now(IST).isoformat()
+    db_execute(
+        "UPDATE client_broker_instances SET token_updated_at=? WHERE id=?",
+        (now_ist, instance["id"])
+    )
+    _audit(user_id=user["id"], action="BROKER_TOKEN_REFRESH", detail="Groww token validated.")
+    return {"success": True, "automated": True, "message": "Groww token validated successfully."}
+
 
 @router.get("/bot/status")
 async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_user)):
