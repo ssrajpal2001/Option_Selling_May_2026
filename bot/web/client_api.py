@@ -34,13 +34,16 @@ def _is_token_fresh(token_updated_at: str) -> bool:
         return False
 
 
-def _is_dhan_token_fresh(token_updated_at: str) -> bool:
+def _is_dhan_token_fresh(token_updated_at: str, api_key_mode: bool = False) -> bool:
     if not token_updated_at:
         return False
     try:
         updated = datetime.fromisoformat(token_updated_at).replace(tzinfo=IST)
         now_ist = datetime.now(IST)
-        return (now_ist - updated).days < 30
+        elapsed = (now_ist - updated).total_seconds()
+        if api_key_mode:
+            return elapsed < 23 * 3600
+        return elapsed < 30 * 86400
     except Exception:
         return False
 
@@ -79,11 +82,13 @@ class BrokerSetup(BaseModel):
 async def get_broker_config(user=Depends(get_current_user)):
     rows = db_fetchall("""
         SELECT id, broker, broker_user_id_encrypted, password_encrypted, totp_encrypted,
+               api_secret_encrypted,
                trading_mode, instrument, quantity, strategy_version,
                status, last_heartbeat, token_updated_at
         FROM client_broker_instances
         WHERE client_id=? AND status != 'removed'
     """, (user["id"],))
+    from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm_cfg
     result = []
     for r in rows:
         d = dict(r)
@@ -92,9 +97,14 @@ async def get_broker_config(user=Depends(get_current_user)):
         d["totp"] = "..." if d.get("totp_encrypted") else ""
 
         if d["broker"] == "dhan":
-            d["token_fresh"] = _is_dhan_token_fresh(d.get("token_updated_at"))
+            _api_sec = decrypt_secret(d["api_secret_encrypted"]) if d.get("api_secret_encrypted") else ""
+            _api_key_mode = _is_akm_cfg({"api_secret": _api_sec})
+            d["dhan_api_key_mode"] = _api_key_mode
+            d["token_fresh"] = _is_dhan_token_fresh(d.get("token_updated_at"), api_key_mode=_api_key_mode)
         else:
             d["token_fresh"] = _is_token_fresh(d.get("token_updated_at"))
+
+        del d["api_secret_encrypted"]
         result.append(d)
     # Resolve plan info + effective broker cap (handles plan expiry)
     from datetime import datetime, timezone as _tz
@@ -307,30 +317,76 @@ async def zerodha_login_url(request: Request, user=Depends(get_current_user)):
 async def dhan_login_url(user=Depends(get_current_user)):
     instance = db_fetchone("SELECT * FROM client_broker_instances WHERE client_id=? AND broker='dhan'", (user["id"],))
     if not instance or not instance.get("api_key_encrypted"):
-        raise HTTPException(400, "Enter your Dhan Client ID in Settings first.")
+        raise HTTPException(400, "Enter your Dhan credentials in Settings first.")
 
-    # 1. Attempt Automated Login
-    if instance.get("password_encrypted") and instance.get("totp_encrypted"):
-        try:
-            from utils.auth_manager_dhan import handle_dhan_login_automated
-            creds = {
-                "api_key": decrypt_secret(instance["api_key_encrypted"]),
-                "broker_user_id": decrypt_secret(instance["broker_user_id_encrypted"]),
-                "password": decrypt_secret(instance["password_encrypted"]),
-                "totp": decrypt_secret(instance["totp_encrypted"])
+    api_key    = decrypt_secret(instance["api_key_encrypted"])
+    api_secret = decrypt_secret(instance["api_secret_encrypted"]) if instance.get("api_secret_encrypted") else ""
+    broker_uid = decrypt_secret(instance["broker_user_id_encrypted"]) if instance.get("broker_user_id_encrypted") else ""
+    password   = decrypt_secret(instance["password_encrypted"]) if instance.get("password_encrypted") else ""
+    totp_sec   = decrypt_secret(instance["totp_encrypted"]) if instance.get("totp_encrypted") else ""
+
+    creds = {
+        "api_key": api_key, "api_secret": api_secret,
+        "broker_user_id": broker_uid, "password": password, "totp": totp_sec,
+    }
+
+    from utils.auth_manager_dhan import is_dhan_api_key_mode, generate_dhan_token, handle_dhan_login_automated
+
+    # ── Path 1: API Key mode — auto-generate a fresh 24-hr token ──────────
+    if is_dhan_api_key_mode(creds):
+        if not password:
+            raise HTTPException(
+                400,
+                "API Key mode requires your Dhan login password. "
+                "Add it in Settings so tokens can be generated automatically."
+            )
+        dhan_client_id = broker_uid or api_key
+        token = generate_dhan_token(
+            api_key=api_key,
+            client_id=dhan_client_id,
+            password=password,
+            totp_secret=totp_sec,
+        )
+        if token:
+            enc_token = encrypt_secret(token)
+            now_ist = datetime.now(IST).isoformat()
+            db_execute(
+                "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? "
+                "WHERE client_id=? AND broker='dhan'",
+                (enc_token, now_ist, user["id"]),
+            )
+            from hub.event_bus import event_bus
+            await event_bus.publish('BROKER_TOKEN_UPDATED',
+                                    {'user_id': user["id"], 'broker': 'dhan', 'access_token': token})
+            return {
+                "success": True, "automated": True,
+                "message": "Dhan access token generated automatically via API Key! Valid for 24 hours."
             }
+        raise HTTPException(
+            400,
+            "Dhan token generation failed. Check your API Key, Dhan Client ID, and password in Settings."
+        )
+
+    # ── Path 2: Direct token mode — validate existing token ───────────────
+    if password and totp_sec:
+        try:
             token = handle_dhan_login_automated(creds)
             if token:
                 enc_token = encrypt_secret(token)
                 now_ist = datetime.now(IST).isoformat()
-                db_execute("UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE client_id=? AND broker='dhan'", (enc_token, now_ist, user["id"]))
+                db_execute(
+                    "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? "
+                    "WHERE client_id=? AND broker='dhan'",
+                    (enc_token, now_ist, user["id"]),
+                )
                 from hub.event_bus import event_bus
-                await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'dhan', 'access_token': token})
-                return {"success": True, "automated": True, "message": "Dhan background login successful."}
+                await event_bus.publish('BROKER_TOKEN_UPDATED',
+                                        {'user_id': user["id"], 'broker': 'dhan', 'access_token': token})
+                return {"success": True, "automated": True, "message": "Dhan token validated."}
         except Exception as e:
-            logger.error(f"Dhan automated login failed: {e}")
+            logger.error(f"[Dhan] Token validation failed: {e}")
 
-    # 2. Fallback to Browser Redirect
+    # ── Path 3: Fallback → open Dhan web login ───────────────────────────
     state_payload = f'{user["id"]}:{int(time.time())}'
     state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
     url = f"https://login.dhan.co/?state={urllib.parse.quote(state_encrypted)}"
@@ -568,7 +624,12 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
         if not _is_token_fresh(instance.get("token_updated_at")):
             raise HTTPException(400, f"{broker_name.capitalize()} session expired. Update Password/TOTP or reconnect in Settings.")
     elif broker_name == "dhan":
-        if not _is_dhan_token_fresh(instance.get("token_updated_at")):
+        _dhan_api_secret = decrypt_secret(instance["api_secret_encrypted"]) if instance.get("api_secret_encrypted") else ""
+        from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm
+        _dhan_is_api_mode = _is_akm({"api_secret": _dhan_api_secret})
+        if not _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_is_api_mode):
+            if _dhan_is_api_mode:
+                raise HTTPException(400, "Dhan access token expired (24-hr limit). Click 'Connect Now' to auto-refresh it.")
             raise HTTPException(400, "Dhan access token expired. Reconnect in Settings.")
 
     pending_change = db_fetchone(

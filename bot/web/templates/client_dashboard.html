@@ -586,9 +586,22 @@
              </div>
            </div>
 
+           <!-- Dhan mode toggle (visible only when Dhan is selected) -->
+           <div id="dhan-mode-bar" class="hidden mb-3 flex items-center gap-2">
+             <span class="text-xs font-bold" style="color:#64748b">Dhan Mode:</span>
+             <button type="button" id="btn-dhan-access-token" onclick="setDhanMode('token')"
+               class="px-3 py-1 text-xs font-bold rounded"
+               style="background:#2563eb;color:#fff;border:1px solid #3b82f6">Access Token</button>
+             <button type="button" id="btn-dhan-api-key" onclick="setDhanMode('apikey')"
+               class="px-3 py-1 text-xs font-bold rounded"
+               style="background:#0f172a;color:#64748b;border:1px solid #334155">API Key</button>
+             <span id="dhan-mode-hint" class="text-xs" style="color:#64748b">Paste your 24-hr token manually</span>
+           </div>
+
            <!-- Standard Credentials Form -->
            <form id="dynamic-broker-form">
               <input type="hidden" id="active-broker-type" value="zerodha"/>
+              <input type="hidden" id="dhan-mode-value" value="token"/>
 
               <div id="fields-row-1" class="grid grid-cols-2 gap-3 mb-3">
                 <div id="wrapper-broker-user-id" class="hidden">
@@ -841,8 +854,69 @@ function selectBroker(broker) {
       }
   });
 
+  // Show / hide the Dhan mode toggle bar
+  const dhanModeBar = document.getElementById('dhan-mode-bar');
+  if (dhanModeBar) dhanModeBar.classList.toggle('hidden', broker !== 'dhan');
+
+  // Apply correct labels for current Dhan mode
+  if (broker === 'dhan') {
+    setDhanMode(document.getElementById('dhan-mode-value')?.value || 'token', false);
+  }
+
   updateConnectionCard(broker);
   _applyBrokerSaveLimit(broker);
+}
+
+function setDhanMode(mode, updateBrokerUserId = true) {
+  const modeInput = document.getElementById('dhan-mode-value');
+  if (modeInput) modeInput.value = mode;
+
+  const btnToken  = document.getElementById('btn-dhan-access-token');
+  const btnApiKey = document.getElementById('btn-dhan-api-key');
+  const hint      = document.getElementById('dhan-mode-hint');
+  const labelKey  = document.getElementById('label-api-key');
+  const wrapperSecret = document.getElementById('wrapper-api-secret');
+  const secretInput   = document.getElementById('input-api-secret');
+  const labelSecret   = wrapperSecret?.querySelector('label');
+  const wrapperBUID   = document.getElementById('wrapper-broker-user-id');
+  const labelBUID     = document.getElementById('label-broker-user-id');
+  const labelPwd      = document.getElementById('label-password');
+  const labelTotp     = document.getElementById('label-totp');
+  const inputKey      = document.getElementById('input-api-key');
+
+  const ON  = 'background:#2563eb;color:#fff;border:1px solid #3b82f6';
+  const OFF = 'background:#0f172a;color:#64748b;border:1px solid #334155';
+
+  if (mode === 'apikey') {
+    if (btnToken)  btnToken.style.cssText  = OFF;
+    if (btnApiKey) btnApiKey.style.cssText = ON;
+    if (hint) hint.textContent = 'Tokens are generated automatically — no daily manual entry needed';
+    if (labelKey)    labelKey.textContent    = 'API Key (applicationId)';
+    if (labelSecret) labelSecret.textContent = 'API Secret';
+    if (labelBUID)   labelBUID.textContent   = 'Dhan Client ID (trading account)';
+    if (wrapperBUID) wrapperBUID.style.display = 'block';
+    if (labelPwd)    labelPwd.textContent    = 'Dhan Login Password';
+    if (labelTotp)   labelTotp.textContent   = 'TOTP Secret (optional)';
+    if (inputKey)    inputKey.placeholder    = 'e.g. dba1ea52';
+    if (secretInput) {
+      secretInput.placeholder = 'e.g. 2b8b473e-9f18-4bc8-…';
+      secretInput.type = 'text';
+    }
+  } else {
+    if (btnToken)  btnToken.style.cssText  = ON;
+    if (btnApiKey) btnApiKey.style.cssText = OFF;
+    if (hint) hint.textContent = 'Paste your 24-hr / 30-day token from Dhan portal';
+    if (labelKey)    labelKey.textContent    = 'Dhan Client ID';
+    if (labelSecret) labelSecret.textContent = 'Access Token';
+    if (labelBUID)   labelBUID.textContent   = 'Dhan Customer ID (optional)';
+    if (labelPwd)    labelPwd.textContent    = 'Password (optional)';
+    if (labelTotp)   labelTotp.textContent   = 'TOTP Seed (optional)';
+    if (inputKey)    inputKey.placeholder    = 'Your Dhan Client ID';
+    if (secretInput) {
+      secretInput.placeholder = 'Paste access token from portal';
+      secretInput.type = 'password';
+    }
+  }
 }
 
 function fmt(v) { return v !== null && v !== undefined ? parseFloat(v).toFixed(2) : '--'; }
@@ -1591,6 +1665,11 @@ async function loadBrokerSettings() {
         document.getElementById('s-quantity').value = inst.quantity || 25;
         document.getElementById('s-strategy').value = inst.strategy_version || 'V3';
 
+        // Auto-detect Dhan mode from saved credentials
+        if (inst.broker === 'dhan' && inst.dhan_api_key_mode) {
+          const modeInput = document.getElementById('dhan-mode-value');
+          if (modeInput) modeInput.value = 'apikey';
+        }
         updateBrokerStatus(inst.broker, inst.token_fresh, inst.token_updated_at);
         selectBroker(inst.broker);
         document.getElementById('btn-delete-broker').classList.remove('hidden');
