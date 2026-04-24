@@ -1124,8 +1124,8 @@ async def get_audit_log(
     params: list = []
 
     if action:
-        conditions.append("al.action LIKE ?")
-        params.append(f"%{action}%")
+        conditions.append("al.action = ?")
+        params.append(action)
     if username:
         conditions.append("tu.username LIKE ?")
         params.append(f"%{username}%")
