@@ -356,12 +356,13 @@ async def dhan_login_url(user=Depends(get_current_user)):
                 "Add it in Settings so tokens can be generated automatically."
             )
         dhan_client_id = broker_uid or api_key
-        token = generate_dhan_token(
+        _dhan_result = generate_dhan_token(
             api_key=api_key,
             client_id=dhan_client_id,
             password=password,
             totp_secret=totp_sec,
         )
+        token = _dhan_result['token']
         if token:
             enc_token = encrypt_secret(token)
             now_ist = datetime.now(IST).isoformat()
@@ -377,10 +378,8 @@ async def dhan_login_url(user=Depends(get_current_user)):
                 "success": True, "automated": True,
                 "message": "Dhan access token generated automatically via API Key! Valid for 24 hours."
             }
-        raise HTTPException(
-            400,
-            "Dhan token generation failed. Check your API Key, Dhan Client ID, and password in Settings."
-        )
+        _dhan_err = _dhan_result['error'] or "Check your API Key, Dhan Client ID, and password."
+        raise HTTPException(400, f"Dhan token generation failed. {_dhan_err}")
 
     # ── Path 2: Direct token mode — validate existing token ───────────────
     if password and totp_sec:

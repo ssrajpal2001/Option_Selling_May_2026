@@ -777,7 +777,8 @@ async def _dhan_auto_renewal_scheduler():
                         password   = decrypt_secret(inst["password_encrypted"])
                         totp_sec   = decrypt_secret(inst["totp_encrypted"]) if inst.get("totp_encrypted") else ""
 
-                        token = generate_dhan_token(api_key, client_id, password, totp_sec)
+                        _dhan_result = generate_dhan_token(api_key, client_id, password, totp_sec)
+                        token = _dhan_result['token']
                         if token:
                             enc_token = encrypt_secret(token)
                             now_ist   = now.isoformat()
@@ -787,7 +788,7 @@ async def _dhan_auto_renewal_scheduler():
                             )
                             logger.info(f"[Dhan Renewal] Auto-renewed token for instance {inst['id']} (client {inst['client_id']})")
                         else:
-                            logger.warning(f"[Dhan Renewal] Token renewal FAILED for instance {inst['id']}")
+                            logger.warning(f"[Dhan Renewal] Token renewal FAILED for instance {inst['id']}: {_dhan_result['error']}")
                     except Exception as _ie:
                         logger.error(f"[Dhan Renewal] Instance {inst.get('id')} error: {_ie}")
             except Exception as e:
