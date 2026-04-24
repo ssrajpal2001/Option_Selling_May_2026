@@ -118,6 +118,10 @@
       <div class="text-xs mb-1" style="color:#64748b">Python Procs</div>
       <div id="h-python-procs" class="text-white font-bold">--</div>
     </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Event Loop</div>
+      <div id="h-event-loop" class="text-xs font-bold">--</div>
+    </div>
   </div>
 </div>
 
@@ -339,6 +343,16 @@ async function loadHealth() {
     // Bots and procs
     document.getElementById('h-active-bots').textContent = h.active_bots ?? '--';
     document.getElementById('h-python-procs').textContent = h.python_process_count ?? '--';
+
+    // Event loop health
+    const loopEl = document.getElementById('h-event-loop');
+    if (h.event_loop_closed) {
+      loopEl.textContent = 'CLOSED'; loopEl.style.color = '#f87171';
+    } else if (h.event_loop_running) {
+      loopEl.textContent = 'RUNNING'; loopEl.style.color = '#34d399';
+    } else {
+      loopEl.textContent = 'STOPPED'; loopEl.style.color = '#fb923c';
+    }
 
     document.getElementById('health-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
   } catch(e) {}
