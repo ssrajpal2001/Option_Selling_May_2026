@@ -19,12 +19,12 @@
       <select id="filter-action" class="input-field" onchange="loadLogs(1)">
         <option value="">All Actions</option>
         <option value="set_tier">Set Tier / Plan</option>
-        <option value="activate">Activate</option>
-        <option value="deactivate">Deactivate</option>
+        <option value="activate_client">Activate</option>
+        <option value="deactivate_client">Deactivate</option>
         <option value="force_close">Force Close</option>
         <option value="clear_history">Clear History</option>
-        <option value="approve_bcr">Approve BCR</option>
-        <option value="deny_bcr">Deny BCR</option>
+        <option value="approve_broker_request">Approve BCR</option>
+        <option value="deny_broker_request">Deny BCR</option>
         <option value="create_user">Create User</option>
         <option value="delete_user">Delete User</option>
       </select>
@@ -120,12 +120,12 @@ function changePage(delta) {
 
 const ACTION_COLORS = {
   set_tier:      ['#0c4a6e', '#38bdf8', 'Plan Changed'],
-  activate:      ['#14532d', '#4ade80', 'Activated'],
-  deactivate:    ['#431407', '#fb923c', 'Deactivated'],
+  activate_client:   ['#14532d', '#4ade80', 'Activated'],
+  deactivate_client: ['#431407', '#fb923c', 'Deactivated'],
   force_close:   ['#450a0a', '#f87171', 'Force Closed'],
   clear_history: ['#1e1b4b', '#818cf8', 'History Cleared'],
-  approve_bcr:   ['#052e16', '#34d399', 'BCR Approved'],
-  deny_bcr:      ['#450a0a', '#f87171', 'BCR Denied'],
+  approve_broker_request: ['#052e16', '#34d399', 'BCR Approved'],
+  deny_broker_request:    ['#450a0a', '#f87171', 'BCR Denied'],
   create_user:   ['#0c4a6e', '#60a5fa', 'User Created'],
   delete_user:   ['#450a0a', '#f87171', 'User Deleted'],
 };

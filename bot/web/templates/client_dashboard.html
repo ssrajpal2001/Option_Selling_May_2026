@@ -767,6 +767,25 @@ var brokerConfigured = false;
 var activeBrokerFromStatus = null;
 var primaryBrokerType = null;
 var credentialsSaved = false;
+var _atBrokerLimit = false;
+var _slotLimitLabel = '';
+var _configuredBrokerSet = new Set();
+
+function _applyBrokerSaveLimit(broker) {
+  const isAlreadyConfigured = _configuredBrokerSet.has(broker);
+  const shouldDisable = _atBrokerLimit && !isAlreadyConfigured;
+  const tipText = shouldDisable
+    ? `Broker slot limit reached (${_slotLimitLabel}). Contact admin to upgrade your plan.`
+    : '';
+  ['#dynamic-broker-form button[type="submit"]', '#config-form button[type="submit"]'].forEach(sel => {
+    const btn = document.querySelector(sel);
+    if (!btn) return;
+    btn.disabled = shouldDisable;
+    btn.title = tipText;
+    btn.style.opacity = shouldDisable ? '0.4' : '';
+    btn.style.cursor = shouldDisable ? 'not-allowed' : '';
+  });
+}
 
 const BROKER_CONFIG = {
     zerodha: { title: 'Zerodha', keyLabel: 'API Key', secretLabel: 'API Secret', showSecret: true, showAuth: true, showOptional: true, showBrokerUserId: true, secretPlaceholder: 'One-time setup', hint: 'Requires Kite Connect (₹2000/month) for live ticks.' },
@@ -823,6 +842,7 @@ function selectBroker(broker) {
   });
 
   updateConnectionCard(broker);
+  _applyBrokerSaveLimit(broker);
 }
 
 function fmt(v) { return v !== null && v !== undefined ? parseFloat(v).toFixed(2) : '--'; }
@@ -1522,30 +1542,17 @@ async function loadBrokerSettings() {
     expiredBadge.classList.toggle('hidden', !plan.expired);
     expiredAlert.classList.toggle('hidden', !plan.expired);
 
-    // Slot limit warning + disable broker add buttons when at cap
+    // Slot limit warning
     const atLimit = usedSlots >= (plan.max_brokers || 1) && plan.max_brokers !== 999;
-    const limitWarn = document.getElementById('plan-limit-warn');
-    limitWarn.classList.toggle('hidden', !atLimit);
+    document.getElementById('plan-limit-warn').classList.toggle('hidden', !atLimit);
 
-    // Gate broker credential / config save buttons when at slot limit
-    // (only gate if client has NO broker for a given slot — existing broker form is still editable)
-    const hasNoBrokerConfigured = usedSlots === 0;
-    const saveCredBtn = document.querySelector('#dynamic-broker-form button[type="submit"]');
-    const saveConfigBtn = document.querySelector('#config-form button[type="submit"]');
-    const _title = atLimit && hasNoBrokerConfigured
-      ? `Broker slot limit reached (${usedSlots}/${maxSlots}). Contact admin to upgrade.` : '';
-    if (saveCredBtn) {
-      saveCredBtn.disabled = atLimit && hasNoBrokerConfigured;
-      saveCredBtn.title = _title;
-      saveCredBtn.style.opacity = (atLimit && hasNoBrokerConfigured) ? '0.4' : '';
-      saveCredBtn.style.cursor = (atLimit && hasNoBrokerConfigured) ? 'not-allowed' : '';
-    }
-    if (saveConfigBtn) {
-      saveConfigBtn.disabled = atLimit && hasNoBrokerConfigured;
-      saveConfigBtn.title = _title;
-      saveConfigBtn.style.opacity = (atLimit && hasNoBrokerConfigured) ? '0.4' : '';
-      saveConfigBtn.style.cursor = (atLimit && hasNoBrokerConfigured) ? 'not-allowed' : '';
-    }
+    // Persist limit state + configured broker set for per-tab gating in selectBroker()
+    _atBrokerLimit = atLimit;
+    _slotLimitLabel = `${usedSlots}/${maxSlots === '∞' ? '∞' : maxSlots}`;
+    _configuredBrokerSet = new Set((d.instances || []).map(i => i.broker));
+
+    // Apply initial gating for the currently shown broker tab
+    _applyBrokerSaveLimit(primaryBrokerType || 'zerodha');
   }
   // ────────────────────────────────────────────────────────────────────────
 
