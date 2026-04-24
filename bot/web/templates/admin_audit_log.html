@@ -27,6 +27,10 @@
         <option value="deny_broker_request">Deny BCR</option>
         <option value="create_user">Create User</option>
         <option value="delete_user">Delete User</option>
+        <option value="client_static_ip_update">Static IP Update</option>
+        <option value="client_risk_params_update">Risk Params Update</option>
+        <option value="client_daily_pnl_reset">Daily P&amp;L Reset</option>
+        <option value="platform_settings_update">Platform Settings</option>
       </select>
     </div>
     <div class="flex-1 min-w-36">
@@ -128,6 +132,10 @@ const ACTION_COLORS = {
   deny_broker_request:    ['#450a0a', '#f87171', 'BCR Denied'],
   create_user:   ['#0c4a6e', '#60a5fa', 'User Created'],
   delete_user:   ['#450a0a', '#f87171', 'User Deleted'],
+  client_static_ip_update:    ['#1c1917', '#a8a29e', 'IP Updated'],
+  client_risk_params_update:  ['#1e1b4b', '#818cf8', 'Risk Params'],
+  client_daily_pnl_reset:     ['#0c4a6e', '#38bdf8', 'P&L Reset'],
+  platform_settings_update:   ['#14532d', '#4ade80', 'Platform Settings'],
 };
 
 function actionBadge(action) {

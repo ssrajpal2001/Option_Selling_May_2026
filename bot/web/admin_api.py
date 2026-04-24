@@ -1292,7 +1292,7 @@ async def save_platform_settings(body: PlatformSettingsBatch, admin=Depends(requ
             "updated_by=excluded.updated_by",
             (k, v, now, admin["id"])
         )
-    _audit(admin, "platform_settings_update", "system", 0, {
+    _audit(admin["id"], admin["role"], "platform_settings_update", 0, {
         "keys": [k for k in body.settings if body.settings[k] != "••••••••"]
     })
     return {"success": True, "message": "Platform settings saved."}
@@ -1346,7 +1346,7 @@ async def update_client_static_ip(client_id: int, body: StaticIPBody,
     if not row:
         raise HTTPException(404, "Client not found.")
     db_execute("UPDATE users SET static_ip=? WHERE id=?", (body.static_ip.strip() or None, client_id))
-    _audit(admin, "client_static_ip_update", "user", client_id, {"static_ip": body.static_ip})
+    _audit(admin["id"], admin["role"], "client_static_ip_update", client_id, {"static_ip": body.static_ip})
     return {"success": True}
 
 
@@ -1452,7 +1452,7 @@ async def save_client_risk_params(client_id: int, body: RiskParamsBody,
         body.max_open_positions, body.max_daily_trades, body.per_trade_loss_limit,
         body.max_drawdown_pct, body.risk_per_trade_pct, lock_val, inst_id
     ))
-    _audit(admin, "client_risk_params_update", "broker_instance", inst_id, {
+    _audit(admin["id"], admin["role"], "client_risk_params_update", inst_id, {
         "daily_loss_limit": body.daily_loss_limit,
         "capital_allocated": body.capital_allocated,
         "max_position_size": body.max_position_size,
@@ -1474,5 +1474,5 @@ async def reset_client_daily_pnl(client_id: int, admin=Depends(require_admin)):
         "UPDATE client_broker_instances SET daily_pnl=0, daily_trade_count=0, pnl_reset_date=? WHERE id=?",
         (datetime.now(timezone.utc).date().isoformat(), inst["id"])
     )
-    _audit(admin, "client_daily_pnl_reset", "broker_instance", inst["id"], {})
+    _audit(admin["id"], admin["role"], "client_daily_pnl_reset", inst["id"], {})
     return {"success": True}
