@@ -340,6 +340,16 @@
     ⚠️ Broker not configured — go to <button onclick="showPane('settings')" style="color:var(--primary);background:transparent;border:none;cursor:pointer;font-weight:700;text-decoration:underline">Settings</button> to add your broker credentials.
   </div>
 
+  <!-- Kill-switch locked banner -->
+  <div id="kill-switch-banner" style="display:none;background:#1a0a0a;border:1.5px solid #ef4444;border-radius:10px;padding:13px 18px;margin-bottom:16px;align-items:center;gap:12px">
+    <span style="font-size:22px">🔒</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:#f87171">Trading Locked by Kill Switch</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:2px" id="ks-lock-reason">Daily loss limit exceeded. Contact admin to unlock.</div>
+    </div>
+    <div id="ks-unlock-time" style="font-size:11px;color:#64748b;text-align:right"></div>
+  </div>
+
   <div class="grid-2" style="gap:20px;align-items:start">
 
     <!-- ── LEFT: Bot Control ── -->
@@ -700,6 +710,37 @@
           <button class="btn btn-primary" style="width:100%" onclick="saveRiskParams()">💾 Save Risk Parameters</button>
           <div style="margin-top:10px;font-size:12px;color:var(--muted)">
             ⚠️ Kill-switch fires automatically when daily loss exceeds your limit. Bot restarts next trading day.
+          </div>
+
+          <!-- Admin-set risk limits (read-only) -->
+          <div id="admin-limits-section" style="margin-top:14px;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid var(--border);display:none">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">📋 Admin-Set Limits (Read Only)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="font-size:11px">
+                <span style="color:var(--muted)">Capital Allocated</span>
+                <div style="font-weight:700;color:#e2e8f0" id="adm-capital">—</div>
+              </div>
+              <div style="font-size:11px">
+                <span style="color:var(--muted)">Per-Trade Loss Limit</span>
+                <div style="font-weight:700;color:#e2e8f0" id="adm-per-trade">—</div>
+              </div>
+              <div style="font-size:11px">
+                <span style="color:var(--muted)">Max Position Size</span>
+                <div style="font-weight:700;color:#e2e8f0" id="adm-pos-size">—</div>
+              </div>
+              <div style="font-size:11px">
+                <span style="color:var(--muted)">Max Drawdown %</span>
+                <div style="font-weight:700;color:#e2e8f0" id="adm-drawdown">—</div>
+              </div>
+              <div style="font-size:11px">
+                <span style="color:var(--muted)">Max Open Positions</span>
+                <div style="font-weight:700;color:#e2e8f0" id="adm-open-pos">—</div>
+              </div>
+              <div style="font-size:11px">
+                <span style="color:var(--muted)">Risk Per Trade %</span>
+                <div style="font-weight:700;color:#e2e8f0" id="adm-risk-pct">—</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1362,6 +1403,33 @@ async function loadSettingsPane() {
     document.getElementById('rp-gr-sl').value = d.params.guardrail_pnl_sl || '';
     document.getElementById('rp-st-target').value = d.params.single_trade_target || '';
     document.getElementById('rp-st-sl').value = d.params.single_trade_sl || '';
+
+    // Show admin-set limits if any are configured
+    const hasAdminLimits = d.capital_allocated > 0 || d.per_trade_loss_limit > 0
+      || d.max_drawdown_pct > 0 || d.max_position_size > 1 || d.max_open_positions > 1;
+    const adminSec = document.getElementById('admin-limits-section');
+    if (adminSec) {
+      adminSec.style.display = hasAdminLimits ? 'block' : 'none';
+      document.getElementById('adm-capital').textContent = d.capital_allocated > 0 ? `₹${d.capital_allocated.toLocaleString()}` : 'Not set';
+      document.getElementById('adm-per-trade').textContent = d.per_trade_loss_limit > 0 ? `₹${d.per_trade_loss_limit.toLocaleString()}` : 'Disabled';
+      document.getElementById('adm-pos-size').textContent = `${d.max_position_size || 1} lot${(d.max_position_size || 1) !== 1 ? 's' : ''}`;
+      document.getElementById('adm-drawdown').textContent = d.max_drawdown_pct > 0 ? `${d.max_drawdown_pct}%` : 'Disabled';
+      document.getElementById('adm-open-pos').textContent = d.max_open_positions || 1;
+      document.getElementById('adm-risk-pct').textContent = `${d.risk_per_trade_pct || 1}%`;
+    }
+
+    // Kill-switch locked banner
+    const banner = document.getElementById('kill-switch-banner');
+    if (banner && d.trading_locked_until) {
+      const lockUntil = new Date(d.trading_locked_until);
+      if (lockUntil > new Date()) {
+        banner.style.display = 'flex';
+        const unlockEl = document.getElementById('ks-unlock-time');
+        if (unlockEl) unlockEl.textContent = `Unlocks: ${lockUntil.toLocaleString()}`;
+      } else {
+        banner.style.display = 'none';
+      }
+    }
   } catch (e) { console.warn('risk params load:', e); }
 
   // Load profile

@@ -74,24 +74,24 @@
     <form id="config-form" class="space-y-5">
       <input type="hidden" id="provider-id">
 
-      <!-- DHAN-specific 5-field section (auto token generation) -->
+      <!-- DHAN-specific 5-field section (auto token generation via TOTP) -->
       <div id="dhan-fields-section" class="inner-section hidden space-y-3">
-        <div class="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-          <p class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Dhan Credentials</p>
-          <p class="text-[10px] text-slate-500 mt-0.5">Save credentials, then click <strong class="text-blue-300">Connect Now</strong> — a Dhan login page opens in a new tab. Sign in there to activate the feed.</p>
+        <div class="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+          <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Auto Token Generation</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Save credentials, then click <strong class="text-emerald-400">Connect Now</strong> — token generated automatically in background using Client ID + PIN + TOTP. No browser window needed.</p>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Client ID</label>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Client ID <span class="text-red-400">*</span></label>
             <input type="text" id="dhan-client-id" class="input-field w-full" placeholder="e.g. 1000123456">
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Key (Application ID)</label>
-            <input type="text" id="dhan-app-id" class="input-field w-full" placeholder="Enter Application ID">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Application ID (optional)</label>
+            <input type="text" id="dhan-app-id" class="input-field w-full" placeholder="From DhanHQ API portal">
           </div>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Secret</label>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Secret (optional)</label>
           <div class="relative">
             <input type="password" id="dhan-api-secret" class="input-field w-full" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
             <button type="button" onclick="toggleField('dhan-api-secret', this)" class="absolute right-3 top-2 text-slate-500 hover:text-slate-300">
@@ -101,29 +101,32 @@
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">PIN / Password</label>
-            <input type="password" id="dhan-pin" class="input-field w-full" placeholder="Login PIN or Password">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">PIN / Password <span class="text-red-400">*</span></label>
+            <input type="password" id="dhan-pin" class="input-field w-full" placeholder="6-digit login PIN">
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">TOTP Secret</label>
-            <input type="text" id="dhan-totp" class="input-field w-full" placeholder="32-char TOTP secret">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">TOTP Secret <span class="text-red-400">*</span></label>
+            <input type="text" id="dhan-totp" class="input-field w-full" placeholder="32-char secret (from authenticator setup)">
           </div>
         </div>
 
         <div class="pt-3 border-t border-slate-700/50 space-y-2">
-          <div class="flex items-center justify-between p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+          <div class="flex items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
             <div>
-              <p class="text-xs font-bold text-blue-300">Connect via Dhan Portal</p>
-              <p class="text-[10px] text-slate-500 mt-0.5">Opens Dhan login in a new tab. Sign in there — token is captured automatically.</p>
+              <p class="text-xs font-bold text-emerald-400">Background Auto Connect</p>
+              <p class="text-[10px] text-slate-500 mt-0.5">Token generated server-side using PIN + TOTP. Valid 24 hours, auto-renewed.</p>
             </div>
-            <button type="button" id="btn-dhan-web-auth" onclick="dhanWebLogin()" class="btn-primary px-4 py-1.5 text-xs">Connect Now</button>
+            <button type="button" id="btn-dhan-bg-connect" onclick="connectGlobalProvider('dhan', this)" class="btn-primary px-4 py-1.5 text-xs">Connect Now</button>
           </div>
-          <p class="text-[9px] text-slate-600 text-center">Dhan requires browser-based login — the access token is generated by their portal after you authenticate.</p>
+          <div class="flex items-center justify-end gap-2 mt-1">
+            <span class="text-[9px] text-slate-600">Need manual auth instead?</span>
+            <button type="button" onclick="triggerGlobalAuth('dhan')" class="text-[9px] text-blue-400 hover:text-blue-300 underline">Open Dhan Login Portal</button>
+          </div>
         </div>
 
         <div class="p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
           <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Or Paste Access Token Directly</label>
-          <p class="text-[9px] text-slate-600 mb-2">Get a 30-day token from <strong class="text-slate-400">app.dhan.co → Settings → DhanHQ Trading APIs → Access Token</strong>.</p>
+          <p class="text-[9px] text-slate-600 mb-2">Get a 24-hour token from <strong class="text-slate-400">web.dhan.co → My Profile → Access DhanHQ APIs → Generate Access Token</strong>.</p>
           <div class="flex gap-2">
             <input type="text" id="manual-token-input" class="input-field flex-1 text-[10px]" placeholder="Paste access token here">
             <button type="button" onclick="saveManualToken()" class="btn-ghost px-3 py-1 text-[10px]">Save</button>
@@ -246,7 +249,7 @@ async function loadProviders() {
 
       const descriptions = {
         'upstox': 'Redundant industrial-grade market feed. Auto-renews daily via TOTP.',
-        'dhan': 'Primary high-speed WebSocket feed. Token obtained via Dhan portal login (30-day validity). Store credentials then click Login.',
+        'dhan': 'Primary high-speed WebSocket feed. Fully automated token generation using Client ID + PIN + TOTP (24-hour validity, auto-renewed daily).',
         'zerodha': 'Legacy market feed (Kite Connect paid addon required).'
       };
 
@@ -318,10 +321,7 @@ async function loadProviders() {
           </div>
           <div class="flex gap-3 mt-5">
             <button onclick="openConfig('${p.provider}')" class="btn-primary flex-1 py-2 text-sm">Configure & Connect</button>
-            ${p.provider === 'dhan'
-              ? `<button onclick="triggerGlobalAuth('dhan')" class="btn-ghost px-5 py-2 text-sm">Login</button>`
-              : `<button onclick="connectGlobalProvider('${p.provider}', this)" class="btn-ghost px-5 py-2 text-sm">Connect Now</button>`
-            }
+            <button onclick="connectGlobalProvider('${p.provider}', this)" class="btn-ghost px-5 py-2 text-sm">Connect Now</button>
           </div>
         </div>
       `;

@@ -232,6 +232,17 @@ def _migrate(conn: sqlite3.Connection):
         ("client_strategy_overrides", "TEXT"),
         ("trading_locked_until",      "TEXT"),
         ("daily_loss_limit",          "REAL DEFAULT 0"),
+        # Task #13: extended risk & money management parameters
+        ("capital_allocated",         "REAL DEFAULT 0"),
+        ("max_position_size",         "INTEGER DEFAULT 1"),
+        ("max_open_positions",        "INTEGER DEFAULT 1"),
+        ("max_daily_trades",          "INTEGER DEFAULT 0"),
+        ("per_trade_loss_limit",      "REAL DEFAULT 0"),
+        ("max_drawdown_pct",          "REAL DEFAULT 0"),
+        ("risk_per_trade_pct",        "REAL DEFAULT 1.0"),
+        ("daily_pnl",                 "REAL DEFAULT 0"),
+        ("daily_trade_count",         "INTEGER DEFAULT 0"),
+        ("pnl_reset_date",            "TEXT"),
     ]:
         if col not in inst_cols:
             conn.execute(f"ALTER TABLE client_broker_instances ADD COLUMN {col} {defn}")

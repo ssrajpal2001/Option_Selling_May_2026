@@ -26,6 +26,7 @@
 
 <div class="flex gap-2 mb-4">
   <button onclick="showClientTab('info')" id="ct-info" class="tab-btn active">Info & Trades</button>
+  <button onclick="showClientTab('risk')" id="ct-risk" class="tab-btn">Risk & Money</button>
   <button onclick="showClientTab('monitor')" id="ct-monitor" class="tab-btn">Live Monitor</button>
 </div>
 
@@ -109,6 +110,144 @@
       </tbody>
     </table>
   </div>
+</div>
+
+<!-- RISK & MONEY MANAGEMENT TAB -->
+<div id="pane-risk" class="hidden">
+
+  <!-- Live Risk Status -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div class="stat-card p-4">
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Today's P&L</div>
+      <div id="risk-daily-pnl" class="text-2xl font-bold" style="color:#94a3b8">₹ --</div>
+      <div class="text-xs mt-1" style="color:#64748b">vs limit: <span id="risk-loss-limit-badge">--</span></div>
+    </div>
+    <div class="stat-card p-4">
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Trades Today</div>
+      <div id="risk-trade-count" class="text-2xl font-bold text-white">--</div>
+      <div class="text-xs mt-1" style="color:#64748b">max: <span id="risk-max-trades-badge">--</span></div>
+    </div>
+    <div class="stat-card p-4">
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Capital Used %</div>
+      <div id="risk-capital-pct" class="text-2xl font-bold text-white">--</div>
+      <div class="text-xs mt-1" style="color:#64748b">Allocated: <span id="risk-capital-badge">₹ --</span></div>
+    </div>
+    <div class="stat-card p-4">
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Kill Switch</div>
+      <div id="risk-lock-status" class="text-sm font-bold mt-1">Loading...</div>
+      <div class="flex gap-2 mt-2">
+        <button onclick="lockTrading()" class="btn-danger px-2 py-1 text-xs">🔒 Lock</button>
+        <button onclick="unlockTrading()" class="btn-ghost px-2 py-1 text-xs" style="color:#34d399;border-color:#065f46">🔓 Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- P&L Usage Bar -->
+  <div class="card p-4 mb-4">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Daily Loss Usage</div>
+      <div class="flex gap-2">
+        <span id="risk-pnl-pct-text" class="text-xs font-bold text-white">--</span>
+        <button onclick="resetDailyPnl()" class="text-xs text-slate-500 hover:text-slate-300 underline">Reset</button>
+      </div>
+    </div>
+    <div class="w-full rounded-full h-3 mb-1" style="background:#1e293b">
+      <div id="risk-pnl-bar" class="h-3 rounded-full transition-all duration-500" style="width:0%;background:#22c55e"></div>
+    </div>
+    <div class="flex justify-between text-xs mt-1" style="color:#64748b">
+      <span>₹0</span>
+      <span id="risk-bar-limit">Limit: ₹0</span>
+    </div>
+  </div>
+
+  <!-- Risk Parameters Form -->
+  <div class="card p-5 mb-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:#64748b">Risk & Money Management Parameters</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+
+      <!-- Capital & Loss Limits -->
+      <div class="space-y-4">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-700/50 pb-1">Capital & Loss Limits</div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Allocated Capital (₹)</label>
+          <input type="number" id="r-capital" class="input-field w-full" min="0" step="1000" placeholder="e.g. 500000">
+          <p class="text-xs mt-0.5" style="color:#475569">Total capital assigned to this client's bot account.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Daily Loss Limit (₹) <span class="text-red-400">Kill Switch</span></label>
+          <input type="number" id="r-daily-loss" class="input-field w-full" min="0" step="100" placeholder="e.g. 5000">
+          <p class="text-xs mt-0.5" style="color:#475569">Bot stops trading when daily loss exceeds this. Set 0 to disable.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Per-Trade Loss Limit (₹)</label>
+          <input type="number" id="r-per-trade-loss" class="input-field w-full" min="0" step="100" placeholder="e.g. 1000">
+          <p class="text-xs mt-0.5" style="color:#475569">Max loss allowed on a single trade before forced exit. 0 = disabled.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Max Drawdown % <span class="text-red-400">Kill Switch</span></label>
+          <input type="number" id="r-drawdown" class="input-field w-full" min="0" max="100" step="0.5" placeholder="e.g. 10">
+          <p class="text-xs mt-0.5" style="color:#475569">Trading halts when drawdown exceeds this % of allocated capital. 0 = disabled.</p>
+        </div>
+      </div>
+
+      <!-- Position & Trade Limits -->
+      <div class="space-y-4">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-700/50 pb-1">Position & Trade Limits</div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Max Position Size (lots per trade)</label>
+          <input type="number" id="r-pos-size" class="input-field w-full" min="1" step="1" placeholder="e.g. 2">
+          <p class="text-xs mt-0.5" style="color:#475569">Maximum number of lots in a single order. Default 1.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Max Open Positions</label>
+          <input type="number" id="r-open-pos" class="input-field w-full" min="1" step="1" placeholder="e.g. 2">
+          <p class="text-xs mt-0.5" style="color:#475569">Maximum concurrent open positions allowed at once.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Max Trades Per Day</label>
+          <input type="number" id="r-daily-trades" class="input-field w-full" min="0" step="1" placeholder="e.g. 10">
+          <p class="text-xs mt-0.5" style="color:#475569">Hard cap on total trades in a session. 0 = unlimited.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Risk Per Trade (% of capital)</label>
+          <input type="number" id="r-risk-pct" class="input-field w-full" min="0.1" max="100" step="0.1" placeholder="e.g. 1.0">
+          <p class="text-xs mt-0.5" style="color:#475569">% of allocated capital risked on each trade (for position sizing calculations).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 pt-4 border-t border-slate-700/50">
+      <button onclick="saveRiskParams()" class="btn-primary px-8 py-2.5 text-sm font-bold">Save Risk Parameters</button>
+      <button onclick="loadRiskParams()" class="btn-ghost px-5 py-2.5 text-sm">Reset to Saved</button>
+    </div>
+  </div>
+
+  <!-- Strategy Overrides Note -->
+  <div class="card p-4 mb-4" style="border-color:#334155">
+    <div class="flex items-start gap-3">
+      <div class="text-xl mt-0.5">ℹ️</div>
+      <div>
+        <div class="text-xs font-bold text-slate-300 mb-1">How Risk Enforcement Works</div>
+        <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+          <li><strong class="text-slate-400">Daily Loss Limit</strong> — Bot checks P&L after each trade; halts if limit breached.</li>
+          <li><strong class="text-slate-400">Max Drawdown %</strong> — Calculated as |Daily P&L| / Capital × 100. Kills bot when exceeded.</li>
+          <li><strong class="text-slate-400">Per-Trade Loss</strong> — Exit signal triggered when a single trade loss crosses threshold.</li>
+          <li><strong class="text-slate-400">Max Daily Trades</strong> — No new entries once trade count ceiling is hit.</li>
+          <li><strong class="text-slate-400">Kill Switch (Lock)</strong> — Manually locks trading for 24 hours. Override with Unlock.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- LIVE MONITOR TAB -->
@@ -317,11 +456,142 @@
 const clientId = window.location.pathname.split('/').pop();
 
 function showClientTab(tab) {
-  document.getElementById('pane-info').classList.toggle('hidden', tab !== 'info');
-  document.getElementById('pane-monitor').classList.toggle('hidden', tab !== 'monitor');
-  document.getElementById('ct-info').classList.toggle('active', tab === 'info');
-  document.getElementById('ct-monitor').classList.toggle('active', tab === 'monitor');
+  ['info','risk','monitor'].forEach(t => {
+    document.getElementById(`pane-${t}`).classList.toggle('hidden', tab !== t);
+    document.getElementById(`ct-${t}`).classList.toggle('active', tab === t);
+  });
   if (tab === 'monitor') loadBotStatus();
+  if (tab === 'risk') loadRiskParams();
+}
+
+// ─── Risk & Money Management ───────────────────────────────────────────────
+let _riskData = {};
+
+async function loadRiskParams() {
+  try {
+    const r = await fetch(`/api/admin/clients/${clientId}/risk-overrides`);
+    const d = await r.json();
+    _riskData = d;
+
+    // Populate form fields
+    document.getElementById('r-capital').value        = d.capital_allocated || 0;
+    document.getElementById('r-daily-loss').value     = d.daily_loss_limit || 0;
+    document.getElementById('r-per-trade-loss').value = d.per_trade_loss_limit || 0;
+    document.getElementById('r-drawdown').value       = d.max_drawdown_pct || 0;
+    document.getElementById('r-pos-size').value       = d.max_position_size || 1;
+    document.getElementById('r-open-pos').value       = d.max_open_positions || 1;
+    document.getElementById('r-daily-trades').value   = d.max_daily_trades || 0;
+    document.getElementById('r-risk-pct').value       = d.risk_per_trade_pct || 1.0;
+
+    // Status cards
+    const pnl = d.daily_pnl || 0;
+    const limit = d.daily_loss_limit || 0;
+    const capital = d.capital_allocated || 0;
+    const tradeCount = d.daily_trade_count || 0;
+    const maxTrades = d.max_daily_trades || 0;
+
+    const pnlEl = document.getElementById('risk-daily-pnl');
+    pnlEl.textContent = `₹ ${pnl >= 0 ? '+' : ''}${pnl.toFixed(0)}`;
+    pnlEl.style.color = pnl >= 0 ? '#34d399' : '#f87171';
+
+    document.getElementById('risk-loss-limit-badge').textContent = limit > 0 ? `₹${limit.toLocaleString()}` : 'No limit';
+    document.getElementById('risk-trade-count').textContent = tradeCount;
+    document.getElementById('risk-max-trades-badge').textContent = maxTrades > 0 ? maxTrades : '∞';
+
+    // Capital usage
+    let capPct = '--';
+    if (capital > 0 && pnl < 0) {
+      capPct = `${(Math.abs(pnl) / capital * 100).toFixed(1)}%`;
+    } else if (capital > 0) {
+      capPct = '0%';
+    }
+    document.getElementById('risk-capital-pct').textContent = capPct;
+    document.getElementById('risk-capital-badge').textContent = capital > 0 ? `₹${capital.toLocaleString()}` : 'Not set';
+
+    // Kill switch status
+    const lockEl = document.getElementById('risk-lock-status');
+    const locked = d.trading_locked_until && new Date(d.trading_locked_until) > new Date();
+    if (locked) {
+      const lockUntil = new Date(d.trading_locked_until).toLocaleString();
+      lockEl.innerHTML = `<span style="color:#f87171">🔒 LOCKED</span><div class="text-xs mt-0.5" style="color:#64748b">Until ${lockUntil}</div>`;
+    } else {
+      lockEl.innerHTML = `<span style="color:#34d399">🟢 ACTIVE</span>`;
+    }
+
+    // P&L bar
+    if (limit > 0) {
+      const usedPct = Math.min(100, Math.abs(Math.min(0, pnl)) / limit * 100);
+      const barColor = usedPct > 80 ? '#ef4444' : usedPct > 50 ? '#f59e0b' : '#22c55e';
+      document.getElementById('risk-pnl-bar').style.width = usedPct + '%';
+      document.getElementById('risk-pnl-bar').style.background = barColor;
+      document.getElementById('risk-pnl-pct-text').textContent = `${usedPct.toFixed(1)}% used`;
+      document.getElementById('risk-bar-limit').textContent = `Limit: ₹${limit.toLocaleString()}`;
+    } else {
+      document.getElementById('risk-pnl-bar').style.width = '0%';
+      document.getElementById('risk-pnl-pct-text').textContent = 'No limit set';
+      document.getElementById('risk-bar-limit').textContent = 'Limit: disabled';
+    }
+
+  } catch(e) {
+    showToast('Failed to load risk parameters.', 'error');
+  }
+}
+
+async function saveRiskParams() {
+  const body = {
+    instance_id: _riskData.instance_id || null,
+    capital_allocated:   parseFloat(document.getElementById('r-capital').value) || 0,
+    daily_loss_limit:    parseFloat(document.getElementById('r-daily-loss').value) || 0,
+    per_trade_loss_limit: parseFloat(document.getElementById('r-per-trade-loss').value) || 0,
+    max_drawdown_pct:    parseFloat(document.getElementById('r-drawdown').value) || 0,
+    max_position_size:   parseInt(document.getElementById('r-pos-size').value) || 1,
+    max_open_positions:  parseInt(document.getElementById('r-open-pos').value) || 1,
+    max_daily_trades:    parseInt(document.getElementById('r-daily-trades').value) || 0,
+    risk_per_trade_pct:  parseFloat(document.getElementById('r-risk-pct').value) || 1.0,
+  };
+  const r = await fetch(`/api/admin/clients/${clientId}/risk-params`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  const d = await r.json();
+  if (d.success) {
+    showToast('Risk parameters saved successfully.', 'success');
+    loadRiskParams();
+  } else {
+    showToast(d.detail || 'Failed to save risk parameters.', 'error');
+  }
+}
+
+async function lockTrading() {
+  if (!confirm('Lock trading for this client for 24 hours?')) return;
+  const body = { instance_id: _riskData.instance_id || null, lock_trading: true,
+    daily_loss_limit: _riskData.daily_loss_limit || 0 };
+  const r = await fetch(`/api/admin/clients/${clientId}/risk-params`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+  });
+  const d = await r.json();
+  showToast(d.success ? 'Trading locked for 24 hours.' : (d.detail || 'Error'), d.success ? 'success' : 'error');
+  if (d.success) loadRiskParams();
+}
+
+async function unlockTrading() {
+  const body = { instance_id: _riskData.instance_id || null, unlock_trading: true,
+    daily_loss_limit: _riskData.daily_loss_limit || 0 };
+  const r = await fetch(`/api/admin/clients/${clientId}/risk-params`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+  });
+  const d = await r.json();
+  showToast(d.success ? 'Trading unlocked.' : (d.detail || 'Error'), d.success ? 'success' : 'error');
+  if (d.success) loadRiskParams();
+}
+
+async function resetDailyPnl() {
+  if (!confirm('Reset daily P&L and trade count for this client?')) return;
+  const r = await fetch(`/api/admin/clients/${clientId}/reset-daily-pnl`, { method: 'POST' });
+  const d = await r.json();
+  showToast(d.success ? 'Daily P&L reset.' : 'Error resetting P&L.', d.success ? 'success' : 'error');
+  if (d.success) loadRiskParams();
 }
 
 let _allPlans = [];

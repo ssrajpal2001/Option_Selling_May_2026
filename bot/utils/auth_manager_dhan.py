@@ -12,26 +12,33 @@ _UUID_RE = re.compile(
 
 def is_dhan_api_key_mode(credentials: dict) -> bool:
     """
-    Returns True when the stored api_secret is a Dhan API Secret (UUID format)
-    rather than a 24-hour/30-day access token.
+    Returns True when TOTP secret is stored — meaning fully automated background
+    token generation is possible via auth.dhan.co/app/generateAccessToken.
 
-    API Key mode allows fully automated token generation; the API Secret is a
-    permanent credential from DhanHQ → DhanHQ Trading APIs → API Key tab.
+    Requires: Client ID (api_key), PIN (password), TOTP Secret (totp_secret or totp).
     """
-    api_secret = (credentials.get('api_secret') or '').strip()
-    return bool(api_secret and _UUID_RE.match(api_secret))
+    totp_secret = (
+        credentials.get('totp_secret') or
+        credentials.get('totp') or ''
+    ).strip()
+    password = (credentials.get('password') or credentials.get('pin') or '').strip()
+    api_key   = (credentials.get('api_key') or credentials.get('client_id') or '').strip()
+    return bool(api_key and password and totp_secret)
 
 
 def generate_dhan_token(api_key: str, client_id: str, password: str,
                         totp_secret: str = '') -> str | None:
     """
-    Generates a fresh Dhan access token using the DhanHQ API.
+    Generates a fresh Dhan access token using the official auth endpoint.
 
-    Endpoint: POST https://api.dhan.co/token
-    Required: applicationId (api_key), loginId (client_id), password
-    Optional: 2FA (TOTP code derived from totp_secret)
+    Endpoint: GET https://auth.dhan.co/app/generateAccessToken
+    Query params: dhanClientId, pin, totp
+    Requires TOTP to be enabled for the account.
 
     Returns the new access token string, or None on failure.
+
+    NOTE: `api_key` parameter retained for API compatibility but is not sent to
+    this endpoint (client_id == dhanClientId is sufficient).
     """
     totp_code = ''
     if totp_secret:
@@ -41,37 +48,78 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
         except Exception as e:
             logger.warning(f"[Dhan] TOTP generation failed: {e}")
 
-    payload: dict = {
-        'loginId': client_id,
-        'password': password,
-        'applicationId': api_key,
+    if not totp_code:
+        logger.error("[Dhan] TOTP code is required for background token generation.")
+        return None
+
+    login_id = client_id or api_key
+    params = {
+        'dhanClientId': login_id,
+        'pin': password,
+        'totp': totp_code,
     }
-    if totp_code:
-        payload['2FA'] = totp_code
 
     try:
-        logger.info(f"[Dhan] Generating access token for client {client_id} via API Key …")
-        resp = requests.post(
-            'https://api.dhan.co/token',
-            json=payload,
+        logger.info(f"[Dhan] Generating access token for client {login_id} …")
+        resp = requests.get(
+            'https://auth.dhan.co/app/generateAccessToken',
+            params=params,
             headers={'Content-Type': 'application/json'},
             timeout=15,
         )
         if resp.status_code == 200:
-            data = resp.json()
+            try:
+                data = resp.json()
+            except Exception:
+                logger.error(f"[Dhan] Token response not JSON: {resp.text[:300]}")
+                return None
             token = data.get('accessToken') or data.get('access_token')
             if token:
-                logger.info(f"[Dhan] Access token generated successfully for {client_id}.")
+                logger.info(f"[Dhan] Access token generated successfully for {login_id}.")
                 return token
             logger.error(f"[Dhan] Token response missing accessToken field: {data}")
         else:
             logger.error(
-                f"[Dhan] Token generation failed for {client_id}: "
+                f"[Dhan] Token generation failed for {login_id}: "
                 f"HTTP {resp.status_code} — {resp.text[:300]}"
             )
     except Exception as e:
-        logger.error(f"[Dhan] Token generation error for {client_id}: {e}")
+        logger.error(f"[Dhan] Token generation error for {login_id}: {e}")
 
+    return None
+
+
+def renew_dhan_token(access_token: str, client_id: str) -> str | None:
+    """
+    Renews an active 24-hour Dhan access token for another 24 hours.
+    Only works on tokens generated via Dhan Web / generateAccessToken.
+    Returns the new token string, or None on failure.
+
+    Endpoint: POST https://api.dhan.co/v2/RenewToken
+    """
+    try:
+        logger.info(f"[Dhan] Renewing token for {client_id} …")
+        resp = requests.post(
+            'https://api.dhan.co/v2/RenewToken',
+            headers={
+                'access-token': access_token,
+                'dhanClientId': client_id,
+                'Content-Type': 'application/json',
+            },
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            try:
+                data = resp.json()
+                new_token = data.get('accessToken') or data.get('access_token') or access_token
+                logger.info(f"[Dhan] Token renewed successfully for {client_id}.")
+                return new_token
+            except Exception:
+                logger.error(f"[Dhan] Renew response not JSON: {resp.text[:200]}")
+        else:
+            logger.warning(f"[Dhan] Renew failed for {client_id}: HTTP {resp.status_code}")
+    except Exception as e:
+        logger.error(f"[Dhan] Token renewal error: {e}")
     return None
 
 
@@ -117,8 +165,8 @@ def _estimate_dhan_token_expiry(token_updated_at: str, api_key_mode: bool = Fals
     """
     Estimates remaining validity of the Dhan access token.
 
-    API Key mode  → tokens are generated with 24-hour validity.
-    Direct Token  → user-generated tokens may be up to 30 days.
+    Tokens generated via generateAccessToken have 24-hour validity.
+    Manual/OAuth tokens may be up to 30 days.
     """
     result = {'hours_remaining': None, 'days_remaining': None,
               'is_valid': False, 'warn_soon': False}

@@ -1019,8 +1019,13 @@ class RiskParamsUpdate(BaseModel):
 @router.get("/risk-params")
 async def get_risk_params(user=Depends(get_current_user)):
     inst = db_fetchone(
-        "SELECT id, daily_loss_limit, client_strategy_overrides FROM client_broker_instances "
-        "WHERE client_id=? AND status!='removed' ORDER BY CASE WHEN status='running' THEN 0 ELSE 1 END, id DESC LIMIT 1",
+        """SELECT id, daily_loss_limit, client_strategy_overrides,
+                  capital_allocated, max_position_size, max_open_positions,
+                  per_trade_loss_limit, max_drawdown_pct, risk_per_trade_pct,
+                  trading_locked_until, daily_pnl, daily_trade_count, max_daily_trades
+           FROM client_broker_instances
+           WHERE client_id=? AND status!='removed'
+           ORDER BY CASE WHEN status='running' THEN 0 ELSE 1 END, id DESC LIMIT 1""",
         (user["id"],)
     )
     if not inst:
@@ -1034,8 +1039,19 @@ async def get_risk_params(user=Depends(get_current_user)):
     return {
         "configured": True,
         "instance_id": inst["id"],
-        "daily_loss_limit": inst.get("daily_loss_limit") or 0,
+        "daily_loss_limit":    inst.get("daily_loss_limit") or 0,
         "params": overrides,
+        # Admin-set risk limits (read-only for client)
+        "capital_allocated":   inst.get("capital_allocated") or 0,
+        "max_position_size":   inst.get("max_position_size") or 1,
+        "max_open_positions":  inst.get("max_open_positions") or 1,
+        "per_trade_loss_limit": inst.get("per_trade_loss_limit") or 0,
+        "max_drawdown_pct":    inst.get("max_drawdown_pct") or 0,
+        "risk_per_trade_pct":  inst.get("risk_per_trade_pct") or 1.0,
+        "trading_locked_until": inst.get("trading_locked_until"),
+        "daily_pnl":           inst.get("daily_pnl") or 0,
+        "daily_trade_count":   inst.get("daily_trade_count") or 0,
+        "max_daily_trades":    inst.get("max_daily_trades") or 0,
     }
 
 

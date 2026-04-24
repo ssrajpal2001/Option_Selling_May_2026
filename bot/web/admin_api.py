@@ -10,7 +10,7 @@ import configparser
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from web.deps import require_admin, get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
@@ -117,21 +117,24 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
         elif provider == 'dhan':
-            # Dhan does not offer a server-side token generation REST API.
-            # Tokens must be obtained via browser-based login at login.dhan.co.
-            from web.auth import _fernet
-            state_payload = f"admin:{int(time.time())}"
-            state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
-            app_id = decrypt_secret(dp.get("user_id_encrypted", "") or "")
-            login_url = f"https://login.dhan.co/?state={urllib.parse.quote(state_encrypted)}"
-            if app_id:
-                login_url += f"&applicationId={urllib.parse.quote(app_id)}"
-            return {
-                "success": False,
-                "requires_browser": True,
-                "login_url": login_url,
-                "message": "Dhan requires browser login. Opening Dhan portal automatically…"
-            }
+            from utils.auth_manager_dhan import generate_dhan_token
+            client_id  = decrypt_secret(dp.get("api_key_encrypted",    "") or "")
+            pin        = decrypt_secret(dp.get("password_encrypted",    "") or "")
+            totp_sec   = decrypt_secret(dp.get("totp_encrypted",        "") or "")
+            missing = [f for f, v in [
+                ("Client ID",    client_id),
+                ("PIN",          pin),
+                ("TOTP Secret",  totp_sec),
+            ] if not v]
+            if missing:
+                return {"success": False,
+                        "message": f"Dhan credentials incomplete — missing: {', '.join(missing)}. Save all fields first."}
+            token = generate_dhan_token(
+                api_key=client_id,
+                client_id=client_id,
+                password=pin,
+                totp_secret=totp_sec,
+            )
 
         if token:
             enc_token = encrypt_secret(token)
@@ -208,21 +211,25 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
             elif provider == "dhan":
-                # Dhan requires browser-based login — no server-side token API available.
-                from web.auth import _fernet
-                _state_payload = f"admin:{int(time.time())}"
-                _state_enc = _fernet.encrypt(_state_payload.encode()).decode()
-                _app_id = decrypt_secret(dp.get("user_id_encrypted", "") or "")
-                _login_url = f"https://login.dhan.co/?state={urllib.parse.quote(_state_enc)}"
-                if _app_id:
-                    _login_url += f"&applicationId={urllib.parse.quote(_app_id)}"
-                results[provider] = {
-                    "success": False,
-                    "requires_browser": True,
-                    "login_url": _login_url,
-                    "message": "Dhan needs browser login — opening Dhan portal."
-                }
-                continue
+                from utils.auth_manager_dhan import generate_dhan_token
+                _client_id = decrypt_secret(dp.get("api_key_encrypted",  "") or "")
+                _pin       = decrypt_secret(dp.get("password_encrypted",  "") or "")
+                _totp_sec  = decrypt_secret(dp.get("totp_encrypted",      "") or "")
+                _missing = [f for f, v in [
+                    ("Client ID",   _client_id),
+                    ("PIN",         _pin),
+                    ("TOTP Secret", _totp_sec),
+                ] if not v]
+                if _missing:
+                    results[provider] = {"success": False,
+                                         "message": f"Dhan credentials incomplete — missing: {', '.join(_missing)}."}
+                    continue
+                token = generate_dhan_token(
+                    api_key=_client_id,
+                    client_id=_client_id,
+                    password=_pin,
+                    totp_secret=_totp_sec,
+                )
 
             if token:
                 enc_token = encrypt_secret(token)
@@ -1341,14 +1348,32 @@ async def update_client_static_ip(client_id: int, body: StaticIPBody,
 
 @router.get("/clients/{client_id}/risk-overrides")
 async def get_client_risk_overrides(client_id: int, admin=Depends(require_admin)):
-    """Return client's strategy overrides and risk params from active broker instance."""
+    """Return client's full risk & money management parameters from active broker instance."""
     inst = db_fetchone(
-        "SELECT id, client_strategy_overrides, daily_loss_limit, trading_locked_until "
-        "FROM client_broker_instances WHERE client_id=? ORDER BY id DESC LIMIT 1",
+        """SELECT id, client_strategy_overrides, daily_loss_limit, trading_locked_until,
+                  capital_allocated, max_position_size, max_open_positions, max_daily_trades,
+                  per_trade_loss_limit, max_drawdown_pct, risk_per_trade_pct,
+                  daily_pnl, daily_trade_count, pnl_reset_date
+           FROM client_broker_instances WHERE client_id=? ORDER BY id DESC LIMIT 1""",
         (client_id,)
     )
     if not inst:
-        return {"overrides": {}, "daily_loss_limit": 0, "trading_locked_until": None}
+        return {
+            "instance_id": None,
+            "overrides": {},
+            "daily_loss_limit": 0,
+            "trading_locked_until": None,
+            "capital_allocated": 0,
+            "max_position_size": 1,
+            "max_open_positions": 1,
+            "max_daily_trades": 0,
+            "per_trade_loss_limit": 0,
+            "max_drawdown_pct": 0,
+            "risk_per_trade_pct": 1.0,
+            "daily_pnl": 0,
+            "daily_trade_count": 0,
+            "pnl_reset_date": None,
+        }
     overrides = {}
     try:
         if inst.get("client_strategy_overrides"):
@@ -1356,7 +1381,94 @@ async def get_client_risk_overrides(client_id: int, admin=Depends(require_admin)
     except Exception:
         pass
     return {
+        "instance_id": inst.get("id"),
         "overrides": overrides,
-        "daily_loss_limit": inst.get("daily_loss_limit") or 0,
+        "daily_loss_limit":    inst.get("daily_loss_limit") or 0,
         "trading_locked_until": inst.get("trading_locked_until"),
+        "capital_allocated":   inst.get("capital_allocated") or 0,
+        "max_position_size":   inst.get("max_position_size") or 1,
+        "max_open_positions":  inst.get("max_open_positions") or 1,
+        "max_daily_trades":    inst.get("max_daily_trades") or 0,
+        "per_trade_loss_limit": inst.get("per_trade_loss_limit") or 0,
+        "max_drawdown_pct":    inst.get("max_drawdown_pct") or 0,
+        "risk_per_trade_pct":  inst.get("risk_per_trade_pct") or 1.0,
+        "daily_pnl":           inst.get("daily_pnl") or 0,
+        "daily_trade_count":   inst.get("daily_trade_count") or 0,
+        "pnl_reset_date":      inst.get("pnl_reset_date"),
     }
+
+
+class RiskParamsBody(BaseModel):
+    instance_id: int | None = None
+    daily_loss_limit: float = 0
+    capital_allocated: float = 0
+    max_position_size: int = 1
+    max_open_positions: int = 1
+    max_daily_trades: int = 0
+    per_trade_loss_limit: float = 0
+    max_drawdown_pct: float = 0
+    risk_per_trade_pct: float = 1.0
+    lock_trading: bool | None = None
+    unlock_trading: bool | None = None
+
+
+@router.post("/clients/{client_id}/risk-params")
+async def save_client_risk_params(client_id: int, body: RiskParamsBody,
+                                  admin=Depends(require_admin)):
+    """Save risk & money management parameters for a client's broker instance."""
+    inst = db_fetchone(
+        "SELECT id FROM client_broker_instances WHERE client_id=? ORDER BY id DESC LIMIT 1",
+        (client_id,)
+    ) if not body.instance_id else {"id": body.instance_id}
+
+    if not inst:
+        raise HTTPException(404, "No broker instance found for client. Connect a broker first.")
+
+    inst_id = inst["id"]
+    now_utc = datetime.now(timezone.utc).isoformat()
+
+    lock_val = None
+    if body.lock_trading is True:
+        # Lock for 24 hours
+        lock_val = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+    elif body.unlock_trading is True:
+        lock_val = None
+    else:
+        existing = db_fetchone("SELECT trading_locked_until FROM client_broker_instances WHERE id=?", (inst_id,))
+        lock_val = existing.get("trading_locked_until") if existing else None
+
+    db_execute("""
+        UPDATE client_broker_instances SET
+            daily_loss_limit=?, capital_allocated=?, max_position_size=?,
+            max_open_positions=?, max_daily_trades=?, per_trade_loss_limit=?,
+            max_drawdown_pct=?, risk_per_trade_pct=?, trading_locked_until=?
+        WHERE id=?
+    """, (
+        body.daily_loss_limit, body.capital_allocated, body.max_position_size,
+        body.max_open_positions, body.max_daily_trades, body.per_trade_loss_limit,
+        body.max_drawdown_pct, body.risk_per_trade_pct, lock_val, inst_id
+    ))
+    _audit(admin, "client_risk_params_update", "broker_instance", inst_id, {
+        "daily_loss_limit": body.daily_loss_limit,
+        "capital_allocated": body.capital_allocated,
+        "max_position_size": body.max_position_size,
+        "lock_trading": body.lock_trading,
+    })
+    return {"success": True, "instance_id": inst_id}
+
+
+@router.post("/clients/{client_id}/reset-daily-pnl")
+async def reset_client_daily_pnl(client_id: int, admin=Depends(require_admin)):
+    """Manually reset the daily P&L counter and trade count for a client."""
+    inst = db_fetchone(
+        "SELECT id FROM client_broker_instances WHERE client_id=? ORDER BY id DESC LIMIT 1",
+        (client_id,)
+    )
+    if not inst:
+        raise HTTPException(404, "No broker instance found.")
+    db_execute(
+        "UPDATE client_broker_instances SET daily_pnl=0, daily_trade_count=0, pnl_reset_date=? WHERE id=?",
+        (datetime.now(timezone.utc).date().isoformat(), inst["id"])
+    )
+    _audit(admin, "client_daily_pnl_reset", "broker_instance", inst["id"], {})
+    return {"success": True}

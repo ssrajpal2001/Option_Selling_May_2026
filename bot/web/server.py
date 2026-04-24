@@ -639,32 +639,56 @@ async def _kill_switch_enforcer():
             today = now.strftime("%Y-%m-%d")
             try:
                 running_instances = db_fetchall(
-                    "SELECT id, client_id, daily_loss_limit, trading_locked_until "
-                    "FROM client_broker_instances "
-                    "WHERE status='running' AND daily_loss_limit > 0"
+                    """SELECT id, client_id, daily_loss_limit, trading_locked_until,
+                              capital_allocated, max_drawdown_pct, pnl_reset_date,
+                              max_daily_trades, daily_trade_count
+                       FROM client_broker_instances
+                       WHERE status='running'
+                         AND (daily_loss_limit > 0 OR max_drawdown_pct > 0)"""
                 )
                 for inst in running_instances:
                     try:
                         # Already locked — skip
                         if inst.get("trading_locked_until"):
                             continue
-                        # Sum today's live losses
+                        # Sum today's live P&L from trade history
                         row = db_fetchone(
-                            "SELECT COALESCE(SUM(pnl_rs), 0) as total_rs "
+                            "SELECT COALESCE(SUM(pnl_rs), 0) as total_rs, COUNT(*) as cnt "
                             "FROM trade_history WHERE instance_id=? AND trading_mode='live' "
                             "AND date(closed_at)=?",
                             (inst["id"], today)
                         )
                         daily_pnl_rs = row["total_rs"] if row else 0
+                        trade_count  = row["cnt"] if row else 0
+
+                        # Update live P&L and trade count in instance row
+                        db_execute(
+                            "UPDATE client_broker_instances SET daily_pnl=?, daily_trade_count=?, pnl_reset_date=? WHERE id=?",
+                            (daily_pnl_rs, trade_count, today, inst["id"])
+                        )
+
                         if daily_pnl_rs >= 0:
-                            continue  # profitable, nothing to do
-                        if abs(daily_pnl_rs) < inst["daily_loss_limit"]:
-                            continue  # within limit
+                            continue  # profitable, nothing to enforce
+
+                        trigger_reason = None
+                        # Check daily loss limit (₹)
+                        loss_limit = inst.get("daily_loss_limit") or 0
+                        if loss_limit > 0 and abs(daily_pnl_rs) >= loss_limit:
+                            trigger_reason = f"Daily loss limit ₹{loss_limit:.0f} exceeded (loss: ₹{abs(daily_pnl_rs):.0f})"
+                        # Check max drawdown % of capital
+                        drawdown_pct = inst.get("max_drawdown_pct") or 0
+                        capital = inst.get("capital_allocated") or 0
+                        if not trigger_reason and drawdown_pct > 0 and capital > 0:
+                            actual_drawdown_pct = abs(daily_pnl_rs) / capital * 100
+                            if actual_drawdown_pct >= drawdown_pct:
+                                trigger_reason = f"Max drawdown {drawdown_pct:.1f}% exceeded ({actual_drawdown_pct:.1f}% of ₹{capital:.0f})"
+
+                        if not trigger_reason:
+                            continue  # within all limits
 
                         # KILL-SWITCH TRIGGERED
                         logger.warning(
-                            f"[KillSwitch] Instance {inst['id']} (client {inst['client_id']}) "
-                            f"daily loss ₹{abs(daily_pnl_rs):.0f} exceeds limit ₹{inst['daily_loss_limit']:.0f}"
+                            f"[KillSwitch] Instance {inst['id']} (client {inst['client_id']}): {trigger_reason}"
                         )
                         # Find next trading day 9:15 AM for unlock time
                         unlock = now + timedelta(days=1)
@@ -693,7 +717,7 @@ async def _kill_switch_enforcer():
                             notify_kill_switch(
                                 client_row["telegram_chat_id"],
                                 client_row["username"],
-                                f"Daily loss limit ₹{inst['daily_loss_limit']:.0f} exceeded",
+                                trigger_reason,
                                 daily_pnl_rs,
                             )
                         logger.info(f"[KillSwitch] Instance {inst['id']} stopped. Locked until {unlock.isoformat()}")
