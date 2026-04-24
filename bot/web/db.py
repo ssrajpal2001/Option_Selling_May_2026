@@ -157,6 +157,18 @@ def _migrate(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE data_providers ADD COLUMN password_encrypted TEXT")
     if "totp_encrypted" not in dp_cols:
         conn.execute("ALTER TABLE data_providers ADD COLUMN totp_encrypted TEXT")
+    if "token_issued_at" not in dp_cols:
+        # Tracks when the access_token was first obtained — separate from updated_at.
+        # For Dhan (30-day tokens): used to compute remaining life; never reset by validation-only runs.
+        # For Upstox (daily tokens): reset each time a new token is fetched.
+        conn.execute("ALTER TABLE data_providers ADD COLUMN token_issued_at TEXT")
+
+    # One-time backfill: for existing records that have a token but no token_issued_at,
+    # seed token_issued_at from updated_at so expiry calculations are stable immediately.
+    conn.execute(
+        "UPDATE data_providers SET token_issued_at = updated_at "
+        "WHERE access_token_encrypted IS NOT NULL AND token_issued_at IS NULL"
+    )
 
     existing = [row[1] for row in conn.execute("PRAGMA table_info(client_broker_instances)").fetchall()]
     if "api_secret_encrypted" not in existing:

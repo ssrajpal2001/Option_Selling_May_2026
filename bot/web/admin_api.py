@@ -131,7 +131,28 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
         if token:
             enc_token = encrypt_secret(token)
             now = datetime.now(timezone.utc).isoformat()
-            db_execute("UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider=?", (enc_token, now, provider))
+            if provider == 'upstox':
+                # Upstox: daily token — always refresh token_issued_at
+                db_execute(
+                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
+                    (enc_token, now, now, provider)
+                )
+            else:
+                # Dhan: 30-day token — only stamp token_issued_at on first set; preserve existing value
+                db_execute(
+                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=COALESCE(token_issued_at, ?) WHERE provider=?",
+                    (enc_token, now, now, provider)
+                )
+
+            # Signal any running feed instance to adopt the new token immediately
+            try:
+                from hub.feed_registry import refresh_feed_credentials
+                api_key_clear = decrypt_secret(dp.get("api_key_encrypted", ""))
+                refreshed = refresh_feed_credentials(provider, token, api_key=api_key_clear)
+                if refreshed:
+                    logger.info(f"[Admin] Live {provider} feed signaled to refresh credentials.")
+            except Exception as _rf_err:
+                logger.warning(f"[Admin] Could not signal live feed refresh for {provider}: {_rf_err}")
 
             # Also sync to credentials.ini for compatibility with legacy parts of the bot
             if provider == 'upstox':
@@ -198,10 +219,24 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
             if token:
                 enc_token = encrypt_secret(token)
                 now = datetime.now(timezone.utc).isoformat()
-                db_execute(
-                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider=?",
-                    (enc_token, now, provider)
-                )
+                if provider == "upstox":
+                    db_execute(
+                        "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
+                        (enc_token, now, now, provider)
+                    )
+                else:
+                    db_execute(
+                        "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=COALESCE(token_issued_at, ?) WHERE provider=?",
+                        (enc_token, now, now, provider)
+                    )
+                # Signal any live feed to adopt new token immediately
+                try:
+                    from hub.feed_registry import refresh_feed_credentials
+                    api_key_clear = decrypt_secret(dp.get("api_key_encrypted", ""))
+                    refresh_feed_credentials(provider, token, api_key=api_key_clear)
+                except Exception as _rf_err:
+                    logger.warning(f"[Admin] Could not signal live feed refresh for {provider}: {_rf_err}")
+
                 results[provider] = {"success": True, "message": f"{provider.capitalize()} connected."}
             else:
                 results[provider] = {"success": False, "message": f"{provider.capitalize()} login returned no token."}
@@ -914,10 +949,17 @@ async def feeder_health_status(admin=Depends(require_admin)):
                 age_s = (now - upd).total_seconds()
                 info["token_age_hours"] = round(age_s / 3600, 1)
                 if p["provider"] == "upstox":
+                    # Upstox: daily token — freshness from updated_at (set on each new token fetch)
                     info["token_fresh"] = age_s < 86400
                     info["expires_in"] = f"{max(0, 24 - round(age_s/3600, 1))}h"
                 else:
-                    days_remaining = 30 - (age_s / 86400)
+                    # Dhan: 30-day token — use token_issued_at if available; fall back to updated_at
+                    issued_str = p.get("token_issued_at") or p.get("updated_at")
+                    issued = datetime.fromisoformat(issued_str)
+                    if issued.tzinfo is None:
+                        issued = issued.replace(tzinfo=timezone.utc)
+                    issued_age_s = (now - issued).total_seconds()
+                    days_remaining = 30 - (issued_age_s / 86400)
                     info["token_fresh"] = days_remaining > 0
                     info["days_remaining"] = max(0, round(days_remaining, 1))
                     info["warn_expiry"] = 0 < days_remaining <= 5

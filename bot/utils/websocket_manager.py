@@ -33,6 +33,7 @@ class WebSocketManager(DataFeed):
         # Thread pool for sync handlers
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="ws_handler")
         self._last_message_time = asyncio.get_event_loop().time()
+        self._last_tick_epoch: float = 0.0  # Real Unix epoch seconds for health reporting
 
     def register_message_handler(self, handler):
         """Adds a new message handler to the list of handlers."""
@@ -139,7 +140,9 @@ class WebSocketManager(DataFeed):
                         logger.warning("V2 WebSocket: No existing instruments to re-subscribe to.")
 
                     # Start proactive watchdog, message processor and latency monitor
+                    import time as _time
                     self._last_message_time = asyncio.get_event_loop().time()
+                    self._last_tick_epoch = _time.time()
                     self._watchdog_task = asyncio.create_task(self._run_watchdog())
                     self._processor_task = asyncio.create_task(self._message_processor())
                     self._latency_task = asyncio.create_task(self._run_latency_monitor())
@@ -253,7 +256,9 @@ class WebSocketManager(DataFeed):
                         break
                     raise
 
+                import time as _time
                 self._last_message_time = asyncio.get_event_loop().time()
+                self._last_tick_epoch = _time.time()
 
                 try:
                     # Put into queue for background processing
@@ -497,3 +502,27 @@ class WebSocketManager(DataFeed):
                 await self._listener_task
             except asyncio.CancelledError:
                 logger.info("WebSocket listen task cancelled.")
+
+    def refresh_credentials(self, access_token: str, api_key: str = None) -> None:
+        """
+        Update the access token on the live auth object so the next reconnect uses it.
+        Closes the current WS connection to force an immediate reconnect with the new token.
+        """
+        if self.api_client and hasattr(self.api_client, 'auth'):
+            self.api_client.auth.token = access_token
+            logger.info("[WebSocketManager] Upstox auth token refreshed in-place.")
+        if self.api_client_manager and hasattr(self.api_client_manager, 'set_access_token'):
+            self.api_client_manager.set_access_token(access_token)
+            logger.info("[WebSocketManager] Upstox api_client_manager token updated.")
+        # Force reconnect by closing the current connection
+        if self.websocket and self.is_connected:
+            asyncio.create_task(self._force_reconnect())
+
+    async def _force_reconnect(self):
+        """Close the current WS so the reconnect loop re-establishes with the new token."""
+        try:
+            if self.websocket:
+                await self.websocket.close()
+                logger.info("[WebSocketManager] Forced reconnect for token refresh.")
+        except Exception as e:
+            logger.warning(f"[WebSocketManager] Error during forced reconnect: {e}")

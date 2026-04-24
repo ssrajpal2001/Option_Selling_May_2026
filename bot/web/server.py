@@ -487,9 +487,10 @@ def _seed_global_providers_from_ini():
                     """UPDATE data_providers
                        SET api_key_encrypted=?, api_secret_encrypted=?,
                            access_token_encrypted=?, totp_encrypted=?,
-                           status='configured', updated_at=?
+                           status='configured', updated_at=?,
+                           token_issued_at=COALESCE(token_issued_at, ?)
                        WHERE provider='dhan'""",
-                    (enc_key, enc_token, enc_token, enc_totp, now)
+                    (enc_key, enc_token, enc_token, enc_totp, now, now)
                 )
                 logger.info("[Startup] Dhan global provider seeded from credentials.ini (status=configured)")
 

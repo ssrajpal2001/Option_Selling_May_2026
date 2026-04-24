@@ -24,6 +24,12 @@ class DhanWebSocketManager(DataFeed):
         self._task = None
         self._retry_delay = 2
         self._last_tick_time = 0
+        self._last_tick_epoch: float = 0.0  # Real Unix epoch seconds
+
+    @property
+    def is_connected(self) -> bool:
+        """True when the Dhan WebSocket is actively open."""
+        return bool(self.feed and getattr(self.feed, 'ws', None) and getattr(self.feed.ws, 'open', False))
 
     def register_message_handler(self, handler):
         if handler not in self.message_handlers:
@@ -113,6 +119,9 @@ class DhanWebSocketManager(DataFeed):
             except: pass
 
         if processed and isinstance(processed, dict):
+            import time as _time
+            self._last_tick_epoch = _time.time()
+
             # Debug logging for Dhan ticks
             sid = processed.get('security_id') or processed.get('SecurityId')
             ltp = processed.get('LTP') or processed.get('last_price')
@@ -158,3 +167,24 @@ class DhanWebSocketManager(DataFeed):
             except: pass
         if self._task:
             self._task.cancel()
+
+    def refresh_credentials(self, access_token: str, api_key: str = None) -> None:
+        """
+        Update the access token and trigger a reconnect with the new credentials.
+        The reconnect loop will use the updated token on the next DhanFeed creation.
+        """
+        self.access_token = access_token
+        if api_key:
+            self.client_id = api_key
+        logger.info("[DhanWebSocketManager] Credentials refreshed. Triggering reconnect...")
+        if self.feed:
+            asyncio.create_task(self._close_for_reconnect())
+
+    async def _close_for_reconnect(self):
+        """Close the current WS connection so the reconnect loop re-establishes with new creds."""
+        try:
+            if self.feed:
+                await self.feed.disconnect()
+                logger.info("[DhanWebSocketManager] Forced disconnect for credential refresh.")
+        except Exception as e:
+            logger.warning(f"[DhanWebSocketManager] Error during forced disconnect: {e}")
