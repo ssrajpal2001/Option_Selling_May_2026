@@ -200,12 +200,30 @@ async function loadProviders() {
           <strong>Ready:</strong> Credentials set. Click "Connect Now" to fetch today's token.
         </div>`;
       } else if (health.has_token && p.provider === 'dhan') {
-        const days = health.days_remaining;
-        const warnCls = health.warn_expiry ? 'text-rose-400' : 'text-emerald-400';
-        healthHtml = `<div class="mt-3 p-2 rounded bg-slate-800/50 border border-slate-700/50 text-xs flex justify-between">
-          <span class="text-slate-400">Token expires in:</span>
-          <span class="font-bold ${warnCls}">${days} day${days !== 1 ? 's' : ''}</span>
-        </div>`;
+        if (health.token_expired || health.token_api_valid === false) {
+          // Token is live-confirmed EXPIRED via Dhan API
+          healthHtml = `
+            <div class="mt-3 p-3 rounded bg-rose-500/15 border border-rose-500/40 text-xs">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-rose-400 font-bold">&#9888; Dhan Token EXPIRED</span>
+              </div>
+              <p class="text-rose-300/80">Your access token has been rejected by Dhan (HTTP 401). 
+                Dhan tokens last 30 days and must be regenerated manually.</p>
+              <p class="text-amber-300/80 mt-1">
+                Go to <strong>app.dhan.co → API → Access Token</strong>, generate a new token, 
+                then click <strong>Configure &amp; Connect</strong> to paste it here.
+              </p>
+            </div>`;
+        } else {
+          const days = health.days_remaining;
+          const validBadge = health.token_api_valid === true
+            ? '<span class="text-emerald-400 ml-2">&#10003; API-Verified</span>' : '';
+          const warnCls = health.warn_expiry ? 'text-amber-400' : 'text-emerald-400';
+          healthHtml = `<div class="mt-3 p-2 rounded bg-slate-800/50 border border-slate-700/50 text-xs flex justify-between items-center">
+            <span class="text-slate-400">Token expires in:</span>
+            <span class="font-bold ${warnCls}">${days} day${days !== 1 ? 's' : ''}${validBadge}</span>
+          </div>`;
+        }
       } else if (health.has_token && p.provider === 'upstox') {
         const freshCls = health.token_fresh ? 'text-emerald-400' : 'text-rose-400';
         const freshText = health.token_fresh ? `Valid (${health.expires_in} left)` : 'Expired — reconnect now';

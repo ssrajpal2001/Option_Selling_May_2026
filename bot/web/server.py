@@ -529,10 +529,33 @@ async def _global_provider_scheduler():
             logger.error(f"[Scheduler] Global provider scheduler error: {e}")
             await asyncio.sleep(60)
 
+async def _startup_auto_connect():
+    """
+    On bot startup, wait a few seconds for the server to fully initialise, then
+    attempt to connect both global data feeders automatically.  This means the
+    admin never needs to click 'Connect Now' after a restart.
+    """
+    await asyncio.sleep(5)           # let Uvicorn finish startup
+    logger.info("[Startup] Auto-connecting global data providers...")
+    try:
+        from web.admin_api import global_provider_connect_background
+        for p in ('upstox', 'dhan'):
+            try:
+                result = await global_provider_connect_background(p, admin={"id": 0})
+                status = "OK" if result.get("success") else f"FAILED: {result.get('message','')}"
+                logger.info(f"[Startup] Auto-connect {p}: {status}")
+            except Exception as _e:
+                logger.error(f"[Startup] Auto-connect {p} error: {_e}")
+    except Exception as e:
+        logger.error(f"[Startup] Auto-connect task error: {e}")
+
+
 @app.on_event("startup")
 async def startup_event():
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
     _seed_global_providers_from_ini()
+    # Immediately try to connect both feeders in background (non-blocking)
+    asyncio.create_task(_startup_auto_connect())
     # Background morning scheduler (runs daily at 08:30 AM IST)
     asyncio.create_task(_global_provider_scheduler())
 

@@ -170,7 +170,14 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             return {"success": True, "message": f"{provider.capitalize()} background login successful."}
         else:
             logger.warning(f"Background login for {provider} returned no token.")
-            return {"success": False, "message": f"Background login failed for {provider.capitalize()}. Check credentials and TOTP seed."}
+            if provider == 'dhan':
+                msg = ("Dhan token invalid or expired. Your 30-day access token must be manually regenerated "
+                       "on the Dhan portal (app.dhan.co → API → Access Token), then saved here.")
+            elif provider == 'upstox':
+                msg = "Upstox login failed. Check your User ID, Password, and TOTP secret in the configure panel."
+            else:
+                msg = f"{provider.capitalize()} login returned no token. Verify credentials."
+            return {"success": False, "message": msg}
 
     except Exception as e:
         logger.error(f"[Admin] Background {provider} auth error: {e}")
@@ -986,5 +993,26 @@ async def feeder_health_status(admin=Depends(require_admin)):
                     info["warn_expiry"] = 0 < days_remaining <= 5
             except Exception:
                 pass
+
+        # ── Dhan: live API token validation (quick check, timeout=5s) ──────
+        if p["provider"] == "dhan" and p.get("access_token_encrypted"):
+            try:
+                import requests as _req
+                _tok = decrypt_secret(p.get("access_token_encrypted", ""))
+                _cid = decrypt_secret(p.get("api_key_encrypted", ""))
+                _r = _req.get(
+                    'https://api.dhan.co/v2/fundlimit',
+                    headers={'access-token': _tok, 'client-id': _cid, 'Content-Type': 'application/json'},
+                    timeout=5
+                )
+                info["token_api_valid"] = (_r.status_code == 200)
+                info["token_api_status"] = _r.status_code
+                if _r.status_code == 401:
+                    info["token_fresh"] = False  # override — token is confirmed dead
+                    info["token_expired"] = True
+                    info["warn_expiry"] = False  # expired, not just warn
+            except Exception as _ve:
+                info["token_api_valid"] = None  # couldn't check (network/timeout)
+
         result[p["provider"]] = info
     return result
