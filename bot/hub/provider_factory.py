@@ -158,11 +158,16 @@ class ProviderFactory:
                             db_execute("UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='upstox'", (enc_token, now_str))
                             logger.info("Global Upstox token auto-refreshed successfully.")
 
-                    # Create a specialized Upstox REST client for this global feed
+                    # Minimal auth handler for global Upstox — satisfies RestApiClient + WebSocketManager
+                    class _ConfigStub:
+                        def get_boolean(self, *args, **kwargs): return False
+                        def get(self, *args, **kwargs): return kwargs.get('fallback', None)
+
                     class GlobalUpstoxAuth:
-                        def __init__(self, key, token):
+                        config_manager = _ConfigStub()
+                        def __init__(self, key, tok):
                             self.key = key
-                            self.token = token
+                            self.token = tok
                         def get_access_token(self): return self.token
 
                     global_auth = GlobalUpstoxAuth(api_key, access_token)

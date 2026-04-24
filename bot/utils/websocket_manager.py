@@ -506,15 +506,24 @@ class WebSocketManager(DataFeed):
     def refresh_credentials(self, access_token: str, api_key: str = None) -> None:
         """
         Update the access token on the live auth object so the next reconnect uses it.
-        Closes the current WS connection to force an immediate reconnect with the new token.
+        RestApiClient stores credentials under auth_handler; WebSocketManager's _get_auth_uri
+        reads active_client.auth_handler.get_access_token(). We update auth_handler.token in-place.
         """
-        if self.api_client and hasattr(self.api_client, 'auth'):
-            self.api_client.auth.token = access_token
-            logger.info("[WebSocketManager] Upstox auth token refreshed in-place.")
+        updated = False
+        if self.api_client and hasattr(self.api_client, 'auth_handler'):
+            auth = self.api_client.auth_handler
+            if hasattr(auth, 'token'):
+                auth.token = access_token
+                updated = True
+            elif hasattr(auth, '_token'):
+                auth._token = access_token
+                updated = True
+            if updated:
+                logger.info("[WebSocketManager] Upstox auth_handler token refreshed in-place.")
         if self.api_client_manager and hasattr(self.api_client_manager, 'set_access_token'):
             self.api_client_manager.set_access_token(access_token)
             logger.info("[WebSocketManager] Upstox api_client_manager token updated.")
-        # Force reconnect by closing the current connection
+        # Force reconnect by closing the current connection so auth re-runs with new token
         if self.websocket and self.is_connected:
             asyncio.create_task(self._force_reconnect())
 

@@ -58,7 +58,7 @@ class DualFeedManager(DataFeed):
             tick['atp'] = float(data.get('atp') or data.get('avg_price'))
 
         # Publish to Event Bus. PriceFeedHandler listens for this.
-        logger.info(f"DEBUG: DualFeedManager dispatching global Dhan tick for {inst_key}: LTP={ltp}")
+        logger.debug(f"DualFeedManager dispatching global Dhan tick for {inst_key}: LTP={ltp}")
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)
 
     def subscribe(self, symbols, mode='full'):

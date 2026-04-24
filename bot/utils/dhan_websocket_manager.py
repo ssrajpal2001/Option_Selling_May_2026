@@ -122,11 +122,11 @@ class DhanWebSocketManager(DataFeed):
             import time as _time
             self._last_tick_epoch = _time.time()
 
-            # Debug logging for Dhan ticks
+            # Throttled debug logging for Dhan ticks (not on hot path)
             sid = processed.get('security_id') or processed.get('SecurityId')
             ltp = processed.get('LTP') or processed.get('last_price')
             if sid and ltp:
-                logger.info(f"[Dhan-DEBUG] Received global tick: SID={sid}, LTP={ltp}")
+                logger.debug(f"[Dhan] Global tick: SID={sid}, LTP={ltp}")
 
             # Pass to handlers (e.g. DualFeedManager)
             for h in self.message_handlers:
