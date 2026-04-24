@@ -96,7 +96,38 @@ async def get_broker_config(user=Depends(get_current_user)):
         else:
             d["token_fresh"] = _is_token_fresh(d.get("token_updated_at"))
         result.append(d)
-    return {"instances": result, "max_brokers": user["max_broker_instances"]}
+    # Resolve plan info + effective broker cap (handles plan expiry)
+    from datetime import datetime, timezone as _tz
+    now_utc = datetime.now(_tz.utc)
+    expiry_str = user.get("plan_expiry_date")
+    plan_expired = False
+    if expiry_str:
+        try:
+            exp = datetime.fromisoformat(expiry_str)
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=_tz.utc)
+            plan_expired = now_utc > exp
+        except Exception:
+            pass
+    effective_max = 1 if plan_expired else (user.get("max_broker_instances") or 1)
+
+    # Fetch plan display info
+    plan_info = None
+    if user.get("plan_id"):
+        from web.db import db_fetchone as _dbf
+        plan_info = _dbf("SELECT plan_name, display_name, max_broker_instances FROM subscription_plans WHERE id=?", (user["plan_id"],))
+
+    return {
+        "instances": result,
+        "max_brokers": effective_max,
+        "plan": {
+            "name": plan_info["display_name"] if plan_info else (user.get("subscription_tier") or "Basic"),
+            "slug": plan_info["plan_name"] if plan_info else (user.get("subscription_tier") or "BASIC"),
+            "max_brokers": effective_max,
+            "expiry_date": expiry_str,
+            "expired": plan_expired,
+        }
+    }
 
 
 @router.delete("/broker/{broker}")
@@ -145,14 +176,27 @@ async def save_broker_config(body: BrokerSetup, user=Depends(get_current_user)):
     existing = db_fetchall(
         "SELECT id FROM client_broker_instances WHERE client_id=? AND status != 'removed'", (user["id"],)
     )
-    max_b = user["max_broker_instances"]
+    # Effective max brokers — respects plan expiry
+    from datetime import datetime, timezone as _tz2
+    _exp_str = user.get("plan_expiry_date")
+    _plan_expired = False
+    if _exp_str:
+        try:
+            _exp = datetime.fromisoformat(_exp_str)
+            if _exp.tzinfo is None: _exp = _exp.replace(tzinfo=_tz2.utc)
+            _plan_expired = datetime.now(_tz2.utc) > _exp
+        except Exception: pass
+    max_b = 1 if _plan_expired else (user.get("max_broker_instances") or 1)
+
     if len(existing) >= max_b:
         existing_broker = db_fetchone(
             "SELECT id FROM client_broker_instances WHERE client_id=? AND broker=? AND status != 'removed'",
             (user["id"], body.broker)
         )
         if not existing_broker:
-            raise HTTPException(400, f"Your plan allows {max_b} broker(s). Upgrade to Premium for more.")
+            if _plan_expired:
+                raise HTTPException(400, "Your plan has expired. Broker slots are capped at 1. Contact admin to renew.")
+            raise HTTPException(400, f"Your plan allows {max_b} broker(s). Contact admin to upgrade your plan.")
 
     if body.trading_mode not in ("paper", "live"):
         raise HTTPException(400, "trading_mode must be 'paper' or 'live'")

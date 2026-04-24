@@ -128,6 +128,14 @@ async def admin_strategy(request: Request):
     return templates.TemplateResponse(request, "strategy.html")
 
 
+@app.get("/admin/audit-log", response_class=HTMLResponse)
+async def admin_audit_log(request: Request):
+    user = _get_user_from_request(request)
+    if not user or user["role"] != "admin":
+        return RedirectResponse("/login")
+    return templates.TemplateResponse(request, "admin_audit_log.html")
+
+
 
 
 # ─── Client Pages ─────────────────────────────────────────────────────────────

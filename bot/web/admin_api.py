@@ -417,13 +417,34 @@ async def deactivate_client(client_id: int, admin=Depends(require_admin)):
     return {"success": True, "message": f"Client '{user['username']}' deactivated."}
 
 
+def _resolve_effective_max_brokers(user: dict) -> int:
+    """
+    Returns the effective max_broker_instances for a user.
+    Respects plan expiry: if plan_expiry_date is set and has passed, falls back to BASIC (1).
+    """
+    # Check plan expiry
+    expiry_str = user.get("plan_expiry_date")
+    if expiry_str:
+        try:
+            exp = datetime.fromisoformat(expiry_str)
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) > exp:
+                # Plan expired — fall back to BASIC (1 broker)
+                return 1
+        except Exception:
+            pass
+    return user.get("max_broker_instances") or 1
+
+
 @router.post("/clients/{client_id}/set-tier")
 async def set_subscription_tier(client_id: int, request: Request, admin=Depends(require_admin)):
     body = await request.json()
-    tier = body.get("tier", "FREE")
     plan_id = body.get("plan_id")
+    tier = body.get("tier", "BASIC")
+    plan_expiry_date = body.get("plan_expiry_date")  # ISO date string or None
 
-    # Lookup max_broker_instances from plans table first, fall back to hard-coded defaults
+    # Lookup plan from DB
     if plan_id:
         plan = db_fetchone("SELECT * FROM subscription_plans WHERE id=? AND is_active=1", (plan_id,))
     else:
@@ -432,22 +453,44 @@ async def set_subscription_tier(client_id: int, request: Request, admin=Depends(
     if plan:
         max_broker_instances = plan["max_broker_instances"]
         tier = plan["plan_name"]
+        plan_id = plan["id"]
     else:
-        # Fallback hard-coded values
-        max_broker_instances = {"FREE": 1, "PREMIUM": 3, "PRO": 5}.get(tier, 1)
+        max_broker_instances = {"FREE": 1, "BASIC": 1, "STANDARD": 2, "PREMIUM": 3, "PRO": 5, "ENTERPRISE": 999}.get(tier, 1)
 
     db_execute(
-        "UPDATE users SET subscription_tier=?, max_broker_instances=? WHERE id=?",
-        (tier, max_broker_instances, client_id)
+        "UPDATE users SET subscription_tier=?, max_broker_instances=?, plan_id=?, plan_expiry_date=? WHERE id=?",
+        (tier, max_broker_instances, plan_id, plan_expiry_date, client_id)
     )
-    return {"success": True, "tier": tier, "max_broker_instances": max_broker_instances}
+    # Audit log
+    try:
+        user = db_fetchone("SELECT username FROM users WHERE id=?", (client_id,))
+        import json as _json
+        _uname = user.get("username", "") if user else ""
+        _details = _json.dumps({"plan": tier, "max_brokers": max_broker_instances, "expiry": plan_expiry_date, "user": _uname})
+        db_execute(
+            "INSERT INTO audit_log (actor_id, actor_role, action, target_type, target_id, details) VALUES (?,?,?,?,?,?)",
+            (admin["id"], "admin", "set_tier", "user", client_id, _details)
+        )
+    except Exception:
+        pass
+    return {"success": True, "tier": tier, "plan_id": plan_id, "max_broker_instances": max_broker_instances}
 
 
 @router.get("/clients/{client_id}/detail")
 async def client_detail(client_id: int, admin=Depends(require_admin)):
-    user = db_fetchone("SELECT id, username, email, is_active, subscription_tier, max_broker_instances, created_at FROM users WHERE id=?", (client_id,))
+    user = db_fetchone("""
+        SELECT u.id, u.username, u.email, u.is_active, u.subscription_tier,
+               u.max_broker_instances, u.plan_id, u.plan_expiry_date, u.created_at,
+               sp.display_name AS plan_display_name, sp.max_broker_instances AS plan_max_brokers,
+               sp.plan_name AS plan_slug
+        FROM users u
+        LEFT JOIN subscription_plans sp ON sp.id = u.plan_id
+        WHERE u.id=?
+    """, (client_id,))
     if not user:
         raise HTTPException(404, "Client not found")
+    # Effective broker cap (considers plan expiry)
+    user["effective_max_brokers"] = _resolve_effective_max_brokers(user)
     instances = db_fetchall("""
         SELECT id, broker, trading_mode, instrument, quantity, strategy_version,
                status, bot_pid, last_heartbeat, token_updated_at, created_at
@@ -1016,3 +1059,151 @@ async def feeder_health_status(admin=Depends(require_admin)):
 
         result[p["provider"]] = info
     return result
+
+
+# ── Audit Log ────────────────────────────────────────────────────────────────
+
+@router.get("/audit-log")
+async def get_audit_log(
+    admin=Depends(require_admin),
+    page: int = 1,
+    per_page: int = 50,
+    action: str = None,
+    username: str = None,
+    from_date: str = None,
+    to_date: str = None,
+):
+    """Paginated audit log with filters for action, target username, and date range."""
+    offset = (page - 1) * per_page
+    conditions = []
+    params: list = []
+
+    if action:
+        conditions.append("al.action LIKE ?")
+        params.append(f"%{action}%")
+    if username:
+        conditions.append("tu.username LIKE ?")
+        params.append(f"%{username}%")
+    if from_date:
+        conditions.append("DATE(al.created_at) >= ?")
+        params.append(from_date)
+    if to_date:
+        conditions.append("DATE(al.created_at) <= ?")
+        params.append(to_date)
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    rows = db_fetchall(f"""
+        SELECT al.id, al.action, al.target_type, al.target_id, al.details,
+               al.created_at, al.actor_role, al.ip_address,
+               au.username AS admin_username,
+               tu.username AS target_username,
+               al.target_id  AS target_client_id
+        FROM audit_log al
+        LEFT JOIN users au ON au.id = al.actor_id
+        LEFT JOIN users tu ON tu.id = al.target_id
+        {where}
+        ORDER BY al.created_at DESC
+        LIMIT ? OFFSET ?
+    """, params + [per_page, offset])
+
+    total_row = db_fetchone(
+        f"SELECT COUNT(*) as c FROM audit_log al LEFT JOIN users tu ON tu.id = al.target_id {where}", params
+    )
+    total = total_row["c"] if total_row else 0
+
+    from datetime import date as _date
+    today_str = str(_date.today())
+    today_row = db_fetchone("SELECT COUNT(*) as c FROM audit_log WHERE DATE(created_at)=?", (today_str,))
+    today_count = today_row["c"] if today_row else 0
+
+    return {
+        "items": rows,
+        "total": total,
+        "today_count": today_count,
+        "page": page,
+        "per_page": per_page,
+    }
+
+
+# ── System Health ─────────────────────────────────────────────────────────────
+
+@router.get("/system-health")
+async def system_health(admin=Depends(require_admin)):
+    """Returns server uptime, process metrics, event loop state, and feed tick times."""
+    import os, time, datetime as _dt
+    import psutil
+
+    info: dict = {}
+
+    # Uptime
+    try:
+        proc = psutil.Process(os.getpid())
+        started_at = proc.create_time()
+        uptime_secs = time.time() - started_at
+        hrs, rem = divmod(int(uptime_secs), 3600)
+        mins, secs = divmod(rem, 60)
+        info["uptime"] = f"{hrs}h {mins}m {secs}s"
+        info["uptime_seconds"] = uptime_secs
+        info["started_at"] = _dt.datetime.fromtimestamp(started_at, tz=timezone.utc).isoformat()
+    except Exception as _e:
+        info["uptime"] = "unavailable"
+
+    # CPU / Memory
+    try:
+        info["cpu_percent"] = psutil.cpu_percent(interval=0.1)
+        vm = psutil.virtual_memory()
+        info["memory_used_mb"] = round(vm.used / 1024 / 1024, 1)
+        info["memory_total_mb"] = round(vm.total / 1024 / 1024, 1)
+        info["memory_percent"] = vm.percent
+    except Exception:
+        pass
+
+    # Python process count
+    try:
+        info["python_process_count"] = sum(
+            1 for p in psutil.process_iter(['name']) if 'python' in (p.info.get('name') or '').lower()
+        )
+    except Exception:
+        info["python_process_count"] = None
+
+    # Event loop health
+    import asyncio
+    loop = asyncio.get_event_loop()
+    info["event_loop_running"] = loop.is_running()
+    info["event_loop_closed"] = loop.is_closed()
+
+    # Feed tick times (from feed_registry)
+    try:
+        from hub.feed_registry import get_ws_state
+        for feed_name in ("upstox", "dhan"):
+            ws = get_ws_state(feed_name)
+            last = ws.get("last_tick_time")
+            if last:
+                age = time.time() - last
+                info[f"{feed_name}_last_tick_secs_ago"] = round(age, 1)
+                info[f"{feed_name}_ws_connected"] = ws["ws_connected"]
+            else:
+                info[f"{feed_name}_last_tick_secs_ago"] = None
+                info[f"{feed_name}_ws_connected"] = ws["ws_connected"]
+    except Exception:
+        pass
+
+    # Active client bots
+    try:
+        running = db_fetchone("SELECT COUNT(*) as c FROM client_broker_instances WHERE status='running'")
+        info["active_bots"] = running["c"] if running else 0
+    except Exception:
+        info["active_bots"] = 0
+
+    # Total clients + active
+    try:
+        tot = db_fetchone("SELECT COUNT(*) as c FROM users WHERE role='client'")
+        act = db_fetchone("SELECT COUNT(*) as c FROM users WHERE role='client' AND is_active=1")
+        info["total_clients"] = tot["c"] if tot else 0
+        info["active_clients"] = act["c"] if act else 0
+    except Exception:
+        pass
+
+    info["timestamp"] = _dt.datetime.now(timezone.utc).isoformat()
+    return info

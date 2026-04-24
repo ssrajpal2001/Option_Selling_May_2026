@@ -51,3 +51,4 @@ bcrypt==4.1.2
 python-jose[cryptography]
 upstox-totp
 Dhan-Tradehull
+psutil>=5.9.0

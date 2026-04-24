@@ -196,6 +196,14 @@ def _migrate(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE subscription_plans ADD COLUMN description TEXT DEFAULT ''")
     if plan_cols and "is_active" not in plan_cols:
         conn.execute("ALTER TABLE subscription_plans ADD COLUMN is_active INTEGER DEFAULT 1")
+    if plan_cols and "price_monthly" not in plan_cols:
+        conn.execute("ALTER TABLE subscription_plans ADD COLUMN price_monthly REAL DEFAULT 0")
+
+    # Migration: add plan_id and plan_expiry_date to users
+    if "plan_id" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN plan_id INTEGER REFERENCES subscription_plans(id)")
+    if "plan_expiry_date" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN plan_expiry_date TEXT")
 
     conn.commit()
 
@@ -219,18 +227,44 @@ def _seed(conn: sqlite3.Connection):
         "INSERT OR IGNORE INTO data_providers (provider, status) VALUES ('dhan', 'not_configured')"
     )
 
-    # Seed default subscription plans
+    # Seed default subscription plans (use REPLACE only for new seeds; keep existing data intact)
+    for row in [
+        ('BASIC',      'Basic',      1,   0,    'Starter — 1 broker connection'),
+        ('STANDARD',   'Standard',   2,   999,  'Standard — up to 2 broker connections'),
+        ('PREMIUM',    'Premium',    3,   1999, 'Premium — up to 3 simultaneous brokers'),
+        ('ENTERPRISE', 'Enterprise', 999, 4999, 'Enterprise — unlimited broker connections'),
+        # Legacy names kept for backward compat
+        ('FREE', 'Free', 1, 0, 'Basic access with 1 broker connection'),
+        ('PRO',  'Pro',  5, 2999, 'Pro access with up to 5 simultaneous brokers'),
+    ]:
+        conn.execute("""
+            INSERT OR IGNORE INTO subscription_plans
+                (plan_name, display_name, max_broker_instances, price_monthly, description)
+            VALUES (?,?,?,?,?)
+        """, row)
+
+    # Ensure price_monthly column exists on plans already seeded without it
+    try:
+        conn.execute("UPDATE subscription_plans SET price_monthly=999 WHERE plan_name='STANDARD' AND price_monthly=0 AND plan_name!='FREE'")
+    except Exception:
+        pass
+
+    # Backfill: assign plan_id to clients that don't have one yet
+    # Match on subscription_tier → plan_name; fall back to BASIC
     conn.execute("""
-        INSERT OR IGNORE INTO subscription_plans (plan_name, display_name, max_broker_instances, description)
-        VALUES ('FREE', 'Free', 1, 'Basic access with 1 broker connection')
+        UPDATE users SET plan_id = (
+            SELECT sp.id FROM subscription_plans sp
+            WHERE sp.plan_name = users.subscription_tier AND sp.is_active = 1
+            LIMIT 1
+        )
+        WHERE plan_id IS NULL AND role = 'client'
     """)
+    # Any still-null → assign BASIC
     conn.execute("""
-        INSERT OR IGNORE INTO subscription_plans (plan_name, display_name, max_broker_instances, description)
-        VALUES ('PREMIUM', 'Premium', 3, 'Premium access with up to 3 simultaneous brokers')
-    """)
-    conn.execute("""
-        INSERT OR IGNORE INTO subscription_plans (plan_name, display_name, max_broker_instances, description)
-        VALUES ('PRO', 'Pro', 5, 'Pro access with up to 5 simultaneous brokers')
+        UPDATE users SET plan_id = (
+            SELECT id FROM subscription_plans WHERE plan_name = 'BASIC' LIMIT 1
+        )
+        WHERE plan_id IS NULL AND role = 'client'
     """)
     conn.commit()
 

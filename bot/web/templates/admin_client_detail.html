@@ -48,6 +48,45 @@
     </div>
   </div>
 
+  <!-- ── Plan Assignment ─────────────────────────────────────────────────── -->
+  <div class="card p-4 mb-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Subscription Plan</div>
+      <span id="plan-expiry-badge" class="text-xs px-2 py-0.5 rounded" style="display:none"></span>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
+        <div class="text-xs" style="color:#64748b">Current Plan</div>
+        <div id="plan-current" class="text-white font-bold mt-0.5">--</div>
+      </div>
+      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
+        <div class="text-xs" style="color:#64748b">Broker Slots</div>
+        <div id="plan-slots" class="text-white font-bold mt-0.5">--</div>
+      </div>
+      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
+        <div class="text-xs" style="color:#64748b">Slots Used</div>
+        <div id="plan-used" class="text-white font-bold mt-0.5">--</div>
+      </div>
+      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
+        <div class="text-xs" style="color:#64748b">Expires</div>
+        <div id="plan-expiry-date" class="text-white font-bold mt-0.5">--</div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3 items-end">
+      <div class="flex-1 min-w-40">
+        <label class="field-label">Assign Plan</label>
+        <select id="plan-select" class="input-field"></select>
+      </div>
+      <div class="flex-1 min-w-40">
+        <label class="field-label">Expiry Date (optional)</label>
+        <input type="date" id="plan-expiry-input" class="input-field">
+      </div>
+      <button onclick="assignPlan()" class="btn-primary px-5 py-2 text-sm font-bold whitespace-nowrap">Save Plan</button>
+      <button onclick="clearExpiry()" class="btn-ghost px-4 py-2 text-xs whitespace-nowrap">Clear Expiry</button>
+    </div>
+  </div>
+
   <div class="card p-4 mb-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Broker Change Requests</div>
     <div id="bcr-detail-list" style="color:#64748b;font-size:13px">Loading...</div>
@@ -280,6 +319,41 @@ function showClientTab(tab) {
   if (tab === 'monitor') loadBotStatus();
 }
 
+let _allPlans = [];
+async function loadPlans() {
+  const r = await fetch('/api/admin/plans');
+  _allPlans = await r.json();
+  const sel = document.getElementById('plan-select');
+  sel.innerHTML = _allPlans.filter(p => p.is_active).map(p =>
+    `<option value="${p.id}">${p.display_name} (${p.max_broker_instances === 999 ? '∞' : p.max_broker_instances} broker${p.max_broker_instances !== 1 ? 's' : ''})</option>`
+  ).join('');
+}
+
+async function assignPlan() {
+  const planId = parseInt(document.getElementById('plan-select').value);
+  const expiry = document.getElementById('plan-expiry-input').value || null;
+  const r = await fetch(`/api/admin/clients/${clientId}/set-tier`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ plan_id: planId, plan_expiry_date: expiry ? expiry + 'T23:59:59Z' : null })
+  });
+  const d = await r.json();
+  showToast(d.success ? `Plan updated to ${d.tier} (${d.max_broker_instances} broker slots)` : (d.detail || 'Error'), d.success ? 'success' : 'error');
+  if (d.success) loadDetail();
+}
+
+async function clearExpiry() {
+  const planId = parseInt(document.getElementById('plan-select').value);
+  const r = await fetch(`/api/admin/clients/${clientId}/set-tier`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ plan_id: planId, plan_expiry_date: null })
+  });
+  const d = await r.json();
+  showToast(d.success ? 'Plan expiry cleared' : 'Error', d.success ? 'success' : 'error');
+  if (d.success) { document.getElementById('plan-expiry-input').value = ''; loadDetail(); }
+}
+
 async function loadDetail() {
   const r = await fetch(`/api/admin/clients/${clientId}/detail`);
   const d = await r.json();
@@ -289,8 +363,41 @@ async function loadDetail() {
   document.getElementById('client-email').textContent = c.email;
   document.getElementById('d-status').innerHTML = c.is_active
     ? '<span class="badge-ok">Active</span>' : '<span class="badge-warn">Pending</span>';
-  document.getElementById('d-tier').textContent = c.subscription_tier;
+  document.getElementById('d-tier').textContent = c.plan_display_name || c.subscription_tier;
   document.getElementById('d-joined').textContent = (c.created_at||'').substring(0,10);
+
+  // Plan section
+  const effMax = c.effective_max_brokers || c.max_broker_instances || 1;
+  const usedCount = (d.instances || []).length;
+  document.getElementById('plan-current').textContent = c.plan_display_name || c.subscription_tier || '--';
+  document.getElementById('plan-slots').textContent = effMax === 999 ? '∞ (Unlimited)' : effMax;
+  document.getElementById('plan-used').innerHTML = `<span style="color:${usedCount >= effMax ? '#f87171' : '#34d399'}">${usedCount}</span> / ${effMax === 999 ? '∞' : effMax}`;
+  // Expiry
+  const expiryEl = document.getElementById('plan-expiry-date');
+  const expiryBadge = document.getElementById('plan-expiry-badge');
+  if (c.plan_expiry_date) {
+    const exp = new Date(c.plan_expiry_date);
+    const isExpired = exp < new Date();
+    expiryEl.textContent = exp.toLocaleDateString();
+    expiryEl.style.color = isExpired ? '#f87171' : (exp - Date.now() < 7 * 86400000 ? '#fb923c' : '#34d399');
+    expiryBadge.style.display = '';
+    expiryBadge.textContent = isExpired ? '⚠ EXPIRED' : 'Expires soon';
+    expiryBadge.style.background = isExpired ? '#450a0a' : '#3b1f00';
+    expiryBadge.style.color = isExpired ? '#f87171' : '#fb923c';
+  } else {
+    expiryEl.textContent = 'No expiry';
+    expiryEl.style.color = '#64748b';
+    expiryBadge.style.display = 'none';
+  }
+  // Pre-select current plan in dropdown
+  if (c.plan_id) {
+    const sel = document.getElementById('plan-select');
+    [...sel.options].forEach(o => { o.selected = parseInt(o.value) === c.plan_id; });
+  }
+  // Pre-fill expiry input
+  if (c.plan_expiry_date) {
+    document.getElementById('plan-expiry-input').value = c.plan_expiry_date.substring(0, 10);
+  }
 
   const activeBtn = document.getElementById('toggle-active-btn');
   if (c.is_active) {
@@ -654,6 +761,7 @@ async function denyBCR(id) {
   loadDetail();
 }
 
+loadPlans();
 loadDetail();
 loadBotStatus();
 setInterval(loadBotStatus, 5000);

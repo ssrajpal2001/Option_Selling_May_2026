@@ -58,6 +58,69 @@
   <div id="bcr-list" style="color:#64748b;font-size:13px">No pending requests.</div>
 </div>
 
+<!-- ── System Health ─────────────────────────────────────────────────────── -->
+<div class="card p-4 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">System Health</span>
+    <span id="health-updated" class="text-xs" style="color:#475569">--</span>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Uptime</div>
+      <div id="h-uptime" class="text-white font-bold text-sm">--</div>
+    </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">CPU Usage</div>
+      <div id="h-cpu" class="font-bold text-sm">--</div>
+    </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Memory</div>
+      <div id="h-mem" class="font-bold text-sm">--</div>
+    </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Feed Ticks (1m)</div>
+      <div id="h-ticks" class="font-bold text-sm">--</div>
+    </div>
+  </div>
+  <!-- CPU bar -->
+  <div class="mb-3">
+    <div class="flex justify-between text-xs mb-1" style="color:#64748b">
+      <span>CPU</span><span id="h-cpu-pct">--%</span>
+    </div>
+    <div class="rounded-full overflow-hidden" style="background:#1e293b;height:6px">
+      <div id="h-cpu-bar" class="h-full rounded-full transition-all" style="width:0%;background:#00d4aa"></div>
+    </div>
+  </div>
+  <!-- Memory bar -->
+  <div class="mb-4">
+    <div class="flex justify-between text-xs mb-1" style="color:#64748b">
+      <span>Memory</span><span id="h-mem-pct">--%</span>
+    </div>
+    <div class="rounded-full overflow-hidden" style="background:#1e293b;height:6px">
+      <div id="h-mem-bar" class="h-full rounded-full transition-all" style="width:0%;background:#818cf8"></div>
+    </div>
+  </div>
+  <!-- Feed status -->
+  <div class="grid grid-cols-2 gap-3">
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Primary Feed</div>
+      <div id="h-feed-primary" class="text-xs font-bold">--</div>
+    </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Backup Feed</div>
+      <div id="h-feed-backup" class="text-xs font-bold">--</div>
+    </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Active Bots</div>
+      <div id="h-active-bots" class="text-white font-bold">--</div>
+    </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Python Procs</div>
+      <div id="h-python-procs" class="text-white font-bold">--</div>
+    </div>
+  </div>
+</div>
+
 <div class="card p-4">
   <div class="flex items-center justify-between mb-3">
     <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">All Clients</span>
@@ -213,5 +276,75 @@ async function denyBCR(id) {
 
 loadOverview();
 setInterval(loadOverview, 10000);
+
+async function loadHealth() {
+  try {
+    const r = await fetch('/api/admin/system-health');
+    if (!r.ok) return;
+    const h = r.status === 200 ? await r.json() : null;
+    if (!h) return;
+
+    // Uptime
+    const s = h.uptime_seconds || 0;
+    const hrs = Math.floor(s / 3600), mins = Math.floor((s % 3600) / 60);
+    document.getElementById('h-uptime').textContent = `${hrs}h ${mins}m`;
+
+    // CPU
+    const cpu = h.cpu_percent || 0;
+    const cpuColor = cpu > 80 ? '#f87171' : cpu > 60 ? '#fb923c' : '#00d4aa';
+    document.getElementById('h-cpu').textContent = cpu.toFixed(1) + '%';
+    document.getElementById('h-cpu').style.color = cpuColor;
+    document.getElementById('h-cpu-pct').textContent = cpu.toFixed(1) + '%';
+    document.getElementById('h-cpu-bar').style.width = Math.min(cpu, 100) + '%';
+    document.getElementById('h-cpu-bar').style.background = cpuColor;
+
+    // Memory (flat fields from API)
+    const memPct = h.memory_percent || 0;
+    const memColor = memPct > 85 ? '#f87171' : memPct > 70 ? '#fb923c' : '#818cf8';
+    const memUsed = h.memory_used_mb ? (h.memory_used_mb / 1024).toFixed(1) + ' GB' : '--';
+    const memTotal = h.memory_total_mb ? (h.memory_total_mb / 1024).toFixed(1) + ' GB' : '--';
+    document.getElementById('h-mem').textContent = `${memUsed} / ${memTotal}`;
+    document.getElementById('h-mem').style.color = memColor;
+    document.getElementById('h-mem-pct').textContent = memPct.toFixed(1) + '%';
+    document.getElementById('h-mem-bar').style.width = Math.min(memPct, 100) + '%';
+    document.getElementById('h-mem-bar').style.background = memColor;
+
+    // Feed ticks — derive from last tick seconds ago
+    const upstoxSecs = h.upstox_last_tick_secs_ago;
+    const dhanSecs = h.dhan_last_tick_secs_ago;
+    const bestSecs = [upstoxSecs, dhanSecs].filter(v => v != null).reduce((a, b) => Math.min(a, b), Infinity);
+    const ticksEl = document.getElementById('h-ticks');
+    if (bestSecs === Infinity) {
+      ticksEl.textContent = 'No feed';
+      ticksEl.style.color = '#f87171';
+    } else if (bestSecs < 60) {
+      ticksEl.textContent = Math.round(bestSecs) + 's ago';
+      ticksEl.style.color = '#34d399';
+    } else {
+      ticksEl.textContent = (bestSecs / 60).toFixed(1) + 'm ago';
+      ticksEl.style.color = '#fb923c';
+    }
+
+    // Feed providers — flat fields from API
+    function feedBadgeFlat(connected, secsAgo, name) {
+      const stale = secsAgo == null || secsAgo > 60;
+      const ok = connected && !stale;
+      const color = ok ? '#34d399' : connected ? '#fb923c' : '#f87171';
+      const label = ok ? 'LIVE' : connected ? 'STALE' : 'OFFLINE';
+      return `<span style="color:${color};font-weight:700">${label}</span> <span style="color:#64748b;font-size:10px">${name}</span>`;
+    }
+    document.getElementById('h-feed-primary').innerHTML = feedBadgeFlat(h.upstox_ws_connected, h.upstox_last_tick_secs_ago, 'Upstox');
+    document.getElementById('h-feed-backup').innerHTML = feedBadgeFlat(h.dhan_ws_connected, h.dhan_last_tick_secs_ago, 'Dhan');
+
+    // Bots and procs
+    document.getElementById('h-active-bots').textContent = h.active_bots ?? '--';
+    document.getElementById('h-python-procs').textContent = h.python_process_count ?? '--';
+
+    document.getElementById('health-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) {}
+}
+
+loadHealth();
+setInterval(loadHealth, 15000);
 </script>
 {% endblock %}
