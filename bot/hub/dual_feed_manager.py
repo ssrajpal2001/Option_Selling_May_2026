@@ -112,14 +112,24 @@ class DualFeedManager(DataFeed):
             if to_unsub: self.dhan.unsubscribe(to_unsub)
 
     def start(self):
+        from hub.feed_registry import register_feed
         tasks = []
-        if self.upstox: tasks.append(self.upstox.start())
-        if self.dhan: tasks.append(self.dhan.start())
-        # Return a composite task or just gather
+        if self.upstox:
+            register_feed('upstox', self.upstox)
+            tasks.append(self.upstox.start())
+        if self.dhan:
+            register_feed('dhan', self.dhan)
+            tasks.append(self.dhan.start())
+
         async def wait_all():
             if tasks: await asyncio.gather(*tasks)
         return asyncio.create_task(wait_all())
 
     async def close(self):
-        if self.upstox: await self.upstox.close()
-        if self.dhan: await self.dhan.close()
+        from hub.feed_registry import unregister_feed
+        if self.upstox:
+            unregister_feed('upstox')
+            await self.upstox.close()
+        if self.dhan:
+            unregister_feed('dhan')
+            await self.dhan.close()

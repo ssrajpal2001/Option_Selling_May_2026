@@ -168,10 +168,9 @@ class ProviderFactory:
                     global_auth = GlobalUpstoxAuth(api_key, access_token)
                     global_rest = RestApiClient(global_auth)
 
-                    # WebSocketManager expects an api_client_manager usually,
-                    # but we can pass our custom global_rest if we refactor or mock
-                    # For now, if api_client_manager is None, we need to ensure it works.
-                    upstox_ws = WebSocketManager(api_client_manager or global_rest)
+                    # Pass via api_client= kwarg so WebSocketManager uses it as
+                    # a direct RestApiClient rather than an ApiClientManager wrapper.
+                    upstox_ws = WebSocketManager(api_client=global_rest)
                     active_feeds.append(('upstox', upstox_ws))
 
                     if not rest_client: rest_client = global_rest

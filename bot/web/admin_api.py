@@ -155,6 +155,65 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
         logger.error(f"[Admin] Background {provider} auth error: {e}")
         return {"success": False, "message": f"Error: {str(e)}"}
 
+
+@router.post("/data-providers/connect-all")
+async def connect_all_global_providers(admin=Depends(require_admin)):
+    """Connect both Upstox and Dhan simultaneously and return per-provider results."""
+    results = {}
+    for provider in ("upstox", "dhan"):
+        dp = db_fetchone("SELECT * FROM data_providers WHERE provider=?", (provider,))
+        if not dp:
+            results[provider] = {"success": False, "message": "Not configured in DB."}
+            continue
+        try:
+            token = None
+            if provider == "upstox":
+                from utils.auth_manager_upstox import handle_upstox_login_automated
+                creds = {
+                    "api_key": decrypt_secret(dp["api_key_encrypted"]),
+                    "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                    "password": decrypt_secret(dp.get("password_encrypted", "")),
+                    "totp": decrypt_secret(dp.get("totp_encrypted", ""))
+                }
+                token = handle_upstox_login_automated(creds)
+                if token:
+                    _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
+
+            elif provider == "dhan":
+                from utils.auth_manager_dhan import handle_dhan_login_automated
+                creds = {
+                    "api_key": decrypt_secret(dp["api_key_encrypted"]),
+                    "client_id": decrypt_secret(dp["api_key_encrypted"]),
+                    "access_token": (
+                        decrypt_secret(dp.get("access_token_encrypted", "") or "") or
+                        decrypt_secret(dp.get("api_secret_encrypted", "") or "")
+                    ),
+                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "") or ""),
+                    "password": decrypt_secret(dp.get("password_encrypted", "") or ""),
+                    "totp": decrypt_secret(dp.get("totp_encrypted", "") or ""),
+                }
+                token = handle_dhan_login_automated(creds)
+
+            if token:
+                enc_token = encrypt_secret(token)
+                now = datetime.now(timezone.utc).isoformat()
+                db_execute(
+                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider=?",
+                    (enc_token, now, provider)
+                )
+                results[provider] = {"success": True, "message": f"{provider.capitalize()} connected."}
+            else:
+                results[provider] = {"success": False, "message": f"{provider.capitalize()} login returned no token."}
+
+        except Exception as e:
+            logger.error(f"[Admin] connect-all error for {provider}: {e}")
+            results[provider] = {"success": False, "message": str(e)}
+
+    overall = all(v["success"] for v in results.values())
+    return {"success": overall, "results": results}
+
+
 @router.post("/data-providers")
 async def update_data_provider(body: ProviderConfigRequest, admin=Depends(require_admin)):
     try:
@@ -828,12 +887,13 @@ async def delete_subscription_plan(plan_id: int, admin=Depends(require_admin)):
 
 @router.get("/data-providers/health")
 async def feeder_health_status(admin=Depends(require_admin)):
-    """Returns token health and connectivity status for global data providers."""
-    from datetime import datetime, timezone
+    """Returns token health AND live WebSocket connectivity state for global data providers."""
+    from hub.feed_registry import get_ws_state
     providers = db_fetchall("SELECT * FROM data_providers WHERE provider IN ('upstox', 'dhan')")
     now = datetime.now(timezone.utc)
     result = {}
     for p in providers:
+        ws = get_ws_state(p["provider"])
         info = {
             "provider": p["provider"],
             "status": p["status"],
@@ -842,6 +902,9 @@ async def feeder_health_status(admin=Depends(require_admin)):
             "has_credentials": bool(p.get("api_key_encrypted")),
             "token_age_hours": None,
             "token_fresh": False,
+            # Live WebSocket state from feed_registry
+            "ws_connected": ws["ws_connected"],
+            "last_tick_time": ws["last_tick_time"],
         }
         if p.get("updated_at"):
             try:
@@ -850,7 +913,6 @@ async def feeder_health_status(admin=Depends(require_admin)):
                     upd = upd.replace(tzinfo=timezone.utc)
                 age_s = (now - upd).total_seconds()
                 info["token_age_hours"] = round(age_s / 3600, 1)
-                # Upstox token expires daily; Dhan expires in 30 days
                 if p["provider"] == "upstox":
                     info["token_fresh"] = age_s < 86400
                     info["expires_in"] = f"{max(0, 24 - round(age_s/3600, 1))}h"

@@ -54,6 +54,7 @@
       <div class="flex gap-2">
         <button id="master-connect-dhan" onclick="connectGlobalProvider('dhan', this)" class="px-4 py-2 text-xs font-bold rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all">Connect Dhan</button>
         <button id="master-connect-upstox" onclick="connectGlobalProvider('upstox', this)" class="px-4 py-2 text-xs font-bold rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all">Connect Upstox</button>
+        <button id="master-connect-all" onclick="connectAllProviders(this)" class="px-4 py-2 text-xs font-bold rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all">&#9889; Connect Both</button>
       </div>
     </div>
   </div>
@@ -213,6 +214,18 @@ async function loadProviders() {
           <span class="font-bold ${freshCls}">${freshText}</span>
         </div>`;
       }
+
+      // Live WS state row
+      const wsCls = health.ws_connected ? 'text-emerald-400' : 'text-slate-500';
+      const wsText = health.ws_connected ? 'Live &#9679;' : 'Offline &#9675;';
+      const lastTick = health.last_tick_time
+        ? `last tick ${Math.round((Date.now() / 1000 - health.last_tick_time))}s ago`
+        : 'no ticks yet';
+      healthHtml += `<div class="mt-1 p-2 rounded bg-slate-800/30 border border-slate-700/30 text-xs flex justify-between">
+        <span class="text-slate-400">WebSocket:</span>
+        <span class="font-bold ${wsCls}">${wsText}</span>
+        <span class="text-slate-500 ml-2">${lastTick}</span>
+      </div>`;
 
       return `
         <div class="card p-6 flex flex-col justify-between">
@@ -403,6 +416,25 @@ async function connectGlobalProvider(provider, btn) {
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
+  }
+}
+
+async function connectAllProviders(btn) {
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = 'Connecting...';
+  try {
+    const r = await fetch('/api/admin/data-providers/connect-all', { method: 'POST' });
+    const d = await r.json();
+    const results = d.results || {};
+    const msgs = Object.entries(results).map(([p, v]) => `${p}: ${v.message}`).join(' | ');
+    showToast(d.success ? `Both providers connected. ${msgs}` : `Partial connect — ${msgs}`, d.success ? 'success' : 'error');
+    await loadProviders();
+  } catch (err) {
+    showToast('Network error during dual connect.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
   }
 }
 

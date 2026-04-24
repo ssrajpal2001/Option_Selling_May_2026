@@ -502,9 +502,9 @@ async def _global_provider_scheduler():
     while True:
         try:
             now = datetime.now(IST)
-            # Target: 09:01 AM IST
-            target = now.replace(hour=9, minute=1, second=0, microsecond=0)
-            if now > target:
+            # Target: 08:30 AM IST — before market open
+            target = now.replace(hour=8, minute=30, second=0, microsecond=0)
+            if now >= target:
                 target += timedelta(days=1)
 
             wait_seconds = (target - now).total_seconds()
@@ -513,9 +513,6 @@ async def _global_provider_scheduler():
 
             logger.info("[Scheduler] Starting morning global provider sync...")
             from web.admin_api import global_provider_connect_background
-            # We mock a Depends(require_admin) by not passing it,
-            # but since we call the internal function, we need to handle it.
-            # Let's call the logic directly or refactor admin_api.
 
             providers = ['upstox', 'dhan']
             for p in providers:
@@ -535,7 +532,7 @@ async def _global_provider_scheduler():
 async def startup_event():
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
     _seed_global_providers_from_ini()
-    # Background morning scheduler (runs daily at 09:01 AM IST)
+    # Background morning scheduler (runs daily at 08:30 AM IST)
     asyncio.create_task(_global_provider_scheduler())
 
 if __name__ == "__main__":
