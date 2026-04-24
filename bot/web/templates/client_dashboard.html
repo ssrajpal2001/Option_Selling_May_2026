@@ -1522,9 +1522,30 @@ async function loadBrokerSettings() {
     expiredBadge.classList.toggle('hidden', !plan.expired);
     expiredAlert.classList.toggle('hidden', !plan.expired);
 
-    // Slot limit warning
+    // Slot limit warning + disable broker add buttons when at cap
+    const atLimit = usedSlots >= (plan.max_brokers || 1) && plan.max_brokers !== 999;
     const limitWarn = document.getElementById('plan-limit-warn');
-    limitWarn.classList.toggle('hidden', !(usedSlots >= (plan.max_brokers || 1) && plan.max_brokers !== 999));
+    limitWarn.classList.toggle('hidden', !atLimit);
+
+    // Gate broker credential / config save buttons when at slot limit
+    // (only gate if client has NO broker for a given slot — existing broker form is still editable)
+    const hasNoBrokerConfigured = usedSlots === 0;
+    const saveCredBtn = document.querySelector('#dynamic-broker-form button[type="submit"]');
+    const saveConfigBtn = document.querySelector('#config-form button[type="submit"]');
+    const _title = atLimit && hasNoBrokerConfigured
+      ? `Broker slot limit reached (${usedSlots}/${maxSlots}). Contact admin to upgrade.` : '';
+    if (saveCredBtn) {
+      saveCredBtn.disabled = atLimit && hasNoBrokerConfigured;
+      saveCredBtn.title = _title;
+      saveCredBtn.style.opacity = (atLimit && hasNoBrokerConfigured) ? '0.4' : '';
+      saveCredBtn.style.cursor = (atLimit && hasNoBrokerConfigured) ? 'not-allowed' : '';
+    }
+    if (saveConfigBtn) {
+      saveConfigBtn.disabled = atLimit && hasNoBrokerConfigured;
+      saveConfigBtn.title = _title;
+      saveConfigBtn.style.opacity = (atLimit && hasNoBrokerConfigured) ? '0.4' : '';
+      saveConfigBtn.style.cursor = (atLimit && hasNoBrokerConfigured) ? 'not-allowed' : '';
+    }
   }
   // ────────────────────────────────────────────────────────────────────────
 

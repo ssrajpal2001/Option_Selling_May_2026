@@ -469,7 +469,8 @@ async def square_off_all_positions(user=Depends(get_current_user)):
 
 @router.post("/bot/start")
 async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
-    # ── Plan expiry enforcement ──────────────────────────────────────────
+    # ── Plan expiry check (soft — still allows 1-broker operation) ──────
+    _plan_expiry_warning = None
     from datetime import datetime, timezone as _tz_start
     _exp_str_s = user.get("plan_expiry_date")
     if _exp_str_s:
@@ -478,13 +479,10 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
             if _exp_s.tzinfo is None:
                 _exp_s = _exp_s.replace(tzinfo=_tz_start.utc)
             if datetime.now(_tz_start.utc) > _exp_s:
-                raise HTTPException(
-                    403,
+                _plan_expiry_warning = (
                     f"Your subscription expired on {_exp_str_s[:10]}. "
-                    "Bot start is blocked until your plan is renewed by your admin."
+                    "You are limited to 1 broker slot. Contact admin to renew."
                 )
-        except HTTPException:
-            raise
         except Exception:
             pass
     # ─────────────────────────────────────────────────────────────────────
@@ -578,7 +576,10 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
     )
     if ok:
         db_execute("UPDATE client_broker_instances SET status='running', bot_pid=? WHERE id=?", (pid, instance["id"]))
-    return {"success": ok, "message": msg}
+    response = {"success": ok, "message": msg}
+    if _plan_expiry_warning:
+        response["plan_warning"] = _plan_expiry_warning
+    return response
 
 
 @router.post("/bot/stop")

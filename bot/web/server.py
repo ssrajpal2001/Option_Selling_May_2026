@@ -136,6 +136,11 @@ async def admin_audit_log(request: Request):
     return templates.TemplateResponse(request, "admin_audit_log.html")
 
 
+@app.get("/admin/audit", response_class=HTMLResponse)
+async def admin_audit_redirect(request: Request):
+    return RedirectResponse("/admin/audit-log", status_code=301)
+
+
 
 
 # ─── Client Pages ─────────────────────────────────────────────────────────────
