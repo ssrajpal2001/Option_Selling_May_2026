@@ -469,8 +469,9 @@ async def square_off_all_positions(user=Depends(get_current_user)):
 
 @router.post("/bot/start")
 async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
-    # ── Plan expiry check (soft — still allows 1-broker operation) ──────
+    # ── Plan expiry enforcement (hard cap: only 1 permitted broker slot) ─
     _plan_expiry_warning = None
+    _plan_expired = False
     from datetime import datetime, timezone as _tz_start
     _exp_str_s = user.get("plan_expiry_date")
     if _exp_str_s:
@@ -479,15 +480,35 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
             if _exp_s.tzinfo is None:
                 _exp_s = _exp_s.replace(tzinfo=_tz_start.utc)
             if datetime.now(_tz_start.utc) > _exp_s:
-                _plan_expiry_warning = (
-                    f"Your subscription expired on {_exp_str_s[:10]}. "
-                    "You are limited to 1 broker slot. Contact admin to renew."
-                )
+                _plan_expired = True
         except Exception:
             pass
+
+    if _plan_expired:
+        # When expired, only allow starting the single permitted broker instance
+        # (the lowest-id configured instance).  Any additional brokers are blocked.
+        all_instances = db_fetchall(
+            "SELECT id, broker FROM client_broker_instances "
+            "WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
+            (user["id"],)
+        )
+        requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox") else None
+        if len(all_instances) > 1 and requested_broker:
+            permitted_broker = all_instances[0]["broker"]
+            if requested_broker != permitted_broker:
+                raise HTTPException(
+                    403,
+                    f"Your subscription expired on {_exp_str_s[:10]}. "
+                    f"Only your primary broker ({permitted_broker}) can be started on an expired plan. "
+                    "Contact admin to renew or remove extra broker configurations."
+                )
+        _plan_expiry_warning = (
+            f"Your subscription expired on {_exp_str_s[:10]}. "
+            "You are limited to 1 broker slot. Contact admin to renew."
+        )
     # ─────────────────────────────────────────────────────────────────────
 
-    requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox") else None
+    requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox") else None  # noqa (may duplicate from expiry block; safe)
     instance = _get_active_instance(user["id"], broker=requested_broker)
     if not instance:
         raise HTTPException(400, "No broker configured. Please set up your broker first.")

@@ -394,6 +394,17 @@ async def list_clients(admin=Depends(require_admin)):
     return clients
 
 
+def _audit(actor_id: int, actor_role: str, action: str, target_id: int, details: dict | None = None):
+    """Insert one row into audit_log. Swallows all exceptions to never break the caller."""
+    try:
+        db_execute(
+            "INSERT INTO audit_log (actor_id, actor_role, action, target_type, target_id, details) VALUES (?,?,?,?,?,?)",
+            (actor_id, actor_role, action, "user", target_id, json.dumps(details or {})),
+        )
+    except Exception as _ae:
+        logger.warning(f"[Audit] Failed to write audit log: {_ae}")
+
+
 @router.post("/clients/{client_id}/activate")
 async def activate_client(client_id: int, admin=Depends(require_admin)):
     user = db_fetchone("SELECT * FROM users WHERE id=? AND role='client'", (client_id,))
@@ -404,6 +415,7 @@ async def activate_client(client_id: int, admin=Depends(require_admin)):
         "UPDATE users SET is_active=1, activated_at=?, activated_by=? WHERE id=?",
         (now, admin["id"], client_id)
     )
+    _audit(admin["id"], admin["role"], "activate_client", client_id, {"user": user["username"]})
     return {"success": True, "message": f"Client '{user['username']}' activated."}
 
 
@@ -414,6 +426,7 @@ async def deactivate_client(client_id: int, admin=Depends(require_admin)):
         raise HTTPException(404, "Client not found")
     instance_manager.stop_all_for_client(client_id)
     db_execute("UPDATE users SET is_active=0 WHERE id=?", (client_id,))
+    _audit(admin["id"], admin["role"], "deactivate_client", client_id, {"user": user["username"]})
     return {"success": True, "message": f"Client '{user['username']}' deactivated."}
 
 
@@ -528,6 +541,7 @@ async def force_close_positions(client_id: int, admin=Depends(require_admin)):
     instance_manager.stop_all_for_client(client_id)
     # Also update DB status to ensure UI reflects it immediately
     db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE client_id=?", (client_id,))
+    _audit(admin["id"], admin["role"], "force_close", client_id, {"client_id": client_id})
     return {"success": True, "message": "All bot instances stopped for client."}
 
 
@@ -601,6 +615,7 @@ async def clear_trade_history(client_id: int, admin=Depends(require_admin)):
         # which it isn't (they are separate PIDs). So we rely on file reset.
 
         logger.info(f"[Admin] Successfully cleared all history and state for client {client_id}")
+        _audit(admin["id"], admin["role"], "clear_history", client_id, {"client_id": client_id})
         return {"success": True, "message": "Trade history, session PnL, and V3 state cleared."}
     except Exception as e:
         logger.error(f"[Admin] Error in clear_trade_history for client {client_id}: {e}", exc_info=True)
@@ -747,6 +762,8 @@ async def approve_broker_request(request_id: int, admin=Depends(require_admin)):
         "UPDATE broker_change_requests SET status='approved', resolved_at=?, resolved_by_id=? WHERE id=?",
         (now, admin["id"], request_id)
     )
+    _audit(admin["id"], admin["role"], "approve_broker_request", req["client_id"],
+           {"request_id": request_id, "from": req["current_broker"], "to": req["requested_broker"]})
     return {"success": True, "message": f"Broker change approved. Old {req['current_broker']} instance disabled. Client can now set up {req['requested_broker']}."}
 
 
@@ -762,6 +779,8 @@ async def deny_broker_request(request_id: int, admin=Depends(require_admin)):
         "UPDATE broker_change_requests SET status='denied', resolved_at=?, resolved_by_id=? WHERE id=?",
         (now, admin["id"], request_id)
     )
+    _audit(admin["id"], admin["role"], "deny_broker_request", req["client_id"],
+           {"request_id": request_id, "from": req["current_broker"], "to": req["requested_broker"]})
     return {"success": True, "message": "Broker change request denied."}
 
 
