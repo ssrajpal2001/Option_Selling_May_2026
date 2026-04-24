@@ -82,6 +82,11 @@
         <label class="field-label">Expiry Date (optional)</label>
         <input type="date" id="plan-expiry-input" class="input-field">
       </div>
+      <div class="min-w-32" style="max-width:140px">
+        <label class="field-label">Broker Slot Override</label>
+        <input type="number" id="plan-override-input" class="input-field" min="1" max="20" placeholder="From plan">
+        <p class="text-xs mt-0.5" style="color:#475569">Overrides plan default</p>
+      </div>
       <button onclick="assignPlan()" class="btn-primary px-5 py-2 text-sm font-bold whitespace-nowrap">Save Plan</button>
       <button onclick="clearExpiry()" class="btn-ghost px-4 py-2 text-xs whitespace-nowrap">Clear Expiry</button>
     </div>
@@ -332,10 +337,17 @@ async function loadPlans() {
 async function assignPlan() {
   const planId = parseInt(document.getElementById('plan-select').value);
   const expiry = document.getElementById('plan-expiry-input').value || null;
+  const overrideVal = document.getElementById('plan-override-input').value.trim();
+  const overrideInt = overrideVal !== '' ? parseInt(overrideVal) : null;
+  const body = {
+    plan_id: planId,
+    plan_expiry_date: expiry ? expiry + 'T23:59:59Z' : null,
+  };
+  if (overrideInt && overrideInt > 0) body.max_broker_instances_override = overrideInt;
   const r = await fetch(`/api/admin/clients/${clientId}/set-tier`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ plan_id: planId, plan_expiry_date: expiry ? expiry + 'T23:59:59Z' : null })
+    body: JSON.stringify(body)
   });
   const d = await r.json();
   showToast(d.success ? `Plan updated to ${d.tier} (${d.max_broker_instances} broker slots)` : (d.detail || 'Error'), d.success ? 'success' : 'error');

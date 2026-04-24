@@ -47,3 +47,11 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Bot sensitive config — never commit credentials or token files
+bot/config/credentials.ini
+bot/config/*.ini
+bot/config/algosoft.db
+bot/config/algosoft.db-shm
+bot/config/algosoft.db-wal
+bot/config/bot_status.json

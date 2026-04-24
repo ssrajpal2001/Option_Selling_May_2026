@@ -31,7 +31,11 @@
     </div>
     <div class="flex-1 min-w-36">
       <label class="field-label">Target User</label>
-      <input type="text" id="filter-user" class="input-field" placeholder="Username…" oninput="debounceLoad()">
+      <input type="text" id="filter-user" class="input-field" placeholder="Target username…" oninput="debounceLoad()">
+    </div>
+    <div class="flex-1 min-w-36">
+      <label class="field-label">Admin (Actor)</label>
+      <input type="text" id="filter-actor" class="input-field" placeholder="Admin username…" oninput="debounceLoad()">
     </div>
     <div class="flex-1 min-w-32">
       <label class="field-label">From Date</label>
@@ -104,6 +108,7 @@ function debounceLoad() {
 function clearFilters() {
   document.getElementById('filter-action').value = '';
   document.getElementById('filter-user').value = '';
+  document.getElementById('filter-actor').value = '';
   document.getElementById('filter-from').value = '';
   document.getElementById('filter-to').value = '';
   loadLogs(1);
@@ -150,13 +155,15 @@ async function loadLogs(page) {
   currentPage = page;
 
   const action = document.getElementById('filter-action').value;
-  const user = document.getElementById('filter-user').value.trim();
-  const from = document.getElementById('filter-from').value;
-  const to = document.getElementById('filter-to').value;
+  const user   = document.getElementById('filter-user').value.trim();
+  const actor  = document.getElementById('filter-actor').value.trim();
+  const from   = document.getElementById('filter-from').value;
+  const to     = document.getElementById('filter-to').value;
 
   const params = new URLSearchParams({ page, per_page: perPage });
   if (action) params.set('action', action);
   if (user)   params.set('username', user);
+  if (actor)  params.set('actor_username', actor);
   if (from)   params.set('from_date', from);
   if (to)     params.set('to_date', to);
 
@@ -201,11 +208,13 @@ async function loadLogs(page) {
 async function exportCSV() {
   const action = document.getElementById('filter-action').value;
   const user   = document.getElementById('filter-user').value.trim();
+  const actor  = document.getElementById('filter-actor').value.trim();
   const from   = document.getElementById('filter-from').value;
   const to     = document.getElementById('filter-to').value;
   const params = new URLSearchParams({ page: 1, per_page: 5000 });
   if (action) params.set('action', action);
   if (user)   params.set('username', user);
+  if (actor)  params.set('actor_username', actor);
   if (from)   params.set('from_date', from);
   if (to)     params.set('to_date', to);
   const r = await fetch('/api/admin/audit-log?' + params);

@@ -443,6 +443,8 @@ async def set_subscription_tier(client_id: int, request: Request, admin=Depends(
     plan_id = body.get("plan_id")
     tier = body.get("tier", "BASIC")
     plan_expiry_date = body.get("plan_expiry_date")  # ISO date string or None
+    # Optional manual override — admin can explicitly cap slots independent of plan
+    max_broker_override = body.get("max_broker_instances_override")
 
     # Lookup plan from DB
     if plan_id:
@@ -456,6 +458,15 @@ async def set_subscription_tier(client_id: int, request: Request, admin=Depends(
         plan_id = plan["id"]
     else:
         max_broker_instances = {"FREE": 1, "BASIC": 1, "STANDARD": 2, "PREMIUM": 3, "PRO": 5, "ENTERPRISE": 999}.get(tier, 1)
+
+    # Admin override wins if explicitly provided and valid
+    if max_broker_override is not None:
+        try:
+            _ov = int(max_broker_override)
+            if _ov > 0:
+                max_broker_instances = _ov
+        except (ValueError, TypeError):
+            pass
 
     db_execute(
         "UPDATE users SET subscription_tier=?, max_broker_instances=?, plan_id=?, plan_expiry_date=? WHERE id=?",
@@ -921,6 +932,7 @@ class SubscriptionPlanBody(BaseModel):
     max_broker_instances: int = 1
     description: Optional[str] = ""
     is_active: Optional[int] = 1
+    price_monthly: Optional[float] = None
 
 
 @router.get("/plans")
@@ -940,11 +952,11 @@ async def create_subscription_plan(body: SubscriptionPlanBody, admin=Depends(req
     try:
         now = datetime.now(timezone.utc).isoformat()
         plan_id = db_execute("""
-            INSERT INTO subscription_plans (plan_name, display_name, max_broker_instances, description, is_active, created_at, updated_at)
-            VALUES (?,?,?,?,?,?,?)
+            INSERT INTO subscription_plans (plan_name, display_name, max_broker_instances, description, is_active, price_monthly, created_at, updated_at)
+            VALUES (?,?,?,?,?,?,?,?)
         """, (
             body.plan_name.upper(), body.display_name, body.max_broker_instances,
-            body.description or "", body.is_active or 1, now, now
+            body.description or "", body.is_active or 1, body.price_monthly, now, now
         ))
         return {"success": True, "plan_id": plan_id, "message": f"Plan '{body.display_name}' created."}
     except Exception as e:
@@ -959,12 +971,12 @@ async def update_subscription_plan(plan_id: int, body: SubscriptionPlanBody, adm
     now = datetime.now(timezone.utc).isoformat()
     db_execute("""
         UPDATE subscription_plans
-        SET plan_name=?, display_name=?, max_broker_instances=?, description=?, is_active=?, updated_at=?
+        SET plan_name=?, display_name=?, max_broker_instances=?, description=?, is_active=?, price_monthly=?, updated_at=?
         WHERE id=?
     """, (
         body.plan_name.upper(), body.display_name, body.max_broker_instances,
         body.description or "", body.is_active if body.is_active is not None else 1,
-        now, plan_id
+        body.price_monthly, now, plan_id
     ))
     # Sync existing users on this plan to the new broker limit
     db_execute(
@@ -1070,10 +1082,11 @@ async def get_audit_log(
     per_page: int = 50,
     action: str = None,
     username: str = None,
+    actor_username: str = None,
     from_date: str = None,
     to_date: str = None,
 ):
-    """Paginated audit log with filters for action, target username, and date range."""
+    """Paginated audit log with filters for action, target/actor username, and date range."""
     offset = (page - 1) * per_page
     conditions = []
     params: list = []
@@ -1084,6 +1097,9 @@ async def get_audit_log(
     if username:
         conditions.append("tu.username LIKE ?")
         params.append(f"%{username}%")
+    if actor_username:
+        conditions.append("au.username LIKE ?")
+        params.append(f"%{actor_username}%")
     if from_date:
         conditions.append("DATE(al.created_at) >= ?")
         params.append(from_date)
@@ -1108,7 +1124,10 @@ async def get_audit_log(
     """, params + [per_page, offset])
 
     total_row = db_fetchone(
-        f"SELECT COUNT(*) as c FROM audit_log al LEFT JOIN users tu ON tu.id = al.target_id {where}", params
+        f"""SELECT COUNT(*) as c FROM audit_log al
+            LEFT JOIN users au ON au.id = al.actor_id
+            LEFT JOIN users tu ON tu.id = al.target_id
+            {where}""", params
     )
     total = total_row["c"] if total_row else 0
 

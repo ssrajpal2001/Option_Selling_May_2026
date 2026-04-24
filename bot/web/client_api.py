@@ -469,6 +469,26 @@ async def square_off_all_positions(user=Depends(get_current_user)):
 
 @router.post("/bot/start")
 async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
+    # ── Plan expiry enforcement ──────────────────────────────────────────
+    from datetime import datetime, timezone as _tz_start
+    _exp_str_s = user.get("plan_expiry_date")
+    if _exp_str_s:
+        try:
+            _exp_s = datetime.fromisoformat(_exp_str_s)
+            if _exp_s.tzinfo is None:
+                _exp_s = _exp_s.replace(tzinfo=_tz_start.utc)
+            if datetime.now(_tz_start.utc) > _exp_s:
+                raise HTTPException(
+                    403,
+                    f"Your subscription expired on {_exp_str_s[:10]}. "
+                    "Bot start is blocked until your plan is renewed by your admin."
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+    # ─────────────────────────────────────────────────────────────────────
+
     requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox") else None
     instance = _get_active_instance(user["id"], broker=requested_broker)
     if not instance:

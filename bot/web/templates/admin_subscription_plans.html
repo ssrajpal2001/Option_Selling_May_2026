@@ -63,6 +63,11 @@
         <p class="text-xs text-slate-500 mt-1">How many brokers this plan allows per client account simultaneously.</p>
       </div>
       <div>
+        <label class="field-label">Monthly Price (₹, optional)</label>
+        <input type="number" id="f-price" class="input-field w-full" min="0" step="0.01" placeholder="e.g. 999">
+        <p class="text-xs text-slate-500 mt-1">Displayed on plan cards for reference. Does not trigger billing automatically.</p>
+      </div>
+      <div>
         <label class="field-label">Description</label>
         <input type="text" id="f-description" class="input-field w-full" placeholder="Brief description for admin reference">
       </div>
@@ -130,10 +135,16 @@ function renderPlans() {
           </div>
           ${badge}
         </div>
-        <div class="my-4 flex items-center justify-center">
+        <div class="my-3 text-center">
+          <div class="text-2xl font-bold" style="color:${color}">
+            ${p.price_monthly != null ? '₹' + parseFloat(p.price_monthly).toFixed(0) : '—'}
+            ${p.price_monthly != null ? '<span class="text-sm font-normal text-slate-400">/mo</span>' : '<span class="text-sm text-slate-500">Free / Custom</span>'}
+          </div>
+        </div>
+        <div class="my-3 flex items-center justify-center">
           <div class="broker-badge" style="border-color:${color}40; color:${color}">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4M5 12l4 4"/></svg>
-            ${p.max_broker_instances} Broker${p.max_broker_instances > 1 ? 's' : ''}
+            ${p.max_broker_instances === 999 ? '∞ Unlimited' : p.max_broker_instances + ' Broker' + (p.max_broker_instances > 1 ? 's' : '')}
           </div>
         </div>
         <p class="text-xs text-slate-500 mb-4 min-h-8">${escapeHtml(p.description || '')}</p>
@@ -165,6 +176,7 @@ function openEditModal(planId) {
   document.getElementById('f-plan-name').value = p.plan_name;
   document.getElementById('f-display-name').value = p.display_name;
   document.getElementById('f-max-brokers').value = p.max_broker_instances;
+  document.getElementById('f-price').value = p.price_monthly != null ? p.price_monthly : '';
   document.getElementById('f-description').value = p.description || '';
   document.getElementById('f-active').checked = !!p.is_active;
   document.getElementById('plan-modal').classList.add('open');
@@ -202,10 +214,12 @@ document.getElementById('plan-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = document.getElementById('edit-plan-id').value;
   const isEdit = !!id;
+  const priceVal = document.getElementById('f-price').value.trim();
   const body = {
     plan_name: document.getElementById('f-plan-name').value.trim().toUpperCase(),
     display_name: document.getElementById('f-display-name').value.trim(),
     max_broker_instances: parseInt(document.getElementById('f-max-brokers').value),
+    price_monthly: priceVal !== '' ? parseFloat(priceVal) : null,
     description: document.getElementById('f-description').value.trim(),
     is_active: document.getElementById('f-active').checked ? 1 : 0,
   };
