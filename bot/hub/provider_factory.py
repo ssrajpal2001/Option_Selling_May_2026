@@ -204,9 +204,11 @@ class ProviderFactory:
                         except: pass
 
                     if needs_refresh:
-                        logger.info("Global Dhan token fresh day started. Attempting auto-refresh...")
+                        logger.info("Global Dhan token fresh day started. Validating stored token...")
                         creds = {
                             "api_key": cid,
+                            "client_id": cid,
+                            "access_token": access_token,  # explicitly pass stored token for validation
                             "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
                             "password": decrypt_secret(dp.get("password_encrypted", "")),
                             "totp": decrypt_secret(dp.get("totp_encrypted", ""))
@@ -217,8 +219,9 @@ class ProviderFactory:
                             access_token = new_token
                             enc_token = encrypt_secret(new_token)
                             now_str = datetime.now(timezone.utc).isoformat()
+                            # Only update updated_at; token_issued_at stays unchanged (same 30-day token)
                             db_execute("UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='dhan'", (enc_token, now_str))
-                            logger.info("Global Dhan token auto-refreshed successfully.")
+                            logger.info("Global Dhan token validated successfully.")
 
                     dhan_ws = DhanWebSocketManager(cid, access_token)
                     active_feeds.append(('dhan', dhan_ws))

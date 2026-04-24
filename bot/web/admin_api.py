@@ -332,14 +332,21 @@ async def exchange_manual_token(body: ManualTokenRequest, admin=Depends(require_
             access_token = resp_data.get("access_token", "")
             enc_token = encrypt_secret(access_token)
             now = datetime.now(timezone.utc).isoformat()
-            db_execute("UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider='upstox'", (enc_token, now))
+            # Upstox: always reset token_issued_at (daily token replaced)
+            db_execute(
+                "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider='upstox'",
+                (enc_token, now, now)
+            )
             return {"success": True, "message": "Upstox global token updated via manual code."}
 
         elif provider == 'dhan':
-            # For Dhan, we usually just store the token directly
+            # Dhan: new token being manually entered — always reset token_issued_at (30-day countdown restarts)
             enc_token = encrypt_secret(code)
             now = datetime.now(timezone.utc).isoformat()
-            db_execute("UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider='dhan'", (enc_token, now))
+            db_execute(
+                "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider='dhan'",
+                (enc_token, now, now)
+            )
             return {"success": True, "message": "Dhan global token updated."}
 
         return {"success": False, "message": f"Manual exchange not implemented for {provider}"}
