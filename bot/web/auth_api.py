@@ -38,14 +38,6 @@ async def register(body: RegisterRequest):
         (body.username, body.email, hashed, "client", 0, body.full_name, body.phone_number)
     )
 
-    user = db_fetchone("SELECT id FROM users WHERE email=?", (body.email,))
-    if user and body.broker:
-        # Store preferred broker, but users can now change it later in Settings
-        db_execute(
-            "INSERT INTO client_broker_instances (client_id, broker, status) VALUES (?,?,?)",
-            (user['id'], body.broker.lower(), 'pending_approval')
-        )
-
     return {"success": True, "message": "Registration successful. Awaiting admin activation."}
 
 
