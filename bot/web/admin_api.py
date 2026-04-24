@@ -103,6 +103,7 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
 
     try:
         token = None
+        _dhan_error = None
         if provider == 'upstox':
             from utils.auth_manager_upstox import handle_upstox_login_automated
             creds = {
@@ -170,8 +171,7 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
         else:
             logger.warning(f"Background login for {provider} returned no token.")
             if provider == 'dhan':
-                dhan_detail = locals().get('_dhan_error') or ''
-                msg = f"Dhan: {dhan_detail}" if dhan_detail else "Dhan token generation failed. Verify your Client ID, PIN and TOTP secret."
+                msg = f"Dhan: {_dhan_error}" if _dhan_error else "Dhan token generation failed. Verify your Client ID, PIN and TOTP secret."
             elif provider == 'upstox':
                 msg = "Upstox login failed. Check your User ID, Password, and TOTP secret in the configure panel."
             else:
@@ -194,6 +194,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
             continue
         try:
             token = None
+            _dhan_error = None
             if provider == "upstox":
                 from utils.auth_manager_upstox import handle_upstox_login_automated
                 creds = {
@@ -262,8 +263,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                 results[provider] = {"success": True, "message": f"{provider.capitalize()} connected."}
             else:
                 if provider == "dhan":
-                    _err = locals().get('_dhan_error') or ''
-                    _fail_msg = f"Dhan: {_err}" if _err else "Dhan login returned no token."
+                    _fail_msg = f"Dhan: {_dhan_error}" if _dhan_error else "Dhan login returned no token."
                 else:
                     _fail_msg = f"{provider.capitalize()} login returned no token."
                 results[provider] = {"success": False, "message": _fail_msg}

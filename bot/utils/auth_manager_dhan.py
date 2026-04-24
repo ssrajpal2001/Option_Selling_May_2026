@@ -94,7 +94,7 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
 
     except Exception as e:
         logger.error(f"[Dhan] Token generation error for {login_id}: {e}")
-        return _fail(f"Network error: {e}")
+        return _fail("Could not reach Dhan servers. Check your internet connection and try again.")
 
 
 def renew_dhan_token(access_token: str, client_id: str) -> str | None:
