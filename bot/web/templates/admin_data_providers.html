@@ -74,7 +74,64 @@
     <form id="config-form" class="space-y-5">
       <input type="hidden" id="provider-id">
 
-      <div class="inner-section">
+      <!-- DHAN-specific 5-field section (auto token generation) -->
+      <div id="dhan-fields-section" class="inner-section hidden space-y-3">
+        <div class="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <p class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Auto Token Generation</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Save credentials then click "Connect Now" — access token is generated automatically.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Client ID</label>
+            <input type="text" id="dhan-client-id" class="input-field w-full" placeholder="e.g. 1000123456">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Key (Application ID)</label>
+            <input type="text" id="dhan-app-id" class="input-field w-full" placeholder="Enter Application ID">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Secret</label>
+          <div class="relative">
+            <input type="password" id="dhan-api-secret" class="input-field w-full" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            <button type="button" onclick="toggleField('dhan-api-secret', this)" class="absolute right-3 top-2 text-slate-500 hover:text-slate-300">
+              <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">PIN / Password</label>
+            <input type="password" id="dhan-pin" class="input-field w-full" placeholder="Login PIN or Password">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">TOTP Secret</label>
+            <input type="text" id="dhan-totp" class="input-field w-full" placeholder="32-char TOTP secret">
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-700/50">
+          <div class="flex items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+            <div>
+              <p class="text-xs font-bold text-emerald-400">Auto-Generate Token</p>
+              <p class="text-[10px] text-slate-500 mt-0.5">Uses Client ID + API Key + PIN + TOTP to fetch token.</p>
+            </div>
+            <button type="button" id="btn-background-connect" onclick="connectGlobalProvider(null, this)" class="btn-primary px-4 py-1.5 text-xs">Connect Now</button>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
+          <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Manual Token Fallback <span class="text-amber-500">(last resort only)</span></label>
+          <p class="text-[9px] text-slate-600 mb-2">Use only if auto-login is unavailable. Paste the raw access token from app.dhan.co → API → Access Token.</p>
+          <div class="flex gap-2">
+            <input type="text" id="manual-token-input" class="input-field flex-1 text-[10px]" placeholder="Paste access token or redirect URL here">
+            <button type="button" onclick="saveManualToken()" class="btn-ghost px-3 py-1 text-[10px]">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generic fields section (Upstox and others) -->
+      <div id="generic-fields-section" class="inner-section">
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label id="key-label" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Key</label>
@@ -118,24 +175,24 @@
           <p class="text-[9px] text-amber-500 mt-1.5 font-medium">⚠️ Error UDAPI100068? Ensure this URI matches EXACTLY in your Upstox Developer Portal (check http vs https and port 5000).</p>
         </div>
 
-        <div id="auth-action-section" class="mt-4 pt-4 border-t border-slate-700/50">
+        <div class="mt-4 pt-4 border-t border-slate-700/50">
           <div class="flex items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
             <div>
               <p class="text-xs font-bold text-emerald-400">Background Connect</p>
               <p class="text-[10px] text-slate-500 mt-0.5">Automated login using Mobile, PIN and TOTP.</p>
             </div>
-            <button type="button" id="btn-background-connect" onclick="connectGlobalProvider()" class="btn-primary px-4 py-1.5 text-xs">Connect Now</button>
+            <button type="button" id="btn-background-connect-generic" onclick="connectGlobalProvider(null, this)" class="btn-primary px-4 py-1.5 text-xs">Connect Now</button>
           </div>
           <div class="mt-3 flex justify-center">
             <button type="button" onclick="triggerGlobalAuthFromModal()" class="text-[10px] text-slate-500 hover:text-slate-300 underline">Fallback: Manual Browser Auth</button>
           </div>
         </div>
 
-        <div id="manual-token-section" class="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+        <div class="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
            <label class="block text-[9px] text-slate-500 uppercase mb-2">Manual Token / Redirect URL Fallback</label>
            <div class="flex gap-2">
-             <input type="text" id="manual-token-input" class="input-field flex-1 text-[10px]" placeholder="Paste URL from Google/Dhan here">
-             <button type="button" onclick="saveManualToken()" class="btn-ghost px-3 py-1 text-[10px]">Save</button>
+             <input type="text" id="manual-token-input-generic" class="input-field flex-1 text-[10px]" placeholder="Paste URL from Google/Dhan here">
+             <button type="button" onclick="saveManualTokenGeneric()" class="btn-ghost px-3 py-1 text-[10px]">Save</button>
            </div>
         </div>
       </div>
@@ -188,7 +245,7 @@ async function loadProviders() {
 
       const descriptions = {
         'upstox': 'Redundant industrial-grade market feed. Auto-renews daily via TOTP.',
-        'dhan': 'Primary high-speed WebSocket feed. 30-day access token required.',
+        'dhan': 'Primary high-speed WebSocket feed. Token auto-generated via Client ID + API Key + PIN + TOTP.',
         'zerodha': 'Legacy market feed (Kite Connect paid addon required).'
       };
 
@@ -207,12 +264,7 @@ async function loadProviders() {
               <div class="flex items-center gap-2 mb-1">
                 <span class="text-rose-400 font-bold">&#9888; Dhan Token EXPIRED</span>
               </div>
-              <p class="text-rose-300/80">Your access token has been rejected by Dhan (HTTP 401). 
-                Dhan tokens last 30 days and must be regenerated manually.</p>
-              <p class="text-amber-300/80 mt-1">
-                Go to <strong>app.dhan.co → API → Access Token</strong>, generate a new token, 
-                then click <strong>Configure &amp; Connect</strong> to paste it here.
-              </p>
+              <p class="text-rose-300/80">Access token rejected by Dhan (HTTP 401). Click <strong>Configure &amp; Connect</strong>, verify your 5 credentials, then click <strong>Connect Now</strong> to auto-generate a fresh token.</p>
             </div>`;
         } else {
           const days = health.days_remaining;
@@ -307,38 +359,43 @@ function openConfig(provider) {
   modal.classList.add('open');
   modal.classList.remove('hidden');
   const title = document.getElementById('modal-title');
-  const keyLabel = document.getElementById('key-label');
-  const secretLabel = document.getElementById('secret-label');
-  const userIdLabel = document.getElementById('automation-user-label');
-  const passwordLabel = document.getElementById('automation-pass-label');
-  const redirectGroup = document.getElementById('redirect-uri-group');
-  const redirectInput = document.getElementById('redirect-uri');
 
   document.getElementById('provider-id').value = provider;
   title.textContent = 'Configure ' + provider.toUpperCase();
 
-  if (provider === 'dhan') {
-    keyLabel.textContent = 'Client ID';
-    secretLabel.textContent = 'Access Token';
-    if (userIdLabel) userIdLabel.textContent = 'CUSTOMER ID';
-    if (passwordLabel) passwordLabel.textContent = 'PASSWORD';
-    redirectGroup.classList.add('hidden');
-  } else if (provider === 'upstox') {
-    keyLabel.textContent = 'API Key';
-    secretLabel.textContent = 'API Secret';
-    if (userIdLabel) userIdLabel.textContent = 'MOBILE NUMBER';
-    if (passwordLabel) passwordLabel.textContent = 'PIN';
+  const dhanSection = document.getElementById('dhan-fields-section');
+  const genericSection = document.getElementById('generic-fields-section');
 
-    redirectGroup.classList.remove('hidden');
-    const proto = window.location.protocol;
-    const host = window.location.host;
-    redirectInput.value = `${proto}//${host}/auth/upstox/callback`;
+  if (provider === 'dhan') {
+    dhanSection.classList.remove('hidden');
+    genericSection.classList.add('hidden');
   } else {
-    keyLabel.textContent = 'API Key';
-    secretLabel.textContent = 'API Secret';
-    if (userIdLabel) userIdLabel.textContent = 'USER ID';
-    if (passwordLabel) passwordLabel.textContent = 'PASSWORD';
-    redirectGroup.classList.add('hidden');
+    dhanSection.classList.add('hidden');
+    genericSection.classList.remove('hidden');
+
+    const keyLabel = document.getElementById('key-label');
+    const secretLabel = document.getElementById('secret-label');
+    const userIdLabel = document.getElementById('automation-user-label');
+    const passwordLabel = document.getElementById('automation-pass-label');
+    const redirectGroup = document.getElementById('redirect-uri-group');
+    const redirectInput = document.getElementById('redirect-uri');
+
+    if (provider === 'upstox') {
+      keyLabel.textContent = 'API Key';
+      secretLabel.textContent = 'API Secret';
+      if (userIdLabel) userIdLabel.textContent = 'MOBILE NUMBER';
+      if (passwordLabel) passwordLabel.textContent = 'PIN';
+      redirectGroup.classList.remove('hidden');
+      const proto = window.location.protocol;
+      const host = window.location.host;
+      redirectInput.value = `${proto}//${host}/auth/upstox/callback`;
+    } else {
+      keyLabel.textContent = 'API Key';
+      secretLabel.textContent = 'API Secret';
+      if (userIdLabel) userIdLabel.textContent = 'USER ID';
+      if (passwordLabel) passwordLabel.textContent = 'PASSWORD';
+      redirectGroup.classList.add('hidden');
+    }
   }
 }
 
@@ -364,6 +421,8 @@ function copyRedirectUri() {
 function closeModal() {
   document.getElementById('config-modal').classList.remove('open');
   document.getElementById('config-form').reset();
+  document.getElementById('dhan-fields-section').classList.add('hidden');
+  document.getElementById('generic-fields-section').classList.remove('hidden');
 }
 
 function updateMasterStatus(connected) {
@@ -456,10 +515,21 @@ async function connectAllProviders(btn) {
   }
 }
 
+async function saveManualTokenGeneric() {
+  const provider = document.getElementById('provider-id').value;
+  const rawValue = document.getElementById('manual-token-input-generic').value.trim();
+  if (!rawValue) return;
+  await _exchangeToken(provider, rawValue);
+}
+
 async function saveManualToken() {
   const provider = document.getElementById('provider-id').value;
   const rawValue = document.getElementById('manual-token-input').value.trim();
   if (!rawValue) return;
+  await _exchangeToken(provider, rawValue);
+}
+
+async function _exchangeToken(provider, rawValue) {
 
   try {
     const r = await fetch('/api/admin/data-providers/exchange-token', {
@@ -482,14 +552,23 @@ async function saveManualToken() {
 
 document.getElementById('config-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  console.log("Config form submitted");
 
   const provider = document.getElementById('provider-id').value;
-  const apiKey = document.getElementById('api-key').value;
-  const apiSecret = document.getElementById('api-secret').value;
-  const userId = document.getElementById('user-id').value;
-  const password = document.getElementById('password').value;
-  const totp = document.getElementById('totp').value;
+  let apiKey, apiSecret, userId, password, totp;
+
+  if (provider === 'dhan') {
+    apiKey    = document.getElementById('dhan-client-id').value;
+    userId    = document.getElementById('dhan-app-id').value;
+    apiSecret = document.getElementById('dhan-api-secret').value;
+    password  = document.getElementById('dhan-pin').value;
+    totp      = document.getElementById('dhan-totp').value;
+  } else {
+    apiKey    = document.getElementById('api-key').value;
+    apiSecret = document.getElementById('api-secret').value;
+    userId    = document.getElementById('user-id').value;
+    password  = document.getElementById('password').value;
+    totp      = document.getElementById('totp').value;
+  }
 
   const saveBtn = e.target.querySelector('button[type="submit"]');
   const originalText = saveBtn.textContent;

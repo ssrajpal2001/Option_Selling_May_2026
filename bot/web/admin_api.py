@@ -113,38 +113,35 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
         elif provider == 'dhan':
-            from utils.auth_manager_dhan import handle_dhan_login_automated
-            creds = {
-                "api_key": decrypt_secret(dp["api_key_encrypted"]),
-                "client_id": decrypt_secret(dp["api_key_encrypted"]),
-                # access_token may be stored as api_secret_encrypted OR access_token_encrypted
-                "access_token": (
-                    decrypt_secret(dp.get("access_token_encrypted", "") or "") or
-                    decrypt_secret(dp.get("api_secret_encrypted", "") or "")
-                ),
-                "user_id": decrypt_secret(dp.get("user_id_encrypted", "") or ""),
-                "password": decrypt_secret(dp.get("password_encrypted", "") or ""),
-                "totp": decrypt_secret(dp.get("totp_encrypted", "") or ""),
-            }
-            token = handle_dhan_login_automated(creds)
+            from utils.auth_manager_dhan import generate_dhan_token
+            client_id  = decrypt_secret(dp.get("api_key_encrypted",  "") or "")
+            app_id     = decrypt_secret(dp.get("user_id_encrypted",   "") or "")
+            pin        = decrypt_secret(dp.get("password_encrypted",  "") or "")
+            totp_sec   = decrypt_secret(dp.get("totp_encrypted",      "") or "")
+            if not (client_id and app_id and pin):
+                return {"success": False,
+                        "message": "Dhan credentials incomplete. Save all 5 fields first (Client ID, API Key, API Secret, PIN, TOTP)."}
+            token = generate_dhan_token(
+                api_key=app_id,
+                client_id=client_id,
+                password=pin,
+                totp_secret=totp_sec,
+            )
 
         if token:
             enc_token = encrypt_secret(token)
             now = datetime.now(timezone.utc).isoformat()
             if provider == 'upstox':
-                # Upstox: daily token — always refresh token_issued_at
                 db_execute(
                     "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
                     (enc_token, now, now, provider)
                 )
             else:
-                # Dhan: 30-day token — only stamp token_issued_at on first set; preserve existing value
                 db_execute(
-                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=COALESCE(token_issued_at, ?) WHERE provider=?",
+                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
                     (enc_token, now, now, provider)
                 )
 
-            # Signal any running feed instance to adopt the new token immediately
             try:
                 from hub.feed_registry import refresh_feed_credentials
                 api_key_clear = decrypt_secret(dp.get("api_key_encrypted", ""))
@@ -154,25 +151,22 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             except Exception as _rf_err:
                 logger.warning(f"[Admin] Could not signal live feed refresh for {provider}: {_rf_err}")
 
-            # Also sync to credentials.ini for compatibility with legacy parts of the bot
             if provider == 'upstox':
                 _sync_upstox_to_credentials(decrypt_secret(dp["api_key_encrypted"]), token, decrypt_secret(dp.get("api_secret_encrypted", "")))
             elif provider == 'dhan':
-                # Sync Dhan to credentials.ini [dhan_global]
-                creds = configparser.ConfigParser()
-                creds.read(_CREDENTIALS_PATH)
-                if not creds.has_section('dhan_global'): creds.add_section('dhan_global')
-                creds.set('dhan_global', 'client_id', decrypt_secret(dp["api_key_encrypted"]))
-                creds.set('dhan_global', 'access_token', token)
+                _dhan_creds = configparser.ConfigParser()
+                _dhan_creds.read(_CREDENTIALS_PATH)
+                if not _dhan_creds.has_section('dhan_global'): _dhan_creds.add_section('dhan_global')
+                _dhan_creds.set('dhan_global', 'client_id', decrypt_secret(dp["api_key_encrypted"]))
+                _dhan_creds.set('dhan_global', 'access_token', token)
                 with open(_CREDENTIALS_PATH, 'w') as f:
-                    creds.write(f)
+                    _dhan_creds.write(f)
 
             return {"success": True, "message": f"{provider.capitalize()} background login successful."}
         else:
             logger.warning(f"Background login for {provider} returned no token.")
             if provider == 'dhan':
-                msg = ("Dhan token invalid or expired. Your 30-day access token must be manually regenerated "
-                       "on the Dhan portal (app.dhan.co → API → Access Token), then saved here.")
+                msg = ("Dhan token generation failed. Verify your Client ID, API Key, PIN and TOTP secret are correct.")
             elif provider == 'upstox':
                 msg = "Upstox login failed. Check your User ID, Password, and TOTP secret in the configure panel."
             else:
@@ -209,19 +203,21 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
             elif provider == "dhan":
-                from utils.auth_manager_dhan import handle_dhan_login_automated
-                creds = {
-                    "api_key": decrypt_secret(dp["api_key_encrypted"]),
-                    "client_id": decrypt_secret(dp["api_key_encrypted"]),
-                    "access_token": (
-                        decrypt_secret(dp.get("access_token_encrypted", "") or "") or
-                        decrypt_secret(dp.get("api_secret_encrypted", "") or "")
-                    ),
-                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "") or ""),
-                    "password": decrypt_secret(dp.get("password_encrypted", "") or ""),
-                    "totp": decrypt_secret(dp.get("totp_encrypted", "") or ""),
-                }
-                token = handle_dhan_login_automated(creds)
+                from utils.auth_manager_dhan import generate_dhan_token
+                _client_id = decrypt_secret(dp.get("api_key_encrypted",  "") or "")
+                _app_id    = decrypt_secret(dp.get("user_id_encrypted",   "") or "")
+                _pin       = decrypt_secret(dp.get("password_encrypted",  "") or "")
+                _totp_sec  = decrypt_secret(dp.get("totp_encrypted",      "") or "")
+                if not (_client_id and _app_id and _pin):
+                    results[provider] = {"success": False,
+                                         "message": "Dhan credentials incomplete — save all 5 fields first."}
+                    continue
+                token = generate_dhan_token(
+                    api_key=_app_id,
+                    client_id=_client_id,
+                    password=_pin,
+                    totp_secret=_totp_sec,
+                )
 
             if token:
                 enc_token = encrypt_secret(token)
@@ -281,12 +277,17 @@ async def update_data_provider(body: ProviderConfigRequest, admin=Depends(requir
 
         now = datetime.now(timezone.utc).isoformat()
 
-        # Logic Fix: Only treat api_secret as access_token for Dhan (if access_token not explicitly provided)
-        # For Upstox, api_secret is the App Secret needed for OAuth/OTP flow.
+        # Dhan: 5-field auto-login mode.
+        # api_key  → api_key_encrypted  (Client ID / loginId)
+        # user_id  → user_id_encrypted  (Application ID / applicationId)
+        # api_secret → api_secret_encrypted (UUID permanent secret)
+        # password → password_encrypted (PIN)
+        # totp    → totp_encrypted     (TOTP secret)
+        # access_token_encrypted is NOT touched here — it is written only by the /connect endpoint.
         if body.provider == 'dhan':
             db_execute(
-                "UPDATE data_providers SET api_key_encrypted=?, access_token_encrypted=?, api_secret_encrypted=?, user_id_encrypted=?, password_encrypted=?, totp_encrypted=?, status='configured', updated_at=?, updated_by=? WHERE provider=?",
-                (enc_key, enc_secret, enc_secret, enc_user, enc_pass, enc_totp, now, admin["id"], body.provider)
+                "UPDATE data_providers SET api_key_encrypted=?, api_secret_encrypted=?, user_id_encrypted=?, password_encrypted=?, totp_encrypted=?, status='configured', updated_at=?, updated_by=? WHERE provider=?",
+                (enc_key, enc_secret, enc_user, enc_pass, enc_totp, now, admin["id"], body.provider)
             )
         else:
             # For Upstox/Others, keep access_token separate.
@@ -1036,7 +1037,9 @@ async def feeder_health_status(admin=Depends(require_admin)):
             "status": p["status"],
             "updated_at": p.get("updated_at"),
             "has_token": bool(p.get("access_token_encrypted")),
-            "has_credentials": bool(p.get("api_key_encrypted")),
+            "has_credentials": bool(p.get("api_key_encrypted")) and (
+                p["provider"] != "dhan" or bool(p.get("user_id_encrypted"))
+            ),
             "token_age_hours": None,
             "token_fresh": False,
             # Live WebSocket state from feed_registry
