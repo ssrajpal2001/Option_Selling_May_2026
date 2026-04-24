@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 from web.auth import hash_password, verify_password, create_access_token
 from web.db import db_fetchone, db_execute, db_fetchall
 from web.deps import get_current_user, require_admin
@@ -12,7 +13,7 @@ class RegisterRequest(BaseModel):
     username: str
     email: str
     password: str
-    broker: str
+    broker: Optional[str] = None
     full_name: str
     phone_number: str
 
