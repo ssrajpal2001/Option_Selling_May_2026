@@ -209,9 +209,9 @@
 
         <div class="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
            <label class="block text-[9px] text-slate-500 uppercase mb-1">Paste Redirect URL / Manual Token</label>
-           <p class="text-[9px] text-slate-600 mb-2">After Upstox login, copy the full URL from your browser (e.g. <span class="text-slate-400">https://google.com?code=ABC123...</span>) and paste it here. The bot extracts the code and saves your token automatically.</p>
+           <p class="text-[9px] text-slate-600 mb-2">After Upstox login, copy the full URL from your browser (e.g. <span class="text-slate-400">https://google.com?code=ABC123&amp;...</span>) and paste it here. The bot extracts the code and saves your token automatically.</p>
            <div class="flex gap-2">
-             <input type="text" id="manual-token-input-generic" class="input-field flex-1 text-[10px]" placeholder="Paste full google.com?code=... redirect URL here">
+             <input type="text" id="manual-token-input-generic" class="input-field flex-1 text-[10px]" placeholder="Paste full https://google.com?code=... redirect URL here">
              <button type="button" onclick="saveManualTokenGeneric()" class="btn-primary px-3 py-1 text-[10px]">Exchange &amp; Save</button>
            </div>
         </div>

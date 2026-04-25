@@ -422,8 +422,9 @@ Upstox tokens expire daily. There are two ways to refresh the token depending on
 
 Set the Redirect URI in the Upstox Developer Portal to exactly:
 ```
-http://13.234.185.209:5000/auth/upstox/callback
+http://<EC2-IP>:5000/auth/upstox/callback
 ```
+*(e.g. `http://13.234.185.209:5000/auth/upstox/callback`)*
 Then the token is captured automatically after login — no copy-paste needed.
 
 **Steps:**
@@ -443,14 +444,14 @@ capture the token automatically. Use this manual flow instead:
 2. Click **Fallback: Manual Browser Auth** → Upstox login page opens in a new tab
 3. Log in with your Upstox account + OTP
 4. After login, your browser is redirected to a google.com URL — do NOT close it
-5. Copy the **full URL** from the browser address bar (it starts with `https://www.google.com/?code=...`)
+5. Copy the **full URL** from the browser address bar (it starts with `https://google.com?code=...`)
 6. Go back to the Admin → Data Providers → Configure Upstox modal
 7. Paste the full URL into the **"Paste Redirect URL"** box at the bottom
 8. Click **Exchange & Save** — the bot extracts the auth code and saves your token ✓
 
 > **Tip:** To switch to the fully automated Option A, update the Redirect URI in your
 > [Upstox Developer Portal](https://upstox.com/developer/apps) to
-> `http://13.234.185.209:5000/auth/upstox/callback`. This is the recommended long-term setup.
+> `http://<EC2-IP>:5000/auth/upstox/callback`. This is the recommended long-term setup.
 
 ---
 
