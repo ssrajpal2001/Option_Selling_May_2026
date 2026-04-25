@@ -227,6 +227,20 @@ class TickProcessor:
                 except Exception as e:
                     logger.error(f"Error processing square off signal: {e}")
 
+            # PER-LEG SQUARE OFF SIGNAL CHECK
+            for _leg in ['CE', 'PE']:
+                leg_file = f"config/square_off_leg_{user_id}_{_leg}.json"
+                if os.path.exists(leg_file):
+                    try:
+                        logger.info(f"[Client {user_id}] SQUARE OFF LEG {_leg} signal detected.")
+                        from hub.sell_manager_v3 import SellManagerV3
+                        sm = getattr(self.orchestrator, 'sell_manager', None)
+                        if sm and isinstance(sm, SellManagerV3) and not sm.strangle_closed:
+                            await sm.close_one_side(_leg, timestamp, reason="MANUAL_SQUARE_OFF")
+                        os.remove(leg_file)
+                    except Exception as e:
+                        logger.error(f"Error processing per-leg square off signal ({_leg}): {e}")
+
         # HEARTBEAT (every 5 minutes)
         if not self.orchestrator.is_backtest:
             if now_ts - self.last_heartbeat_time >= 300.0:

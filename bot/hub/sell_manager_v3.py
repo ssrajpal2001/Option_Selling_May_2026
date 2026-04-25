@@ -539,8 +539,21 @@ class SellManagerV3:
         except Exception as _te:
             logger.error(f"[SellManagerV3] Telegram entry notify failed: {_te}")
 
-    async def _execute_full_exit(self, timestamp, reason, cooldown=True, stop_for_day=False):
-        logger.info(f"[SellManagerV3] Full Exit: {reason}")
+    async def close_one_side(self, side: str, timestamp, reason: str = "MANUAL_SQUARE_OFF"):
+        """Close a single leg (CE or PE) without affecting the other side."""
+        side = side.upper()
+        if side not in ('CE', 'PE'):
+            logger.warning(f"[SellManagerV3] Invalid side for close_one_side: {side}")
+            return
+        if side not in self.active_trades:
+            logger.info(f"[SellManagerV3] No active {side} trade to close.")
+            return
+        await self._execute_full_exit(timestamp, reason, cooldown=False, stop_for_day=False, sides=[side])
+
+    async def _execute_full_exit(self, timestamp, reason, cooldown=True, stop_for_day=False, sides=None):
+        if sides is None:
+            sides = ['CE', 'PE']
+        logger.info(f"[SellManagerV3] Full Exit ({', '.join(sides)}): {reason}")
         tasks = []
         expiry = self.orchestrator.atm_manager.get_expiry_by_mode('sell', 'signal')
         product_type = self._cfg('product_type', 'NRML')
@@ -565,7 +578,7 @@ class SellManagerV3:
             g_roc_tf = self._v3_cfg('guardrail_roc.tf', 15, int)
             exit_snap = f"RSI:{m_rsi or '--'}, VWAP:{m_vwap}, ROC({g_roc_tf}m):{g_roc or '--'}"
 
-        for side in ['CE', 'PE']:
+        for side in sides:
             trade = self.active_trades.get(side)
             if not trade or not trade.get('contract'): continue
 
@@ -641,7 +654,8 @@ class SellManagerV3:
             self.trades_completed_today += 1
 
         if tasks: await asyncio.gather(*tasks)
-        self.active_trades = {}
+        for _s in sides:
+            self.active_trades.pop(_s, None)
 
         # Fire Telegram notifications AFTER orders are dispatched (non-blocking threads)
         if _tg_notification_data:

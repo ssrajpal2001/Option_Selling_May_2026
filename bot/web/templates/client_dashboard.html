@@ -552,28 +552,8 @@
 <!-- ══════════════════════════════════════════════════════════ POSITIONS PANE -->
 <div class="pane" id="pane-positions">
 
-  <!-- P&L Summary bar -->
-  <div class="pos-summary-bar" id="pos-summary-bar">
-    <div class="pos-summary-item">
-      <span class="pos-summary-lbl">Open P&amp;L</span>
-      <span class="pos-summary-val text-muted" id="pos-open-pnl">₹0</span>
-    </div>
-    <div style="width:1px;background:var(--border);align-self:stretch"></div>
-    <div class="pos-summary-item">
-      <span class="pos-summary-lbl">Today Realised</span>
-      <span class="pos-summary-val text-muted" id="pos-realised-pnl">₹0</span>
-    </div>
-    <div style="width:1px;background:var(--border);align-self:stretch"></div>
-    <div class="pos-summary-item">
-      <span class="pos-summary-lbl">Net Day P&amp;L</span>
-      <span class="pos-summary-val text-muted" id="pos-net-pnl">₹0</span>
-    </div>
-    <div style="flex:1"></div>
-    <button class="sqoff-btn" style="padding:6px 14px;font-size:12px;align-self:center" onclick="confirmSquareOff()">Close All</button>
-  </div>
-
   <!-- Positions card -->
-  <div class="card" style="padding:0;overflow:hidden">
+  <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
 
     <!-- Card header -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
@@ -581,16 +561,17 @@
         <span class="sec-title" style="margin:0">Open Positions</span>
         <span id="pos-count-badge" style="display:none;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(0,212,170,.15);color:var(--primary)"></span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
         <span id="pos-last-updated" style="font-size:11px;color:var(--muted)"></span>
         <span id="pos-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#64748b"></span>
+        <button class="sqoff-btn" style="padding:5px 12px;font-size:11px" onclick="confirmSquareOff()">Close All</button>
       </div>
     </div>
 
     <!-- Empty state -->
     <div id="pos-empty" class="pos-empty">
       <div class="pos-empty-icon">📭</div>
-      <div class="pos-empty-txt">No open positions</div>
+      <div class="pos-empty-txt">No open positions today</div>
       <div style="font-size:12px;margin-top:4px;color:#475569">Bot will show active CE/PE positions here once placed</div>
     </div>
 
@@ -613,6 +594,24 @@
         </thead>
         <tbody id="pos-table-body"></tbody>
       </table>
+    </div>
+
+    <!-- Sticky P&L Summary bar at bottom -->
+    <div class="pos-summary-bar" id="pos-summary-bar" style="border-top:1px solid var(--border);border-radius:0;margin:0;position:sticky;bottom:0">
+      <div class="pos-summary-item">
+        <span class="pos-summary-lbl">Open P&amp;L</span>
+        <span class="pos-summary-val text-muted" id="pos-open-pnl">₹0</span>
+      </div>
+      <div style="width:1px;background:var(--border);align-self:stretch"></div>
+      <div class="pos-summary-item">
+        <span class="pos-summary-lbl">Today Realised</span>
+        <span class="pos-summary-val text-muted" id="pos-realised-pnl">₹0</span>
+      </div>
+      <div style="width:1px;background:var(--border);align-self:stretch"></div>
+      <div class="pos-summary-item">
+        <span class="pos-summary-lbl">Net Day P&amp;L</span>
+        <span class="pos-summary-val text-muted" id="pos-net-pnl">₹0</span>
+      </div>
     </div>
   </div>
 </div>
@@ -1372,7 +1371,7 @@ function renderPositions(d, todayTrades) {
       <td class="${pnlCls}">${fmtRs(pnl)}</td>
       <td class="${pnlCls}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</td>
       <td style="color:var(--muted);font-size:12px">${entryTime}</td>
-      <td><button class="sqoff-btn" onclick="confirmSquareOff()">Squareoff</button></td>
+      <td><button class="sqoff-btn" onclick="squareOffLeg('${side}')">Squareoff</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -1556,6 +1555,29 @@ async function confirmSquareOff() {
     toast('Square-off sent!', 'ok');
   } catch (e) {
     toast(e.message || 'Square-off failed', 'err');
+  }
+}
+
+async function squareOffLeg(side) {
+  if (!confirm(`This will close the ${side} position only. Continue?`)) return;
+  try {
+    await api('POST', '/bot/square-off-leg', { side });
+    toast(`${side} square-off sent!`, 'ok');
+  } catch (e) {
+    toast(e.message || `${side} square-off failed`, 'err');
+  }
+}
+
+async function pollPositions() {
+  if (!state.selectedBroker) return;
+  try {
+    const d = await api('GET', '/bot/status');
+    if (!d.configured) return;
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const todayTrades = (d.trade_history || []).filter(t => (t.closed_at || '').startsWith(today));
+    renderPositions(d, todayTrades);
+  } catch (e) {
+    // Silent — positions are secondary; main pollBotStatus handles errors
   }
 }
 
@@ -1890,6 +1912,7 @@ async function init() {
 
   // Poll intervals
   setInterval(pollBotStatus, 8000);
+  setInterval(pollPositions, 2000);  // Fast 2s refresh for live P&L on Positions tab
   setInterval(loadMarketStatus, 60000);
   setInterval(tickClock, 1000);
   tickClock();

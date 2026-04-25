@@ -540,6 +540,22 @@ async def square_off_all_positions(user=Depends(get_current_user)):
     return {"success": True, "message": "Square off signal sent to bot."}
 
 
+@router.post("/bot/square-off-leg")
+async def square_off_one_leg(request: Request, user=Depends(get_current_user)):
+    instance = _get_active_instance(user["id"])
+    if not instance or instance["status"] != "running":
+        raise HTTPException(400, "Broker connection must be active first.")
+    body = await request.json()
+    side = str(body.get("side", "")).upper()
+    if side not in ("CE", "PE"):
+        raise HTTPException(400, "side must be CE or PE.")
+    leg_file = Path(f'config/square_off_leg_{user["id"]}_{side}.json')
+    with open(leg_file, 'w') as f:
+        json.dump({"side": side, "triggered_at": time.time()}, f)
+    logger.info(f"[Client] User {user['id']} requested SQUARE OFF LEG {side}.")
+    return {"success": True, "message": f"{side} square off signal sent to bot."}
+
+
 @router.post("/bot/start")
 async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
     # ── Plan expiry enforcement (hard cap: only 1 permitted broker slot) ─
