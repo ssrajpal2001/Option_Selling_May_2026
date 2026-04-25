@@ -433,7 +433,7 @@ Dhan tokens last 30 days and the platform auto-renews them. No daily manual step
 1. Enter **Client ID** and **Access Token** → click **Save**
 2. Token status shows Fresh immediately ✓
 
-> Dhan tokens auto-renew every 30 days. You will get a Telegram alert 7 days before expiry.
+> Dhan tokens are valid for 30 days. When your subscription expiry check runs (9:15 AM) and your Dhan token is close to expiring, admin will be notified. If you receive a Telegram alert about your Dhan token, re-enter a fresh access token from the Dhan developer portal.
 
 ---
 
@@ -526,8 +526,8 @@ These run automatically every day without admin intervention:
 |------------|-------------|
 | **8:30 AM** | Platform reconnects Upstox and Dhan global data feeds |
 | **9:15 AM** | Kill-switch locks are cleared — clients who were locked yesterday can trade again |
+| **9:15 AM** | Subscription expiry check — clients and admin are alerted if a plan expires in 7 or 1 day |
 | **3:30 PM** | Day-end Telegram P&L summary sent to all active clients who have a Telegram Chat ID |
-| **9:00 AM** | Subscription expiry check — clients and admin are alerted if a plan expires in 7 or 1 day |
 
 ---
 
@@ -592,6 +592,22 @@ These run automatically every day without admin intervention:
 **Cause:** No access token is saved and no One-Click credentials (password/TOTP) are stored.
 
 **Fix:** Go to Settings → Broker → complete the full credential setup and login for your broker.
+
+---
+
+### Bot not starting — "Invalid API key" or "Authentication failed" error
+
+**Cause:** The API Key or API Secret saved in Settings is incorrect or has been regenerated on the broker's platform since it was last entered.
+
+**Fix:**
+1. Log in to your broker's developer portal (e.g. [kite.trade](https://kite.trade) for Zerodha, [dhanhq.co](https://dhanhq.co) for Dhan)
+2. Navigate to your API app settings and copy the current API Key
+3. In AlgoSoft → Settings → Broker → click **Edit Credentials**
+4. Re-enter the correct API Key and API Secret (do not paste extra spaces)
+5. Save, then complete the broker login/token flow again
+6. Confirm the token pill turns green before starting the bot
+
+> If the error persists, check that the app's Redirect URI in the broker portal exactly matches the URL your admin configured. A mismatch causes authentication to fail even with correct credentials.
 
 ---
 
