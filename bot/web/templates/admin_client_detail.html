@@ -49,6 +49,15 @@
     </div>
   </div>
 
+  <!-- ── Telegram Configuration ───────────────────────────────────────────── -->
+  <div class="card p-4 mb-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Telegram Notifications</div>
+    <div class="flex items-center gap-3">
+      <span id="tg-badge" style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:12px;font-weight:600">--</span>
+      <span id="tg-chat-id" style="color:#94a3b8;font-size:12px;font-family:monospace"></span>
+    </div>
+  </div>
+
   <!-- ── Plan Assignment ─────────────────────────────────────────────────── -->
   <div class="card p-4 mb-4">
     <div class="flex items-center justify-between mb-3">
@@ -643,6 +652,22 @@ async function loadDetail() {
 
   document.getElementById('client-name').textContent = c.username;
   document.getElementById('client-email').textContent = c.email;
+
+  // Telegram status badge
+  const tgBadge = document.getElementById('tg-badge');
+  const tgChatEl = document.getElementById('tg-chat-id');
+  if (c.telegram_chat_id) {
+    tgBadge.textContent = '✅ Configured';
+    tgBadge.style.background = '#052e16'; tgBadge.style.color = '#34d399';
+    // Mask middle digits: show first 3 and last 2 chars only
+    const raw = String(c.telegram_chat_id);
+    const masked = raw.length > 6 ? raw.slice(0, 3) + '·'.repeat(raw.length - 5) + raw.slice(-2) : raw;
+    tgChatEl.textContent = `Chat ID: ${masked}`;
+  } else {
+    tgBadge.textContent = '⚠ Not configured';
+    tgBadge.style.background = '#1c1917'; tgBadge.style.color = '#94a3b8';
+    tgChatEl.textContent = 'Client has not set a Telegram Chat ID';
+  }
   document.getElementById('d-status').innerHTML = c.is_active
     ? '<span class="badge-ok">Active</span>' : '<span class="badge-warn">Pending</span>';
   document.getElementById('d-tier').textContent = c.plan_display_name || c.subscription_tier;

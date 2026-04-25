@@ -516,6 +516,7 @@ async def client_detail(client_id: int, admin=Depends(require_admin)):
     user = db_fetchone("""
         SELECT u.id, u.username, u.email, u.is_active, u.subscription_tier,
                u.max_broker_instances, u.plan_id, u.plan_expiry_date, u.created_at,
+               u.full_name, u.phone_number, u.telegram_chat_id,
                sp.display_name AS plan_display_name, sp.max_broker_instances AS plan_max_brokers,
                sp.plan_name AS plan_slug
         FROM users u
