@@ -629,9 +629,19 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
 
     has_auto_login = instance.get("password_encrypted") and instance.get("totp_encrypted")
 
+    # Determine whether the stored token is stale and actually needs refreshing.
+    # Dhan uses a time-based window; all other brokers use the 6 AM IST gate.
+    _token_ts = instance.get("token_updated_at", "")
+    if broker_name == "dhan":
+        token_needs_refresh = not _is_dhan_token_fresh(_token_ts)
+    else:
+        token_needs_refresh = not _is_token_fresh(_token_ts)
+
     # ── Headless Login Integration ──
-    # If auto-login is possible, we attempt it BEFORE starting the bot to ensure valid tokens in DB
-    if has_auto_login:
+    # Only attempt headless login when credentials are saved AND the token is stale.
+    # This prevents a live OTP being fired every time "Start Bot" is clicked for
+    # brokers like Upstox / Zerodha whose tokens are still valid from the same day.
+    if has_auto_login and token_needs_refresh:
         try:
             logger.info(f"[Bot Start] Attempting headless login for {broker_name} (User {user['id']})...")
             creds = {
@@ -676,6 +686,12 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
                 logger.warning(f"[Bot Start] Headless login failed for {broker_name}, will attempt with existing token if any.")
         except Exception as e:
             logger.error(f"[Bot Start] Headless login error: {e}")
+    elif has_auto_login:
+        # Token is still fresh — skip headless login to avoid triggering a live OTP
+        logger.info(
+            f"[Bot Start] Skipping headless login for {broker_name} (User {user['id']}) "
+            f"— token is fresh (updated_at={_token_ts[:19] if _token_ts else 'unknown'})"
+        )
 
     # Validation
     if not instance.get("access_token_encrypted"):
