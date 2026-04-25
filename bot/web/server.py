@@ -3,6 +3,9 @@ import hashlib
 import urllib.parse
 from datetime import datetime, timezone, timedelta
 
+# Track server start time for /health and uptime reporting
+APP_START_TIME: float = time.time()
+
 from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -898,6 +901,37 @@ async def _day_end_summary_scheduler():
         except Exception as e:
             logger.error(f"[Scheduler] Day-end scheduler error: {e}")
             await asyncio.sleep(60)
+
+
+@app.get("/health")
+async def health_check():
+    """Public health check endpoint for monitoring tools and process managers.
+    Returns bot uptime, active client session count, and timestamp.
+    No authentication required — safe to expose behind a firewall/load balancer.
+    """
+    import os
+    uptime_secs = time.time() - APP_START_TIME
+    hrs, rem = divmod(int(uptime_secs), 3600)
+    mins, secs = divmod(rem, 60)
+
+    # Count running client bot instances from DB
+    try:
+        active_sessions = (db_fetchone(
+            "SELECT COUNT(*) as c FROM client_broker_instances WHERE status='running'"
+        ) or {}).get("c", 0)
+    except Exception:
+        active_sessions = 0
+
+    return {
+        "status": "ok",
+        "uptime_seconds": round(uptime_secs, 1),
+        "uptime": f"{hrs}h {mins}m {secs}s",
+        "started_at": datetime.fromtimestamp(APP_START_TIME, tz=timezone.utc).isoformat(),
+        "active_sessions": active_sessions,
+        "pid": os.getpid(),
+        "version": app.version,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @app.on_event("startup")
