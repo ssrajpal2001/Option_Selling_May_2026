@@ -65,7 +65,8 @@ class InstanceManager:
         log_dir = os.path.join(os.getcwd(), "logs")
         os.makedirs(log_dir, exist_ok=True)
 
-        log_file = f"logs/client_{client_id}_{broker}.log"
+        log_file = os.path.join(log_dir, f"client_{client_id}_{broker}.log")
+        env["CLIENT_LOG_FILE"] = log_file
 
         try:
             # We allow the subprocess to inherit stdout/stderr so that logs appear in the EC2 terminal.

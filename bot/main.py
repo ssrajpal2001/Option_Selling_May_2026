@@ -65,8 +65,13 @@ async def main():
     if args.client_mode:
         from hub.client_config import load_client_config
         client_cfg = load_client_config()
-        # Override log file for client mode BEFORE configuring logger
-        config_manager.set_override('app', 'log_file', f"logs/client_{client_cfg.client_id}_{client_cfg.broker}.log")
+        # Use the explicit log file path passed by InstanceManager via CLIENT_LOG_FILE.
+        # Fall back to constructing from client_cfg if running outside of InstanceManager.
+        client_log_file = os.environ.get(
+            'CLIENT_LOG_FILE',
+            f"logs/client_{client_cfg.client_id}_{client_cfg.broker}.log"
+        )
+        config_manager.set_override('app', 'log_file', client_log_file)
 
         # Absolute path hardening
         log_dir = os.path.join(os.getcwd(), "logs")
