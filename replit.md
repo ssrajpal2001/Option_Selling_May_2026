@@ -53,3 +53,18 @@ Three default plans seeded in DB: FREE (1 broker), PREMIUM (3 brokers), PRO (5 b
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure details.
+
+---
+
+## GitHub Auto-Push
+
+Every commit on `main` is automatically pushed to GitHub after it is made.
+
+- **Python script**: `scripts/github_push.py` — uses dulwich to push `main` to GitHub; token is never exposed in process list; push output is suppressed
+- **Shell wrapper**: `scripts/github-push.sh` — discovers the correct Python with dulwich and invokes the Python script
+- **Hook**: `.git/hooks/post-commit` — triggers the wrapper in the background after each commit (non-blocking, always exits 0)
+- **Log**: `logs/github-push.log` — all push results (success and failure) are logged here
+- **Env vars required**:
+  - `GITHUB_TOKEN` — personal access token with repo write access (already configured as a secret)
+  - `GITHUB_REPO` — repository in `owner/repo` format (e.g. `ssrajpal2001/Option_Selling_May_2026`, stored as shared env var)
+- **Hook reinstall**: `scripts/post-merge.sh` reinstalls the hook automatically after each task merge so it is never lost

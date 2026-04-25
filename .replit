@@ -63,3 +63,8 @@ externalPort = 3000
 [nix]
 channel = "stable-25_05"
 packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
+
+[userenv]
+
+[userenv.shared]
+GITHUB_REPO = "ssrajpal2001/Option_Selling_May_2026"

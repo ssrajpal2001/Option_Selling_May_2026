@@ -52,3 +52,4 @@ python-jose[cryptography]
 upstox-totp
 Dhan-Tradehull
 psutil>=5.9.0
+dulwich>=1.2.0

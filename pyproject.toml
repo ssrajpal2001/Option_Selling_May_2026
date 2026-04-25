@@ -5,6 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
     "aiofiles>=25.1.0",
+    "dulwich>=1.2.0",
     "aiohttp>=3.13.5",
     "bcrypt==4.1.2",
     "cryptography>=46.0.7",
