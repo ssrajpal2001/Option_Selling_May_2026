@@ -208,6 +208,7 @@ class StatusWriter:
                         "entry": round(float(trade['entry_price']), 2),
                         "ltp": round(float(ltp), 2),
                         "pnl": round((float(trade['entry_price']) - float(ltp)) * trade['lot_size'] * v3_qty_mult, 2),
+                        "qty": int(trade['lot_size'] * v3_qty_mult),
                         "entry_time": e_time_str,
                         "entry_index": trade.get('entry_index_price'),
                     }

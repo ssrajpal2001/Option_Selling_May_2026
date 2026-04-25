@@ -156,6 +156,29 @@
     .trade-table tr:last-child td { border-bottom: none; }
     .trade-table tr:hover td { background: rgba(255,255,255,.02); }
 
+    /* Positions pane */
+    .pos-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 680px; }
+    .pos-table th { padding: 10px 12px; text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .pos-table td { padding: 11px 12px; border-bottom: 1px solid rgba(51,65,85,.4); vertical-align: middle; white-space: nowrap; }
+    .pos-table tr:last-child td { border-bottom: none; }
+    .pos-table tr:hover td { background: rgba(255,255,255,.025); }
+    .pos-row-green td { background: rgba(0,212,170,.04); }
+    .pos-row-red   td { background: rgba(239,68,68,.04); }
+    .pos-pnl-green { color: #00d4aa; font-weight: 700; }
+    .pos-pnl-red   { color: #ef4444; font-weight: 700; }
+    .pos-badge-ce  { display:inline-block; padding:2px 7px; border-radius:4px; font-size:11px; font-weight:700; background:#1e3a5f; color:#60a5fa; }
+    .pos-badge-pe  { display:inline-block; padding:2px 7px; border-radius:4px; font-size:11px; font-weight:700; background:#3b1f2b; color:#f472b6; }
+    .sqoff-btn { padding:4px 10px; font-size:11px; font-weight:700; border-radius:5px; border:1px solid #ef4444; background:transparent; color:#ef4444; cursor:pointer; transition:all .15s; }
+    .sqoff-btn:hover { background:#ef4444; color:#fff; }
+    .pos-summary-bar { display:flex; gap:20px; padding:12px 16px; background:#0f172a; border-radius:8px; margin-bottom:14px; flex-wrap:wrap; }
+    .pos-summary-item { display:flex; flex-direction:column; gap:2px; }
+    .pos-summary-lbl { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .pos-summary-val { font-size:15px; font-weight:700; }
+    .pos-empty { padding:48px 20px; text-align:center; color:var(--muted); }
+    .pos-empty-icon { font-size:36px; margin-bottom:10px; }
+    .pos-empty-txt { font-size:14px; }
+    .pos-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
     /* Toast */
     .toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; padding: 12px 20px; border-radius: 8px; font-weight: 600; opacity: 0; transition: opacity .3s; pointer-events: none; max-width: 340px; font-size: 13px; }
     .toast.show { opacity: 1; pointer-events: auto; }
@@ -230,6 +253,7 @@
     <!-- Tabs -->
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="showPane('dashboard')" id="tab-dashboard">Dashboard</button>
+      <button class="nav-tab" onclick="showPane('positions')" id="tab-positions">Positions</button>
       <button class="nav-tab" onclick="showPane('backtest')" id="tab-backtest">Backtest</button>
       <button class="nav-tab" onclick="showPane('history')" id="tab-history">History</button>
       <button class="nav-tab" onclick="showPane('settings')" id="tab-settings">Settings</button>
@@ -521,6 +545,74 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ POSITIONS PANE -->
+<div class="pane" id="pane-positions">
+
+  <!-- P&L Summary bar -->
+  <div class="pos-summary-bar" id="pos-summary-bar">
+    <div class="pos-summary-item">
+      <span class="pos-summary-lbl">Open P&amp;L</span>
+      <span class="pos-summary-val text-muted" id="pos-open-pnl">₹0</span>
+    </div>
+    <div style="width:1px;background:var(--border);align-self:stretch"></div>
+    <div class="pos-summary-item">
+      <span class="pos-summary-lbl">Today Realised</span>
+      <span class="pos-summary-val text-muted" id="pos-realised-pnl">₹0</span>
+    </div>
+    <div style="width:1px;background:var(--border);align-self:stretch"></div>
+    <div class="pos-summary-item">
+      <span class="pos-summary-lbl">Net Day P&amp;L</span>
+      <span class="pos-summary-val text-muted" id="pos-net-pnl">₹0</span>
+    </div>
+    <div style="flex:1"></div>
+    <button class="sqoff-btn" style="padding:6px 14px;font-size:12px;align-self:center" onclick="confirmSquareOff()">Close All</button>
+  </div>
+
+  <!-- Positions card -->
+  <div class="card" style="padding:0;overflow:hidden">
+
+    <!-- Card header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="sec-title" style="margin:0">Open Positions</span>
+        <span id="pos-count-badge" style="display:none;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(0,212,170,.15);color:var(--primary)"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="pos-last-updated" style="font-size:11px;color:var(--muted)"></span>
+        <span id="pos-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#64748b"></span>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="pos-empty" class="pos-empty">
+      <div class="pos-empty-icon">📭</div>
+      <div class="pos-empty-txt">No open positions</div>
+      <div style="font-size:12px;margin-top:4px;color:#475569">Bot will show active CE/PE positions here once placed</div>
+    </div>
+
+    <!-- Positions table -->
+    <div id="pos-table-wrap" class="pos-scroll" style="display:none">
+      <table class="pos-table">
+        <thead>
+          <tr>
+            <th>Instrument</th>
+            <th>Type</th>
+            <th>Strike</th>
+            <th>Qty</th>
+            <th>Avg Price</th>
+            <th>LTP</th>
+            <th>P&amp;L ₹</th>
+            <th>P&amp;L %</th>
+            <th>Entry Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="pos-table-body"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -1177,9 +1269,113 @@ async function pollBotStatus() {
     updateBotUI(running, state.tradingEnabled);
     updateStatsUI(todayTrades);
     updateKillSwitchUI();
+    renderPositions(d, todayTrades);
   } catch (e) {
     console.warn('pollBotStatus:', e);
   }
+}
+
+// ══════════════════════════════════════════════════════ POSITIONS RENDERER
+function renderPositions(d, todayTrades) {
+  const sell = d.bot_data?.sell || {};
+  const instrument = (d.bot_data?.instrument || 'NIFTY').toUpperCase();
+
+  const sides = ['CE', 'PE'];
+  const activePosns = sides.filter(s => sell[s]?.placed);
+
+  // Summary bar: open P&L
+  const openPnl = activePosns.reduce((sum, s) => sum + (sell[s].pnl || 0), 0);
+  const realisedPnl = state.todayPnlRs || 0;
+  const netPnl = openPnl + realisedPnl;
+
+  function fmtRs(v) {
+    const abs = Math.abs(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (v >= 0 ? '₹' : '-₹') + abs;
+  }
+  function pnlClass(v) { return v >= 0 ? 'pos-pnl-green' : 'pos-pnl-red'; }
+
+  const openEl = document.getElementById('pos-open-pnl');
+  const realEl = document.getElementById('pos-realised-pnl');
+  const netEl  = document.getElementById('pos-net-pnl');
+  if (openEl) { openEl.textContent = fmtRs(openPnl); openEl.className = 'pos-summary-val ' + pnlClass(openPnl); }
+  if (realEl) { realEl.textContent = fmtRs(realisedPnl); realEl.className = 'pos-summary-val ' + pnlClass(realisedPnl); }
+  if (netEl)  { netEl.textContent  = fmtRs(netPnl);  netEl.className  = 'pos-summary-val ' + pnlClass(netPnl); }
+
+  // Live dot + timestamp
+  const dotEl = document.getElementById('pos-live-dot');
+  const updEl = document.getElementById('pos-last-updated');
+  if (dotEl) dotEl.style.background = d.bot_data ? '#00d4aa' : '#64748b';
+  if (updEl) {
+    const now = new Date();
+    updEl.textContent = 'Updated ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  }
+
+  // Badge
+  const badge = document.getElementById('pos-count-badge');
+  if (badge) {
+    if (activePosns.length > 0) {
+      badge.style.display = 'inline-block';
+      badge.textContent = activePosns.length + ' open';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // Empty/table toggle
+  const emptyEl = document.getElementById('pos-empty');
+  const tableWrap = document.getElementById('pos-table-wrap');
+  if (!emptyEl || !tableWrap) return;
+
+  if (activePosns.length === 0) {
+    emptyEl.style.display = 'block';
+    tableWrap.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  tableWrap.style.display = 'block';
+
+  const tbody = document.getElementById('pos-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  activePosns.forEach(side => {
+    const p = sell[side];
+    const entry = p.entry || 0;
+    const ltp   = p.ltp   || 0;
+    const pnl   = p.pnl   || 0;
+    const qty   = p.qty   || '—';
+    const strike = p.strike || '—';
+
+    // For SELL: profit = entry > ltp
+    const pnlPct = entry > 0 ? ((entry - ltp) / entry * 100) : 0;
+    const isProfit = pnl >= 0;
+    const rowClass = isProfit ? 'pos-row-green' : 'pos-row-red';
+    const pnlCls   = isProfit ? 'pos-pnl-green' : 'pos-pnl-red';
+
+    const typeBadge = side === 'CE'
+      ? `<span class="pos-badge-ce">CE</span>`
+      : `<span class="pos-badge-pe">PE</span>`;
+
+    const instrLabel = `${instrument}&nbsp;${strike}&nbsp;${side}`;
+
+    const entryTime = p.entry_time || '—';
+
+    const tr = document.createElement('tr');
+    tr.className = rowClass;
+    tr.innerHTML = `
+      <td style="font-weight:600">${instrLabel}</td>
+      <td>${typeBadge}</td>
+      <td style="font-family:monospace">${strike}</td>
+      <td style="font-family:monospace;color:var(--muted)">${typeof qty === 'number' ? -qty : qty}</td>
+      <td style="font-family:monospace">₹${entry.toFixed(2)}</td>
+      <td style="font-family:monospace;font-weight:600">₹${ltp.toFixed(2)}</td>
+      <td class="${pnlCls}">${fmtRs(pnl)}</td>
+      <td class="${pnlCls}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</td>
+      <td style="color:var(--muted);font-size:12px">${entryTime}</td>
+      <td><button class="sqoff-btn" onclick="confirmSquareOff()">Squareoff</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 function updateBotUI(running, tradingEnabled) {
