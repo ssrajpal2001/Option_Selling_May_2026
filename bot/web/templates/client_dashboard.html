@@ -362,7 +362,7 @@
   <!-- Setup alert / onboarding card -->
   <div id="setup-alert" style="display:none;background:#0f1f2e;border:1px solid #38bdf8;border-radius:10px;padding:16px 18px;margin-bottom:16px;color:#bae6fd;font-size:13px">
     <div style="font-weight:700;color:#f0f9ff;font-size:14px;margin-bottom:6px">🚀 Get started — connect your broker</div>
-    <div style="margin-bottom:10px">Go to <button onclick="showPane('settings')" style="color:var(--primary);background:transparent;border:none;cursor:pointer;font-weight:700;text-decoration:underline">Settings</button> to configure your broker API credentials and start trading. It only takes a minute.</div>
+    <div style="margin-bottom:10px">Click <button onclick="openBrokerSetup()" style="color:var(--primary);background:transparent;border:none;cursor:pointer;font-weight:700;text-decoration:underline">Connect Broker</button> to enter your API credentials and start trading. It only takes a minute.</div>
     <div id="onboard-ip-hint" style="display:none;background:#0c2a1a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-top:8px">
       <div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px">📌 Whitelist your static IP first</div>
       <div style="font-size:12px;color:#86efac;margin-bottom:8px">Your account has been assigned a dedicated static IP. Before adding your broker API key, whitelist this IP in your broker's developer portal:</div>
@@ -1022,6 +1022,19 @@ function toggleAcc(bodyId, arrowId) {
   const arrow = document.getElementById(arrowId);
   body.classList.toggle('open');
   arrow.classList.toggle('open');
+}
+
+function openBrokerSetup() {
+  showPane('settings');
+  setTimeout(() => {
+    const body = document.getElementById('broker-cred');
+    const arrow = document.getElementById('arr-broker');
+    if (body && !body.classList.contains('open')) {
+      body.classList.add('open');
+      if (arrow) arrow.classList.add('open');
+    }
+    if (body) body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 250);
 }
 
 // ═══════════════════════════════════════════════════════════════ TOAST

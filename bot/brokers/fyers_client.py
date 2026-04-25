@@ -77,7 +77,11 @@ class FyersClient(BaseBroker):
         if not self.fyers:
             return []
         try:
-            resp = self.fyers.positions()
+            self._set_source_ip()
+            try:
+                resp = self.fyers.positions()
+            finally:
+                self._clear_source_ip()
             if resp and resp.get("s") == "ok":
                 return resp.get("netPositions", [])
             return []
@@ -89,7 +93,11 @@ class FyersClient(BaseBroker):
         if not self.fyers:
             return {}
         try:
-            resp = self.fyers.funds()
+            self._set_source_ip()
+            try:
+                resp = self.fyers.funds()
+            finally:
+                self._clear_source_ip()
             if resp and resp.get("s") == "ok":
                 fund_data = resp.get("fund_limit", [])
                 for item in fund_data:

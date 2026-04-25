@@ -42,7 +42,9 @@ class UpstoxClient(BaseBroker):
                     if access_token:
                         self._access_token = access_token
                         auth = SimpleAuth(access_token, self.config_manager)
-                        self.api_client = RestApiClient(auth)
+                        # Pass source_ip so RestApiClient creates aiohttp session with
+                        # TCPConnector(local_addr=...) — covers ALL async HTTP calls.
+                        self.api_client = RestApiClient(auth, source_ip=self.source_ip)
                         logger.info(f"Upstox client initialized for User ID: {self.user_id}.")
                     else:
                         logger.error(f"Upstox: Missing credentials in DB config for user {self.user_id}.")

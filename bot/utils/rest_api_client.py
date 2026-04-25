@@ -7,15 +7,26 @@ import asyncio
 class RestApiClient:
     BASE_URL = "https://api.upstox.com/v2"
 
-    def __init__(self, auth_handler):
+    def __init__(self, auth_handler, source_ip: str = None):
         self.auth_handler = auth_handler
         self.session = None
+        self.source_ip = source_ip or None
         self.ohlc_cache = {}
         self.backtest_mode = self.auth_handler.config_manager.get_boolean('backtest', 'enabled', fallback=False)
 
     async def _get_session(self):
         if self.session is None or self.session.closed:
-            self.session = aiohttp.ClientSession(headers=await self._get_headers())
+            connector_kwargs = {}
+            if self.source_ip:
+                # Bind all outbound connections to the client's assigned Elastic IP.
+                # aiohttp TCPConnector.local_addr is the correct, native way to do this.
+                connector_kwargs['connector'] = aiohttp.TCPConnector(
+                    local_addr=(self.source_ip, 0)
+                )
+            self.session = aiohttp.ClientSession(
+                headers=await self._get_headers(),
+                **connector_kwargs
+            )
         return self.session
 
     async def _get_headers(self):
