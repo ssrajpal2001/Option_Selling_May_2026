@@ -1124,7 +1124,10 @@ async function loadBrokerData() {
       selectBroker(state.instances[0].broker);
     }
 
-    if (state.instances.length === 0) {
+    // Show onboarding card only for new users: no broker connected AND no trades today
+    const noInstances = state.instances.length === 0;
+    const noTodayTrades = !state.todayTrades || state.todayTrades.length === 0;
+    if (noInstances && noTodayTrades) {
       document.getElementById('setup-alert').style.display = '';
       // Show IP whitelist hint when a static IP is assigned
       const assignedIP = state.profile && state.profile.static_ip;

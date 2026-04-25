@@ -17,7 +17,11 @@ class AliceblueClient(BaseBroker):
 
         if self.db_config:
             try:
-                self.alice = handle_alice_login(self.db_config)
+                self._set_source_ip()
+                try:
+                    self.alice = handle_alice_login(self.db_config)
+                finally:
+                    self._clear_source_ip()
                 if self.alice:
                     logger.info(f"[AliceblueClient] Initialised for user {self.user_id}.")
                 else:

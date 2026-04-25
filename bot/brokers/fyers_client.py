@@ -16,7 +16,11 @@ class FyersClient(BaseBroker):
 
         if self.db_config:
             try:
-                self.fyers = handle_fyers_login(self.db_config)
+                self._set_source_ip()
+                try:
+                    self.fyers = handle_fyers_login(self.db_config)
+                finally:
+                    self._clear_source_ip()
                 if self.fyers:
                     logger.info(f"[FyersClient] Initialised for user {self.user_id}.")
                 else:

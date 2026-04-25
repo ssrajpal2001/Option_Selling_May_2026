@@ -28,7 +28,11 @@ class GrowwClient(BaseBroker):
 
         if self.db_config:
             try:
-                token = handle_groww_login(self.db_config)
+                self._set_source_ip()
+                try:
+                    token = handle_groww_login(self.db_config)
+                finally:
+                    self._clear_source_ip()
                 if token:
                     self.access_token = token
                     self.client_id = (
