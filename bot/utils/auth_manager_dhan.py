@@ -1,4 +1,5 @@
 import re
+import time
 import requests
 from dhanhq import dhanhq
 from utils.logger import logger
@@ -57,44 +58,66 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
 
     login_id = client_id or api_key
 
-    try:
-        logger.info(f"[Dhan] Generating access token for client {login_id} …")
-        resp = requests.post(
-            'https://auth.dhan.co/app/generateAccessToken',
-            data={
-                'dhanClientId': login_id,
-                'pin': password,
-                'totp': totp_code,
-            },
-            headers={'Content-Type': 'application/x-www-form-urlencoded'},
-            timeout=15,
-        )
+    def _attempt(code: str) -> dict:
+        """Single POST attempt. Returns the standard {'token', 'error'} dict."""
         try:
-            data = resp.json()
-        except Exception:
-            logger.error(f"[Dhan] Token response not JSON (HTTP {resp.status_code}): {resp.text[:300]}")
-            return _fail(f"Dhan returned an unexpected response (HTTP {resp.status_code}).")
-
-        if resp.status_code == 200:
-            token = data.get('accessToken') or data.get('access_token')
-            if token:
-                logger.info(f"[Dhan] Access token generated successfully for {login_id}.")
-                return {'token': token, 'error': None}
-            # 200 but no token field — surface whatever message Dhan included
-            dhan_msg = data.get('message') or data.get('errorMessage') or str(data)
-            logger.error(f"[Dhan] Token response missing accessToken field: {data}")
-            return _fail(dhan_msg)
-        else:
-            dhan_msg = data.get('message') or data.get('errorMessage') or resp.text[:200]
-            logger.error(
-                f"[Dhan] Token generation failed for {login_id}: "
-                f"HTTP {resp.status_code} — {dhan_msg}"
+            resp = requests.post(
+                'https://auth.dhan.co/app/generateAccessToken',
+                data={
+                    'dhanClientId': login_id,
+                    'pin': password,
+                    'totp': code,
+                },
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                timeout=15,
             )
-            return _fail(dhan_msg)
+            try:
+                data = resp.json()
+            except Exception:
+                logger.error(
+                    f"[Dhan] Token response not JSON (HTTP {resp.status_code}): {resp.text[:300]}"
+                )
+                return _fail(f"Dhan returned an unexpected response (HTTP {resp.status_code}).")
 
-    except Exception as e:
-        logger.error(f"[Dhan] Token generation error for {login_id}: {e}")
-        return _fail("Could not reach Dhan servers. Check your internet connection and try again.")
+            if resp.status_code == 200:
+                token = data.get('accessToken') or data.get('access_token')
+                if token:
+                    logger.info(f"[Dhan] Access token generated successfully for {login_id}.")
+                    return {'token': token, 'error': None}
+                dhan_msg = data.get('message') or data.get('errorMessage') or str(data)
+                logger.error(f"[Dhan] Token response missing accessToken field: {data}")
+                return _fail(dhan_msg)
+            else:
+                dhan_msg = data.get('message') or data.get('errorMessage') or resp.text[:200]
+                logger.error(
+                    f"[Dhan] Token generation failed for {login_id}: "
+                    f"HTTP {resp.status_code} — {dhan_msg}"
+                )
+                return _fail(dhan_msg)
+
+        except Exception as e:
+            logger.error(f"[Dhan] Token generation error for {login_id}: {e}")
+            return _fail("Could not reach Dhan servers. Check your internet connection and try again.")
+
+    logger.info(f"[Dhan] Generating access token for client {login_id} …")
+    result = _attempt(totp_code)
+
+    # Retry once if Dhan rejected the TOTP (race at 30s window boundary)
+    if result['error'] and 'totp' in result['error'].lower():
+        logger.warning(
+            f"[Dhan] TOTP rejected for {login_id} — waiting 1 s for next window, retrying …"
+        )
+        time.sleep(1)
+        try:
+            import pyotp
+            fresh_totp = pyotp.TOTP(totp_secret.replace(' ', '')).now()
+        except Exception as te:
+            logger.error(f"[Dhan] TOTP regeneration failed on retry: {te}")
+            return result  # return original error
+        logger.info(f"[Dhan] Retrying token generation for {login_id} with fresh TOTP …")
+        result = _attempt(fresh_totp)
+
+    return result
 
 
 def renew_dhan_token(access_token: str, client_id: str) -> str | None:
