@@ -17,11 +17,6 @@ logs/
 env_debug.txt
 .env
 
-backtest_data/*.csv
-data_history/*.csv
-atp_data_*.csv
-market_data_*.csv
-
 node_modules/
 package-lock.json
 
