@@ -606,19 +606,19 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="field-label">Market Open / Start Time</label>
-            <input type="text" class="input-field" data-path="sell.start_time" placeholder="09:15" title="Bot starts looking for signals after this time (default 09:15)"/>
+            <input type="time" class="input-field" data-path="sell.start_time" placeholder="09:15" title="Bot starts looking for signals after this time (default 09:15)"/>
           </div>
           <div>
             <label class="field-label">No New Trades After</label>
-            <input type="text" class="input-field" data-path="sell.v3.entry_end_time" placeholder="14:00" title="Entry cutoff — no new straddles entered after this time (default 14:00)"/>
+            <input type="time" class="input-field" data-path="sell.v3.entry_end_time" placeholder="14:00" title="Entry cutoff — no new straddles entered after this time (default 14:00)"/>
           </div>
           <div>
             <label class="field-label">Force Square-Off At</label>
-            <input type="text" class="input-field" data-path="sell.v3.square_off_time" placeholder="15:15" title="All open positions are force-closed at this time regardless of P&L (default 15:15)"/>
+            <input type="time" class="input-field" data-path="sell.v3.square_off_time" placeholder="15:15" title="All open positions are force-closed at this time regardless of P&L (default 15:15)"/>
           </div>
           <div>
             <label class="field-label">Bot Close Time</label>
-            <input type="text" class="input-field" data-path="sell.v3.close_time" placeholder="15:20" title="Bot process shuts down for the day after this time (default 15:20)"/>
+            <input type="time" class="input-field" data-path="sell.v3.close_time" placeholder="17:00" title="Bot process shuts down for the day after this time (default 17:00)"/>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">

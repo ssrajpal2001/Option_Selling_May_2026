@@ -571,7 +571,7 @@ The V3 Option Selling strategy has three time boundaries that govern when the bo
 | **Market Open / Start Time** | `sell.start_time` | `09:15` | Bot begins scanning for entry signals after this time. Before this time the bot waits and does not evaluate any entry or exit conditions. |
 | **No New Trades After** | `sell.v3.entry_end_time` | `14:00` | Entry cutoff. After this time the bot will not open any new straddle positions. Existing open trades continue to be monitored for exits normally. |
 | **Force Square-Off At** | `sell.v3.square_off_time` | `15:15` | Hard EOD deadline. At this time ALL open positions are forcefully closed regardless of P&L. The exit reason recorded is `EOD_SQUAREOFF`. This is the definitive risk control that ensures no client is left with open overnight FO positions. |
-| **Bot Close Time** | `sell.v3.close_time` | `15:20` | After this time the bot process winds down for the day. |
+| **Bot Close Time** | `sell.v3.close_time` | `17:00` | After this time the bot process winds down for the day. |
 
 **How the gates interact (example for a typical day):**
 1. `09:15` — Bot wakes up and starts looking for entry signals
