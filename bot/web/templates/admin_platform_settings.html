@@ -78,7 +78,10 @@
           Create a bot: open Telegram → search <strong>@BotFather</strong> → /newbot → copy the token
         </div>
       </div>
-      <button onclick="saveTelegram()" class="btn-primary px-5 py-2 text-sm">💾 Save Telegram Settings</button>
+      <div class="flex items-center gap-3 mt-2">
+        <button onclick="saveTelegram()" class="btn-primary px-5 py-2 text-sm">💾 Save Telegram Settings</button>
+        <button onclick="testTelegram()" class="btn-ghost px-5 py-2 text-sm" id="test-tg-btn">✈️ Send Test Message</button>
+      </div>
       <div id="tg-msg" class="mt-3 text-sm hidden"></div>
     </div>
 
@@ -187,6 +190,31 @@ async function testEmail() {
   }
   btn.disabled = false;
   btn.textContent = '📤 Send Test Email';
+}
+
+async function testTelegram() {
+  const btn = document.getElementById('test-tg-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending...';
+  const msg = document.getElementById('tg-msg');
+  msg.className = 'mt-3 text-sm';
+  msg.classList.remove('hidden');
+  try {
+    const r = await fetch('/api/admin/platform-settings/test-telegram', { method: 'POST' });
+    const d = await r.json();
+    if (r.ok) {
+      msg.textContent = '✅ ' + d.message;
+      msg.style.color = '#34d399';
+    } else {
+      msg.textContent = '❌ ' + (d.detail || 'Failed');
+      msg.style.color = '#f87171';
+    }
+  } catch (e) {
+    msg.textContent = '❌ ' + e.message;
+    msg.style.color = '#f87171';
+  }
+  btn.disabled = false;
+  btn.textContent = '✈️ Send Test Message';
 }
 
 loadSettings();

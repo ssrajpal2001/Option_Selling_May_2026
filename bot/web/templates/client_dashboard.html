@@ -768,7 +768,10 @@
               Open Telegram → search <strong>@userinfobot</strong> → send /start → copy your Chat ID
             </div>
           </div>
-          <button class="btn btn-primary" onclick="saveProfile()" style="width:100%">💾 Save Notifications</button>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="btn btn-primary" onclick="saveProfile()" style="flex:1">💾 Save</button>
+            <button class="btn btn-outline btn-sm" onclick="sendTestTelegram()" id="btn-test-tg" style="flex:1">✈️ Send Test</button>
+          </div>
         </div>
       </div>
 
@@ -1548,6 +1551,19 @@ async function saveProfile() {
     toast(d.message || 'Profile updated!', 'ok');
   } catch (e) {
     toast(e.message || 'Save failed', 'err');
+  }
+}
+
+async function sendTestTelegram() {
+  const btn = document.getElementById('btn-test-tg');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Sending...'; }
+  try {
+    const d = await api('POST', '/settings/test-telegram');
+    toast(d.message || 'Test sent!', 'ok');
+  } catch (e) {
+    toast(e.message || 'Failed — save your Chat ID first.', 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✈️ Send Test'; }
   }
 }
 

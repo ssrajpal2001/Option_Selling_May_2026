@@ -1104,6 +1104,27 @@ async def update_profile(body: ProfileUpdate, user=Depends(get_current_user)):
     return {"success": True, "message": "Profile updated."}
 
 
+@router.post("/settings/test-telegram")
+async def test_telegram_client(user=Depends(get_current_user)):
+    """Send a test Telegram message to verify the client's Chat ID is working."""
+    row = db_fetchone("SELECT telegram_chat_id FROM users WHERE id=?", (user["id"],))
+    chat_id = (row.get("telegram_chat_id") or "").strip() if row else ""
+    if not chat_id:
+        raise HTTPException(400, "No Telegram Chat ID saved yet. Enter your Chat ID and save first.")
+    from utils.notifier import send_telegram
+    ok = send_telegram(
+        chat_id,
+        "✅ <b>AlgoSoft — Telegram Connected!</b>\n"
+        "You will receive live trade alerts and a day-end PnL summary here."
+    )
+    if ok:
+        return {"success": True, "message": "Test message sent! Check your Telegram."}
+    raise HTTPException(
+        500,
+        "Failed to send. Ensure the bot token is configured by admin and you have sent /start to the bot."
+    )
+
+
 # ── Referral ──────────────────────────────────────────────────────────────────
 
 def _ensure_referral_code(user_id: int) -> str:

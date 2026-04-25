@@ -578,6 +578,28 @@ class SellManagerV3:
                     """, (int(inst_id), int(client_id), 'SELL', side, float(trade['strike']), float(trade['entry_price']), float(exit_price), float(pnl_pts), float(pnl_rs), int(trade['lot_size'] * mult), 'V3', reason, self.instrument_name, os.environ.get('CLIENT_TRADING_MODE', 'PAPER').upper(), trade['entry_time'].isoformat(), float(trade.get('entry_index_price', 0) or 0), timestamp.isoformat(), str(trade.get('entry_indicators', '--')), str(exit_snap)))
                 except Exception as e: logger.error(f"[SellManagerV3] DB Persistence failed: {e}")
 
+                # Telegram trade notification (live mode only, non-blocking)
+                try:
+                    trading_mode = os.environ.get('CLIENT_TRADING_MODE', 'PAPER').upper()
+                    if trading_mode == 'LIVE':
+                        from web.db import db_fetchone as _db_fetchone
+                        client_row = _db_fetchone(
+                            "SELECT telegram_chat_id FROM users WHERE id=?", (int(client_id),)
+                        )
+                        if client_row and client_row.get("telegram_chat_id"):
+                            from utils.notifier import notify_trade
+                            notify_trade(client_row["telegram_chat_id"], {
+                                'direction': side,
+                                'pnl_pts': float(pnl_pts),
+                                'pnl_rs': float(pnl_rs),
+                                'exit_reason': reason,
+                                'broker': os.environ.get('CLIENT_BROKER', 'V3'),
+                                'trading_mode': trading_mode,
+                                'instrument': self.instrument_name,
+                            })
+                except Exception as _te:
+                    logger.error(f"[SellManagerV3] Telegram notify failed: {_te}")
+
         for session in self.orchestrator.user_sessions.values():
             session.state_manager.total_pnl += total_pnl
 

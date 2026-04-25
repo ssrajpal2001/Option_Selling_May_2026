@@ -1327,6 +1327,28 @@ async def test_email(admin=Depends(require_admin)):
     raise HTTPException(500, "Failed to send test email. Check SMTP settings.")
 
 
+@router.post("/platform-settings/test-telegram")
+async def test_telegram(admin=Depends(require_admin)):
+    """Send a test Telegram message to the admin's registered Chat ID."""
+    admin_row = db_fetchone("SELECT telegram_chat_id, username FROM users WHERE id=?", (admin["id"],))
+    chat_id = (admin_row.get("telegram_chat_id") or "").strip() if admin_row else ""
+    if not chat_id:
+        raise HTTPException(400, "No Telegram Chat ID set for your admin account. Add it in Admin profile or users table.")
+    from utils.notifier import send_telegram
+    ok = send_telegram(
+        chat_id,
+        "✅ <b>AlgoSoft — Test Message</b>\n"
+        "Your Telegram bot is correctly configured.\n"
+        "Clients will receive live trade alerts and day-end summaries at their Chat IDs."
+    )
+    if ok:
+        return {"success": True, "message": f"Test message sent to Chat ID {chat_id}"}
+    raise HTTPException(
+        500,
+        "Failed to send. Check: (1) Bot token is saved correctly, (2) You have sent /start to the bot on Telegram first."
+    )
+
+
 @router.get("/clients/{client_id}/static-ip")
 async def get_client_static_ip(client_id: int, admin=Depends(require_admin)):
     row = db_fetchone("SELECT static_ip FROM users WHERE id=?", (client_id,))
