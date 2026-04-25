@@ -801,22 +801,37 @@ async def _dhan_auto_renewal_scheduler():
             await asyncio.sleep(60)
 
 
+_NSE_HOLIDAYS = frozenset({
+    # 2025
+    "2025-01-26", "2025-02-26", "2025-03-14", "2025-03-31",
+    "2025-04-10", "2025-04-14", "2025-04-18", "2025-05-01",
+    "2025-08-15", "2025-10-02", "2025-10-20", "2025-10-21",
+    "2025-11-05", "2025-12-25",
+    # 2026
+    "2026-01-26", "2026-03-03", "2026-04-03", "2026-04-14",
+    "2026-04-17", "2026-05-01", "2026-08-15", "2026-10-02",
+    "2026-10-09", "2026-11-24", "2026-12-25",
+})
+
+
 async def _day_end_summary_scheduler():
-    """Run daily at 15:30 IST on weekdays — send day-end PnL summary via Telegram."""
+    """Run daily at 15:30 IST on market days (weekdays, excluding NSE holidays)."""
     while True:
         try:
             now = datetime.now(IST)
             target = now.replace(hour=15, minute=30, second=0, microsecond=0)
             if now >= target:
                 target += timedelta(days=1)
-            # Advance to next weekday if target falls on weekend
-            while target.weekday() >= 5:
+            # Advance to next market day (weekday + not NSE holiday)
+            while target.weekday() >= 5 or target.strftime("%Y-%m-%d") in _NSE_HOLIDAYS:
                 target += timedelta(days=1)
             await asyncio.sleep((target - now).total_seconds())
 
-            # Re-check after sleep — skip if somehow fired on a weekend
-            if datetime.now(IST).weekday() >= 5:
-                logger.info("[Scheduler] Day-end summary skipped — weekend.")
+            # Re-check after sleep — skip if weekend or NSE holiday
+            _now_ist = datetime.now(IST)
+            _today_str = _now_ist.strftime("%Y-%m-%d")
+            if _now_ist.weekday() >= 5 or _today_str in _NSE_HOLIDAYS:
+                logger.info(f"[Scheduler] Day-end summary skipped — market holiday or weekend ({_today_str}).")
                 continue
 
             logger.info("[Scheduler] Sending day-end Telegram summaries...")

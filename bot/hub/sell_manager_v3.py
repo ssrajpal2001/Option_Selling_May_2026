@@ -344,7 +344,7 @@ class SellManagerV3:
 
             if timestamp.time() >= close_time:
                 if self.active_trades:
-                    await self._execute_full_exit(timestamp, "EOD Square-off")
+                    await self._execute_full_exit(timestamp, "EOD Square-off", stop_for_day=True)
                 self.strangle_closed = True
                 self.save_state()
                 return
@@ -720,7 +720,7 @@ class SellManagerV3:
         return None
 
     async def close_all(self, timestamp):
-        if self.active_trades: await self._execute_full_exit(timestamp, "EOD Square-off")
+        if self.active_trades: await self._execute_full_exit(timestamp, "EOD Square-off", stop_for_day=True)
 
     def reconnect_positions(self):
         if not self.active_trades: return
