@@ -1257,6 +1257,13 @@ async def system_health(admin=Depends(require_admin)):
     except Exception:
         pass
 
+    # Rust engine status
+    try:
+        from hub.sell_v3.rust_bridge import RUST_AVAILABLE
+        info["rust_available"] = RUST_AVAILABLE
+    except Exception:
+        info["rust_available"] = False
+
     info["timestamp"] = _dt.datetime.now(timezone.utc).isoformat()
     return info
 

@@ -152,6 +152,23 @@
       <div class="text-xs mb-1" style="color:#64748b">Event Loop</div>
       <div id="h-event-loop" class="text-xs font-bold">--</div>
     </div>
+    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+      <div class="text-xs mb-1" style="color:#64748b">Engine</div>
+      <div id="h-rust-badge" class="text-xs font-bold cursor-pointer" title="Click to see rebuild instructions" onclick="showRustInfo()">--</div>
+    </div>
+  </div>
+</div>
+
+<!-- Rust rebuild modal -->
+<div id="rust-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);align-items:center;justify-content:center">
+  <div class="card p-6" style="max-width:520px;width:90%;position:relative">
+    <button onclick="document.getElementById('rust-modal').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#64748b;font-size:18px;cursor:pointer">✕</button>
+    <div class="text-sm font-bold text-white mb-3">⚡ Rust Engine — Rebuild Instructions</div>
+    <p class="text-xs mb-3" style="color:#94a3b8">The Rust module accelerates RSI, VWAP, ROC and boolean-logic calculations. Run the command below on the server to compile and install it:</p>
+    <div class="rounded-lg p-3 mb-4" style="background:#0f172a;border:1px solid #334155">
+      <code class="text-xs" style="color:#34d399;word-break:break-all">bash bot/scripts/install_rust_core.sh</code>
+    </div>
+    <p class="text-xs" style="color:#64748b">After a successful build restart the AlgoSoft server process. The Engine badge will switch to <span style="color:#34d399;font-weight:700">⚡ Rust ACTIVE</span>.</p>
   </div>
 </div>
 
@@ -308,6 +325,11 @@ async function denyBCR(id) {
   loadOverview();
 }
 
+function showRustInfo() {
+  const modal = document.getElementById('rust-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
 loadOverview();
 setInterval(loadOverview, 10000);
 
@@ -382,6 +404,20 @@ async function loadHealth() {
       loopEl.textContent = 'RUNNING'; loopEl.style.color = '#34d399';
     } else {
       loopEl.textContent = 'STOPPED'; loopEl.style.color = '#fb923c';
+    }
+
+    // Rust engine badge
+    const rustEl = document.getElementById('h-rust-badge');
+    if (rustEl) {
+      if (h.rust_available === true) {
+        rustEl.textContent = '⚡ Rust ACTIVE';
+        rustEl.style.color = '#34d399';
+        rustEl.title = 'Rust module is loaded — indicator calculations run at native speed. Click for details.';
+      } else {
+        rustEl.textContent = '⚠️ Python fallback';
+        rustEl.style.color = '#fb923c';
+        rustEl.title = 'Rust module not loaded — using slower Python. Click to see rebuild instructions.';
+      }
     }
 
     document.getElementById('health-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
