@@ -801,7 +801,7 @@ async def _dhan_auto_renewal_scheduler():
             await asyncio.sleep(60)
 
 
-_NSE_HOLIDAYS = frozenset({
+_NSE_HOLIDAYS_DEFAULT = frozenset({
     # 2025
     "2025-01-26", "2025-02-26", "2025-03-14", "2025-03-31",
     "2025-04-10", "2025-04-14", "2025-04-18", "2025-05-01",
@@ -814,6 +814,19 @@ _NSE_HOLIDAYS = frozenset({
 })
 
 
+def _get_nse_holidays() -> frozenset:
+    """Load NSE holiday list from platform_settings (key: nse_holidays_json).
+    Falls back to the hardcoded default list if not configured in DB."""
+    try:
+        import json as _json
+        row = db_fetchone("SELECT value FROM platform_settings WHERE key='nse_holidays_json'")
+        if row and row.get("value"):
+            return frozenset(_json.loads(row["value"]))
+    except Exception:
+        pass
+    return _NSE_HOLIDAYS_DEFAULT
+
+
 async def _day_end_summary_scheduler():
     """Run daily at 15:30 IST on market days (weekdays, excluding NSE holidays)."""
     while True:
@@ -823,14 +836,16 @@ async def _day_end_summary_scheduler():
             if now >= target:
                 target += timedelta(days=1)
             # Advance to next market day (weekday + not NSE holiday)
-            while target.weekday() >= 5 or target.strftime("%Y-%m-%d") in _NSE_HOLIDAYS:
+            _holidays = _get_nse_holidays()
+            while target.weekday() >= 5 or target.strftime("%Y-%m-%d") in _holidays:
                 target += timedelta(days=1)
             await asyncio.sleep((target - now).total_seconds())
 
             # Re-check after sleep — skip if weekend or NSE holiday
             _now_ist = datetime.now(IST)
             _today_str = _now_ist.strftime("%Y-%m-%d")
-            if _now_ist.weekday() >= 5 or _today_str in _NSE_HOLIDAYS:
+            _holidays = _get_nse_holidays()
+            if _now_ist.weekday() >= 5 or _today_str in _holidays:
                 logger.info(f"[Scheduler] Day-end summary skipped — market holiday or weekend ({_today_str}).")
                 continue
 
