@@ -841,12 +841,12 @@ async def _day_end_summary_scheduler():
                         total_rs  = sum(t.get("pnl_rs") or 0 for t in trades)
                         wins   = sum(1 for t in trades if (t.get("pnl_pts") or 0) > 0)
                         losses = sum(1 for t in trades if (t.get("pnl_pts") or 0) < 0)
-                        if trades:
-                            notify_day_end_summary(c["telegram_chat_id"], {
-                                "date": today, "broker": c.get("broker", ""),
-                                "total_trades": len(trades), "wins": wins, "losses": losses,
-                                "total_pnl_pts": total_pts, "total_pnl_rs": total_rs,
-                            })
+                        # Always send summary (even 0-trade days show bot is active)
+                        notify_day_end_summary(c["telegram_chat_id"], {
+                            "date": today, "broker": c.get("broker", ""),
+                            "total_trades": len(trades), "wins": wins, "losses": losses,
+                            "total_pnl_pts": total_pts, "total_pnl_rs": total_rs,
+                        })
                     except Exception as _ce:
                         logger.error(f"[Scheduler] Day-end error for {c['username']}: {_ce}")
             except Exception as e:

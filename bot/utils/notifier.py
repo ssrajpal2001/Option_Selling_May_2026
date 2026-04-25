@@ -128,6 +128,26 @@ def notify_trade(chat_id: str, trade: dict) -> bool:
     return send_telegram(chat_id, msg)
 
 
+def notify_squareoff(chat_id: str, data: dict) -> bool:
+    """Send a SQUARED OFF alert when all positions are closed (EOD or kill-switch)."""
+    instrument   = data.get("instrument", "NIFTY")
+    broker       = data.get("broker", "")
+    reason       = data.get("reason", "EOD Square-off")
+    total_pnl_rs = data.get("total_pnl_rs", 0.0)
+    total_pnl_pts= data.get("total_pnl_pts", 0.0)
+
+    trend = "🟢" if total_pnl_pts >= 0 else "🔴"
+    msg = (
+        f"🔒 <b>SQUARED OFF — AlgoSoft</b>\n"
+        f"<b>Instrument:</b> {instrument}\n"
+        f"<b>Reason:</b> {reason}\n"
+        f"<b>Net PnL:</b> {trend} {total_pnl_pts:+.1f} pts (₹{total_pnl_rs:+,.0f})\n"
+        f"<b>Broker:</b> {broker}   🟡 LIVE\n"
+        f"<i>All positions closed.</i>"
+    )
+    return send_telegram(chat_id, msg)
+
+
 def notify_day_end_summary(chat_id: str, summary: dict) -> bool:
     """Send daily PnL summary to client's Telegram chat."""
     date       = summary.get("date", "Today")

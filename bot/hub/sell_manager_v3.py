@@ -551,6 +551,7 @@ class SellManagerV3:
         except: mult = 1
 
         total_pnl = 0.0
+        _tg_notification_data = []  # collect per-trade data; dispatched after orders are awaited
 
         # Enrichment: Capture technical snapshot at exit
         v3_data = self.v3_dashboard_data
@@ -606,32 +607,22 @@ class SellManagerV3:
                     """, (int(inst_id), int(client_id), 'SELL', side, float(trade['strike']), float(trade['entry_price']), float(exit_price), float(pnl_pts), float(pnl_rs), int(trade['lot_size'] * mult), 'V3', reason, self.instrument_name, os.environ.get('CLIENT_TRADING_MODE', 'PAPER').upper(), trade['entry_time'].isoformat(), float(trade.get('entry_index_price', 0) or 0), timestamp.isoformat(), str(trade.get('entry_indicators', '--')), str(exit_snap)))
                 except Exception as e: logger.error(f"[SellManagerV3] DB Persistence failed: {e}")
 
-                # Telegram trade-exit notification — fire in background thread (non-blocking)
+                # Collect Telegram data (dispatched after broker orders are awaited)
                 try:
                     trading_mode = os.environ.get('CLIENT_TRADING_MODE', 'PAPER').upper()
                     if trading_mode == 'LIVE':
-                        from web.db import db_fetchone as _db_fetchone
-                        client_row = _db_fetchone(
-                            "SELECT telegram_chat_id FROM users WHERE id=?", (int(client_id),)
-                        )
-                        if client_row and client_row.get("telegram_chat_id"):
-                            import threading
-                            from utils.notifier import notify_trade
-                            _chat_id = client_row["telegram_chat_id"]
-                            _t_data = {
-                                'direction': side,
-                                'pnl_pts': float(pnl_pts),
-                                'pnl_rs': float(pnl_rs),
-                                'exit_reason': reason,
-                                'broker': os.environ.get('CLIENT_BROKER', 'V3'),
-                                'trading_mode': trading_mode,
-                                'instrument': self.instrument_name,
-                            }
-                            threading.Thread(
-                                target=notify_trade, args=(_chat_id, _t_data), daemon=True
-                            ).start()
+                        _tg_notification_data.append({
+                            'direction': side,
+                            'pnl_pts': float(pnl_pts),
+                            'pnl_rs': float(pnl_rs),
+                            'exit_reason': reason,
+                            'broker': os.environ.get('CLIENT_BROKER', 'V3'),
+                            'trading_mode': trading_mode,
+                            'instrument': self.instrument_name,
+                            '_client_id': int(client_id),
+                        })
                 except Exception as _te:
-                    logger.error(f"[SellManagerV3] Telegram exit notify failed: {_te}")
+                    logger.error(f"[SellManagerV3] Telegram data collection failed: {_te}")
 
         for session in self.orchestrator.user_sessions.values():
             session.state_manager.total_pnl += total_pnl
@@ -647,6 +638,35 @@ class SellManagerV3:
 
         if tasks: await asyncio.gather(*tasks)
         self.active_trades = {}
+
+        # Fire Telegram notifications AFTER orders are dispatched (non-blocking threads)
+        if _tg_notification_data:
+            try:
+                from web.db import db_fetchone as _db_fetchone
+                client_row = _db_fetchone(
+                    "SELECT telegram_chat_id FROM users WHERE id=?",
+                    (_tg_notification_data[0]['_client_id'],)
+                )
+                if client_row and client_row.get("telegram_chat_id"):
+                    import threading
+                    _chat_id = client_row["telegram_chat_id"]
+                    is_squareoff = any(kw in reason for kw in ("Square-off", "EOD", "Kill", "Kill-switch"))
+                    if is_squareoff:
+                        from utils.notifier import notify_squareoff
+                        _sq = {
+                            'instrument': _tg_notification_data[0]['instrument'],
+                            'broker': _tg_notification_data[0]['broker'],
+                            'reason': reason,
+                            'total_pnl_rs': sum(t['pnl_rs'] for t in _tg_notification_data),
+                            'total_pnl_pts': sum(t['pnl_pts'] for t in _tg_notification_data),
+                        }
+                        threading.Thread(target=notify_squareoff, args=(_chat_id, _sq), daemon=True).start()
+                    else:
+                        from utils.notifier import notify_trade
+                        for _td in _tg_notification_data:
+                            threading.Thread(target=notify_trade, args=(_chat_id, _td), daemon=True).start()
+            except Exception as _te:
+                logger.error(f"[SellManagerV3] Telegram post-exit notify failed: {_te}")
         self.session_min_vwap = float('inf')
         # Reset Trailing SL Lock, but preserve for UI visibility
         if self.tsl_high_lock > 0:
