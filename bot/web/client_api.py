@@ -1087,6 +1087,10 @@ async def get_profile(user=Depends(get_current_user)):
 
 @router.patch("/profile")
 async def update_profile(body: ProfileUpdate, user=Depends(get_current_user)):
+    # Read current chat_id before saving to detect actual changes
+    existing = db_fetchone("SELECT telegram_chat_id FROM users WHERE id=?", (user["id"],))
+    old_chat_id = (existing.get("telegram_chat_id") or "").strip() if existing else ""
+
     updates, params = [], []
     if body.full_name is not None:
         updates.append("full_name=?"); params.append(body.full_name.strip())
@@ -1103,8 +1107,8 @@ async def update_profile(body: ProfileUpdate, user=Depends(get_current_user)):
     _audit_client(user["id"], "profile_update", {
         "fields": [u.split("=")[0] for u in updates]
     })
-    # Auto-verify Telegram when a new chat ID is saved
-    if new_chat_id:
+    # Auto-verify Telegram only when chat ID is set to a NEW value
+    if new_chat_id and new_chat_id != old_chat_id:
         try:
             from utils.notifier import send_telegram
             send_telegram(
