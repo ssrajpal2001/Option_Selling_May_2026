@@ -122,34 +122,76 @@ class UpstoxClient(BaseBroker):
     async def handle_entry_signal(self, **kwargs):
         if self.paper_trade:
             return await self._handle_paper_entry(**kwargs)
+
         contract = kwargs.get('contract')
-        transaction_type = kwargs.get('direction', 'SELL')
-        quantity = kwargs.get('quantity', 1)
-        if not contract:
-            logger.error(f"[UpstoxClient] handle_entry_signal: no contract provided for user {self.user_id}.")
+        instrument_name = kwargs.get('instrument_name')
+        direction = kwargs.get('direction')        # CALL / PUT (strategy direction)
+        entry_type = kwargs.get('entry_type', 'BUY')  # BUY / SELL (actual order side)
+        signal_expiry_date = kwargs.get('signal_expiry_date')
+
+        if not all([contract, instrument_name, direction, signal_expiry_date]):
+            logger.error(f"[UpstoxClient] handle_entry_signal missing required args. Data: {kwargs}")
             return None
-        order_id = self.place_order(contract, transaction_type, quantity)
-        if order_id:
-            await event_bus.publish('TRADE_CONFIRMED', {
-                'user_id': self.user_id,
-                'instrument_name': kwargs.get('instrument_name'),
-                'direction': transaction_type,
-                'trade_contract': contract,
-                'ltp': kwargs.get('ltp', 0),
-                'order_id': order_id,
-            })
-        return order_id
+
+        broker_base_qty = self.config_manager.get_int(self.instance_name, 'quantity', 1)
+        instrument_lot_size = getattr(contract, 'lot_size', 1) or 1
+        quantity_multiplier = int(kwargs.get('quantity_multiplier', 1))
+        final_qty = broker_base_qty * instrument_lot_size * quantity_multiplier
+        transaction_type = "BUY" if entry_type == 'BUY' else "SELL"
+
+        try:
+            product_type = kwargs.get('product_type', 'NRML')
+            order_id = self.place_order(contract, transaction_type, final_qty,
+                                        expiry=signal_expiry_date, product_type=product_type)
+            if order_id:
+                logger.info(f"[UpstoxClient] Placed {transaction_type} ({direction}) order={order_id} qty={final_qty} user={self.user_id}")
+                await event_bus.publish('TRADE_CONFIRMED', {
+                    'user_id': self.user_id,
+                    'instrument_name': instrument_name,
+                    'direction': direction,
+                    'trade_contract': contract,
+                    'ltp': kwargs.get('ltp', 0),
+                })
+                return order_id
+            else:
+                logger.error(f"[UpstoxClient] Failed to place {transaction_type} ({direction}) for {contract.instrument_key} user={self.user_id}")
+                return None
+        except Exception as e:
+            logger.error(f"[UpstoxClient] handle_entry_signal error for user {self.user_id}: {e}", exc_info=True)
+            return None
 
     async def handle_close_signal(self, **kwargs):
         if self.paper_trade:
             return await self._handle_paper_exit(**kwargs)
+
+        side = kwargs.get('side')
+        instrument_name = kwargs.get('instrument_name')
         contract = kwargs.get('contract')
-        transaction_type = kwargs.get('side', 'BUY')
-        quantity = kwargs.get('quantity', 1)
+        position = self.state_manager.get_position(side) if self.state_manager else None
+
+        if not contract and position:
+            contract = position.get('contract')
+
         if not contract:
-            logger.error(f"[UpstoxClient] handle_close_signal: no contract provided for user {self.user_id}.")
+            logger.warning(f"[UpstoxClient] No active {side} position/contract to close. user={self.user_id}")
             return None
-        return self.place_order(contract, transaction_type, quantity)
+
+        broker_base_qty = self.config_manager.get_int(self.instance_name, 'quantity', 1)
+        instrument_lot_size = getattr(contract, 'lot_size', 1) or 1
+        final_qty = broker_base_qty * instrument_lot_size
+
+        entry_type = position.get('entry_type', 'BUY') if position else 'BUY'
+        exit_transaction_type = "SELL" if entry_type == 'BUY' else "BUY"
+
+        try:
+            signal_expiry_date = kwargs.get('signal_expiry_date')
+            order_id = self.place_order(contract, exit_transaction_type, final_qty, expiry=signal_expiry_date)
+            if order_id:
+                logger.info(f"[UpstoxClient] Closed {side} position: {exit_transaction_type} qty={final_qty} order={order_id} user={self.user_id}")
+            return order_id
+        except Exception as e:
+            logger.error(f"[UpstoxClient] handle_close_signal error for user {self.user_id}: {e}", exc_info=True)
+            return None
 
     async def _handle_paper_entry(self, **kwargs):
         inst_name = kwargs.get('instrument_name')
