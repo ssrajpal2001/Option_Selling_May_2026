@@ -5,6 +5,7 @@ __pycache__/
 *.so
 *.whl
 rust_core-*.whl
+hub/sell_v3/rust_core/target/
 
 *.log
 server.log
