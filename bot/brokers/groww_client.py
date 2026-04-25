@@ -1,4 +1,5 @@
-from .base_broker import BaseBroker
+import requests
+from .base_broker import BaseBroker, SourceIPHTTPAdapter
 from utils.logger import logger
 from utils.auth_manager_groww import handle_groww_login
 
@@ -8,6 +9,10 @@ class GrowwClient(BaseBroker):
     Execution-only Groww broker client (no WebSocket data feed).
     Groww's trading API requires a Bearer access token obtained from the Groww
     developer portal. Token is stored and validated on bot start.
+
+    Uses a persistent requests.Session with SourceIPHTTPAdapter mounted so that
+    ALL HTTP calls (auth, orders, positions, funds) route through the client's
+    assigned Elastic IP.
     """
 
     def __init__(self, broker_instance_name, config_manager, login_required=True, user_id=None, db_config=None):
@@ -15,6 +20,11 @@ class GrowwClient(BaseBroker):
         self.broker_name = "groww"
         self.access_token = None
         self.client_id = None
+
+        # Persistent session — adapter is mounted below if source_ip is set
+        self._session = requests.Session()
+        if self.source_ip and SourceIPHTTPAdapter is not None:
+            self._install_source_ip_adapter(self._session)
 
         if self.db_config:
             try:
@@ -53,7 +63,6 @@ class GrowwClient(BaseBroker):
             logger.error(f"[GrowwClient] No access token. Cannot place order.")
             return None
         try:
-            import requests
             symbol = self._resolve_symbol(contract)
             if not symbol:
                 logger.error(f"[GrowwClient] Could not resolve symbol for {contract.instrument_key}")
@@ -69,16 +78,12 @@ class GrowwClient(BaseBroker):
                 "validity": "DAY",
             }
 
-            self._set_source_ip()
-            try:
-                resp = requests.post(
-                    "https://groww.in/v1/api/trade/v1/order/place",
-                    json=payload,
-                    headers=self._headers(),
-                    timeout=15,
-                )
-            finally:
-                self._clear_source_ip()
+            resp = self._session.post(
+                "https://groww.in/v1/api/trade/v1/order/place",
+                json=payload,
+                headers=self._headers(),
+                timeout=15,
+            )
 
             if resp.status_code in (200, 201):
                 data = resp.json()
@@ -96,8 +101,7 @@ class GrowwClient(BaseBroker):
         if not self.access_token:
             return []
         try:
-            import requests
-            resp = requests.get(
+            resp = self._session.get(
                 "https://groww.in/v1/api/trade/v1/portfolio/positions",
                 headers=self._headers(),
                 timeout=10,
@@ -113,8 +117,7 @@ class GrowwClient(BaseBroker):
         if not self.access_token:
             return {}
         try:
-            import requests
-            resp = requests.get(
+            resp = self._session.get(
                 "https://groww.in/v1/api/trade/v1/user/trading_balance",
                 headers=self._headers(),
                 timeout=10,

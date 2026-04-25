@@ -44,6 +44,11 @@ class InstanceManager:
         broker_user_id = decrypt_secret(instance_row["broker_user_id_encrypted"]) if instance_row and instance_row["broker_user_id_encrypted"] else ""
         api_secret = decrypt_secret(instance_row["api_secret_encrypted"]) if instance_row and instance_row["api_secret_encrypted"] else ""
 
+        # Propagate client's assigned Elastic IP into the subprocess so the broker
+        # layer can bind all outbound connections to that source address.
+        user_row = db_fetchone("SELECT static_ip FROM users WHERE id=?", (client_id,))
+        static_ip = (user_row.get("static_ip") or "") if user_row else ""
+
         env.update({
             "CLIENT_ID": str(client_id),
             "CLIENT_USERNAME": username,
@@ -59,6 +64,7 @@ class InstanceManager:
             "CLIENT_TOTP": totp,
             "CLIENT_BROKER_USER_ID": broker_user_id,
             "CLIENT_INSTANCE_ID": str(instance_id),
+            "CLIENT_STATIC_IP": static_ip,
         })
 
         # Ensure logs directory exists using absolute path to prevent startup failures

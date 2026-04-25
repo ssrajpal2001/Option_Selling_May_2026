@@ -45,6 +45,11 @@ class AngelOneClient(BaseBroker):
                 logger.critical(f"AUTHENTICATION FAILED for AngelOne account [{self.instance_name}]. Reason: {e}", exc_info=True)
                 sys.exit(1)
 
+        # Mount SourceIPHTTPAdapter on SmartAPI's requests session so that ALL
+        # HTTP calls (login, orders, instruments, funds) route through assigned IP.
+        if self.smart_api and self.source_ip:
+            self._install_source_ip_adapter(getattr(self.smart_api, 'reqsession', None))
+
     def connect(self):
         # Established in init. Proactively load tokens.
         if not self.paper_trade and self.smart_api:
@@ -457,11 +462,7 @@ class AngelOneClient(BaseBroker):
                 "quantity": str(int(quantity))
             }
 
-            self._set_source_ip()
-            try:
-                order_id = self.smart_api.placeOrder(order_params)
-            finally:
-                self._clear_source_ip()
+            order_id = self.smart_api.placeOrder(order_params)
             return order_id
         except Exception as e:
             logger.error(f"Error in AngelOne place_order: {e}", exc_info=True)

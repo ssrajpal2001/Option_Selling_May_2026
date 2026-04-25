@@ -59,6 +59,12 @@ class ZerodhaClient(BaseBroker):
                     logger.error(f"AUTHENTICATION FAILED for Zerodha account [{self.instance_name}]. Reason: {e}", exc_info=True)
                     raise RuntimeError(f"Failed to authenticate Zerodha client: {e}")
 
+        # Mount SourceIPHTTPAdapter on KiteConnect's requests session so that
+        # ALL HTTP calls (auth, instrument download, orders, funds) route through
+        # the client-assigned Elastic IP.
+        if self.kite and self.source_ip:
+            self._install_source_ip_adapter(getattr(self.kite, 'reqsession', None))
+
     def connect(self):
         # Established in init. But we also ensure master instruments are loaded.
         if not self.paper_trade and self.kite:
@@ -475,11 +481,7 @@ class ZerodhaClient(BaseBroker):
                 if order_type == self.kite.ORDER_TYPE_MARKET:
                     place_params['market_protection'] = m_prot
 
-            self._set_source_ip()
-            try:
-                order_id = self.kite.place_order(**place_params)
-            finally:
-                self._clear_source_ip()
+            order_id = self.kite.place_order(**place_params)
             return order_id
         except Exception as e:
             logger.error(f"Error placing order with Zerodha. Symbol: {symbol}, Exchange: {exchange}, Type: {transaction_type}, Qty: {quantity}. API Error: {e}", exc_info=True)

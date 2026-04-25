@@ -6,13 +6,10 @@ from utils.trade_logger import TradeLogger
 from utils.logger import logger
 
 # ── Per-thread source IP binding ─────────────────────────────────────────────
-# Installed once at module load. Each broker wraps its SDK calls with:
-#   _tls.source_ip = self.source_ip
-#   try:
-#       result = sdk.do_thing()
-#   finally:
-#       _tls.source_ip = None
-# Thread-safe: different threads can bind different IPs simultaneously.
+# Global socket.create_connection is patched once at import time.
+# The SourceIPHTTPAdapter (and per-call helpers) set/restore _tls.source_ip
+# within the thread that actually makes the HTTP call, so urllib3/httplib
+# picks up the correct source address regardless of the calling thread.
 
 _tls = threading.local()
 _orig_create_connection = socket.create_connection
@@ -25,6 +22,34 @@ def _source_ip_aware_create_connection(address, timeout=socket.getdefaulttimeout
     return _orig_create_connection(address, timeout, source_address)
 
 socket.create_connection = _source_ip_aware_create_connection
+
+
+# ── SourceIPHTTPAdapter ───────────────────────────────────────────────────────
+try:
+    from requests.adapters import HTTPAdapter as _HTTPAdapter
+
+    class SourceIPHTTPAdapter(_HTTPAdapter):
+        """
+        Requests adapter that routes all outbound connections through a specific
+        local IP address.  Mount on a broker SDK's requests.Session at init time
+        and every HTTP call (auth, instruments, orders, funds) will automatically
+        use the assigned Elastic IP — no per-call wrapping required.
+        """
+        def __init__(self, source_ip: str, **kwargs):
+            self.source_ip = source_ip
+            super().__init__(**kwargs)
+
+        def send(self, request, **kwargs):
+            old_src = getattr(_tls, 'source_ip', None)
+            _tls.source_ip = self.source_ip
+            try:
+                return super().send(request, **kwargs)
+            finally:
+                _tls.source_ip = old_src
+
+except ImportError:
+    SourceIPHTTPAdapter = None  # type: ignore
+
 
 # ── Instrument name normalisation map ────────────────────────────────────────
 _INSTRUMENT_NAME_MAP = {
@@ -83,13 +108,40 @@ class BaseBroker(ABC):
             self.instruments = {i.strip().upper() for i in instruments_str.split(',') if i.strip()}
             self.source_ip = None
 
+    def _install_source_ip_adapter(self, session):
+        """
+        Mount a SourceIPHTTPAdapter on a requests.Session so that every HTTP
+        call routed through that session (auth, data, orders, etc.) automatically
+        uses self.source_ip as the outbound local address.
+
+        Safe to call with session=None or when source_ip is not set.
+        """
+        if not self.source_ip or not session or SourceIPHTTPAdapter is None:
+            return
+        try:
+            adapter = SourceIPHTTPAdapter(self.source_ip)
+            session.mount("https://", adapter)
+            session.mount("http://", adapter)
+            logger.info(
+                f"[{self.instance_name}] SourceIPHTTPAdapter mounted "
+                f"(source IP: {self.source_ip})"
+            )
+        except Exception as exc:
+            logger.warning(
+                f"[{self.instance_name}] Could not mount SourceIPHTTPAdapter: {exc}"
+            )
+
     def _set_source_ip(self):
-        """Call before a broker SDK HTTP call to bind this thread's outbound socket to source_ip."""
+        """
+        Fallback: set thread-local source IP for a single SDK call block.
+        Use this for brokers whose HTTP client is not a requests.Session
+        (e.g. Upstox swagger client, raw http.client usage).
+        """
         if self.source_ip:
             _tls.source_ip = self.source_ip
 
     def _clear_source_ip(self):
-        """Call in a finally block after the broker SDK HTTP call."""
+        """Companion to _set_source_ip(): clear after the SDK call."""
         _tls.source_ip = None
 
     def is_configured_for_instrument(self, instrument_name):

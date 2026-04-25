@@ -54,6 +54,7 @@ class BrokerManager:
             'password': client_cfg.password,
             'totp': client_cfg.totp,
             'broker_user_id': os.environ.get('CLIENT_BROKER_USER_ID', ''),
+            'static_ip': client_cfg.static_ip or None,   # Elastic IP for source-IP binding
             'broker_settings': {
                 'instruments_to_trade': client_cfg.instrument,
             },
@@ -76,6 +77,11 @@ class BrokerManager:
                 try:
                     await asyncio.to_thread(kite.profile)
                     broker_instance.kite = kite
+                    # Re-mount source-IP adapter on the newly created kite session
+                    if broker_instance.source_ip:
+                        broker_instance._install_source_ip_adapter(
+                            getattr(kite, 'reqsession', None)
+                        )
                     logger.info(f"[CLIENT MODE] Zerodha authenticated via token.")
                 except Exception as e:
                     logger.critical(f"[CLIENT MODE] Zerodha token validation also failed: {e}")

@@ -26,6 +26,7 @@ class ClientConfig:
     instance_id: int
     password: str = ""
     totp: str = ""
+    static_ip: str = ""        # Elastic IP assigned to this client (may be empty)
 
     @property
     def is_paper(self) -> bool:
@@ -71,4 +72,5 @@ def load_client_config() -> ClientConfig:
         password=os.environ.get("CLIENT_PASSWORD", ""),
         totp=os.environ.get("CLIENT_TOTP", ""),
         instance_id=int(os.environ["CLIENT_INSTANCE_ID"]),
+        static_ip=os.environ.get("CLIENT_STATIC_IP", ""),
     )

@@ -901,13 +901,16 @@
               <div class="inp-label">Email (read-only)</div>
               <input type="text" class="inp" id="p-email" readonly style="opacity:.6;cursor:not-allowed">
             </div>
-            <div id="p-static-ip-row" style="display:none">
-              <div class="inp-label">Your Static IP (for broker whitelisting)</div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <input type="text" class="inp" id="p-static-ip" readonly style="opacity:.6;cursor:not-allowed;font-family:monospace;font-size:13px;flex:1">
+            <div id="p-static-ip-row">
+              <div class="inp-label">Your Static IP (for broker API whitelisting)</div>
+              <div id="p-static-ip-assigned" style="display:flex;align-items:center;gap:8px;display:none">
+                <input type="text" class="inp" id="p-static-ip" readonly style="opacity:.7;cursor:not-allowed;font-family:monospace;font-size:13px;flex:1">
                 <button onclick="copyStaticIP()" style="padding:6px 10px;border-radius:8px;background:#1e293b;border:1px solid #334155;color:#94a3b8;font-size:11px;cursor:pointer;white-space:nowrap">Copy</button>
               </div>
-              <div style="font-size:11px;color:#475569;margin-top:4px">Add this IP to your broker's app developer portal to whitelist API access.</div>
+              <div id="p-static-ip-none" style="display:flex;align-items:center;gap:6px;margin-top:2px">
+                <span style="font-size:12px;color:#64748b">Not assigned yet — contact support to get your dedicated IP assigned.</span>
+              </div>
+              <div id="p-static-ip-hint" style="display:none;font-size:11px;color:#475569;margin-top:4px">Add this IP to your broker's developer portal to whitelist API access.</div>
             </div>
           </div>
           <button class="btn btn-primary" onclick="saveProfile()" style="width:100%">💾 Save Profile</button>
@@ -1719,11 +1722,18 @@ async function loadSettingsPane() {
     state.profile = d;
     document.getElementById('p-name').value = d.full_name || '';
     document.getElementById('p-phone').value = d.phone_number || '';
+    const assignedDiv = document.getElementById('p-static-ip-assigned');
+    const noneDiv = document.getElementById('p-static-ip-none');
+    const hintDiv = document.getElementById('p-static-ip-hint');
     if (d.static_ip) {
       document.getElementById('p-static-ip').value = d.static_ip;
-      document.getElementById('p-static-ip-row').style.display = '';
+      if (assignedDiv) assignedDiv.style.display = 'flex';
+      if (noneDiv) noneDiv.style.display = 'none';
+      if (hintDiv) hintDiv.style.display = '';
     } else {
-      document.getElementById('p-static-ip-row').style.display = 'none';
+      if (assignedDiv) assignedDiv.style.display = 'none';
+      if (noneDiv) noneDiv.style.display = 'flex';
+      if (hintDiv) hintDiv.style.display = 'none';
     }
     document.getElementById('p-username').value = d.username || '';
     document.getElementById('p-email').value = d.email || '';

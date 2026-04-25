@@ -67,6 +67,11 @@ class DhanClient(BaseBroker):
             if not self.paper_trade and self.dhan:
                 asyncio.create_task(self._load_security_list())
 
+        # Mount SourceIPHTTPAdapter on Dhan's requests session so that ALL HTTP
+        # calls (auth, orders, funds, security list) route through the assigned IP.
+        if self.dhan and self.source_ip:
+            self._install_source_ip_adapter(getattr(self.dhan, 'session', None))
+
     def connect(self):
         # Established in __init__
         pass
@@ -682,20 +687,16 @@ class DhanClient(BaseBroker):
 
             # Dhan API expects string security_id
             # Price is required even for MARKET orders (use 0)
-            self._set_source_ip()
-            try:
-                response = self.dhan.place_order(
-                    security_id=str(security_id),
-                    exchange_segment=segment,
-                    transaction_type=dhan_transaction_type,
-                    quantity=int(quantity),
-                    order_type=self.dhan.MARKET,
-                    product_type=self.dhan.MARGIN, # Carry Forward for Options
-                    price=0.0,
-                    validity='DAY'
-                )
-            finally:
-                self._clear_source_ip()
+            response = self.dhan.place_order(
+                security_id=str(security_id),
+                exchange_segment=segment,
+                transaction_type=dhan_transaction_type,
+                quantity=int(quantity),
+                order_type=self.dhan.MARKET,
+                product_type=self.dhan.MARGIN, # Carry Forward for Options
+                price=0.0,
+                validity='DAY'
+            )
 
             if response.get('status') == 'success':
                 return response.get('data', {}).get('orderId')
