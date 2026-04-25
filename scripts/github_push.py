@@ -96,12 +96,12 @@ def main() -> None:
             refspecs=[refspec],
             outstream=_null,
             errstream=_null,
+            force=True,
         )
         log.info("SUCCESS: Pushed 'main' to github.com/%s", github_repo)
     except (SendPackError, GitProtocolError, HangupException) as exc:
         log.error(
-            "Push rejected by remote for github.com/%s: %s — "
-            "remote may have diverged; no force-push will be attempted",
+            "Push rejected by remote for github.com/%s: %s",
             github_repo,
             _sanitize(str(exc)),
         )
