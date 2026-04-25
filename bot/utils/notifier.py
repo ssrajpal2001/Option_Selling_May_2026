@@ -32,7 +32,8 @@ def _is_telegram_enabled() -> bool:
     return True
 
 
-def send_telegram(chat_id: str, message: str, parse_mode: str = "HTML") -> bool:
+def send_telegram(chat_id: str, message: str, parse_mode: str = "HTML",
+                  force: bool = False) -> bool:
     """
     Send a Telegram message to a specific chat_id.
 
@@ -40,11 +41,13 @@ def send_telegram(chat_id: str, message: str, parse_mode: str = "HTML") -> bool:
         chat_id: Telegram chat ID (user or group).
         message: HTML-formatted message text.
         parse_mode: "HTML" or "Markdown".
+        force: If True, bypass the global telegram_alerts_enabled toggle.
+               Use only for admin/client test-message calls.
 
     Returns:
         True on success, False on failure.
     """
-    if not _is_telegram_enabled():
+    if not force and not _is_telegram_enabled():
         logger.debug("[Telegram] Alerts globally disabled — skipping.")
         return False
     token = _get_tg_token()
@@ -160,13 +163,16 @@ def notify_day_end_summary(chat_id: str, summary: dict) -> bool:
 
     trend = "🟢 Profitable" if total_pts >= 0 else "🔴 Loss"
     pnl_str = f"{total_pts:+.1f} pts (₹{total_rs:+,.0f})"
+    win_rate = f"{round(wins / trades * 100)}%" if trades else "N/A"
 
     msg = (
         f"<b>📅 Day-End Summary — {date}</b>\n"
         f"<b>Broker:</b> {broker}\n"
         f"<b>Total Trades:</b> {trades}  (W:{wins} / L:{losses})\n"
+        f"<b>Win Rate:</b> {win_rate}\n"
         f"<b>Net PnL:</b> {pnl_str}\n"
-        f"<b>Result:</b> {trend}"
+        f"<b>Result:</b> {trend}\n"
+        f"Bot: Connected ✅"
     )
     return send_telegram(chat_id, msg)
 

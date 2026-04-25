@@ -1340,13 +1340,16 @@ async def test_telegram(admin=Depends(require_admin)):
         chat_id,
         "✅ <b>AlgoSoft — Test Message</b>\n"
         "Your Telegram bot is correctly configured.\n"
-        "Clients will receive live trade alerts and day-end summaries at their Chat IDs."
+        "Clients will receive live trade alerts and day-end summaries at their Chat IDs.",
+        force=True
     )
     if ok:
         return {"success": True, "message": f"Test message sent to Chat ID {chat_id}"}
     raise HTTPException(
         500,
-        "Failed to send. Check: (1) Bot token is saved correctly, (2) You have sent /start to the bot on Telegram first."
+        "Failed to send. Check: (1) Bot token is saved correctly, "
+        "(2) You have sent /start to the bot on Telegram first. "
+        "(Note: test messages bypass the global alert toggle.)"
     )
 
 

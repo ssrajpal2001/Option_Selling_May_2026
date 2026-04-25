@@ -1128,7 +1128,9 @@ async def test_telegram_client(user=Depends(get_current_user)):
     ok = send_telegram(
         chat_id,
         "✅ <b>AlgoSoft — Telegram Connected!</b>\n"
-        "You will receive live trade alerts and a day-end PnL summary here."
+        "You will receive live trade alerts and a day-end PnL summary here.\n"
+        "Bot: Connected ✅",
+        force=True
     )
     if ok:
         return {"success": True, "message": "Test message sent! Check your Telegram."}
