@@ -26,7 +26,9 @@ HEALTH_URL = os.environ.get("HEALTH_URL", "http://localhost:5000/health")
 # Poll every 5 seconds so we detect brief crash/restart cycles that PM2
 # resolves within seconds.  Using 60s + threshold-2 would miss most crashes.
 POLL_INTERVAL = int(os.environ.get("WATCHDOG_INTERVAL", "5"))
-DB_PATH = os.environ.get("DB_PATH", "bot/config/algosoft.db")
+# Use the same env var as bot/web/db.py so the path is always consistent.
+_SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.environ.get("ALGOSOFT_DB_PATH", os.path.join(_SCRIPT_DIR, "bot", "config", "algosoft.db"))
 TG_API = "https://api.telegram.org/bot{token}/sendMessage"
 BOT_NAME = os.environ.get("BOT_NAME", "AlgoSoft Bot")
 

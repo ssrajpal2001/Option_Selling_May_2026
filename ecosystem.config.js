@@ -40,6 +40,14 @@ module.exports = {
       max_restarts: 50,
       min_uptime: '5s',
       restart_delay: 5000,
+      // Align DB path with what bot/web/db.py reads (ALGOSOFT_DB_PATH)
+      env: {
+        ALGOSOFT_DB_PATH: './bot/config/algosoft.db',
+        HEALTH_URL: 'http://localhost:5000/health',
+        BOT_NAME: 'AlgoSoft Bot',
+        WATCHDOG_INTERVAL: '5',
+        WATCHDOG_STARTUP_WAIT: '30',
+      },
       output: './logs/watchdog_out.log',
       error: './logs/watchdog_err.log',
       merge_logs: true,
