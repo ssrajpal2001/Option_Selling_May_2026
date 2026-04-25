@@ -249,7 +249,8 @@ class UpstoxClient(BaseBroker):
                 return None
 
             tx_type = "BUY" if str(transaction_type).upper() == "BUY" else "SELL"
-            product = "D"  # D = NRML/Carry-forward for FO; I = MIS
+            # Upstox product codes: D = NRML (carry-forward), I = MIS (intraday)
+            product = "I" if str(product_type).upper() == "MIS" else "D"
 
             cfg = upstox_client.Configuration()
             cfg.access_token = self._access_token
