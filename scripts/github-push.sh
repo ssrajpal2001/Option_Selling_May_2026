@@ -19,8 +19,13 @@ for candidate in \
 done
 
 if [ -z "$PYTHON" ]; then
+  LOG_FILE="$SCRIPT_DIR/../logs/github-push.log"
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: No Python with dulwich found — skipping push" \
-    >> "$SCRIPT_DIR/../logs/github-push.log"
+    >> "$LOG_FILE"
+  # Keep only the last 1000 lines so this fallback path stays bounded too
+  if [ -f "$LOG_FILE" ]; then
+    tail -n 1000 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
+  fi
   exit 0
 fi
 

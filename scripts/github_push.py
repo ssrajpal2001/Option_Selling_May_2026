@@ -10,7 +10,7 @@ import io
 import os
 import sys
 import logging
-from datetime import datetime
+import logging.handlers
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -19,14 +19,20 @@ LOG_FILE = LOG_DIR / "github-push.log"
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s] %(levelname)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.FileHandler(LOG_FILE),
-    ],
+_handler = logging.handlers.RotatingFileHandler(
+    LOG_FILE,
+    maxBytes=100_000,
+    backupCount=1,
+    encoding="utf-8",
 )
+_handler.setFormatter(
+    logging.Formatter(
+        fmt="[%(asctime)s] %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+)
+
+logging.basicConfig(level=logging.INFO, handlers=[_handler])
 log = logging.getLogger("github-push")
 
 
