@@ -106,17 +106,42 @@ class FyersClient(BaseBroker):
         pass
 
     def _resolve_symbol(self, contract) -> str | None:
-        """Converts contract to Fyers NSE symbol format (e.g. NSE:NIFTY25APR24500CE)."""
+        """Converts contract to Fyers NSE symbol format.
+        Monthly expiry: NSE:NIFTY25APR23350CE
+        Weekly expiry:  NSE:NIFTY25M DD23350CE  (M=1..9, O=Oct, N=Nov, D=Dec)
+        """
         try:
-            name = str(getattr(contract, "name", "NIFTY") or "NIFTY").upper()
+            import datetime as _dt
+            raw_name = str(getattr(contract, "name", "NIFTY") or "NIFTY")
+            name = self._normalize_instrument_name(raw_name)
             expiry = contract.expiry
-            if hasattr(expiry, "strftime"):
-                expiry_str = expiry.strftime("%d%b%y").upper()
-            else:
-                expiry_str = str(expiry).upper()
+            expiry_date = expiry.date() if isinstance(expiry, _dt.datetime) else expiry
+            year_str = expiry_date.strftime('%y')
             strike = int(float(contract.strike_price))
             opt_type = str(getattr(contract, "instrument_type", "CE") or "CE").upper()
-            return f"NSE:{name}{expiry_str}{strike}{opt_type}"
+            if opt_type == "CALL": opt_type = "CE"
+            if opt_type == "PUT": opt_type = "PE"
+
+            is_monthly = False
+            if self.state_manager and getattr(self.state_manager, 'monthly_expiries', None):
+                is_monthly = (expiry_date in self.state_manager.monthly_expiries)
+            else:
+                next_week = expiry_date + _dt.timedelta(days=7)
+                is_monthly = (next_week.month != expiry_date.month)
+
+            if is_monthly:
+                month_names = {1:"JAN",2:"FEB",3:"MAR",4:"APR",5:"MAY",6:"JUN",
+                               7:"JUL",8:"AUG",9:"SEP",10:"OCT",11:"NOV",12:"DEC"}
+                month_str = month_names[expiry_date.month]
+                symbol = f"NSE:{name}{year_str}{month_str}{strike}{opt_type}"
+            else:
+                m = expiry_date.month
+                month_char = 'O' if m == 10 else 'N' if m == 11 else 'D' if m == 12 else str(m)
+                day_str = expiry_date.strftime('%d')
+                symbol = f"NSE:{name}{year_str}{month_char}{day_str}{strike}{opt_type}"
+
+            logger.debug(f"[FyersClient] Resolved symbol: {symbol} (monthly={is_monthly})")
+            return symbol
         except Exception as e:
-            logger.error(f"[FyersClient] Symbol resolution error: {e}")
+            logger.error(f"[FyersClient] Symbol resolution error for {getattr(contract, 'instrument_key', 'unknown')}: {e}", exc_info=True)
             return None

@@ -133,17 +133,24 @@ class GrowwClient(BaseBroker):
         pass
 
     def _resolve_symbol(self, contract) -> str | None:
-        """Converts contract to Groww NFO symbol string."""
+        """Converts contract to Groww NFO symbol string.
+        Format: NIFTY25APR202624500CE  (name + DD + MON + YYYY + strike + CE/PE)
+        """
         try:
-            name = str(getattr(contract, "name", "NIFTY") or "NIFTY").upper()
+            import datetime as _dt
+            raw_name = str(getattr(contract, "name", "NIFTY") or "NIFTY")
+            name = self._normalize_instrument_name(raw_name)
             expiry = contract.expiry
-            if hasattr(expiry, "strftime"):
-                expiry_str = expiry.strftime("%d%b%Y").upper()
-            else:
-                expiry_str = str(expiry).upper()
+            if isinstance(expiry, _dt.datetime):
+                expiry = expiry.date()
+            expiry_str = expiry.strftime("%d%b%Y").upper()
             strike = int(float(contract.strike_price))
             opt_type = str(getattr(contract, "instrument_type", "CE") or "CE").upper()
-            return f"{name}{expiry_str}{strike}{opt_type}"
+            if opt_type == "CALL": opt_type = "CE"
+            if opt_type == "PUT": opt_type = "PE"
+            symbol = f"{name}{expiry_str}{strike}{opt_type}"
+            logger.debug(f"[GrowwClient] Resolved symbol: {symbol}")
+            return symbol
         except Exception as e:
-            logger.error(f"[GrowwClient] Symbol resolution error: {e}")
+            logger.error(f"[GrowwClient] Symbol resolution error for {getattr(contract, 'instrument_key', 'unknown')}: {e}", exc_info=True)
             return None

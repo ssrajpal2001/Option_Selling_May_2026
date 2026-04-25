@@ -99,17 +99,25 @@ class AliceblueClient(BaseBroker):
         pass
 
     def _resolve_symbol(self, contract) -> str | None:
-        """Converts contract to Alice Blue NFO symbol string."""
+        """Converts contract to Alice Blue NFO symbol string for pya3.
+        Format expected by pya3 get_instrument_by_symbol('NFO', symbol):
+          NIFTY25APR26C24000   (name + DD + MON + YY + C/P + strike)
+        Note: pya3 uses single-letter C/P (not CE/PE) and 2-digit year.
+        """
         try:
-            name = str(getattr(contract, "name", "NIFTY") or "NIFTY").upper()
+            import datetime as _dt
+            raw_name = str(getattr(contract, "name", "NIFTY") or "NIFTY")
+            name = self._normalize_instrument_name(raw_name)
             expiry = contract.expiry
-            if hasattr(expiry, "strftime"):
-                expiry_str = expiry.strftime("%d%b%Y").upper()
-            else:
-                expiry_str = str(expiry).upper()
+            if isinstance(expiry, _dt.datetime):
+                expiry = expiry.date()
+            expiry_str = expiry.strftime("%d%b%y").upper()
             strike = int(float(contract.strike_price))
-            opt_type = str(getattr(contract, "instrument_type", "CE") or "CE").upper()
-            return f"{name}{expiry_str}{strike}{opt_type}"
+            raw_type = str(getattr(contract, "instrument_type", "CE") or "CE").upper()
+            opt_char = "C" if raw_type in ("CE", "CALL") else "P"
+            symbol = f"{name}{expiry_str}{opt_char}{strike}"
+            logger.debug(f"[AliceblueClient] Resolved symbol: {symbol}")
+            return symbol
         except Exception as e:
-            logger.error(f"[AliceblueClient] Symbol resolution error: {e}")
+            logger.error(f"[AliceblueClient] Symbol resolution error for {getattr(contract, 'instrument_key', 'unknown')}: {e}", exc_info=True)
             return None

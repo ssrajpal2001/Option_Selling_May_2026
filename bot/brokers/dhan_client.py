@@ -656,23 +656,28 @@ class DhanClient(BaseBroker):
             segment = self.dhan.NSE_FNO
 
         try:
-            # First, resolve security_id
-            # NOTE: We use a thread-safe way to call the async get_security_id from this sync method
-            # In a production environment, place_order should ideally be async,
-            # but we follow the BaseBroker interface here.
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                     # This is a bit risky but common in hybrid apps
-                     security_id = asyncio.run_coroutine_threadsafe(self.get_security_id(contract), loop).result(timeout=10)
-                else:
-                     security_id = loop.run_until_complete(self.get_security_id(contract))
-            except Exception as se:
-                logger.error(f"Dhan: Failed to resolve security_id in place_order: {se}")
-                return None
+            # Resolve security_id — short-circuit via ikey_to_sid cache first (dual-role:
+            # when Dhan is both the data feed AND the execution broker, the feed's
+            # ikey_to_sid map already has every subscribed contract's security_id).
+            ikey = getattr(contract, 'instrument_key', None)
+            security_id = self.ikey_to_sid.get(ikey) if ikey else None
 
             if not security_id:
-                logger.error(f"Dhan: No security_id found for {contract.instrument_key}")
+                # Fallback: look up from security list CSV (slower, but complete)
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        security_id = asyncio.run_coroutine_threadsafe(
+                            self.get_security_id(contract), loop
+                        ).result(timeout=10)
+                    else:
+                        security_id = loop.run_until_complete(self.get_security_id(contract))
+                except Exception as se:
+                    logger.error(f"[DhanClient] Failed to resolve security_id in place_order for {ikey}: {se}")
+                    return None
+
+            if not security_id:
+                logger.error(f"[DhanClient] No security_id found for {ikey}. Cannot place order.")
                 return None
 
             # Dhan API expects string security_id

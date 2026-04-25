@@ -2,6 +2,24 @@ from abc import ABC, abstractmethod
 import asyncio
 from utils.trade_logger import TradeLogger
 
+_INSTRUMENT_NAME_MAP = {
+    "NIFTY 50": "NIFTY",
+    "NIFTY50": "NIFTY",
+    "NIFTY": "NIFTY",
+    "NIFTY BANK": "BANKNIFTY",
+    "NIFTYBANK": "BANKNIFTY",
+    "BANKNIFTY": "BANKNIFTY",
+    "NIFTY FINANCIAL SERVICES": "FINNIFTY",
+    "NIFTY FIN SERVICE": "FINNIFTY",
+    "FINNIFTY": "FINNIFTY",
+    "NIFTY MIDCAP SELECT": "MIDCPNIFTY",
+    "NIFTY MID SELECT": "MIDCPNIFTY",
+    "MIDCAP NIFTY": "MIDCPNIFTY",
+    "MIDCPNIFTY": "MIDCPNIFTY",
+    "SENSEX": "SENSEX",
+    "BANKEX": "BANKEX",
+}
+
 class BaseBroker(ABC):
     """
     Abstract base class for all broker clients.
@@ -45,6 +63,13 @@ class BaseBroker(ABC):
     def set_state_manager(self, state_manager):
         """Receives the shared StateManager instance."""
         self.state_manager = state_manager
+
+    def _normalize_instrument_name(self, raw_name: str) -> str:
+        """Normalize an instrument name to the short broker-compatible form.
+        e.g. 'NIFTY 50' -> 'NIFTY', 'NIFTY BANK' -> 'BANKNIFTY'
+        """
+        upper = (raw_name or "NIFTY").strip().upper()
+        return _INSTRUMENT_NAME_MAP.get(upper, upper)
 
     @abstractmethod
     def connect(self):

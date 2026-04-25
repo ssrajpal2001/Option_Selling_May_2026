@@ -13,6 +13,7 @@ class UpstoxClient(BaseBroker):
         self.api_client = None
         self.ws_manager = None
         self.loop = None
+        self._access_token = None  # Stored for order placement via SDK
 
         if login_required:
             if self.db_config:
@@ -39,6 +40,7 @@ class UpstoxClient(BaseBroker):
                         access_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
 
                     if access_token:
+                        self._access_token = access_token
                         auth = SimpleAuth(access_token, self.config_manager)
                         self.api_client = RestApiClient(auth)
                         logger.info(f"Upstox client initialized for User ID: {self.user_id}.")
@@ -119,18 +121,35 @@ class UpstoxClient(BaseBroker):
 
     async def handle_entry_signal(self, **kwargs):
         if self.paper_trade:
-            # Standard paper trade logic from BaseBroker or custom implementation
             return await self._handle_paper_entry(**kwargs)
-
-        # Real execution logic for Upstox would go here
-        # For now, we prioritize paper trading and data feed
-        logger.warning(f"Upstox real execution not fully implemented for client mode yet.")
-        return None
+        contract = kwargs.get('contract')
+        transaction_type = kwargs.get('direction', 'SELL')
+        quantity = kwargs.get('quantity', 1)
+        if not contract:
+            logger.error(f"[UpstoxClient] handle_entry_signal: no contract provided for user {self.user_id}.")
+            return None
+        order_id = self.place_order(contract, transaction_type, quantity)
+        if order_id:
+            await event_bus.publish('TRADE_CONFIRMED', {
+                'user_id': self.user_id,
+                'instrument_name': kwargs.get('instrument_name'),
+                'direction': transaction_type,
+                'trade_contract': contract,
+                'ltp': kwargs.get('ltp', 0),
+                'order_id': order_id,
+            })
+        return order_id
 
     async def handle_close_signal(self, **kwargs):
         if self.paper_trade:
             return await self._handle_paper_exit(**kwargs)
-        return None
+        contract = kwargs.get('contract')
+        transaction_type = kwargs.get('side', 'BUY')
+        quantity = kwargs.get('quantity', 1)
+        if not contract:
+            logger.error(f"[UpstoxClient] handle_close_signal: no contract provided for user {self.user_id}.")
+            return None
+        return self.place_order(contract, transaction_type, quantity)
 
     async def _handle_paper_entry(self, **kwargs):
         inst_name = kwargs.get('instrument_name')
@@ -171,8 +190,57 @@ class UpstoxClient(BaseBroker):
         })
         return "PAPER_UPSTOX_EXIT"
 
-    def place_order(self, *args, **kwargs):
-        pass
+    def place_order(self, contract, transaction_type: str, quantity: int, expiry=None,
+                    product_type: str = "NRML", market_protection=None):
+        """Places a real order via Upstox V2 SDK OrderApi.
+        Upstox natively uses instrument_key (e.g. NSE_FO|...) — no symbol construction needed.
+        """
+        if not self._access_token:
+            logger.error(f"[UpstoxClient] No access token available. Cannot place order for user {self.user_id}.")
+            return None
+        try:
+            import upstox_client
+
+            instrument_token = getattr(contract, "instrument_key", None)
+            if not instrument_token:
+                logger.error(f"[UpstoxClient] Contract has no instrument_key. Cannot place order for user {self.user_id}.")
+                return None
+
+            tx_type = "BUY" if str(transaction_type).upper() == "BUY" else "SELL"
+            product = "D"  # D = NRML/Carry-forward for FO; I = MIS
+
+            cfg = upstox_client.Configuration()
+            cfg.access_token = self._access_token
+            api_client = upstox_client.ApiClient(cfg)
+            order_api = upstox_client.OrderApi(api_client)
+
+            req = upstox_client.PlaceOrderRequest(
+                quantity=int(quantity),
+                product=product,
+                validity="DAY",
+                price=0,
+                tag="algosoft",
+                instrument_token=instrument_token,
+                order_type="MARKET",
+                transaction_type=tx_type,
+                disclosed_quantity=0,
+                trigger_price=0,
+                is_amo=False,
+            )
+
+            resp = order_api.place_order(body=req, api_version="2.0")
+            order_id = getattr(resp, "data", None)
+            order_id = getattr(order_id, "order_id", None) if order_id else None
+
+            if order_id:
+                logger.info(f"[UpstoxClient] Order placed: {order_id} | {tx_type} {quantity} x {instrument_token} | user={self.user_id}")
+                return order_id
+            else:
+                logger.error(f"[UpstoxClient] Order placement returned no order_id. Response: {resp}")
+                return None
+        except Exception as e:
+            logger.error(f"[UpstoxClient] place_order error for user {self.user_id}: {e}", exc_info=True)
+            return None
 
     async def close_all_positions(self):
         """Squares off positions in Upstox."""
