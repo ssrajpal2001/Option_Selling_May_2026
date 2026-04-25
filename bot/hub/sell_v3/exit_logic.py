@@ -11,6 +11,28 @@ class ExitLogic(SellV3Base):
         pe = self.manager.active_trades.get('PE')
         if not ce or not pe: return
 
+        # --- EOD FORCE SQUARE-OFF (Highest Priority) ---
+        # If the clock has passed square_off_time, force-exit ALL open positions
+        # regardless of P&L and skip all further exit evaluation for this tick.
+        sq_off_str = self._v3_cfg('square_off_time', '15:15', timestamp=timestamp)
+        try:
+            sq_parts = str(sq_off_str).replace('.', ':').split(':')
+            sq_off_time = datetime.time(int(sq_parts[0]), int(sq_parts[1]))
+        except Exception:
+            sq_off_time = datetime.time(15, 15)
+
+        if timestamp.time() >= sq_off_time:
+            eod_bucket = f"eod_sqoff_{timestamp.date()}"
+            if getattr(self.manager, '_last_eod_sqoff_bucket', None) != eod_bucket:
+                self.manager._last_eod_sqoff_bucket = eod_bucket
+                logger.info(
+                    f"[SellManagerV3] EOD FORCE SQUARE-OFF triggered at "
+                    f"{timestamp.strftime('%H:%M:%S')} "
+                    f"(square_off_time={sq_off_str}) — closing all open positions."
+                )
+                await self.manager._execute_full_exit(timestamp, "EOD_SQUAREOFF", stop_for_day=True)
+            return  # Past square-off time: skip all further exit checks
+
         do_log = getattr(self.manager, 'do_log', False)
         # Use state manager for LTP to be robust against filtered tick dictionaries
         ltp_ce = self.orchestrator.state_manager.get_ltp(ce['key'])

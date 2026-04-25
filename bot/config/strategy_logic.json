@@ -93,6 +93,7 @@
                 "strict_ltp_balancing": false,
                 "profit_target_enabled": true,
                 "entry_end_time": "15:15:00",
+                "square_off_time": "15:15",
                 "close_time": "17:00",
                 "reentry_offset": 2,
                 "v_slope_pool_offset": 2,

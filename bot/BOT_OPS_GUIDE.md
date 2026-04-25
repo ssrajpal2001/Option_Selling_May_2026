@@ -562,6 +562,31 @@ These run automatically every day without admin intervention:
 | **9:15 AM** | Subscription expiry check — clients and admin are alerted if a plan expires in 7 or 1 day |
 | **3:30 PM** | Day-end Telegram P&L summary sent to all active clients who have a Telegram Chat ID |
 
+### 6.7 V3 Strategy Time Gates
+
+The V3 Option Selling strategy has three time boundaries that govern when the bot trades each day. **Only admins can change these** — they are platform-wide risk controls, not per-client settings.
+
+| Time Gate | Config key | Default | What it does |
+|-----------|-----------|---------|--------------|
+| **Market Open / Start Time** | `sell.start_time` | `09:15` | Bot begins scanning for entry signals after this time. Before this time the bot waits and does not evaluate any entry or exit conditions. |
+| **No New Trades After** | `sell.v3.entry_end_time` | `14:00` | Entry cutoff. After this time the bot will not open any new straddle positions. Existing open trades continue to be monitored for exits normally. |
+| **Force Square-Off At** | `sell.v3.square_off_time` | `15:15` | Hard EOD deadline. At this time ALL open positions are forcefully closed regardless of P&L. The exit reason recorded is `EOD_SQUAREOFF`. This is the definitive risk control that ensures no client is left with open overnight FO positions. |
+| **Bot Close Time** | `sell.v3.close_time` | `15:20` | After this time the bot process winds down for the day. |
+
+**How the gates interact (example for a typical day):**
+1. `09:15` — Bot wakes up and starts looking for entry signals
+2. `14:00` — Entry gate closes; no new trades are taken
+3. `15:15` — **Force square-off fires** — all CE and PE positions are closed immediately
+4. `15:20` — Bot shuts down until the next trading day
+
+**To change a time gate:**
+1. Log in as admin
+2. Go to **Strategy** → **V3 Settings** tab
+3. Edit the time fields under **"Time Gates (Admin Only)"**
+4. Click **Save** — changes take effect on the next bot startup
+
+> **Important:** The `square_off_time` gate runs independently of all other exit logic (TSL, ratio breach, etc.). It fires unconditionally as a platform-level safety net. Do not set it later than 15:25 to ensure all FO positions clear before exchange close.
+
 ---
 
 ## 7. Daily Routine Checklist
