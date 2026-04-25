@@ -621,6 +621,9 @@ class SellManagerV3:
                             'instrument': self.instrument_name,
                             '_client_id': int(client_id),
                             '_stop_for_day': stop_for_day,
+                            'strike': float(trade.get('strike', 0)),
+                            'exit_price': float(exit_price),
+                            'lots': int(trade.get('lot_size', 1) * mult),
                         })
                 except Exception as _te:
                     logger.error(f"[SellManagerV3] Telegram data collection failed: {_te}")
@@ -658,12 +661,19 @@ class SellManagerV3:
                     )
                     if is_squareoff:
                         from utils.notifier import notify_squareoff
+                        _ce = next((t for t in _tg_notification_data if t['direction'] == 'CE'), {})
+                        _pe = next((t for t in _tg_notification_data if t['direction'] == 'PE'), {})
                         _sq = {
                             'instrument': _tg_notification_data[0]['instrument'],
                             'broker': _tg_notification_data[0]['broker'],
                             'reason': reason,
                             'total_pnl_rs': sum(t['pnl_rs'] for t in _tg_notification_data),
                             'total_pnl_pts': sum(t['pnl_pts'] for t in _tg_notification_data),
+                            'ce_strike': _ce.get('strike', '—'),
+                            'ce_exit_price': _ce.get('exit_price', 0),
+                            'pe_strike': _pe.get('strike', '—'),
+                            'pe_exit_price': _pe.get('exit_price', 0),
+                            'lots': _tg_notification_data[0].get('lots', 1),
                         }
                         threading.Thread(target=notify_squareoff, args=(_chat_id, _sq), daemon=True).start()
                     else:

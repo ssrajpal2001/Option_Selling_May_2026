@@ -115,15 +115,22 @@ def notify_trade(chat_id: str, trade: dict) -> bool:
     mode      = trade.get("trading_mode", "paper").upper()
     instrument= trade.get("instrument", "NIFTY")
 
+    strike     = trade.get("strike")
+    exit_price = trade.get("exit_price")
+    lots       = trade.get("lots")
+
     pnl_icon = "🟢" if (pnl_pts or 0) >= 0 else "🔴"
     pnl_text = f"{pnl_pts:+.1f} pts (₹{pnl_rs:+,.0f})" if pnl_pts is not None else "—"
-
     mode_badge = "🔵 PAPER" if mode == "PAPER" else "🟡 LIVE"
+
+    strike_line = f"<b>Strike:</b> {strike:.0f}  Exit @ ₹{exit_price:.2f}\n" if strike and exit_price else ""
+    lots_line   = f"<b>Lots:</b> {lots}\n" if lots else ""
 
     msg = (
         f"<b>📊 Trade Closed — AlgoSoft</b>\n"
-        f"<b>Instrument:</b> {instrument}\n"
-        f"<b>Direction:</b> {direction}\n"
+        f"<b>Instrument:</b> {instrument}  ({direction})\n"
+        f"{strike_line}"
+        f"{lots_line}"
         f"<b>Exit Reason:</b> {reason}\n"
         f"<b>PnL:</b> {pnl_icon} {pnl_text}\n"
         f"<b>Broker:</b> {broker}   {mode_badge}"
@@ -139,10 +146,23 @@ def notify_squareoff(chat_id: str, data: dict) -> bool:
     total_pnl_rs = data.get("total_pnl_rs", 0.0)
     total_pnl_pts= data.get("total_pnl_pts", 0.0)
 
+    ce_strike    = data.get("ce_strike", "—")
+    ce_exit      = data.get("ce_exit_price")
+    pe_strike    = data.get("pe_strike", "—")
+    pe_exit      = data.get("pe_exit_price")
+    lots         = data.get("lots")
+
     trend = "🟢" if total_pnl_pts >= 0 else "🔴"
+    ce_line = f"<b>CE:</b> {ce_strike:.0f}  Exit @ ₹{ce_exit:.2f}\n" if ce_strike != "—" and ce_exit else ""
+    pe_line = f"<b>PE:</b> {pe_strike:.0f}  Exit @ ₹{pe_exit:.2f}\n" if pe_strike != "—" and pe_exit else ""
+    lots_line = f"<b>Lots:</b> {lots}\n" if lots else ""
+
     msg = (
         f"🔒 <b>SQUARED OFF — AlgoSoft</b>\n"
         f"<b>Instrument:</b> {instrument}\n"
+        f"{ce_line}"
+        f"{pe_line}"
+        f"{lots_line}"
         f"<b>Reason:</b> {reason}\n"
         f"<b>Net PnL:</b> {trend} {total_pnl_pts:+.1f} pts (₹{total_pnl_rs:+,.0f})\n"
         f"<b>Broker:</b> {broker}   🟡 LIVE\n"
