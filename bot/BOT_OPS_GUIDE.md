@@ -113,14 +113,16 @@ A working bot returns: `{"status": "ok", "uptime": "2h 15m 30s", ...}`
 
 1. Go to **Admin → Data Providers** (left sidebar)
 2. Click **Configure** next to **Upstox**:
-   - Enter the platform Upstox API Key and Secret
-   - Click **Auth** → a browser tab opens → log in with the platform Upstox account → it redirects back and saves the token automatically
+   - Enter the platform Upstox API Key, Secret, Mobile Number, PIN, and TOTP Secret
+   - Click **Connect Now** to generate the token automatically in the background
+   - If you have not set up automation credentials yet, click **Fallback: Manual Browser Auth** → log in → copy the full redirect URL from the browser → paste it in the **Paste Redirect URL** box → click **Exchange & Save**
+   - See **Section 5.2** for detailed Upstox token steps
 3. Click **Configure** next to **Dhan**:
    - Enter the Dhan Client ID and Access Token
    - Click **Save**
 4. Both should show **Connected / LIVE** status
 
-> **Every morning before 9:15 AM:** Upstox tokens expire daily. Click **Auth** on the Upstox provider card to refresh it. Dhan tokens last 30 days and auto-renew.
+> **Every morning before 9:15 AM:** Upstox tokens expire daily. Click **Connect Now** on the Upstox provider card to auto-renew it (requires automation credentials saved). Dhan tokens last 30 days and auto-renew.
 
 ---
 
@@ -408,17 +410,47 @@ If you have saved your Zerodha **Password** and **TOTP secret** in Settings, the
 
 ### 5.2 Upstox
 
-Upstox tokens expire daily but the bot handles the OAuth flow automatically.
+Upstox tokens expire daily. There are two ways to refresh the token depending on how your Upstox Developer App is configured.
 
 **Where to get credentials:**
-- Log in at [upstox.com](https://upstox.com) → Apps → Create App
-- Note: Redirect URI must be set to `http://<EC2-IP>:5000/auth/upstox/callback`
+- Log in at [upstox.com/developer/apps](https://upstox.com/developer/apps) → Create App
+- Note the **API Key** and **API Secret** shown on the app page
 
-**Connection steps (Settings → Broker → Upstox):**
-1. Enter **API Key** and **API Secret** → click **Save**
-2. Click **Connect with Upstox** → Upstox login page opens
+---
+
+**Option A — Fully Automated (Recommended)**
+
+Set the Redirect URI in the Upstox Developer Portal to exactly:
+```
+http://13.234.185.209:5000/auth/upstox/callback
+```
+Then the token is captured automatically after login — no copy-paste needed.
+
+**Steps:**
+1. Enter **API Key** and **API Secret** → click **Save Credentials**
+2. Enter **Mobile Number**, **PIN**, and **TOTP Secret** in the Automation Credentials section
+3. Click **Connect Now** — token is generated in the background automatically ✓
+
+---
+
+**Option B — Manual (If Redirect URI is google.com)**
+
+If your Upstox Developer App has `https://google.com` as the Redirect URI, the bot cannot
+capture the token automatically. Use this manual flow instead:
+
+**Steps:**
+1. Enter **API Key** and **API Secret** → click **Save Credentials**
+2. Click **Fallback: Manual Browser Auth** → Upstox login page opens in a new tab
 3. Log in with your Upstox account + OTP
-4. Page redirects back and token is saved automatically ✓
+4. After login, your browser is redirected to a google.com URL — do NOT close it
+5. Copy the **full URL** from the browser address bar (it starts with `https://www.google.com/?code=...`)
+6. Go back to the Admin → Data Providers → Configure Upstox modal
+7. Paste the full URL into the **"Paste Redirect URL"** box at the bottom
+8. Click **Exchange & Save** — the bot extracts the auth code and saves your token ✓
+
+> **Tip:** To switch to the fully automated Option A, update the Redirect URI in your
+> [Upstox Developer Portal](https://upstox.com/developer/apps) to
+> `http://13.234.185.209:5000/auth/upstox/callback`. This is the recommended long-term setup.
 
 ---
 

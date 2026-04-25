@@ -136,6 +136,21 @@
 
       <!-- Generic fields section (Upstox and others) -->
       <div id="generic-fields-section" class="inner-section">
+
+        <!-- Upstox-specific redirect notice — shown only when provider = upstox -->
+        <div id="upstox-redirect-notice" class="hidden mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1.5">&#9888; Token Flow: Two Options</p>
+          <div class="space-y-2 text-[10px] text-slate-400">
+            <div class="flex gap-2">
+              <span class="text-emerald-400 font-bold shrink-0">Option A (Automated):</span>
+              <span>Set redirect URI to <code class="bg-slate-800 px-1 rounded text-slate-300">http://&lt;EC2-IP&gt;:5000/auth/upstox/callback</code> in your Upstox Developer Portal. Token is captured automatically after login.</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="text-blue-400 font-bold shrink-0">Option B (Current):</span>
+              <span>If redirect URI is <code class="bg-slate-800 px-1 rounded text-slate-300">https://google.com</code>, click <strong class="text-slate-300">Fallback: Manual Browser Auth</strong> below → log in → copy the full URL from the browser bar (it starts with google.com?code=...) → paste it in the <strong class="text-slate-300">Paste Redirect URL</strong> box at the bottom.</span>
+            </div>
+          </div>
+        </div>
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label id="key-label" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Key</label>
@@ -193,10 +208,11 @@
         </div>
 
         <div class="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
-           <label class="block text-[9px] text-slate-500 uppercase mb-2">Manual Token / Redirect URL Fallback</label>
+           <label class="block text-[9px] text-slate-500 uppercase mb-1">Paste Redirect URL / Manual Token</label>
+           <p class="text-[9px] text-slate-600 mb-2">After Upstox login, copy the full URL from your browser (e.g. <span class="text-slate-400">https://google.com?code=ABC123...</span>) and paste it here. The bot extracts the code and saves your token automatically.</p>
            <div class="flex gap-2">
-             <input type="text" id="manual-token-input-generic" class="input-field flex-1 text-[10px]" placeholder="Paste URL from Google/Dhan here">
-             <button type="button" onclick="saveManualTokenGeneric()" class="btn-ghost px-3 py-1 text-[10px]">Save</button>
+             <input type="text" id="manual-token-input-generic" class="input-field flex-1 text-[10px]" placeholder="Paste full google.com?code=... redirect URL here">
+             <button type="button" onclick="saveManualTokenGeneric()" class="btn-primary px-3 py-1 text-[10px]">Exchange &amp; Save</button>
            </div>
         </div>
       </div>
@@ -382,6 +398,7 @@ function openConfig(provider) {
     const redirectGroup = document.getElementById('redirect-uri-group');
     const redirectInput = document.getElementById('redirect-uri');
 
+    const upstoxNotice = document.getElementById('upstox-redirect-notice');
     if (provider === 'upstox') {
       keyLabel.textContent = 'API Key';
       secretLabel.textContent = 'API Secret';
@@ -391,7 +408,12 @@ function openConfig(provider) {
       const proto = window.location.protocol;
       const host = window.location.host;
       redirectInput.value = `${proto}//${host}/auth/upstox/callback`;
+      if (upstoxNotice) upstoxNotice.classList.remove('hidden');
+      // Update placeholder to be Upstox-specific
+      const pasteInput = document.getElementById('manual-token-input-generic');
+      if (pasteInput) pasteInput.placeholder = 'Paste full google.com?code=... redirect URL here';
     } else {
+      if (upstoxNotice) upstoxNotice.classList.add('hidden');
       keyLabel.textContent = 'API Key';
       secretLabel.textContent = 'API Secret';
       if (userIdLabel) userIdLabel.textContent = 'USER ID';
@@ -457,7 +479,11 @@ function updateMasterStatus(connected) {
 function triggerGlobalAuth(provider) {
   if (!provider) return;
   window.open(`/api/admin/data-providers/${provider}/auth`, '_blank');
-  showToast(`${provider.toUpperCase()} auth window opened. Sign in and the token will be captured.`, 'success');
+  if (provider === 'upstox') {
+    showToast('Upstox login window opened. After signing in, copy the full URL from your browser address bar and paste it in the "Paste Redirect URL" box below.', 'info');
+  } else {
+    showToast(`${provider.toUpperCase()} auth window opened. Sign in and the token will be captured.`, 'success');
+  }
 }
 
 function triggerGlobalAuthFromModal() {
