@@ -825,7 +825,7 @@ async def _day_end_summary_scheduler():
                 clients = db_fetchall(
                     "SELECT u.id, u.username, u.telegram_chat_id, "
                     "MIN(cbi.broker) as broker, MIN(cbi.instrument) as instrument "
-                    "FROM users u JOIN client_broker_instances cbi ON cbi.client_id=u.id "
+                    "FROM users u LEFT JOIN client_broker_instances cbi ON cbi.client_id=u.id "
                     "WHERE u.role='client' AND u.is_active=1 AND u.telegram_chat_id IS NOT NULL "
                     "AND u.telegram_chat_id != '' "
                     "GROUP BY u.id, u.username, u.telegram_chat_id"
@@ -870,7 +870,7 @@ async def startup_event():
     asyncio.create_task(_global_provider_scheduler())
     # Daily subscription expiry alerts (09:15 AM IST)
     asyncio.create_task(_subscription_expiry_scheduler())
-    # Day-end Telegram summary (15:35 IST)
+    # Day-end Telegram summary (15:30 IST, weekdays only)
     asyncio.create_task(_day_end_summary_scheduler())
     # Dhan token auto-renewal (hourly, renews when token age > 22h)
     asyncio.create_task(_dhan_auto_renewal_scheduler())
