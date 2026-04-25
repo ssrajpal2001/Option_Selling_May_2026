@@ -78,6 +78,13 @@
           Create a bot: open Telegram → search <strong>@BotFather</strong> → /newbot → copy the token
         </div>
       </div>
+      <div class="flex items-center gap-3 mb-4 p-3 rounded-lg" style="background:#0f172a;border:1px solid #334155">
+        <input type="checkbox" id="telegram_alerts_enabled" class="h-4 w-4 accent-emerald-500" checked>
+        <div>
+          <div class="text-sm font-semibold text-white">Enable Telegram Alerts</div>
+          <div class="text-xs" style="color:#64748b">When disabled, no Telegram messages will be sent to any client</div>
+        </div>
+      </div>
       <div class="flex items-center gap-3 mt-2">
         <button onclick="saveTelegram()" class="btn-primary px-5 py-2 text-sm">💾 Save Telegram Settings</button>
         <button onclick="testTelegram()" class="btn-ghost px-5 py-2 text-sm" id="test-tg-btn">✈️ Send Test Message</button>
@@ -121,6 +128,7 @@ async function loadSettings() {
     document.getElementById('smtp_from_addr').value = s.smtp_from_addr || '';
     document.getElementById('smtp_use_tls').checked = s.smtp_use_tls !== 'false';
     document.getElementById('telegram_bot_token').value = s.telegram_bot_token || '';
+    document.getElementById('telegram_alerts_enabled').checked = s.telegram_alerts_enabled !== 'false';
   } catch (e) {
     console.error('load settings:', e);
   }
@@ -142,6 +150,7 @@ async function saveSmtp() {
 async function saveTelegram() {
   const settings = {
     telegram_bot_token: document.getElementById('telegram_bot_token').value,
+    telegram_alerts_enabled: document.getElementById('telegram_alerts_enabled').checked ? 'true' : 'false',
   };
   await doSave(settings, 'tg-msg');
 }

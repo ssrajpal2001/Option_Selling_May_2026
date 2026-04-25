@@ -802,14 +802,22 @@ async def _dhan_auto_renewal_scheduler():
 
 
 async def _day_end_summary_scheduler():
-    """Run daily at 15:35 IST — send day-end PnL summary via Telegram."""
+    """Run daily at 15:30 IST on weekdays — send day-end PnL summary via Telegram."""
     while True:
         try:
             now = datetime.now(IST)
-            target = now.replace(hour=15, minute=35, second=0, microsecond=0)
+            target = now.replace(hour=15, minute=30, second=0, microsecond=0)
             if now >= target:
                 target += timedelta(days=1)
+            # Advance to next weekday if target falls on weekend
+            while target.weekday() >= 5:
+                target += timedelta(days=1)
             await asyncio.sleep((target - now).total_seconds())
+
+            # Re-check after sleep — skip if somehow fired on a weekend
+            if datetime.now(IST).weekday() >= 5:
+                logger.info("[Scheduler] Day-end summary skipped — weekend.")
+                continue
 
             logger.info("[Scheduler] Sending day-end Telegram summaries...")
             try:

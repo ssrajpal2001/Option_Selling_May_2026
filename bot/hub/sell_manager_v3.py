@@ -511,6 +511,34 @@ class SellManagerV3:
         self.last_entry_bucket = str(timestamp.replace(minute=(timestamp.minute // tf) * tf, second=0, microsecond=0))
         self.save_state()
 
+        # Telegram trade-entry notification — fire in background thread (non-blocking, live only)
+        try:
+            client_id_env = os.environ.get('CLIENT_ID')
+            trading_mode_env = os.environ.get('CLIENT_TRADING_MODE', 'PAPER').upper()
+            if client_id_env and trading_mode_env == 'LIVE':
+                from web.db import db_fetchone as _db_fetchone
+                client_row = _db_fetchone(
+                    "SELECT telegram_chat_id FROM users WHERE id=?", (int(client_id_env),)
+                )
+                if client_row and client_row.get("telegram_chat_id"):
+                    import threading
+                    from utils.notifier import notify_trade_entry
+                    _chat_id = client_row["telegram_chat_id"]
+                    _e_data = {
+                        'ce_strike': ce['strike'],
+                        'pe_strike': pe['strike'],
+                        'ce_price': ce['ltp'],
+                        'pe_price': pe['ltp'],
+                        'instrument': self.instrument_name,
+                        'broker': os.environ.get('CLIENT_BROKER', 'V3'),
+                        'reason': reason,
+                    }
+                    threading.Thread(
+                        target=notify_trade_entry, args=(_chat_id, _e_data), daemon=True
+                    ).start()
+        except Exception as _te:
+            logger.error(f"[SellManagerV3] Telegram entry notify failed: {_te}")
+
     async def _execute_full_exit(self, timestamp, reason, cooldown=True, stop_for_day=False):
         logger.info(f"[SellManagerV3] Full Exit: {reason}")
         tasks = []
@@ -578,7 +606,7 @@ class SellManagerV3:
                     """, (int(inst_id), int(client_id), 'SELL', side, float(trade['strike']), float(trade['entry_price']), float(exit_price), float(pnl_pts), float(pnl_rs), int(trade['lot_size'] * mult), 'V3', reason, self.instrument_name, os.environ.get('CLIENT_TRADING_MODE', 'PAPER').upper(), trade['entry_time'].isoformat(), float(trade.get('entry_index_price', 0) or 0), timestamp.isoformat(), str(trade.get('entry_indicators', '--')), str(exit_snap)))
                 except Exception as e: logger.error(f"[SellManagerV3] DB Persistence failed: {e}")
 
-                # Telegram trade notification (live mode only, non-blocking)
+                # Telegram trade-exit notification — fire in background thread (non-blocking)
                 try:
                     trading_mode = os.environ.get('CLIENT_TRADING_MODE', 'PAPER').upper()
                     if trading_mode == 'LIVE':
@@ -587,8 +615,10 @@ class SellManagerV3:
                             "SELECT telegram_chat_id FROM users WHERE id=?", (int(client_id),)
                         )
                         if client_row and client_row.get("telegram_chat_id"):
+                            import threading
                             from utils.notifier import notify_trade
-                            notify_trade(client_row["telegram_chat_id"], {
+                            _chat_id = client_row["telegram_chat_id"]
+                            _t_data = {
                                 'direction': side,
                                 'pnl_pts': float(pnl_pts),
                                 'pnl_rs': float(pnl_rs),
@@ -596,9 +626,12 @@ class SellManagerV3:
                                 'broker': os.environ.get('CLIENT_BROKER', 'V3'),
                                 'trading_mode': trading_mode,
                                 'instrument': self.instrument_name,
-                            })
+                            }
+                            threading.Thread(
+                                target=notify_trade, args=(_chat_id, _t_data), daemon=True
+                            ).start()
                 except Exception as _te:
-                    logger.error(f"[SellManagerV3] Telegram notify failed: {_te}")
+                    logger.error(f"[SellManagerV3] Telegram exit notify failed: {_te}")
 
         for session in self.orchestrator.user_sessions.values():
             session.state_manager.total_pnl += total_pnl

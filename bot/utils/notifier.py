@@ -20,6 +20,18 @@ def _get_tg_token() -> str | None:
         return None
 
 
+def _is_telegram_enabled() -> bool:
+    """Check if Telegram alerts are globally enabled (default: enabled)."""
+    try:
+        from web.db import db_fetchone
+        row = db_fetchone("SELECT value FROM platform_settings WHERE key='telegram_alerts_enabled'")
+        if row and (row["value"] or "").strip().lower() == "false":
+            return False
+    except Exception:
+        pass
+    return True
+
+
 def send_telegram(chat_id: str, message: str, parse_mode: str = "HTML") -> bool:
     """
     Send a Telegram message to a specific chat_id.
@@ -32,6 +44,9 @@ def send_telegram(chat_id: str, message: str, parse_mode: str = "HTML") -> bool:
     Returns:
         True on success, False on failure.
     """
+    if not _is_telegram_enabled():
+        logger.debug("[Telegram] Alerts globally disabled — skipping.")
+        return False
     token = _get_tg_token()
     if not token:
         logger.warning("[Telegram] Bot token not configured — skipping.")
@@ -64,6 +79,27 @@ def send_telegram(chat_id: str, message: str, parse_mode: str = "HTML") -> bool:
     except Exception as e:
         logger.error(f"[Telegram] Failed to send message to {chat_id}: {e}")
         return False
+
+
+def notify_trade_entry(chat_id: str, trade: dict) -> bool:
+    """Send a trade entry notification (strangle opened) to a client's Telegram chat."""
+    instrument = trade.get("instrument", "NIFTY")
+    ce_strike  = trade.get("ce_strike", "—")
+    pe_strike  = trade.get("pe_strike", "—")
+    ce_price   = trade.get("ce_price", 0)
+    pe_price   = trade.get("pe_price", 0)
+    broker     = trade.get("broker", "")
+    reason     = trade.get("reason", "Signal")
+
+    msg = (
+        f"<b>📈 Trade Entered — AlgoSoft</b>\n"
+        f"<b>Instrument:</b> {instrument}\n"
+        f"<b>CE Strike:</b> {ce_strike}  @ ₹{ce_price:.2f}\n"
+        f"<b>PE Strike:</b> {pe_strike}  @ ₹{pe_price:.2f}\n"
+        f"<b>Reason:</b> {reason}\n"
+        f"<b>Broker:</b> {broker}   🟡 LIVE"
+    )
+    return send_telegram(chat_id, msg)
 
 
 def notify_trade(chat_id: str, trade: dict) -> bool:
