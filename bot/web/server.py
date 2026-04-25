@@ -713,13 +713,23 @@ async def _kill_switch_enforcer():
                             (inst["client_id"],)
                         )
                         if client_row and client_row.get("telegram_chat_id"):
-                            from utils.notifier import notify_kill_switch
+                            _tg_id = client_row["telegram_chat_id"]
+                            from utils.notifier import notify_kill_switch, notify_squareoff
                             notify_kill_switch(
-                                client_row["telegram_chat_id"],
+                                _tg_id,
                                 client_row["username"],
                                 trigger_reason,
                                 daily_pnl_rs,
                             )
+                            # Explicit squareoff notification so client sees all
+                            # positions are closed regardless of graceful/forced shutdown
+                            notify_squareoff(_tg_id, {
+                                "instrument": inst.get("instrument", ""),
+                                "broker": inst.get("broker", ""),
+                                "reason": f"Kill-switch: {trigger_reason}",
+                                "total_pnl_rs": daily_pnl_rs,
+                                "total_pnl_pts": 0.0,
+                            })
                         logger.info(f"[KillSwitch] Instance {inst['id']} stopped. Locked until {unlock.isoformat()}")
                     except Exception as _ie:
                         logger.error(f"[KillSwitch] Instance {inst.get('id')} error: {_ie}")
