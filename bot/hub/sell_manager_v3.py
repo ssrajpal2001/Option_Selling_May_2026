@@ -654,11 +654,8 @@ class SellManagerV3:
                 if client_row and client_row.get("telegram_chat_id"):
                     import threading
                     _chat_id = client_row["telegram_chat_id"]
-                    # Use explicit stop_for_day flag; fall back to keyword matching for kill-switch
-                    is_squareoff = (
-                        _tg_notification_data[0].get('_stop_for_day')
-                        or any(kw in reason for kw in ("Kill-switch", "Kill Switch", "EOD Square-off"))
-                    )
+                    # Use explicit stop_for_day flag (all EOD/kill-switch callers set this)
+                    is_squareoff = bool(_tg_notification_data[0].get('_stop_for_day'))
                     if is_squareoff:
                         from utils.notifier import notify_squareoff
                         _ce = next((t for t in _tg_notification_data if t['direction'] == 'CE'), {})
