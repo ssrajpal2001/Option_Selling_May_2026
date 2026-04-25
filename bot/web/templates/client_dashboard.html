@@ -1574,11 +1574,16 @@ async function squareOffLeg(side) {
 
 async function pollPositions() {
   if (!state.selectedBroker) return;
+  // Only poll fast when the Positions pane is actually visible — avoids unnecessary backend load
+  const posPane = document.getElementById('pane-positions');
+  if (!posPane || !posPane.classList.contains('active')) return;
   try {
     const d = await api('GET', '/bot/status');
     if (!d.configured) return;
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    // Recompute realised PnL fresh from this response so summary bar stays 2s live
     const todayTrades = (d.trade_history || []).filter(t => (t.closed_at || '').startsWith(today));
+    state.todayPnlRs = todayTrades.reduce((s, t) => s + (t.pnl_rs || 0), 0);
     renderPositions(d, todayTrades);
   } catch (e) {
     // Silent — positions are secondary; main pollBotStatus handles errors
