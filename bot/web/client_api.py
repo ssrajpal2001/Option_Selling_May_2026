@@ -1110,7 +1110,9 @@ async def update_profile(body: ProfileUpdate, user=Depends(get_current_user)):
             send_telegram(
                 new_chat_id,
                 "✅ <b>AlgoSoft — Telegram Connected!</b>\n"
-                "You will receive live trade alerts and a day-end PnL summary here."
+                "You will receive live trade alerts and a day-end PnL summary here.\n"
+                "Bot: Connected ✅",
+                force=True
             )
         except Exception:
             pass

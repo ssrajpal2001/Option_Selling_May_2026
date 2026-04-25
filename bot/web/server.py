@@ -654,7 +654,7 @@ async def _kill_switch_enforcer():
                         # Sum today's live P&L from trade history
                         row = db_fetchone(
                             "SELECT COALESCE(SUM(pnl_rs), 0) as total_rs, COUNT(*) as cnt "
-                            "FROM trade_history WHERE instance_id=? AND trading_mode='live' "
+                            "FROM trade_history WHERE instance_id=? AND UPPER(trading_mode)='LIVE' "
                             "AND date(closed_at)=?",
                             (inst["id"], today)
                         )
@@ -835,7 +835,7 @@ async def _day_end_summary_scheduler():
                     try:
                         trades = db_fetchall(
                             "SELECT pnl_pts, pnl_rs, direction FROM trade_history "
-                            "WHERE client_id=? AND date(closed_at)=? AND trading_mode='live'",
+                            "WHERE client_id=? AND date(closed_at)=? AND UPPER(trading_mode)='LIVE'",
                             (c["id"], today)
                         )
                         total_pts = sum(t.get("pnl_pts") or 0 for t in trades)
