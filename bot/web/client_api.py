@@ -1092,8 +1092,10 @@ async def update_profile(body: ProfileUpdate, user=Depends(get_current_user)):
         updates.append("full_name=?"); params.append(body.full_name.strip())
     if body.phone_number is not None:
         updates.append("phone_number=?"); params.append(body.phone_number.strip())
+    new_chat_id = None
     if body.telegram_chat_id is not None:
-        updates.append("telegram_chat_id=?"); params.append(body.telegram_chat_id.strip() or None)
+        new_chat_id = body.telegram_chat_id.strip() or None
+        updates.append("telegram_chat_id=?"); params.append(new_chat_id)
     if not updates:
         return {"success": True, "message": "Nothing to update."}
     params.append(user["id"])
@@ -1101,6 +1103,17 @@ async def update_profile(body: ProfileUpdate, user=Depends(get_current_user)):
     _audit_client(user["id"], "profile_update", {
         "fields": [u.split("=")[0] for u in updates]
     })
+    # Auto-verify Telegram when a new chat ID is saved
+    if new_chat_id:
+        try:
+            from utils.notifier import send_telegram
+            send_telegram(
+                new_chat_id,
+                "✅ <b>AlgoSoft — Telegram Connected!</b>\n"
+                "You will receive live trade alerts and a day-end PnL summary here."
+            )
+        except Exception:
+            pass
     return {"success": True, "message": "Profile updated."}
 
 

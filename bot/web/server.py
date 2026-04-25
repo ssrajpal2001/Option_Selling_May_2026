@@ -824,10 +824,11 @@ async def _day_end_summary_scheduler():
                 today = datetime.now(IST).strftime("%Y-%m-%d")
                 clients = db_fetchall(
                     "SELECT u.id, u.username, u.telegram_chat_id, "
-                    "cbi.broker, cbi.instrument "
+                    "MIN(cbi.broker) as broker, MIN(cbi.instrument) as instrument "
                     "FROM users u JOIN client_broker_instances cbi ON cbi.client_id=u.id "
                     "WHERE u.role='client' AND u.is_active=1 AND u.telegram_chat_id IS NOT NULL "
-                    "AND u.telegram_chat_id != ''"
+                    "AND u.telegram_chat_id != '' "
+                    "GROUP BY u.id, u.username, u.telegram_chat_id"
                 )
                 from utils.notifier import notify_day_end_summary
                 for c in clients:

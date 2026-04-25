@@ -620,6 +620,7 @@ class SellManagerV3:
                             'trading_mode': trading_mode,
                             'instrument': self.instrument_name,
                             '_client_id': int(client_id),
+                            '_stop_for_day': stop_for_day,
                         })
                 except Exception as _te:
                     logger.error(f"[SellManagerV3] Telegram data collection failed: {_te}")
@@ -650,7 +651,11 @@ class SellManagerV3:
                 if client_row and client_row.get("telegram_chat_id"):
                     import threading
                     _chat_id = client_row["telegram_chat_id"]
-                    is_squareoff = any(kw in reason for kw in ("Square-off", "EOD", "Kill", "Kill-switch"))
+                    # Use explicit stop_for_day flag; fall back to keyword matching for kill-switch
+                    is_squareoff = (
+                        _tg_notification_data[0].get('_stop_for_day')
+                        or any(kw in reason for kw in ("Kill-switch", "Kill Switch", "EOD Square-off"))
+                    )
                     if is_squareoff:
                         from utils.notifier import notify_squareoff
                         _sq = {
