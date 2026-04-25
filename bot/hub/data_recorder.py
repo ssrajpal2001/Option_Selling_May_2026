@@ -62,7 +62,9 @@ class DataRecorder:
 
     def _execute_record_ticks(self, d):
         filename = f"market_data_{self.instrument_name}_{datetime.date.today().isoformat()}.csv"
-        filepath = os.path.join(os.getcwd(), filename)
+        _bt_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backtest_data')
+        os.makedirs(_bt_dir, exist_ok=True)
+        filepath = os.path.join(_bt_dir, filename)
 
         headers = [
             'timestamp', 'spot_price', 'index_price', 'atm_strike',
@@ -93,7 +95,9 @@ class DataRecorder:
 
     def _execute_record_atp(self, d):
         atp_filename = f"atp_data_{self.instrument_name}_{datetime.date.today().isoformat()}.csv"
-        atp_filepath = os.path.join(os.getcwd(), atp_filename)
+        _bt_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backtest_data')
+        os.makedirs(_bt_dir, exist_ok=True)
+        atp_filepath = os.path.join(_bt_dir, atp_filename)
 
         if not os.path.exists(atp_filepath):
             with open(atp_filepath, 'w', newline='') as f:

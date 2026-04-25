@@ -1,0 +1,14 @@
+/home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/deps/libpyo3_build_config-92a13c0909bc7206.rmeta: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/errors.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/impl_.rs /home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config-file.txt /home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config.txt
+
+/home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/deps/libpyo3_build_config-92a13c0909bc7206.rlib: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/errors.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/impl_.rs /home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config-file.txt /home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config.txt
+
+/home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/deps/pyo3_build_config-92a13c0909bc7206.d: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/errors.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/impl_.rs /home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config-file.txt /home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config.txt
+
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/lib.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/errors.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.22.6/src/impl_.rs:
+/home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config-file.txt:
+/home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out/pyo3-build-config.txt:
+
+# env-dep:CARGO_PKG_VERSION=0.22.6
+# env-dep:OUT_DIR=/home/runner/workspace/bot/hub/sell_v3/rust_core/target/release/build/pyo3-build-config-9bf56014370a3aa9/out

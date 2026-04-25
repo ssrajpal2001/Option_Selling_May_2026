@@ -87,9 +87,11 @@ class ContractManager:
                 inst = self.config_manager.get('settings', 'instrument_to_trade', fallback='NIFTY').split(',')[0].strip()
                 bt_date = self.config_manager.get('settings', 'backtest_date', fallback='')
                 if inst and bt_date:
-                    specific_path = os.path.join(self._get_project_root(), f"market_data_{inst}_{bt_date}.csv")
-                    if os.path.isfile(specific_path):
-                        csv_path = specific_path
+                    for _md_dir in ["backtest_data", "."]:
+                        specific_path = os.path.join(self._get_project_root(), _md_dir, f"market_data_{inst}_{bt_date}.csv")
+                        if os.path.isfile(specific_path):
+                            csv_path = specific_path
+                            break
 
             if not os.path.isfile(csv_path): return None
 

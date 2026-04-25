@@ -19,3 +19,10 @@ exit 0
 HOOK_EOF
   chmod +x "$HOOK_FILE"
 fi
+
+# Rebuild the Rust acceleration module if cargo and the source are available.
+RUST_CORE_SH="$REPO_ROOT/bot/scripts/install_rust_core.sh"
+if command -v cargo &> /dev/null && [ -f "$RUST_CORE_SH" ]; then
+  echo "Rebuilding Rust core acceleration module..."
+  bash "$RUST_CORE_SH" || echo "WARNING: Rust core build failed — Python fallback remains active."
+fi

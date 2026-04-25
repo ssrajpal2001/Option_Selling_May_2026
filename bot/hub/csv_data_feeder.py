@@ -39,6 +39,7 @@ class CSVDataFeeder:
                 inst = self.config_manager.get('settings', 'instrument_to_trade', fallback='NIFTY').split(',')[0].strip()
                 date_str = self.backtest_date.isoformat() if self.backtest_date else self.config_manager.get('settings', 'backtest_date', fallback='')
                 if inst and date_str:
+                    candidates.insert(0, os.path.join(self._get_project_root(), "backtest_data", f"market_data_{inst}_{date_str}.csv"))
                     candidates.append(os.path.join(self._get_project_root(), f"market_data_{inst}_{date_str}.csv"))
 
                 for cand in candidates:

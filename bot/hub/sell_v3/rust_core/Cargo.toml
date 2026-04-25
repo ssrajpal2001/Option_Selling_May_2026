@@ -1,7 +1,11 @@
 [package]
 name = "rust_core"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[lib]
+name = "rust_core"
+crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.28.3", features = ["extension-module"] }
+pyo3 = { version = "0.22", features = ["extension-module"] }

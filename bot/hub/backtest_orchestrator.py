@@ -57,7 +57,11 @@ class BacktestOrchestrator(BaseOrchestrator):
             if not hasattr(self.state_manager, 'roc_history'):
                 self.state_manager.roc_history = {}
 
+            _bot_root = os.path.dirname(os.path.abspath(__file__))  # hub/ -> sell_v3 -> go up to bot/
+            _bot_root = os.path.dirname(os.path.dirname(_bot_root))
             atp_candidates = [
+                os.path.join(_bot_root, "backtest_data", f"atp_data_{self.instrument_name}_{backtest_date_str}.csv"),
+                os.path.join(os.getcwd(), "backtest_data", f"atp_data_{self.instrument_name}_{backtest_date_str}.csv"),
                 os.path.join(os.getcwd(), f"atp_data_{self.instrument_name}_{backtest_date_str}.csv"),
                 os.path.join(os.getcwd(), "Selling_Using_C", f"atp_data_{self.instrument_name}_{backtest_date_str}.csv"),
                 os.path.join(os.path.dirname(os.getcwd()), "Selling_Using_C", f"atp_data_{self.instrument_name}_{backtest_date_str}.csv")

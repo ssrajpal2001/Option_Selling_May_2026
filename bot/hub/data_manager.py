@@ -433,6 +433,8 @@ class DataManager:
                 # Fallback to old format or external captures
                 hist_dir / f"{safe_key}_{date_str}.csv",
                 external_hist / f"atp_data_{self.instrument_key}_{date_str}.csv",
+                Path(os.path.dirname(os.path.abspath(__file__))).parent / "backtest_data" / f"atp_data_{self.instrument_key}_{date_str}.csv",
+                Path(os.getcwd()) / "backtest_data" / f"atp_data_{self.instrument_key}_{date_str}.csv",
                 Path(os.getcwd()) / f"atp_data_{self.instrument_key}_{date_str}.csv"
             ]
 

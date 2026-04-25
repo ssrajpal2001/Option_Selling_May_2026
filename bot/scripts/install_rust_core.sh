@@ -2,35 +2,50 @@
 set -e
 
 # AlgoSoft V3: Rust Acceleration Installer
-# This script builds the high-performance Rust core and installs it into the local Python environment.
+# Builds the high-performance Rust core and installs it into the local Python environment.
+# Works on EC2 (system Python) and Replit (.pythonlibs virtual environment).
 
 echo "--- AlgoSoft V3: Initializing Rust Acceleration ---"
 
 # 1. Check for Rust/Cargo
 if ! command -v cargo &> /dev/null; then
-    echo "ERROR: Rust/Cargo not found. Please install Rust first: https://rustup.rs/"
+    echo "ERROR: Rust/Cargo not found. Install from https://rustup.rs/ then re-run."
+    exit 1
+fi
+echo "✓ Rust: $(rustc --version)"
+
+# 2. Install/Upgrade maturin
+echo "Step 1: Installing maturin build tool..."
+python3 -m pip install --upgrade maturin --quiet
+
+# 3. Locate rust_core source relative to this script
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+RUST_CORE_DIR="$SCRIPT_DIR/../hub/sell_v3/rust_core"
+
+if [ ! -d "$RUST_CORE_DIR" ]; then
+    echo "ERROR: Cannot find Rust source at $RUST_CORE_DIR"
     exit 1
 fi
 
-# 2. Install/Upgrade build tools
-echo "Step 1: Installing build tools (maturin)..."
-pip3 install --upgrade maturin
+cd "$RUST_CORE_DIR"
+echo "Step 2: Building Rust core in $(pwd) ..."
 
-# 3. Build and Install the Rust Module
-echo "Step 2: Building and installing Rust core module..."
-cd hub/sell_v3/rust_core
+# Detect Python virtual environment (Replit uses .pythonlibs)
+PYTHON_PREFIX="$(python3 -c 'import sys; print(sys.prefix)')"
+if [ -f "$PYTHON_PREFIX/pyvenv.cfg" ]; then
+    echo "  Using virtualenv: $PYTHON_PREFIX"
+    VIRTUAL_ENV="$PYTHON_PREFIX" python3 -m maturin develop --release
+else
+    # EC2 / system Python: build a wheel and install it
+    echo "  No virtualenv detected — building wheel for system Python..."
+    WHEEL_OUT="$(mktemp -d)"
+    python3 -m maturin build --release --out "$WHEEL_OUT"
+    WHEEL="$(ls "$WHEEL_OUT"/rust_core-*.whl | head -1)"
+    echo "Step 3: Installing wheel: $WHEEL"
+    python3 -m pip install "$WHEEL" --force-reinstall --quiet
+    rm -rf "$WHEEL_OUT"
+fi
 
-# maturin build --release installs the module directly into the current environment
-# If not in a venv, it will build a wheel and we'll install it manually.
-maturin build --release --out ..
-
-# Install the generated wheel
-echo "Step 3: Installing the optimized binary..."
-cd ..
-pip3 install rust_core-*.whl --force-reinstall
-
-# Cleanup
-rm rust_core-*.whl
-
+echo ""
 echo "--- SUCCESS: Rust Acceleration is now ACTIVE ---"
-echo "Verification: Run 'python3 -c \"import rust_core; print(rust_core.__file__)\"'"
+python3 -c "import rust_core; print('  Module path:', rust_core.__file__)"
