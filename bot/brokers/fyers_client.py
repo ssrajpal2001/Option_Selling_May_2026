@@ -58,7 +58,11 @@ class FyersClient(BaseBroker):
                 "offlineOrder": False,
                 "orderTag": "algosoft",
             }
-            resp = self.fyers.place_order(data=data)
+            self._set_source_ip()
+            try:
+                resp = self.fyers.place_order(data=data)
+            finally:
+                self._clear_source_ip()
             if resp and (resp.get("s") == "ok" or resp.get("code") == 200):
                 order_id = resp.get("id") or resp.get("data", {}).get("id")
                 logger.info(f"[FyersClient] Order placed: {order_id}")

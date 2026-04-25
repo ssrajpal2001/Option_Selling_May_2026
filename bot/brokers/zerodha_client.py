@@ -475,7 +475,11 @@ class ZerodhaClient(BaseBroker):
                 if order_type == self.kite.ORDER_TYPE_MARKET:
                     place_params['market_protection'] = m_prot
 
-            order_id = self.kite.place_order(**place_params)
+            self._set_source_ip()
+            try:
+                order_id = self.kite.place_order(**place_params)
+            finally:
+                self._clear_source_ip()
             return order_id
         except Exception as e:
             logger.error(f"Error placing order with Zerodha. Symbol: {symbol}, Exchange: {exchange}, Type: {transaction_type}, Qty: {quantity}. API Error: {e}", exc_info=True)

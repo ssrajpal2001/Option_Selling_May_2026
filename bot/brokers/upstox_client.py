@@ -271,7 +271,11 @@ class UpstoxClient(BaseBroker):
                 is_amo=False,
             )
 
-            resp = order_api.place_order(body=req, api_version="2.0")
+            self._set_source_ip()
+            try:
+                resp = order_api.place_order(body=req, api_version="2.0")
+            finally:
+                self._clear_source_ip()
             order_id = getattr(resp, "data", None)
             order_id = getattr(order_id, "order_id", None) if order_id else None
 

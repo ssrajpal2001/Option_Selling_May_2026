@@ -1109,7 +1109,7 @@ class ProfileUpdate(BaseModel):
 async def get_profile(user=Depends(get_current_user)):
     row = db_fetchone(
         "SELECT id, username, email, full_name, phone_number, telegram_chat_id, "
-        "referral_code, referred_by_id, created_at FROM users WHERE id=?",
+        "referral_code, referred_by_id, created_at, static_ip FROM users WHERE id=?",
         (user["id"],)
     )
     if not row:

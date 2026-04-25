@@ -49,13 +49,17 @@ class AliceblueClient(BaseBroker):
             tx = TransactionType.Buy if transaction_type.upper() == "BUY" else TransactionType.Sell
             prod = ProductType.Normal if product_type == "NRML" else ProductType.Intraday
 
-            order_id = self.alice.place_order(
-                transaction_type=tx,
-                instrument=self.alice.get_instrument_by_symbol("NFO", symbol),
-                quantity=int(quantity),
-                order_type=OrderType.Market,
-                product_type=prod,
-            )
+            self._set_source_ip()
+            try:
+                order_id = self.alice.place_order(
+                    transaction_type=tx,
+                    instrument=self.alice.get_instrument_by_symbol("NFO", symbol),
+                    quantity=int(quantity),
+                    order_type=OrderType.Market,
+                    product_type=prod,
+                )
+            finally:
+                self._clear_source_ip()
             if order_id:
                 logger.info(f"[AliceblueClient] Order placed: {order_id}")
                 return order_id

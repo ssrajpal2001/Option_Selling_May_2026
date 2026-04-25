@@ -69,12 +69,16 @@ class GrowwClient(BaseBroker):
                 "validity": "DAY",
             }
 
-            resp = requests.post(
-                "https://groww.in/v1/api/trade/v1/order/place",
-                json=payload,
-                headers=self._headers(),
-                timeout=15,
-            )
+            self._set_source_ip()
+            try:
+                resp = requests.post(
+                    "https://groww.in/v1/api/trade/v1/order/place",
+                    json=payload,
+                    headers=self._headers(),
+                    timeout=15,
+                )
+            finally:
+                self._clear_source_ip()
 
             if resp.status_code in (200, 201):
                 data = resp.json()

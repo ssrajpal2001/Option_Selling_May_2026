@@ -682,16 +682,20 @@ class DhanClient(BaseBroker):
 
             # Dhan API expects string security_id
             # Price is required even for MARKET orders (use 0)
-            response = self.dhan.place_order(
-                security_id=str(security_id),
-                exchange_segment=segment,
-                transaction_type=dhan_transaction_type,
-                quantity=int(quantity),
-                order_type=self.dhan.MARKET,
-                product_type=self.dhan.MARGIN, # Carry Forward for Options
-                price=0.0,
-                validity='DAY'
-            )
+            self._set_source_ip()
+            try:
+                response = self.dhan.place_order(
+                    security_id=str(security_id),
+                    exchange_segment=segment,
+                    transaction_type=dhan_transaction_type,
+                    quantity=int(quantity),
+                    order_type=self.dhan.MARKET,
+                    product_type=self.dhan.MARGIN, # Carry Forward for Options
+                    price=0.0,
+                    validity='DAY'
+                )
+            finally:
+                self._clear_source_ip()
 
             if response.get('status') == 'success':
                 return response.get('data', {}).get('orderId')

@@ -457,7 +457,11 @@ class AngelOneClient(BaseBroker):
                 "quantity": str(int(quantity))
             }
 
-            order_id = self.smart_api.placeOrder(order_params)
+            self._set_source_ip()
+            try:
+                order_id = self.smart_api.placeOrder(order_params)
+            finally:
+                self._clear_source_ip()
             return order_id
         except Exception as e:
             logger.error(f"Error in AngelOne place_order: {e}", exc_info=True)

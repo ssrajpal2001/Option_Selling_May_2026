@@ -58,6 +58,22 @@
     </div>
   </div>
 
+  <!-- ── Assigned Static IP ────────────────────────────────────────────── -->
+  <div class="card p-4 mb-4" id="static-ip-card">
+    <div class="flex items-center justify-between mb-3">
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Assigned Static IP</div>
+      <span id="static-ip-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:9999px;background:#052e16;color:#34d399;font-weight:600">✓ Saved</span>
+    </div>
+    <p class="text-xs mb-3" style="color:#475569">Enter the Elastic IP (public IP) assigned to this client on your EC2 instance. The client uses this IP to whitelist with their broker's developer portal.</p>
+    <div class="flex gap-2 items-end">
+      <div class="flex-1">
+        <input type="text" id="static-ip-input" class="input-field w-full" placeholder="e.g. 13.234.56.78" pattern="^(\d{1,3}\.){3}\d{1,3}$">
+      </div>
+      <button onclick="saveStaticIP()" class="btn-primary px-5 py-2 text-sm font-bold whitespace-nowrap">Save IP</button>
+      <button onclick="clearStaticIP()" class="btn-ghost px-4 py-2 text-sm whitespace-nowrap">Clear</button>
+    </div>
+  </div>
+
   <!-- ── Plan Assignment ─────────────────────────────────────────────────── -->
   <div class="card p-4 mb-4">
     <div class="flex items-center justify-between mb-3">
@@ -799,6 +815,42 @@ async function loadDetail() {
   } else {
     tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="color:#475569">No trades yet.</td></tr>';
   }
+
+  // Load assigned static IP
+  try {
+    const ipResp = await fetch(`/api/admin/clients/${clientId}/static-ip`);
+    const ipData = await ipResp.json();
+    const ipEl = document.getElementById('static-ip-input');
+    if (ipEl) {
+      ipEl.value = ipData.static_ip || '';
+    }
+  } catch (_) {}
+}
+
+async function saveStaticIP() {
+  const ip = (document.getElementById('static-ip-input').value || '').trim();
+  const res = await fetch(`/api/admin/clients/${clientId}/static-ip`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ static_ip: ip }),
+  });
+  const d = await res.json();
+  const badge = document.getElementById('static-ip-badge');
+  if (d.success) {
+    badge.style.display = '';
+    setTimeout(() => { badge.style.display = 'none'; }, 3000);
+  } else {
+    alert('Failed to save static IP: ' + (d.error || 'unknown error'));
+  }
+}
+
+async function clearStaticIP() {
+  document.getElementById('static-ip-input').value = '';
+  await fetch(`/api/admin/clients/${clientId}/static-ip`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ static_ip: '' }),
+  });
 }
 
 function fmt(v) { return v !== null && v !== undefined ? parseFloat(v).toFixed(2) : '--'; }

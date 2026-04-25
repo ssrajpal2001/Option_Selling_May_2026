@@ -1,7 +1,32 @@
 from abc import ABC, abstractmethod
 import asyncio
+import socket
+import threading
 from utils.trade_logger import TradeLogger
+from utils.logger import logger
 
+# ── Per-thread source IP binding ─────────────────────────────────────────────
+# Installed once at module load. Each broker wraps its SDK calls with:
+#   _tls.source_ip = self.source_ip
+#   try:
+#       result = sdk.do_thing()
+#   finally:
+#       _tls.source_ip = None
+# Thread-safe: different threads can bind different IPs simultaneously.
+
+_tls = threading.local()
+_orig_create_connection = socket.create_connection
+
+def _source_ip_aware_create_connection(address, timeout=socket.getdefaulttimeout(),
+                                        source_address=None):
+    src = getattr(_tls, 'source_ip', None)
+    if src and not source_address:
+        source_address = (src, 0)
+    return _orig_create_connection(address, timeout, source_address)
+
+socket.create_connection = _source_ip_aware_create_connection
+
+# ── Instrument name normalisation map ────────────────────────────────────────
 _INSTRUMENT_NAME_MAP = {
     "NIFTY 50": "NIFTY",
     "NIFTY50": "NIFTY",
@@ -49,12 +74,23 @@ class BaseBroker(ABC):
             self.instruments = {i.strip().upper() for i in instruments_str.split(',') if i.strip()}
             self.api_key = self.db_config.get('api_key')
             self.api_secret = self.db_config.get('api_secret') # Already decrypted by Manager
+            self.source_ip = self.db_config.get('static_ip') or None
         else:
             # Legacy INI path
             self.mode = self.config_manager.get(self.instance_name, 'mode', fallback=global_mode)
             self.paper_trade = str(self.mode).lower() == 'paper'
             instruments_str = self.config_manager.get(self.instance_name, 'instruments_to_trade', fallback='')
             self.instruments = {i.strip().upper() for i in instruments_str.split(',') if i.strip()}
+            self.source_ip = None
+
+    def _set_source_ip(self):
+        """Call before a broker SDK HTTP call to bind this thread's outbound socket to source_ip."""
+        if self.source_ip:
+            _tls.source_ip = self.source_ip
+
+    def _clear_source_ip(self):
+        """Call in a finally block after the broker SDK HTTP call."""
+        _tls.source_ip = None
 
     def is_configured_for_instrument(self, instrument_name):
         """Checks if this broker instance is configured to trade the given instrument."""
