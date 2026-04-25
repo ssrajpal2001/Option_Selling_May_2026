@@ -42,6 +42,8 @@ class ZerodhaClient(BaseBroker):
                     if token:
                         self.kite = KiteConnect(api_key=self.api_key)
                         self.kite.set_access_token(token)
+                        # Mount adapter BEFORE profile() so the validation call is IP-bound.
+                        self._install_source_ip_adapter(getattr(self.kite, 'reqsession', None))
                         profile = self.kite.profile()
                         logger.info(f"Zerodha automated authentication successful for user: {profile.get('user_id')} [{self.instance_name}].")
                     else:
@@ -55,6 +57,8 @@ class ZerodhaClient(BaseBroker):
                 try:
                     self.kite = handle_zerodha_login(credentials_section, self.config_manager)
                     if self.kite:
+                        # Mount adapter BEFORE profile() so the validation call is IP-bound.
+                        self._install_source_ip_adapter(getattr(self.kite, 'reqsession', None))
                         profile = self.kite.profile()
                         logger.info(f"Zerodha authentication successful for user: {profile.get('user_id')} [{self.instance_name}].")
                     else:

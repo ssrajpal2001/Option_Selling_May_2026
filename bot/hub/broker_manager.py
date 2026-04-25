@@ -74,14 +74,14 @@ class BrokerManager:
                 logger.info(f"[CLIENT MODE] Automated login failed or skipped. Trying with existing token...")
                 kite = KiteConnect(api_key=client_cfg.api_key)
                 kite.set_access_token(client_cfg.access_token)
+                # Mount adapter BEFORE profile() so the validation call is IP-bound.
+                if broker_instance.source_ip:
+                    broker_instance._install_source_ip_adapter(
+                        getattr(kite, 'reqsession', None)
+                    )
                 try:
                     await asyncio.to_thread(kite.profile)
                     broker_instance.kite = kite
-                    # Re-mount source-IP adapter on the newly created kite session
-                    if broker_instance.source_ip:
-                        broker_instance._install_source_ip_adapter(
-                            getattr(kite, 'reqsession', None)
-                        )
                     logger.info(f"[CLIENT MODE] Zerodha authenticated via token.")
                 except Exception as e:
                     logger.critical(f"[CLIENT MODE] Zerodha token validation also failed: {e}")
