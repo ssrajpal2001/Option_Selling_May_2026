@@ -406,6 +406,14 @@ async function loadProcessManager() {
     if (dot) { dot.style.background = isOk ? '#34d399' : '#f87171'; }
     if (lbl) { lbl.textContent = isOk ? 'ONLINE' : 'DEGRADED'; lbl.style.color = isOk ? '#34d399' : '#f87171'; }
 
+    // Reset field colors on recovery (may have been set red during an outage)
+    ['pm-uptime','pm-sessions'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.color = '#ffffff';
+    });
+    const pidEl = document.getElementById('pm-pid');
+    if (pidEl) pidEl.style.color = '#818cf8';
+
     if (h.uptime) document.getElementById('pm-uptime').textContent = h.uptime;
     if (h.started_at) {
       const d = new Date(h.started_at);
