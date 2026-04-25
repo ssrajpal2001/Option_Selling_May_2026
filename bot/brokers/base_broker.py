@@ -6,22 +6,54 @@ from utils.trade_logger import TradeLogger
 from utils.logger import logger
 
 # ── Per-thread source IP binding ─────────────────────────────────────────────
-# Global socket.create_connection is patched once at import time.
-# The SourceIPHTTPAdapter (and per-call helpers) set/restore _tls.source_ip
-# within the thread that actually makes the HTTP call, so urllib3/httplib
-# picks up the correct source address regardless of the calling thread.
+# Two complementary patches applied once at import time:
+#
+#  1. socket.create_connection  — covers http.client and any code that calls
+#     socket.create_connection directly.
+#
+#  2. urllib3.util.connection.create_connection — urllib3 (and therefore
+#     requests) uses its OWN create_connection that does NOT delegate to
+#     socket.create_connection; it binds via sock.bind(source_address).
+#     Patching at the urllib3 level is the only way to inject a source
+#     address into bare requests.get/post calls (e.g. pya3 AliceBlue SDK)
+#     that have no accessible session to mount an HTTPAdapter on.
+#
+# The preferred method for brokers whose SDK exposes a requests.Session is
+# SourceIPHTTPAdapter.init_poolmanager (urllib3-native, mount once at init).
+# These patches are a defense-in-depth fallback used only where a session
+# cannot be accessed (pya3, fyers-apiv3 SDK).
 
 _tls = threading.local()
-_orig_create_connection = socket.create_connection
+
+# Patch 1 — socket.create_connection
+_orig_socket_create_connection = socket.create_connection
 
 def _source_ip_aware_create_connection(address, timeout=socket.getdefaulttimeout(),
                                         source_address=None):
     src = getattr(_tls, 'source_ip', None)
     if src and not source_address:
         source_address = (src, 0)
-    return _orig_create_connection(address, timeout, source_address)
+    return _orig_socket_create_connection(address, timeout, source_address)
 
 socket.create_connection = _source_ip_aware_create_connection
+
+# Patch 2 — urllib3.util.connection.create_connection
+try:
+    import urllib3.util.connection as _urllib3_conn
+    _orig_urllib3_create_connection = _urllib3_conn.create_connection
+
+    def _source_ip_aware_urllib3_create_connection(
+            address, timeout=socket.getdefaulttimeout(),
+            source_address=None, socket_options=None):
+        src = getattr(_tls, 'source_ip', None)
+        if src and not source_address:
+            source_address = (src, 0)
+        return _orig_urllib3_create_connection(
+            address, timeout, source_address, socket_options)
+
+    _urllib3_conn.create_connection = _source_ip_aware_urllib3_create_connection
+except Exception:
+    pass  # urllib3 not available — no-op
 
 
 # ── SourceIPHTTPAdapter ───────────────────────────────────────────────────────
@@ -30,22 +62,30 @@ try:
 
     class SourceIPHTTPAdapter(_HTTPAdapter):
         """
-        Requests adapter that routes all outbound connections through a specific
-        local IP address.  Mount on a broker SDK's requests.Session at init time
-        and every HTTP call (auth, instruments, orders, funds) will automatically
-        use the assigned Elastic IP — no per-call wrapping required.
+        Requests adapter that routes ALL outbound connections through a specific
+        local IP address by configuring urllib3's connection pool with
+        source_address=(ip, 0).
+
+        This is the correct urllib3-native approach: urllib3 does NOT call
+        socket.create_connection — it uses its own create_connection that
+        only honours source_address when set on the pool manager.  Overriding
+        init_poolmanager / proxy_manager_for is the only reliable method.
+
+        Mount on a broker SDK's requests.Session at __init__ time and every
+        HTTP call (auth, instruments, orders, funds) will automatically use
+        the assigned Elastic IP — no per-call wrapping required.
         """
         def __init__(self, source_ip: str, **kwargs):
             self.source_ip = source_ip
             super().__init__(**kwargs)
 
-        def send(self, request, **kwargs):
-            old_src = getattr(_tls, 'source_ip', None)
-            _tls.source_ip = self.source_ip
-            try:
-                return super().send(request, **kwargs)
-            finally:
-                _tls.source_ip = old_src
+        def init_poolmanager(self, *args, **kwargs):
+            kwargs['source_address'] = (self.source_ip, 0)
+            super().init_poolmanager(*args, **kwargs)
+
+        def proxy_manager_for(self, proxy, **kwargs):
+            kwargs['source_address'] = (self.source_ip, 0)
+            return super().proxy_manager_for(proxy, **kwargs)
 
 except ImportError:
     SourceIPHTTPAdapter = None  # type: ignore

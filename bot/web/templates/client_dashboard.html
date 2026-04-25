@@ -981,6 +981,7 @@ let state = {
   botRunning: false,
   tradingEnabled: false,
   todayTrades: [],
+  openPositions: 0,      // count of live open positions from bot status payload
   riskParams: {},
   dailyLossLimit: 0,
   profile: {},
@@ -1124,10 +1125,11 @@ async function loadBrokerData() {
       selectBroker(state.instances[0].broker);
     }
 
-    // Show onboarding card only for new users: no broker connected AND no trades today
+    // Show onboarding card only when no broker is connected AND no open positions
+    // (openPositions comes from the bot status payload and stays 0 when bot is not running)
     const noInstances = state.instances.length === 0;
-    const noTodayTrades = !state.todayTrades || state.todayTrades.length === 0;
-    if (noInstances && noTodayTrades) {
+    const noOpenPositions = state.openPositions === 0;
+    if (noInstances && noOpenPositions) {
       document.getElementById('setup-alert').style.display = '';
       // Show IP whitelist hint when a static IP is assigned
       const assignedIP = state.profile && state.profile.static_ip;
@@ -1309,6 +1311,10 @@ async function pollBotStatus() {
     const today = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kolkata'}); // YYYY-MM-DD
     const todayTrades = (d.trade_history || []).filter(t => (t.closed_at || '').startsWith(today));
     state.todayTrades = todayTrades;
+
+    // Open positions from status payload (CE/PE placed flags in bot_data.sell)
+    const sell = d.bot_data?.sell || {};
+    state.openPositions = ['CE', 'PE'].filter(s => sell[s]?.placed).length;
 
     // Compute PnL
     state.todayPnlPts = todayTrades.reduce((s, t) => s + (t.pnl_pts || 0), 0);
