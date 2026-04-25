@@ -7,13 +7,9 @@ class ExitLogic(SellV3Base):
     """Handles technical and rule-based exit logic for Sell V3 positions."""
 
     async def check_exits(self, ticks, timestamp):
-        ce = self.manager.active_trades.get('CE')
-        pe = self.manager.active_trades.get('PE')
-        if not ce or not pe: return
-
-        # --- EOD FORCE SQUARE-OFF (Highest Priority) ---
-        # If the clock has passed square_off_time, force-exit ALL open positions
-        # regardless of P&L and skip all further exit evaluation for this tick.
+        # --- EOD FORCE SQUARE-OFF (Highest Priority — checked before CE/PE pair validation) ---
+        # This must run even when only a single leg remains open (partial-fill anomaly),
+        # which is why it precedes the `if not ce or not pe: return` guard below.
         sq_off_str = self._v3_cfg('square_off_time', '15:15', timestamp=timestamp)
         try:
             sq_parts = str(sq_off_str).replace('.', ':').split(':')
@@ -22,16 +18,21 @@ class ExitLogic(SellV3Base):
             sq_off_time = datetime.time(15, 15)
 
         if timestamp.time() >= sq_off_time:
-            eod_bucket = f"eod_sqoff_{timestamp.date()}"
-            if getattr(self.manager, '_last_eod_sqoff_bucket', None) != eod_bucket:
-                self.manager._last_eod_sqoff_bucket = eod_bucket
-                logger.info(
-                    f"[SellManagerV3] EOD FORCE SQUARE-OFF triggered at "
-                    f"{timestamp.strftime('%H:%M:%S')} "
-                    f"(square_off_time={sq_off_str}) — closing all open positions."
-                )
-                await self.manager._execute_full_exit(timestamp, "EOD_SQUAREOFF", stop_for_day=True)
-            return  # Past square-off time: skip all further exit checks
+            if self.manager.active_trades:
+                eod_bucket = f"eod_sqoff_{timestamp.date()}"
+                if getattr(self.manager, '_last_eod_sqoff_bucket', None) != eod_bucket:
+                    self.manager._last_eod_sqoff_bucket = eod_bucket
+                    logger.info(
+                        f"[SellManagerV3] EOD FORCE SQUARE-OFF triggered at "
+                        f"{timestamp.strftime('%H:%M:%S')} "
+                        f"(square_off_time={sq_off_str}) — closing all open positions."
+                    )
+                    await self.manager._execute_full_exit(timestamp, "EOD_SQUAREOFF", stop_for_day=True)
+            return  # Past square-off time: skip all further exit checks for this tick
+
+        ce = self.manager.active_trades.get('CE')
+        pe = self.manager.active_trades.get('PE')
+        if not ce or not pe: return
 
         do_log = getattr(self.manager, 'do_log', False)
         # Use state manager for LTP to be robust against filtered tick dictionaries
