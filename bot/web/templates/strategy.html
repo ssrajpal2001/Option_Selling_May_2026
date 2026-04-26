@@ -894,12 +894,12 @@
       </div>
     </div>
 
-    <div class="card p-5" style="border-color:#1e3a5f">
+    <div class="card p-5" style="border-color:var(--border)">
       <div class="section-label" style="color:#60a5fa">How OI Exit Works</div>
       <div class="space-y-2 text-xs" style="color:var(--text-soft)">
         <p>OI is collected live from Upstox websocket every tick for the <strong class="text-white">ATM ± strikes_range</strong> contracts.</p>
         <p class="mt-2">Every <strong class="text-white">check_interval_seconds</strong>, the monitor compares current OI to the OI at position entry:</p>
-        <div class="mt-2 p-3 rounded" style="background:#0f1b2d">
+        <div class="mt-2 p-3 rounded" style="background:var(--surface2)">
           <p><span style="color:#f59e0b">Call OI rise</span> &gt; threshold → Exit <span style="color:#f59e0b">Sell PE</span> + Buy CE</p>
           <p class="mt-1"><span style="color:#a78bfa">Put OI rise</span> &gt; threshold → Exit <span style="color:#a78bfa">Sell CE</span> + Buy PE</p>
         </div>

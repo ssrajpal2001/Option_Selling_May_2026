@@ -116,8 +116,8 @@
     .btn-primary:hover:not(:disabled)  { background: var(--primary2); }
     .btn-danger   { background: #dc2626; color: #fff; }
     .btn-danger:hover:not(:disabled)   { background: #b91c1c; }
-    .btn-ghost    { background: #334155; color: var(--text); }
-    .btn-ghost:hover:not(:disabled)    { background: #475569; }
+    .btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover:not(:disabled)    { background: var(--border); }
     .btn-outline  { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
     .btn-outline:hover:not(:disabled)  { background: rgba(0,212,170,.08); }
     .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
@@ -127,7 +127,7 @@
     .toggle-wrap { display: flex; align-items: center; gap: 10px; }
     .toggle { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
     .toggle input { display: none; }
-    .toggle-track { position: absolute; inset: 0; background: #334155; border-radius: 13px; cursor: pointer; transition: background .25s; }
+    .toggle-track { position: absolute; inset: 0; background: var(--surface2); border-radius: 13px; cursor: pointer; transition: background .25s; }
     .toggle input:checked + .toggle-track { background: var(--primary); }
     .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; cursor: pointer; transition: transform .25s; pointer-events: none; }
     .toggle input:checked ~ .toggle-thumb { transform: translateX(22px); }
@@ -290,7 +290,7 @@
         if(m)m.classList.toggle('hidden');
       };
       document.addEventListener('DOMContentLoaded',function(){
-        _apply(localStorage.getItem('algosoft-theme')||'dark');
+        _apply(localStorage.getItem('algosoft-theme')||'{{ default_theme() }}');
         document.addEventListener('click',function(e){
           var sw=document.getElementById('theme-switcher');
           if(sw&&!sw.contains(e.target)){
@@ -544,10 +544,10 @@
         </div>
 
         <!-- Capital gauge + PnL -->
-        <div style="display:flex;align-items:center;gap:16px;padding:12px;background:#0f172a;border-radius:8px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:16px;padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:16px">
           <div class="gauge-ring" id="gauge-wrap">
             <svg width="76" height="76" viewBox="0 0 76 76">
-              <circle cx="38" cy="38" r="31" fill="none" stroke="#1e293b" stroke-width="7"/>
+              <circle cx="38" cy="38" r="31" fill="none" style="stroke:var(--border)" stroke-width="7"/>
               <circle id="gauge-arc" cx="38" cy="38" r="31" fill="none" stroke="#00d4aa" stroke-width="7"
                       stroke-dasharray="194.8" stroke-dashoffset="194.8" stroke-linecap="round"/>
             </svg>
@@ -572,7 +572,7 @@
         </button>
 
         <!-- Trading toggle row -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#0f172a;border-radius:8px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:10px">
           <div>
             <div style="font-size:13px;font-weight:700">Allow New Trades</div>
             <div style="font-size:11px;color:var(--muted)">Keeps bot running but halts new positions</div>
@@ -772,7 +772,7 @@
         <div class="dot dot-blue"></div>
         <span style="font-size:13px;color:var(--text)" id="bt-status-msg">Running...</span>
       </div>
-      <div id="bt-result" style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px"></div>
+      <div id="bt-result" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px"></div>
     </div>
   </div>
 </div>
@@ -1019,12 +1019,12 @@
               <div class="inp-label">Your Static IP (for broker API whitelisting)</div>
               <div id="p-static-ip-assigned" style="display:flex;align-items:center;gap:8px;display:none">
                 <input type="text" class="inp" id="p-static-ip" readonly style="opacity:.7;cursor:not-allowed;font-family:monospace;font-size:13px;flex:1">
-                <button onclick="copyStaticIP()" style="padding:6px 10px;border-radius:8px;background:#1e293b;border:1px solid #334155;color:#94a3b8;font-size:11px;cursor:pointer;white-space:nowrap">Copy</button>
+                <button onclick="copyStaticIP()" style="padding:6px 10px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--text-soft);font-size:11px;cursor:pointer;white-space:nowrap">Copy</button>
               </div>
               <div id="p-static-ip-none" style="display:flex;align-items:center;gap:6px;margin-top:2px">
-                <span style="font-size:12px;color:#64748b">Not assigned yet — contact support to get your dedicated IP assigned.</span>
+                <span style="font-size:12px;color:var(--muted)">Not assigned yet — contact support to get your dedicated IP assigned.</span>
               </div>
-              <div id="p-static-ip-hint" style="display:none;font-size:11px;color:#475569;margin-top:4px">Add this IP to your broker's developer portal to whitelist API access.</div>
+              <div id="p-static-ip-hint" style="display:none;font-size:11px;color:var(--muted);margin-top:4px">Add this IP to your broker's developer portal to whitelist API access.</div>
             </div>
           </div>
           <button class="btn btn-primary" onclick="saveProfile()" style="width:100%">💾 Save Profile</button>
@@ -1046,7 +1046,7 @@
             <div class="ref-code" id="ref-code">——</div>
             <button onclick="copyRefCode()" style="margin-top:10px;font-size:12px;color:var(--primary);background:transparent;border:none;cursor:pointer">📋 Copy Code</button>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:10px;background:#0f172a;border-radius:8px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px">
             <span style="color:var(--muted)">Friends Referred</span>
             <span id="ref-count" style="font-weight:700">0</span>
           </div>
