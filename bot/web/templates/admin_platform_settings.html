@@ -8,7 +8,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h2 class="text-xl font-bold text-white">Platform Settings</h2>
-      <p class="text-sm mt-0.5" style="color:var(--muted)>Configure SMTP email and Telegram bot credentials</p>
+      <p class="text-sm mt-0.5" style="color:var(--muted)">Configure SMTP email and Telegram bot credentials</p>
     </div>
   </div>
 
@@ -20,32 +20,32 @@
         <div style="width:40px;height:40px;background:#1e3a5f;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">📧</div>
         <div>
           <div class="font-bold text-white">SMTP Email Configuration</div>
-          <div class="text-xs" style="color:var(--muted)>Used for subscription expiry alerts and admin notifications</div>
+          <div class="text-xs" style="color:var(--muted)">Used for subscription expiry alerts and admin notifications</div>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)>SMTP Host</label>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">SMTP Host</label>
           <input type="text" id="smtp_host" class="input-field" placeholder="smtp.gmail.com" value="">
         </div>
         <div>
-          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)>SMTP Port</label>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">SMTP Port</label>
           <input type="number" id="smtp_port" class="input-field" placeholder="587" value="">
         </div>
         <div>
-          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)>Username / Email</label>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">Username / Email</label>
           <input type="text" id="smtp_username" class="input-field" placeholder="you@gmail.com" value="">
         </div>
         <div>
-          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)>Password / App Password</label>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">Password / App Password</label>
           <input type="password" id="smtp_password" class="input-field" placeholder="App-specific password" value="">
         </div>
         <div>
-          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)>Sender Name</label>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">Sender Name</label>
           <input type="text" id="smtp_from_name" class="input-field" placeholder="AlgoSoft" value="">
         </div>
         <div>
-          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)>From Address</label>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">From Address</label>
           <input type="text" id="smtp_from_addr" class="input-field" placeholder="noreply@yourdomain.com" value="">
         </div>
         <div class="col-span-2 flex items-center gap-3">
@@ -68,13 +68,13 @@
         <div style="width:40px;height:40px;background:var(--card);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">✈️</div>
         <div>
           <div class="font-bold text-white">Telegram Bot Configuration</div>
-          <div class="text-xs" style="color:var(--muted)>Platform bot token for sending Telegram notifications to clients</div>
+          <div class="text-xs" style="color:var(--muted)">Platform bot token for sending Telegram notifications to clients</div>
         </div>
       </div>
       <div class="mb-4">
-        <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)>Bot Token</label>
+        <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">Bot Token</label>
         <input type="password" id="telegram_bot_token" class="input-field" placeholder="1234567890:ABC...xyz (from @BotFather)" value="">
-        <div class="text-xs mt-1" style="color:var(--muted)>
+        <div class="text-xs mt-1" style="color:var(--muted)">
           Create a bot: open Telegram → search <strong>@BotFather</strong> → /newbot → copy the token
         </div>
       </div>
@@ -82,7 +82,7 @@
         <input type="checkbox" id="telegram_alerts_enabled" class="h-4 w-4 accent-emerald-500" checked>
         <div>
           <div class="text-sm font-semibold text-white">Enable Telegram Alerts</div>
-          <div class="text-xs" style="color:var(--muted)>When disabled, no Telegram messages will be sent to any client</div>
+          <div class="text-xs" style="color:var(--muted)">When disabled, no Telegram messages will be sent to any client</div>
         </div>
       </div>
       <div class="flex items-center gap-3 mt-2">
