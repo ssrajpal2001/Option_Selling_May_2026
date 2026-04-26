@@ -104,6 +104,10 @@ cp "$TIMER_SRC" "${SYSTEMD_DIR}/algosoft-bot.timer"
 echo "→ Reloading systemd daemon..."
 systemctl daemon-reload
 
+# Only the timer is enabled (not the service directly).
+# This is standard systemd practice: the timer owns the lifecycle and activates
+# the service on schedule. Enabling the service unit directly would cause it to
+# start immediately at boot rather than at 08:00 AM.
 echo "→ Enabling timer (auto-start on every boot)..."
 systemctl enable algosoft-bot.timer
 
@@ -119,6 +123,9 @@ systemctl status algosoft-bot.timer --no-pager -l || true
 echo ""
 echo "Next scheduled run:"
 systemctl list-timers algosoft-bot.timer --no-pager 2>/dev/null || true
+echo ""
+echo "Installed service file (verify patched paths):"
+systemctl cat algosoft-bot --no-pager 2>/dev/null | head -20 || true
 echo ""
 echo "Useful commands:"
 echo "  sudo systemctl start  algosoft-bot    # start right now"
