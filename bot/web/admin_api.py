@@ -1422,6 +1422,107 @@ async def test_telegram(admin=Depends(require_admin)):
     )
 
 
+def _human_size(size: int) -> str:
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024:
+            return f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} TB"
+
+
+@router.get("/clients/{client_id}/logs")
+async def list_client_logs(client_id: int, admin=Depends(require_admin)):
+    """List all log files on disk that belong to this client."""
+    user = db_fetchone("SELECT id, username FROM users WHERE id=? AND role='client'", (client_id,))
+    if not user:
+        raise HTTPException(404, "Client not found.")
+    log_dir = os.path.join(os.getcwd(), "logs")
+    log_files = []
+    if os.path.isdir(log_dir):
+        prefix = f"client_{client_id}_"
+        for fname in os.listdir(log_dir):
+            if fname.startswith(prefix) and fname.endswith(".log"):
+                fpath = os.path.join(log_dir, fname)
+                try:
+                    stat = os.stat(fpath)
+                    broker = fname[len(prefix):-len(".log")]
+                    log_files.append({
+                        "filename": fname,
+                        "broker": broker,
+                        "size_bytes": stat.st_size,
+                        "size_human": _human_size(stat.st_size),
+                        "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                    })
+                except Exception:
+                    pass
+    log_files.sort(key=lambda x: x["modified_at"], reverse=True)
+    return {"client_id": client_id, "username": user["username"], "logs": log_files}
+
+
+@router.get("/clients/{client_id}/logs/download")
+async def download_client_log(
+    client_id: int,
+    broker: str = Query(...),
+    admin=Depends(require_admin),
+):
+    """Stream/download a client's full log file."""
+    user = db_fetchone("SELECT id FROM users WHERE id=? AND role='client'", (client_id,))
+    if not user:
+        raise HTTPException(404, "Client not found.")
+    safe_broker = broker.replace("/", "").replace("..", "").replace("\\", "").strip()
+    log_path = os.path.join(os.getcwd(), "logs", f"client_{client_id}_{safe_broker}.log")
+    if not os.path.isfile(log_path):
+        raise HTTPException(404, "Log file not found.")
+
+    def _iter():
+        with open(log_path, "rb") as f:
+            while True:
+                chunk = f.read(65536)
+                if not chunk:
+                    break
+                yield chunk
+
+    filename = f"client_{client_id}_{safe_broker}.log"
+    return StreamingResponse(
+        _iter(),
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/clients/{client_id}/logs/tail")
+async def tail_client_log(
+    client_id: int,
+    broker: str = Query(...),
+    lines: int = Query(default=100, ge=10, le=2000),
+    admin=Depends(require_admin),
+):
+    """Return the last N lines of a client log file for in-dashboard viewing."""
+    from collections import deque
+    user = db_fetchone("SELECT id FROM users WHERE id=? AND role='client'", (client_id,))
+    if not user:
+        raise HTTPException(404, "Client not found.")
+    safe_broker = broker.replace("/", "").replace("..", "").replace("\\", "").strip()
+    log_path = os.path.join(os.getcwd(), "logs", f"client_{client_id}_{safe_broker}.log")
+    if not os.path.isfile(log_path):
+        return {"lines": [], "broker": safe_broker, "total_lines": 0, "size_bytes": 0}
+    try:
+        dq: deque = deque(maxlen=lines)
+        total = 0
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                dq.append(line.rstrip("\n"))
+                total += 1
+        return {
+            "lines": list(dq),
+            "broker": safe_broker,
+            "total_lines": total,
+            "size_bytes": os.path.getsize(log_path),
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Error reading log file: {e}")
+
+
 @router.get("/clients/{client_id}/static-ip")
 async def get_client_static_ip(client_id: int, admin=Depends(require_admin)):
     row = db_fetchone("SELECT static_ip FROM users WHERE id=?", (client_id,))

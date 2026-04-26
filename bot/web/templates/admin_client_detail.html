@@ -28,6 +28,7 @@
   <button onclick="showClientTab('info')" id="ct-info" class="tab-btn active">Info & Trades</button>
   <button onclick="showClientTab('risk')" id="ct-risk" class="tab-btn">Risk & Money</button>
   <button onclick="showClientTab('monitor')" id="ct-monitor" class="tab-btn">Live Monitor</button>
+  <button onclick="showClientTab('logs')" id="ct-logs" class="tab-btn">Logs</button>
 </div>
 
 <!-- INFO TAB -->
@@ -481,6 +482,42 @@
     </div>
   </div>
 </div>
+
+<!-- LOGS TAB -->
+<div id="pane-logs" class="hidden">
+  <div class="card p-4 mb-4">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Client Log Files</div>
+      <button onclick="loadLogsList()" class="btn-ghost px-3 py-1.5 text-xs">⟳ Refresh List</button>
+    </div>
+    <div id="logs-file-list" style="color:var(--muted);font-size:13px">Loading...</div>
+  </div>
+
+  <div class="card p-4" id="log-viewer-card" style="display:none">
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">
+        Log Viewer — <span id="log-viewer-label" class="text-white">--</span>
+        <span id="log-viewer-meta" class="text-xs ml-2" style="color:var(--text-soft)"></span>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <select id="log-lines-select" class="input-field text-xs py-1 px-2" style="width:auto" onchange="reloadLogViewer()">
+          <option value="50">Last 50 lines</option>
+          <option value="100" selected>Last 100 lines</option>
+          <option value="250">Last 250 lines</option>
+          <option value="500">Last 500 lines</option>
+          <option value="1000">Last 1000 lines</option>
+          <option value="2000">Last 2000 lines</option>
+        </select>
+        <button onclick="reloadLogViewer()" class="btn-ghost px-3 py-1.5 text-xs">⟳ Refresh</button>
+        <button onclick="scrollLogBottom()" class="btn-ghost px-3 py-1.5 text-xs">↓ Bottom</button>
+        <a id="log-download-btn" href="#" class="btn-primary px-3 py-1.5 text-xs font-bold" download>⬇ Download Full Log</a>
+      </div>
+    </div>
+    <div id="log-viewer-box" class="rounded-lg p-3 overflow-y-auto" style="background:var(--bg);font-family:'Courier New',monospace;font-size:11px;color:var(--text-soft);height:420px;white-space:pre-wrap;word-break:break-all">
+      <span style="color:var(--muted)">Select a log file above to view it here.</span>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -488,12 +525,13 @@
 const clientId = window.location.pathname.split('/').pop();
 
 function showClientTab(tab) {
-  ['info','risk','monitor'].forEach(t => {
+  ['info','risk','monitor','logs'].forEach(t => {
     document.getElementById(`pane-${t}`).classList.toggle('hidden', tab !== t);
     document.getElementById(`ct-${t}`).classList.toggle('active', tab === t);
   });
   if (tab === 'monitor') loadBotStatus();
   if (tab === 'risk') loadRiskParams();
+  if (tab === 'logs') loadLogsList();
 }
 
 // ─── Risk & Money Management ───────────────────────────────────────────────
@@ -1135,6 +1173,80 @@ async function denyBCR(id) {
   const d = await r.json();
   showToast(d.message || 'Done', d.success ? 'success' : 'error');
   loadDetail();
+}
+
+// ─── Logs Tab ───────────────────────────────────────────────────────────────
+let _currentLogBroker = null;
+
+async function loadLogsList() {
+  const listEl = document.getElementById('logs-file-list');
+  listEl.innerHTML = '<span style="color:var(--muted)">Loading...</span>';
+  try {
+    const r = await fetch(`/api/admin/clients/${clientId}/logs`);
+    const d = await r.json();
+    if (!d.logs || d.logs.length === 0) {
+      listEl.innerHTML = '<span style="color:var(--muted)">No log files found for this client. Log files appear once the bot has been started.</span>';
+      return;
+    }
+    listEl.innerHTML = d.logs.map(f => `
+      <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border-soft)">
+        <div>
+          <span class="text-white font-bold">${escapeHtml(f.broker.toUpperCase())}</span>
+          <span class="text-xs ml-2" style="color:var(--muted)">${escapeHtml(f.filename)}</span>
+          <div class="text-xs mt-0.5" style="color:var(--text-soft)">
+            ${escapeHtml(f.size_human)} &middot; Last modified: ${escapeHtml((f.modified_at||'').substring(0,19).replace('T',' '))} UTC
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openLogViewer(${JSON.stringify(f.broker)})" class="btn-ghost px-3 py-1.5 text-xs">👁 View</button>
+          <a href="/api/admin/clients/${clientId}/logs/download?broker=${encodeURIComponent(f.broker)}"
+             class="btn-primary px-3 py-1.5 text-xs font-bold" download="${escapeHtml(f.filename)}">⬇ Download</a>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    listEl.innerHTML = '<span style="color:var(--error)">Failed to load log list.</span>';
+  }
+}
+
+async function openLogViewer(broker) {
+  _currentLogBroker = broker;
+  document.getElementById('log-viewer-card').style.display = '';
+  document.getElementById('log-viewer-label').textContent = broker.toUpperCase();
+  document.getElementById('log-download-btn').href =
+    `/api/admin/clients/${clientId}/logs/download?broker=${encodeURIComponent(broker)}`;
+  document.getElementById('log-download-btn').download = `client_${clientId}_${broker}.log`;
+  await reloadLogViewer();
+  scrollLogBottom();
+}
+
+async function reloadLogViewer() {
+  if (!_currentLogBroker) return;
+  const lines = parseInt(document.getElementById('log-lines-select').value) || 100;
+  const box = document.getElementById('log-viewer-box');
+  box.textContent = 'Loading…';
+  try {
+    const r = await fetch(`/api/admin/clients/${clientId}/logs/tail?broker=${encodeURIComponent(_currentLogBroker)}&lines=${lines}`);
+    const d = await r.json();
+    if (!d.lines || d.lines.length === 0) {
+      box.textContent = 'Log file is empty or not found.';
+      document.getElementById('log-viewer-meta').textContent = '';
+      return;
+    }
+    box.textContent = d.lines.join('\n');
+    const sizeHuman = d.size_bytes < 1024 ? `${d.size_bytes} B`
+      : d.size_bytes < 1048576 ? `${(d.size_bytes/1024).toFixed(1)} KB`
+      : `${(d.size_bytes/1048576).toFixed(1)} MB`;
+    document.getElementById('log-viewer-meta').textContent =
+      `Showing ${d.lines.length} of ${d.total_lines.toLocaleString()} lines · ${sizeHuman}`;
+  } catch(e) {
+    box.textContent = 'Error loading log file.';
+  }
+}
+
+function scrollLogBottom() {
+  const box = document.getElementById('log-viewer-box');
+  box.scrollTop = box.scrollHeight;
 }
 
 loadPlans();
