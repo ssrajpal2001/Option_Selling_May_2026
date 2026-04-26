@@ -1955,7 +1955,7 @@ async function onTradingToggle(enabled) {
   document.getElementById('trading-toggle-card').checked = enabled;
   document.getElementById('trading-toggle-lbl').style.color = enabled ? '#fbbf24' : 'var(--muted)';
   try {
-    await api('POST', '/trading/toggle', { enabled, broker: state.selectedBroker });
+    await api('POST', '/bot/toggle-trading', { enabled, broker: state.selectedBroker });
     state.tradingEnabled = enabled;
     toast(enabled ? 'Trading enabled — bot will take new positions.' : 'Trading disabled — bot stays running, no new trades.', 'ok');
   } catch (e) {
