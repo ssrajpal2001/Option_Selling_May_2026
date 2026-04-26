@@ -1241,11 +1241,11 @@ function renderBrokerTabs() {
       if (inst) {
         const reconnSt = inst.reconnect_status;
         if (reconnSt && reconnSt.active) {
-          dotColor = '#0ea5e9';
+          dotColor = '#f59e0b';  // amber — authenticating/reconnecting
           dotTitle = `Auto-reconnecting (${reconnSt.attempts}/${reconnSt.max_attempts})`;
-          dotExtra = `<span style="font-size:9px;color:#38bdf8;margin-left:3px">↺${reconnSt.attempts}</span>`;
+          dotExtra = `<span style="font-size:9px;color:#f59e0b;margin-left:3px">↺${reconnSt.attempts}</span>`;
         } else if (!inst.has_credentials) {
-          dotColor = '#6366f1'; dotTitle = 'Credentials missing — click to add';
+          dotColor = '#ef4444'; dotTitle = 'Credentials missing — click to add';  // red — error
         } else if (inst.status === 'running' && inst.token_fresh) {
           dotColor = '#34d399'; dotTitle = 'Connected & running';
         } else if (inst.token_fresh) {

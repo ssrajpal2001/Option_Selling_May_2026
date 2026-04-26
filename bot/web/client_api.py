@@ -18,6 +18,8 @@ from utils.logger import logger
 router = APIRouter(prefix="/client", tags=["client"])
 
 IST = timezone(timedelta(hours=5, minutes=30))
+# Brokers that support fully-automated (headless) login — fyers excluded
+HEADLESS_LOGIN_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "aliceblue", "groww")
 
 
 def _compute_has_credentials(row: dict) -> bool:
@@ -73,6 +75,10 @@ def _make_headless_login_fn(user_id: int, broker: str):
         }
 
         token = None
+        # fyers has no automated (headless) login path — skip silently
+        if broker == "fyers":
+            logger.debug(f"[ReconnectFn] fyers does not support headless login (user {user_id}); skipping")
+            return None
         try:
             if broker == "zerodha":
                 from utils.auth_manager_zerodha import handle_zerodha_login_automated
@@ -260,6 +266,15 @@ async def get_broker_config(user=Depends(get_current_user)):
     }
 
 
+@router.get("/broker-status")
+async def get_broker_status(user=Depends(get_current_user)):
+    """
+    Alias of GET /broker — returns the same instances payload.
+    Exists as the canonical polling endpoint for 30-second status refresh on the dashboard.
+    """
+    return await get_broker_config(user=user)
+
+
 @router.post("/broker/{broker}/reconnect")
 async def reconnect_broker(broker: str, user=Depends(get_current_user)):
     """
@@ -350,9 +365,9 @@ async def start_broker_reconnect(broker: str, force: bool = False,
     The hub manager will attempt headless login every 60 s, up to 5 retries.
     Pass ?force=true to override the post-exhaustion cooldown (explicit user retry).
     Poll GET /broker/{broker}/reconnect-status for live progress.
+    Only brokers with a headless login path are supported (fyers is excluded).
     """
-    VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
-    if broker not in VALID_BROKERS:
+    if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
     if reconnect_manager.is_active(user["id"], broker):
         return {"started": False, "message": "Reconnect loop already running."}
@@ -379,8 +394,7 @@ async def start_broker_reconnect(broker: str, force: bool = False,
 @router.post("/broker/{broker}/reconnect/cancel")
 async def cancel_broker_reconnect(broker: str, user=Depends(get_current_user)):
     """Cancel an active background reconnect loop for the given broker."""
-    VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
-    if broker not in VALID_BROKERS:
+    if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
     cancelled = reconnect_manager.cancel(user["id"], broker)
     return {"cancelled": cancelled, "message": "Cancelled." if cancelled else "No active loop found."}
@@ -389,8 +403,7 @@ async def cancel_broker_reconnect(broker: str, user=Depends(get_current_user)):
 @router.get("/broker/{broker}/reconnect-status")
 async def get_broker_reconnect_status(broker: str, user=Depends(get_current_user)):
     """Return the current background reconnect state for the given broker."""
-    VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
-    if broker not in VALID_BROKERS:
+    if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
     return reconnect_manager.get_status(user["id"], broker)
 
