@@ -86,6 +86,11 @@ class InstanceManager:
             )
             self._processes[instance_id] = proc
             logger.info(f"[InstanceManager] Started instance {instance_id} (PID {proc.pid}) for client {username}")
+            try:
+                from utils.notifier import notify_admin_instance_event
+                notify_admin_instance_event(username, "started", trading_mode, instrument)
+            except Exception as _tge:
+                logger.debug(f"[InstanceManager] Admin Telegram start alert failed: {_tge}")
             return True, f"Bot started (PID {proc.pid})", proc.pid
         except Exception as e:
             logger.error(f"[InstanceManager] Failed to start instance {instance_id}: {e}")
@@ -131,6 +136,24 @@ class InstanceManager:
 
         if stopped:
             logger.info(f"[InstanceManager] Stopped instance {instance_id}")
+            try:
+                from web.db import db_fetchone
+                inst_row = db_fetchone(
+                    "SELECT u.username, cbi.trading_mode, cbi.instrument "
+                    "FROM client_broker_instances cbi "
+                    "JOIN users u ON u.id = cbi.client_id "
+                    "WHERE cbi.id=?",
+                    (instance_id,)
+                )
+                if inst_row:
+                    from utils.notifier import notify_admin_instance_event
+                    notify_admin_instance_event(
+                        inst_row["username"], "stopped",
+                        inst_row.get("trading_mode", ""),
+                        inst_row.get("instrument", ""),
+                    )
+            except Exception as _tge:
+                logger.debug(f"[InstanceManager] Admin Telegram stop alert failed: {_tge}")
             return True, "Bot stopped."
         return False, "No running instance found."
 

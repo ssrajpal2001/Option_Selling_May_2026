@@ -752,6 +752,13 @@ async def _kill_switch_enforcer():
                                 "total_pnl_rs": daily_pnl_rs,
                                 "total_pnl_pts": 0.0,
                             })
+                        # Notify admin regardless of client Telegram config
+                        try:
+                            _username = (client_row or {}).get("username", f"client#{inst['client_id']}")
+                            from utils.notifier import notify_admin_kill_switch as _nak
+                            _nak(_username, daily_pnl_rs, trigger_reason)
+                        except Exception as _adm_e:
+                            logger.error(f"[KillSwitch] Admin Telegram notify failed: {_adm_e}")
                         logger.info(f"[KillSwitch] Instance {inst['id']} stopped. Locked until {unlock.isoformat()}")
                     except Exception as _ie:
                         logger.error(f"[KillSwitch] Instance {inst.get('id')} error: {_ie}")
@@ -922,6 +929,79 @@ async def _day_end_summary_scheduler():
             await asyncio.sleep(60)
 
 
+async def _admin_day_end_digest_scheduler():
+    """
+    Send a consolidated day-end digest to the admin at 15:45 IST on market days.
+    Summarises all active clients: username, trade count, PnL, mode.
+    """
+    while True:
+        try:
+            now = datetime.now(IST)
+            target = now.replace(hour=15, minute=45, second=0, microsecond=0)
+            if now >= target:
+                target += timedelta(days=1)
+            _holidays = _get_nse_holidays()
+            while target.weekday() >= 5 or target.strftime("%Y-%m-%d") in _holidays:
+                target += timedelta(days=1)
+            await asyncio.sleep((target - now).total_seconds())
+
+            _now_ist = datetime.now(IST)
+            _today_str = _now_ist.strftime("%Y-%m-%d")
+            _holidays = _get_nse_holidays()
+            if _now_ist.weekday() >= 5 or _today_str in _holidays:
+                logger.info(f"[AdminDigest] Skipped — market holiday or weekend ({_today_str}).")
+                continue
+
+            logger.info("[AdminDigest] Building admin day-end digest...")
+            try:
+                today = datetime.now(IST).strftime("%Y-%m-%d")
+                clients = db_fetchall(
+                    "SELECT u.id, u.username "
+                    "FROM users u "
+                    "WHERE u.role='client' AND u.is_active=1"
+                )
+                summary_rows = []
+                for c in clients:
+                    try:
+                        rows = db_fetchall(
+                            "SELECT pnl_rs, trading_mode FROM trade_history "
+                            "WHERE client_id=? AND date(closed_at)=?",
+                            (c["id"], today)
+                        )
+                        if not rows:
+                            continue
+                        total_pnl = sum(r.get("pnl_rs") or 0 for r in rows)
+                        modes = {(r.get("trading_mode") or "").upper() for r in rows}
+                        if "LIVE" in modes and "PAPER" in modes:
+                            mode_label = "MIXED"
+                        elif "LIVE" in modes:
+                            mode_label = "LIVE"
+                        elif "PAPER" in modes:
+                            mode_label = "PAPER"
+                        else:
+                            mode_label = ""
+                        summary_rows.append({
+                            "username": c["username"],
+                            "trades": len(rows),
+                            "pnl_rs": total_pnl,
+                            "mode": mode_label,
+                        })
+                    except Exception as _ce:
+                        logger.error(f"[AdminDigest] Error for client {c['username']}: {_ce}")
+
+                from utils.notifier import notify_admin_day_end
+                notify_admin_day_end(summary_rows)
+                logger.info(f"[AdminDigest] Digest sent — {len(summary_rows)} clients with trades today.")
+            except Exception as e:
+                logger.error(f"[AdminDigest] Inner error: {e}")
+
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"[AdminDigest] Scheduler error: {e}")
+            await asyncio.sleep(60)
+
+
 @app.get("/health")
 async def health_check():
     """Public health check endpoint for monitoring tools and process managers.
@@ -1064,6 +1144,8 @@ async def startup_event():
     asyncio.create_task(_subscription_expiry_scheduler())
     # Day-end Telegram summary (15:30 IST, weekdays only)
     asyncio.create_task(_day_end_summary_scheduler())
+    # Admin day-end digest (15:45 IST, weekdays only)
+    asyncio.create_task(_admin_day_end_digest_scheduler())
     # Dhan token auto-renewal (hourly, renews when token age > 22h)
     asyncio.create_task(_dhan_auto_renewal_scheduler())
     # Daily loss kill-switch enforcer (runs every 5 minutes during market hours)
@@ -1078,6 +1160,20 @@ async def startup_event():
         start_poller()
     except Exception as _tgp_exc:
         logger.warning(f"[TgPoller] Failed to start polling thread: {_tgp_exc}")
+    # Admin startup alert
+    try:
+        counts = db_fetchone(
+            "SELECT COUNT(*) as total, "
+            "SUM(CASE WHEN is_active=1 THEN 1 ELSE 0 END) as active "
+            "FROM users WHERE role='client'"
+        ) or {}
+        from utils.notifier import notify_admin_startup
+        notify_admin_startup(
+            client_count=counts.get("total") or 0,
+            active_count=counts.get("active") or 0,
+        )
+    except Exception as _adm_exc:
+        logger.warning(f"[Startup] Admin Telegram alert failed: {_adm_exc}")
 
 
 @app.on_event("shutdown")

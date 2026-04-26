@@ -235,6 +235,100 @@ def _get_admin_chat_id() -> str | None:
         return None
 
 
+def notify_admin_startup(client_count: int, active_count: int) -> bool:
+    """Alert admin on Telegram that the AlgoSoft server has started."""
+    chat_id = _get_admin_chat_id()
+    if not chat_id:
+        return False
+    msg = (
+        f"🟢 <b>AlgoSoft Started</b>\n"
+        f"<b>Total clients configured:</b> {client_count}\n"
+        f"<b>Active subscriptions:</b> {active_count}\n"
+        f"<i>Server is up and ready.</i>"
+    )
+    return send_telegram(chat_id, msg, force=True)
+
+
+def notify_admin_instance_event(username: str, event: str, mode: str,
+                                 instrument: str = "", reason: str = "") -> bool:
+    """
+    Alert admin when a client instance starts or stops.
+
+    Args:
+        username: Client's username.
+        event: "started" or "stopped".
+        mode: "LIVE" or "PAPER".
+        instrument: Trading instrument (e.g. "NIFTY").
+        reason: Stop reason or error message (optional).
+    """
+    chat_id = _get_admin_chat_id()
+    if not chat_id:
+        return False
+
+    if event == "started":
+        mode_badge = "🟡 LIVE" if mode.upper() == "LIVE" else "🔵 PAPER"
+        instr_line = f"\n<b>Instrument:</b> {instrument}" if instrument else ""
+        msg = (
+            f"▶ <b>{username}</b> started trading\n"
+            f"<b>Mode:</b> {mode_badge}{instr_line}"
+        )
+    else:
+        reason_line = f"\n<b>Reason:</b> {reason}" if reason else ""
+        msg = (
+            f"⚠️ <b>{username}</b> instance stopped{reason_line}"
+        )
+    return send_telegram(chat_id, msg, force=True)
+
+
+def notify_admin_kill_switch(username: str, pnl_rs: float, reason: str) -> bool:
+    """Alert admin on Telegram when a client's daily-loss kill-switch fires."""
+    chat_id = _get_admin_chat_id()
+    if not chat_id:
+        return False
+    msg = (
+        f"🚨 <b>Kill-Switch Triggered — Admin Alert</b>\n"
+        f"<b>Client:</b> {username}\n"
+        f"<b>Reason:</b> {reason}\n"
+        f"<b>Daily Loss:</b> ₹{abs(pnl_rs):,.0f}\n"
+        f"<i>Bot halted for today.</i>"
+    )
+    return send_telegram(chat_id, msg, force=True)
+
+
+def notify_admin_day_end(summary_rows: list) -> bool:
+    """
+    Send a consolidated day-end digest to the admin.
+
+    Args:
+        summary_rows: list of dicts with keys:
+            username, trades, pnl_rs, mode (LIVE/PAPER/MIXED)
+    """
+    chat_id = _get_admin_chat_id()
+    if not chat_id:
+        return False
+
+    if not summary_rows:
+        msg = "📅 <b>Day-End Digest</b>\nNo trades recorded today."
+        return send_telegram(chat_id, msg, force=True)
+
+    lines = ["📅 <b>Day-End Digest — AlgoSoft</b>\n"]
+    total_clients = len(summary_rows)
+    total_pnl = sum(r.get("pnl_rs", 0) for r in summary_rows)
+
+    for r in summary_rows:
+        uname  = r.get("username", "?")
+        trades = r.get("trades", 0)
+        pnl    = r.get("pnl_rs", 0.0)
+        mode   = r.get("mode", "")
+        icon   = "🟢" if pnl >= 0 else "🔴"
+        mode_badge = f" [{mode}]" if mode else ""
+        lines.append(f"{icon} <b>{uname}</b>{mode_badge} — {trades} trades  ₹{pnl:+,.0f}")
+
+    trend = "🟢" if total_pnl >= 0 else "🔴"
+    lines.append(f"\n<b>Total:</b> {total_clients} clients  {trend} ₹{total_pnl:+,.0f}")
+    return send_telegram(chat_id, "\n".join(lines), force=True)
+
+
 def notify_rust_fallback() -> bool:
     """
     Send a one-time Telegram alert to the admin when the Rust engine is
