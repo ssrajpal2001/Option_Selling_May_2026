@@ -445,7 +445,7 @@
 
   <!-- Setup alert / onboarding card -->
   <div id="setup-alert" style="display:none;background:#0f1f2e;border:1px solid #38bdf8;border-radius:10px;padding:16px 18px;margin-bottom:16px;color:#bae6fd;font-size:13px">
-    <div style="font-weight:700;color:#f0f9ff;font-size:14px;margin-bottom:6px">🚀 Get started — connect your broker</div>
+    <div style="font-weight:700;color:var(--text);font-size:14px;margin-bottom:6px">🚀 Get started — connect your broker</div>
     <div style="margin-bottom:10px">Click <button onclick="openBrokerSetup()" style="color:var(--primary);background:transparent;border:none;cursor:pointer;font-weight:700;text-decoration:underline">Connect Broker</button> to enter your API credentials and start trading. It only takes a minute.</div>
     <div id="onboard-ip-hint" style="display:none;background:#0c2a1a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-top:8px">
       <div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px">📌 Whitelist your static IP first</div>
@@ -462,7 +462,7 @@
     <span style="font-size:18px">⚠️</span>
     <div style="flex:1">
       <div style="font-size:13px;font-weight:700;color:#fbbf24">Broker Token Expired</div>
-      <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="stale-cred-text"></div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="stale-cred-text"></div>
     </div>
     <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:#92400e;border:1px solid #d97706;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Refresh Token →</button>
   </div>
@@ -472,7 +472,7 @@
     <span style="font-size:18px">🔑</span>
     <div style="flex:1">
       <div style="font-size:13px;font-weight:700;color:#a5b4fc">Broker Credentials Missing</div>
-      <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="missing-creds-text"></div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="missing-creds-text"></div>
     </div>
     <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:#312e81;border:1px solid #6366f1;color:#c7d2fe;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Add credentials →</button>
   </div>
@@ -482,7 +482,7 @@
     <span style="font-size:16px;animation:spin 2s linear infinite;display:inline-block">↺</span>
     <div style="flex:1">
       <div style="font-size:13px;font-weight:700;color:#38bdf8">Attempting Auto-Reconnect</div>
-      <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="reconnect-banner-text"></div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="reconnect-banner-text"></div>
     </div>
     <button onclick="_cancelAllReconnects()" style="padding:6px 14px;border-radius:7px;background:#0c2340;border:1px solid #0369a1;color:#7dd3fc;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Cancel</button>
   </div>
@@ -492,9 +492,9 @@
     <span style="font-size:22px">🔒</span>
     <div style="flex:1">
       <div style="font-size:13px;font-weight:700;color:#f87171">Trading Locked by Kill Switch</div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:2px" id="ks-lock-reason">Daily loss limit exceeded. Contact admin to unlock.</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-top:2px" id="ks-lock-reason">Daily loss limit exceeded. Contact admin to unlock.</div>
     </div>
-    <div id="ks-unlock-time" style="font-size:11px;color:#64748b;text-align:right"></div>
+    <div id="ks-unlock-time" style="font-size:11px;color:var(--muted);text-align:right"></div>
   </div>
 
   <div class="grid-2" style="gap:20px;align-items:start">
@@ -685,7 +685,7 @@
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span id="pos-last-updated" style="font-size:11px;color:var(--muted)"></span>
-        <span id="pos-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#64748b"></span>
+        <span id="pos-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted)"></span>
         <button class="sqoff-btn" style="padding:5px 12px;font-size:11px" onclick="confirmSquareOff()">Close All</button>
       </div>
     </div>
@@ -694,7 +694,7 @@
     <div id="pos-empty" class="pos-empty">
       <div class="pos-empty-icon">📭</div>
       <div class="pos-empty-txt">No open positions today</div>
-      <div style="font-size:12px;margin-top:4px;color:#475569">Bot will show active CE/PE positions here once placed</div>
+      <div style="font-size:12px;margin-top:4px;color:var(--muted)">Bot will show active CE/PE positions here once placed</div>
     </div>
 
     <!-- Positions table -->

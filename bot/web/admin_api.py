@@ -1344,9 +1344,13 @@ async def get_platform_settings(admin=Depends(require_admin)):
     return {"settings": safe}
 
 
+_VALID_THEMES = {"dark", "light", "midnight", "saffron"}
+
 @router.post("/platform-settings")
 async def save_platform_settings(body: PlatformSettingsBatch, admin=Depends(require_admin)):
     """Upsert platform settings. Pass empty string to clear a key."""
+    if "default_theme" in body.settings and body.settings["default_theme"] not in _VALID_THEMES:
+        raise HTTPException(400, f"Invalid theme. Allowed values: {sorted(_VALID_THEMES)}")
     now = _dt.datetime.now(timezone.utc).isoformat()
     for k, v in body.settings.items():
         # Do not overwrite password with mask placeholder

@@ -940,11 +940,11 @@ function setNestedValue(obj, path, value) {
 function setToggleState(btn, on) {
   const knob = btn.querySelector('.toggle-knob');
   if (on) {
-    btn.style.background = '#00d4aa';
+    btn.style.background = 'var(--primary)';
     knob.style.transform = 'translateX(24px)';
     btn.dataset.value = 'true';
   } else {
-    btn.style.background = '#475569';
+    btn.style.background = 'var(--surface2)';
     knob.style.transform = 'translateX(0)';
     btn.dataset.value = 'false';
   }
