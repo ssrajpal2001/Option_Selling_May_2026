@@ -3,8 +3,15 @@ ReconnectManager — background broker auto-reconnect scheduler.
 
 When a broker session token expires or a live connection drops, the manager
 schedules an asyncio task that calls the broker's headless login handler every
-60 seconds, up to MAX_RETRIES (5) attempts.  State is persisted in-memory per
-(user_id, broker) pair and exposed to the dashboard via the client API.
+60 seconds, up to MAX_RETRIES (5) attempts.
+
+Retry-cap safety: after a loop exhausts MAX_RETRIES, the session is recorded in
+_exhausted with a timestamp.  A new schedule() call for the same (user_id, broker)
+pair is blocked until EXHAUSTED_COOLDOWN_HOURS have elapsed (or until the user
+explicitly calls clear_exhausted()).  This prevents unbounded restart loops.
+
+Hub-driven: broker_manager calls schedule() on startup when a loaded instance has
+a stale token, so reconnect runs even when the client dashboard is closed.
 """
 
 import asyncio
@@ -14,6 +21,7 @@ from utils.logger import logger
 IST = timezone(timedelta(hours=5, minutes=30))
 MAX_RETRIES = 5
 INTERVAL_SECONDS = 60
+EXHAUSTED_COOLDOWN_HOURS = 1
 
 
 class _BrokerReconnectSession:
@@ -24,7 +32,7 @@ class _BrokerReconnectSession:
         self.broker = broker
         self.attempts = 0
         self.last_attempt: str | None = None
-        self.last_status = "pending"  # pending | success | failed | exhausted
+        self.last_status = "pending"  # pending | success | failed | exhausted | cancelled
         self.task: asyncio.Task | None = None
 
     def as_dict(self) -> dict:
@@ -42,27 +50,81 @@ class ReconnectManager:
 
     def __init__(self):
         self._sessions: dict[tuple[int, str], _BrokerReconnectSession] = {}
+        # Maps (user_id, broker) → IST datetime when the loop was exhausted
+        self._exhausted: dict[tuple[int, str], datetime] = {}
+
+    # ── public query helpers ──────────────────────────────────────────────────
 
     def get_status(self, user_id: int, broker: str) -> dict:
         session = self._sessions.get((user_id, broker))
         if session is None:
-            return {"active": False, "attempts": 0, "max_attempts": MAX_RETRIES, "last_status": None}
-        return session.as_dict()
+            result = {
+                "active": False, "attempts": 0, "max_attempts": MAX_RETRIES,
+                "last_status": None, "last_attempt": None,
+            }
+        else:
+            result = session.as_dict()
+        # Append cooldown info when exhausted
+        key = (user_id, broker)
+        if key in self._exhausted:
+            exhausted_at = self._exhausted[key]
+            cooldown_until = exhausted_at + timedelta(hours=EXHAUSTED_COOLDOWN_HOURS)
+            now = datetime.now(IST)
+            if now < cooldown_until:
+                result["exhausted_until"] = cooldown_until.isoformat()
+                result["last_status"] = "exhausted"
+            else:
+                # Cooldown elapsed — clean up record so schedule() is unblocked
+                del self._exhausted[key]
+        return result
 
     def is_active(self, user_id: int, broker: str) -> bool:
         session = self._sessions.get((user_id, broker))
         return session is not None and session.task is not None and not session.task.done()
 
-    def schedule(self, user_id: int, broker: str, headless_login_fn) -> bool:
+    def is_cooldown(self, user_id: int, broker: str) -> bool:
+        """Returns True when the loop is in post-exhaustion cooldown."""
+        key = (user_id, broker)
+        if key not in self._exhausted:
+            return False
+        cooldown_until = self._exhausted[key] + timedelta(hours=EXHAUSTED_COOLDOWN_HOURS)
+        if datetime.now(IST) >= cooldown_until:
+            del self._exhausted[key]
+            return False
+        return True
+
+    # ── public mutation helpers ───────────────────────────────────────────────
+
+    def clear_exhausted(self, user_id: int, broker: str):
+        """Allow immediate restart by discarding the cooldown record."""
+        self._exhausted.pop((user_id, broker), None)
+
+    def schedule(self, user_id: int, broker: str, headless_login_fn,
+                 force: bool = False) -> bool:
         """
         Start a background reconnect loop (asyncio task) for the given
         (user_id, broker) pair.  Idempotent — returns False if already running.
 
         headless_login_fn must be a *synchronous* callable that returns the new
         access-token string on success or None/falsy on failure.
+
+        Set force=True to override the exhaustion cooldown (e.g. manual retry).
         """
         if self.is_active(user_id, broker):
             return False
+
+        # Enforce cooldown after exhaustion unless the caller explicitly forces
+        if not force and self.is_cooldown(user_id, broker):
+            key = (user_id, broker)
+            cooldown_until = self._exhausted[key] + timedelta(hours=EXHAUSTED_COOLDOWN_HOURS)
+            logger.warning(
+                f"[ReconnectManager] {broker} for user {user_id} is in cooldown until "
+                f"{cooldown_until.isoformat()} — schedule() blocked"
+            )
+            return False
+
+        # Clear any stale exhaustion record when rescheduling
+        self._exhausted.pop((user_id, broker), None)
 
         session = _BrokerReconnectSession(user_id, broker)
         self._sessions[(user_id, broker)] = session
@@ -100,9 +162,12 @@ class ReconnectManager:
                         f"for user {user_id}: {exc}"
                     )
 
+            # All attempts exhausted — record timestamp and start cooldown
             session.last_status = "exhausted"
+            self._exhausted[(user_id, broker)] = datetime.now(IST)
             logger.warning(
-                f"[ReconnectManager] {broker} exhausted {MAX_RETRIES} retries for user {user_id}"
+                f"[ReconnectManager] {broker} exhausted {MAX_RETRIES} retries for user {user_id}; "
+                f"cooldown active for {EXHAUSTED_COOLDOWN_HOURS}h"
             )
             return None
 

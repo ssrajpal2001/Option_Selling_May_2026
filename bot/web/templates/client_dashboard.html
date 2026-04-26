@@ -1330,11 +1330,13 @@ function _updateReconnectBanner() {
 async function _checkReconnectLoops() {
   for (const inst of state.instances) {
     const broker = inst.broker;
+    const rs = inst.reconnect_status || {};
+    // Do not start a new loop if already active OR exhausted (in cooldown)
+    if (rs.active || rs.last_status === 'exhausted') continue;
     // Trigger backend reconnect loop when: credentials present + auto-login + stale OR dropped
     const tokenStale = inst.has_credentials && !inst.token_fresh && inst.has_auto_login;
     const connectionDropped = !!inst._connection_dropped && inst.has_auto_login;
-    const shouldStart = (tokenStale || connectionDropped) && !(inst.reconnect_status && inst.reconnect_status.active);
-    if (shouldStart) {
+    if (tokenStale || connectionDropped) {
       try {
         await fetch(`/api/client/broker/${broker}/reconnect/start`, { method: 'POST' });
       } catch (_) {}

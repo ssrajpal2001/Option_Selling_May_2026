@@ -934,6 +934,76 @@ async def health_check():
     }
 
 
+def _hub_schedule_reconnect_for_instance(row: dict):
+    """
+    Schedule a background reconnect for a single broker instance row if:
+      - the token is stale for that broker, AND
+      - auto-login credentials (password + totp) are stored, AND
+      - a loop is not already active or in cooldown.
+    Called at server startup and periodically to detect mid-day token expiry.
+    """
+    from hub.reconnect_manager import reconnect_manager
+    from web.client_api import _is_token_fresh, _is_dhan_token_fresh, _make_headless_login_fn
+    from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm
+    from web.auth import decrypt_secret
+
+    user_id = row["client_id"]
+    broker  = row["broker"]
+    if reconnect_manager.is_active(user_id, broker) or reconnect_manager.is_cooldown(user_id, broker):
+        return
+
+    if not (row.get("password_encrypted") and row.get("totp_encrypted")):
+        return  # no auto-login credentials
+
+    token_ts = row.get("token_updated_at", "")
+    if broker == "dhan":
+        api_sec = decrypt_secret(row["api_secret_encrypted"]) if row.get("api_secret_encrypted") else ""
+        stale = not _is_dhan_token_fresh(token_ts, api_key_mode=_is_akm({"api_secret": api_sec}))
+    else:
+        stale = not _is_token_fresh(token_ts)
+
+    if not stale:
+        return  # token is fresh — no reconnect needed
+
+    fn = _make_headless_login_fn(user_id, broker)
+    scheduled = reconnect_manager.schedule(user_id, broker, fn)
+    if scheduled:
+        logger.info(
+            f"[HubReconnect] Stale token detected — scheduled background reconnect for "
+            f"{broker} (user {user_id})"
+        )
+
+
+async def _hub_reconnect_scanner():
+    """
+    Hub-driven reconnect orchestrator.
+    Runs at server startup then every 30 minutes, scanning all broker instances
+    whose tokens are stale but have auto-login credentials stored.
+    This ensures reconnect attempts happen even when the client dashboard is closed.
+    """
+    SCAN_INTERVAL_SECONDS = 30 * 60  # 30 minutes
+    while True:
+        try:
+            rows = db_fetchall(
+                """
+                SELECT cbi.client_id, cbi.broker, cbi.token_updated_at,
+                       cbi.password_encrypted, cbi.totp_encrypted,
+                       cbi.api_key_encrypted, cbi.api_secret_encrypted
+                FROM client_broker_instances cbi
+                WHERE cbi.status != 'removed'
+                """,
+                ()
+            )
+            for row in rows:
+                try:
+                    _hub_schedule_reconnect_for_instance(dict(row))
+                except Exception as exc:
+                    logger.warning(f"[HubReconnect] Error scanning instance: {exc}")
+        except Exception as exc:
+            logger.warning(f"[HubReconnect] Scanner error: {exc}")
+        await asyncio.sleep(SCAN_INTERVAL_SECONDS)
+
+
 @app.on_event("startup")
 async def startup_event():
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
@@ -950,6 +1020,8 @@ async def startup_event():
     asyncio.create_task(_dhan_auto_renewal_scheduler())
     # Daily loss kill-switch enforcer (runs every 5 minutes during market hours)
     asyncio.create_task(_kill_switch_enforcer())
+    # Hub-driven broker reconnect scanner (startup + every 30 min)
+    asyncio.create_task(_hub_reconnect_scanner())
 
 if __name__ == "__main__":
     import uvicorn

@@ -343,10 +343,12 @@ async def reconnect_broker(broker: str, user=Depends(get_current_user)):
 
 
 @router.post("/broker/{broker}/reconnect/start")
-async def start_broker_reconnect(broker: str, user=Depends(get_current_user)):
+async def start_broker_reconnect(broker: str, force: bool = False,
+                                 user=Depends(get_current_user)):
     """
     Schedule a background reconnect loop for the given broker.
     The hub manager will attempt headless login every 60 s, up to 5 retries.
+    Pass ?force=true to override the post-exhaustion cooldown (explicit user retry).
     Poll GET /broker/{broker}/reconnect-status for live progress.
     """
     VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
@@ -363,9 +365,14 @@ async def start_broker_reconnect(broker: str, user=Depends(get_current_user)):
         raise HTTPException(404, "Broker not configured.")
     if not (instance.get("password_encrypted") and instance.get("totp_encrypted")):
         raise HTTPException(400, "no_auto_login")
+    # Allow user to bypass cooldown with explicit force flag
+    if force:
+        reconnect_manager.clear_exhausted(user["id"], broker)
     fn = _make_headless_login_fn(user["id"], broker)
-    reconnect_manager.schedule(user["id"], broker, fn)
-    logger.info(f"[Reconnect] Background loop started for {broker} (user {user['id']})")
+    started = reconnect_manager.schedule(user["id"], broker, fn, force=force)
+    if not started:
+        return {"started": False, "message": "In post-exhaustion cooldown. Pass ?force=true to override."}
+    logger.info(f"[Reconnect] Background loop started for {broker} (user {user['id']}, force={force})")
     return {"started": True, "message": f"Reconnect loop started for {broker}."}
 
 
