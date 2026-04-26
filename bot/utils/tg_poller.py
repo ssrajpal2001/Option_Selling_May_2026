@@ -27,7 +27,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from utils.logger import logger
 
-_POLL_TIMEOUT = 25          # seconds for Telegram long-poll
+_POLL_TIMEOUT = 30          # seconds for Telegram long-poll
 _RETRY_BACKOFF = 10         # seconds to wait after a network error
 
 _BASE_DIR = Path(__file__).resolve().parent.parent  # bot/
@@ -52,30 +52,17 @@ def _tg_get(token: str, method: str, params: dict) -> dict | None:
         return None
 
 
-def _tg_post(token: str, method: str, payload: dict) -> dict | None:
-    """Make a POST request to the Telegram Bot API."""
-    url = f"https://api.telegram.org/bot{token}/{method}"
-    data = json.dumps(payload).encode()
-    try:
-        req = urllib.request.Request(
-            url, data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read())
-    except Exception as exc:
-        logger.warning(f"[TgPoller] POST {method} failed: {exc}")
-        return None
 
-
-def _send(token: str, chat_id: str, text: str) -> None:
-    _tg_post(token, "sendMessage", {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": True,
-    })
+def _send(_token: str, chat_id: str, text: str) -> None:
+    """
+    Send a message to a Telegram chat.
+    Delegates to notifier.send_telegram with force=True so command replies are
+    always delivered even when global alerts are toggled off.
+    The token parameter is accepted for interface compatibility but unused here
+    since send_telegram reads it from platform_settings internally.
+    """
+    from utils.notifier import send_telegram
+    send_telegram(chat_id, text, parse_mode="HTML", force=True)
 
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
