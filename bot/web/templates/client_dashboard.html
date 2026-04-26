@@ -19,7 +19,7 @@
       --muted:#64748b; --text-soft:#94a3b8; --text:#e2e8f0;
       --primary:#00d4aa; --primary2:#00a882; --primary-text:#0a0f1e;
       --danger:#ef4444; --warning:#f97316; --info:#3b82f6;
-      --success:var(--success); --error:var(--error); --warn:var(--warn); --link:var(--link);
+      --success:#34d399; --error:#f87171; --warn:#fb923c; --link:#93c5fd;
     }
     [data-theme="light"] {
       --bg:#f1f5f9; --surface:#ffffff; --card:#ffffff; --surface2:#f8fafc;
@@ -35,7 +35,7 @@
       --muted:#6b7db3; --text-soft:#8892c0; --text:#d4d8f0;
       --primary:#7c8eff; --primary2:#5b6de0; --primary-text:#ffffff;
       --danger:#ef4444; --warning:#f97316; --info:#3b82f6;
-      --success:#4ade80; --error:#fca5a5; --warn:#fbbf24; --link:var(--link);
+      --success:#4ade80; --error:#fca5a5; --warn:#fbbf24; --link:#93c5fd;
     }
     [data-theme="saffron"] {
       --bg:#1a0e00; --surface:#2b1800; --card:#3a2208; --surface2:#1a0e00;
@@ -462,13 +462,13 @@
   </div>
 
   <!-- Stale broker token banner -->
-  <div id="stale-cred-banner" style="display:none;background:#1a1000;border:1.5px solid #f59e0b;border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
+  <div id="stale-cred-banner" style="display:none;background:var(--surface);border:1.5px solid var(--warn);border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
     <span style="font-size:18px">⚠️</span>
     <div style="flex:1">
       <div style="font-size:13px;font-weight:700;color:var(--warn)">Broker Token Expired</div>
       <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="stale-cred-text"></div>
     </div>
-    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:#92400e;border:1px solid #d97706;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Refresh Token →</button>
+    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:var(--badge-warn-bg);border:1px solid var(--badge-warn-br);color:var(--badge-warn-txt);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Refresh Token →</button>
   </div>
 
   <!-- Missing broker credentials banner -->
@@ -1326,7 +1326,7 @@ function renderBrokerTabs() {
         if (reconnSt && reconnSt.active) {
           dotColor = '#f59e0b';  // amber — authenticating/reconnecting
           dotTitle = `Auto-reconnecting (${reconnSt.attempts}/${reconnSt.max_attempts})`;
-          dotExtra = `<span style="font-size:9px;color:#f59e0b;margin-left:3px">↺${reconnSt.attempts}</span>`;
+          dotExtra = `<span style="font-size:9px;color:var(--warn);margin-left:3px">↺${reconnSt.attempts}</span>`;
         } else if (!inst.has_credentials) {
           dotColor = '#ef4444'; dotTitle = 'Credentials missing — click to add';  // red — error
         } else if (inst.status === 'running' && inst.token_fresh) {
@@ -1637,7 +1637,7 @@ function renderPositions(d, todayTrades) {
   // Live dot + timestamp
   const dotEl = document.getElementById('pos-live-dot');
   const updEl = document.getElementById('pos-last-updated');
-  if (dotEl) dotEl.style.background = d.bot_data ? '#00d4aa' : '#64748b';
+  if (dotEl) dotEl.style.background = d.bot_data ? 'var(--primary)' : 'var(--muted)';
   if (updEl) {
     const now = new Date();
     updEl.textContent = 'Updated ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });

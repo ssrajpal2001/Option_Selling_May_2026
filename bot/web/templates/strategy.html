@@ -27,7 +27,7 @@
   <button class="tab-btn active" onclick="switchTab('general')">General</button>
   <button class="tab-btn" onclick="switchTab('buy')">Buy Side</button>
   <button class="tab-btn" onclick="switchTab('sell')">Sell Side</button>
-  <button class="tab-btn" onclick="switchTab('sell_v3')" style="border-color:#00d4aa;color:#00d4aa;background:transparent;">Sell Side V3</button>
+  <button class="tab-btn" onclick="switchTab('sell_v3')" style="border-color:var(--primary);color:var(--primary);background:transparent;">Sell Side V3</button>
   <button class="tab-btn" onclick="switchTab('oi')">OI Exit</button>
 </div>
 
@@ -40,7 +40,7 @@
       <div class="space-y-3">
         <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px;">
           <div>
-            <span class="text-sm font-semibold" style="color:#00d4aa;">V3 Mode</span>
+            <span class="text-sm font-semibold" style="color:var(--primary);">V3 Mode</span>
             <span class="text-xs ml-2" style="color:var(--muted)">When ON, Buy/Sell toggles are managed by V3</span>
           </div>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" id="v3-mode-toggle" data-path="v3_mode" onclick="toggleV3Mode(this)">
@@ -590,12 +590,12 @@
 <div id="tab-sell_v3" class="tab-content hidden">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-    <div class="card p-5" style="border-color:#00d4aa33;">
-      <div class="section-label" style="color:#00d4aa;">V3 Strategy Status</div>
+    <div class="card p-5" style="border-color:var(--primary-border);">
+      <div class="section-label" style="color:var(--primary);">V3 Strategy Status</div>
       <div class="space-y-3">
         <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid var(--border);">
           <div>
-            <span class="text-sm font-semibold" style="color:#00d4aa;">V3 Mode (Master Switch)</span>
+            <span class="text-sm font-semibold" style="color:var(--primary);">V3 Mode (Master Switch)</span>
             <span class="text-xs ml-2" style="color:var(--muted)">Enables V3 strategy globally</span>
           </div>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" id="v3-mode-toggle-v3tab" data-path="v3_mode" onclick="toggleV3ModeSync(this)">
@@ -694,12 +694,12 @@
       </div>
     </div>
 
-    <div class="card p-5" style="border-color:#00d4aa33;">
-      <div class="section-label" style="color:#00d4aa;">V3 ROLLOVER / SMART ROLL</div>
+    <div class="card p-5" style="border-color:var(--primary-border);">
+      <div class="section-label" style="color:var(--primary);">V3 ROLLOVER / SMART ROLL</div>
       <div class="space-y-3">
         <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px;">
           <div>
-            <span class="text-sm font-semibold" style="color:#00d4aa;">Smart Rolling (Master)</span>
+            <span class="text-sm font-semibold" style="color:var(--primary);">Smart Rolling (Master)</span>
             <span class="text-xs ml-2" style="color:var(--muted)">Allows continuous trading without stopping</span>
           </div>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.smart_rolling_enabled" onclick="toggleSwitch(this)">
@@ -746,8 +746,8 @@
       </div>
     </div>
 
-    <div class="card p-5" style="border-color:#00d4aa33;">
-      <div class="section-label" style="color:#00d4aa;">Single Trade Risk (Points)</div>
+    <div class="card p-5" style="border-color:var(--primary-border);">
+      <div class="section-label" style="color:var(--primary);">Single Trade Risk (Points)</div>
       <div class="grid grid-cols-2 gap-3 mb-4">
         <div><label class="field-label">Target Pts</label><input type="number" step="0.1" class="input-field" data-path="sell.v3.single_trade_target_pts"/></div>
         <div><label class="field-label">SL Pts</label><input type="number" step="0.1" class="input-field" data-path="sell.v3.single_trade_stoploss_pts"/></div>
@@ -786,8 +786,8 @@
       </div>
     </div>
 
-    <div class="card p-5" style="border-color:#00d4aa33;">
-      <div class="section-label" style="color:#00d4aa;">Scalable Profit Locking (TSL)</div>
+    <div class="card p-5" style="border-color:var(--primary-border);">
+      <div class="section-label" style="color:var(--primary);">Scalable Profit Locking (TSL)</div>
       <div class="space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-sm font-semibold">Scalable TSL Enabled</span>
@@ -819,8 +819,8 @@
       </div>
     </div>
 
-    <div class="card p-5" style="border-color:#f59e0b33;">
-      <div class="section-label" style="color:#f59e0b;">GLOBAL EXIT GUARDRAILS</div>
+    <div class="card p-5" style="border-color:var(--primary-border);">
+      <div class="section-label" style="color:var(--warn);">GLOBAL EXIT GUARDRAILS</div>
       <div class="space-y-4">
         <div>
           <div class="flex items-center justify-between mb-2">
@@ -900,7 +900,7 @@
         <p>OI is collected live from Upstox websocket every tick for the <strong class="text-white">ATM ± strikes_range</strong> contracts.</p>
         <p class="mt-2">Every <strong class="text-white">check_interval_seconds</strong>, the monitor compares current OI to the OI at position entry:</p>
         <div class="mt-2 p-3 rounded" style="background:var(--surface2)">
-          <p><span style="color:#f59e0b">Call OI rise</span> &gt; threshold → Exit <span style="color:#f59e0b">Sell PE</span> + Buy CE</p>
+          <p><span style="color:var(--warn)">Call OI rise</span> &gt; threshold → Exit <span style="color:var(--warn)">Sell PE</span> + Buy CE</p>
           <p class="mt-1"><span style="color:var(--info)">Put OI rise</span> &gt; threshold → Exit <span style="color:var(--info)">Sell CE</span> + Buy PE</p>
         </div>
         <p class="mt-2">OI data is collected unconditionally — toggling <strong class="text-white">OI Exit Enabled</strong> only controls whether the exit action fires.</p>
