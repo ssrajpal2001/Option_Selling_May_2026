@@ -195,16 +195,39 @@ def handle_status(token: str, chat_id: str, client: dict) -> None:
     # Append live session data once (account-level, from status file)
     if live:
         session_pnl = live.get("session_pnl") or 0.0
-        open_pos    = live.get("open_positions") or []
+        active_legs: list[dict] = []
+
+        # --- SELL legs (V3 strangle: CE / PE) ---
+        sell_block = live.get("sell") or {}
+        for side in ("CE", "PE"):
+            leg = sell_block.get(side) or {}
+            if leg.get("placed"):
+                entry = float(leg.get("entry") or 0)
+                ltp   = float(leg.get("ltp") or 0)
+                pnl_r = float(leg.get("pnl") or 0)
+                pnl_p = round(entry - ltp, 2)  # sell: profit when ltp drops
+                active_legs.append({"side": side, "pnl_r": pnl_r, "pnl_p": pnl_p})
+
+        # --- BUY legs (V2: CALL / PUT) ---
+        buy_block = live.get("buy") or {}
+        for side in ("CALL", "PUT"):
+            leg = buy_block.get(side) or {}
+            if leg.get("status") == "ACTIVE":
+                entry = float(leg.get("entry") or 0)
+                ltp   = float(leg.get("ltp") or 0)
+                pnl_r = float(leg.get("pnl") or 0)
+                entry_type = leg.get("entry_type", "BUY")
+                pnl_p = round((ltp - entry) if entry_type == "BUY" else (entry - ltp), 2)
+                active_legs.append({"side": side, "pnl_r": pnl_r, "pnl_p": pnl_p})
+
         lines.append("<b>Live session:</b>")
-        if isinstance(open_pos, list) and open_pos:
-            lines.append(f"  Open positions : {len(open_pos)}")
-            for p in open_pos[:4]:
-                side  = p.get("direction") or p.get("side") or "?"
-                pnl_p = p.get("pnl_pts") or p.get("pnl") or 0.0
-                pnl_r = p.get("pnl_rs") or 0.0
-                icon  = "🟢" if float(pnl_r) >= 0 else "🔴"
-                lines.append(f"    {icon} {side}: ₹{float(pnl_r):+,.0f}  ({float(pnl_p):+.1f} pts)")
+        if active_legs:
+            lines.append(f"  Open positions : {len(active_legs)}")
+            for leg in active_legs:
+                icon = "🟢" if leg["pnl_r"] >= 0 else "🔴"
+                lines.append(
+                    f"    {icon} {leg['side']}: ₹{leg['pnl_r']:+,.0f}  ({leg['pnl_p']:+.1f} pts)"
+                )
         else:
             lines.append("  Open positions : None (waiting for signal)")
         lines.append(f"  Session P&L    : ₹{session_pnl:+,.0f}")
