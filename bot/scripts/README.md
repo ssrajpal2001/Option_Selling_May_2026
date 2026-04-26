@@ -47,10 +47,11 @@ pip install -r bot/requirements.txt
 sudo bash bot/scripts/setup_systemd.sh
 ```
 
-The script auto-detects your project path and Python interpreter. You can override them:
+The script auto-detects your project path and Python interpreter, and reads the calling user from `SUDO_USER` automatically.
+
+You can override any value with environment variables:
 
 ```bash
-# Custom path, user, or port:
 sudo INSTALL_ROOT=/opt/algosoft BOT_USER=ubuntu BOT_PORT=5000 \
     bash bot/scripts/setup_systemd.sh
 ```
@@ -66,19 +67,17 @@ After setup, the timer activates. **No further action needed** — the bot will 
 sudo systemctl list-timers algosoft-bot.timer
 
 # Is the bot service currently running?
-sudo systemctl status algosoft-bot@ubuntu
+sudo systemctl status algosoft-bot
 
 # Follow live logs (Ctrl+C to stop)
-sudo journalctl -u algosoft-bot@ubuntu -f
+sudo journalctl -u algosoft-bot -f
 
 # Last 100 log lines
-sudo journalctl -u algosoft-bot@ubuntu -n 100
+sudo journalctl -u algosoft-bot -n 100
 
 # Logs from today only
-sudo journalctl -u algosoft-bot@ubuntu --since today
+sudo journalctl -u algosoft-bot --since today
 ```
-
-Replace `ubuntu` with your EC2 username if different.
 
 ---
 
@@ -92,14 +91,14 @@ git pull origin main
 # 2. Install any new dependencies
 pip install -r bot/requirements.txt
 
-# 3. Stop the bot gracefully, then let systemd restart it
+# 3. Stop the bot gracefully
 sudo bash bot/scripts/stop_bot.sh
 
 # 4. Start the bot immediately (don't wait until 08:00 AM)
-sudo systemctl start algosoft-bot@ubuntu
+sudo systemctl start algosoft-bot
 
 # 5. Confirm it started cleanly
-sudo systemctl status algosoft-bot@ubuntu
+sudo systemctl status algosoft-bot
 ```
 
 ---
@@ -108,15 +107,15 @@ sudo systemctl status algosoft-bot@ubuntu
 
 ```bash
 # Start the bot right now (outside of the 08:00 AM schedule)
-sudo systemctl start algosoft-bot@ubuntu
+sudo systemctl start algosoft-bot
 
 # Stop the bot gracefully
 sudo bash bot/scripts/stop_bot.sh
 # or:
-sudo systemctl stop algosoft-bot@ubuntu
+sudo systemctl stop algosoft-bot
 
 # Restart the bot (e.g. after a config change)
-sudo systemctl restart algosoft-bot@ubuntu
+sudo systemctl restart algosoft-bot
 ```
 
 ---
@@ -136,7 +135,7 @@ sudo bash bot/scripts/uninstall_systemd.sh
 ### Bot didn't start at 08:00 AM
 ```bash
 sudo systemctl status algosoft-bot.timer     # is the timer enabled?
-sudo journalctl -u algosoft-bot@ubuntu -n 50 # any startup errors?
+sudo journalctl -u algosoft-bot -n 50        # any startup errors?
 sudo systemctl list-timers --all             # check next scheduled run
 ```
 
@@ -144,15 +143,15 @@ sudo systemctl list-timers --all             # check next scheduled run
 ```bash
 sudo lsof -i :5000                           # find the conflicting process
 sudo kill -9 <PID>
-sudo systemctl start algosoft-bot@ubuntu
+sudo systemctl start algosoft-bot
 ```
 
 ### Bot keeps crashing (exceeded restart limit)
 ```bash
-sudo journalctl -u algosoft-bot@ubuntu -n 200 --no-pager
+sudo journalctl -u algosoft-bot -n 200 --no-pager
 # After fixing the issue, reset the restart counter:
-sudo systemctl reset-failed algosoft-bot@ubuntu
-sudo systemctl start algosoft-bot@ubuntu
+sudo systemctl reset-failed algosoft-bot
+sudo systemctl start algosoft-bot
 ```
 
 ### Python / module not found errors
@@ -164,7 +163,7 @@ sudo systemctl start algosoft-bot@ubuntu
 pip install -r /opt/algosoft/bot/requirements.txt
 ```
 
-### Check which Python path is in the service file
+### Check which user and paths are in the installed service file
 ```bash
-sudo systemctl cat algosoft-bot@ubuntu
+sudo systemctl cat algosoft-bot
 ```

@@ -1,7 +1,6 @@
 [Unit]
 Description=Start AlgoSoft bot at 08:00 IST (02:30 UTC) Mon-Fri
 Documentation=https://github.com/ssrajpal2001/Option_Selling_May_2026
-Requires=algosoft-bot.service
 
 [Timer]
 # 08:00 AM IST = 02:30 UTC  (IST is UTC+5:30)

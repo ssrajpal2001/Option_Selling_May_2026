@@ -6,7 +6,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=%i
+
+# User is patched in by setup_systemd.sh — do not edit this line manually
+User=ubuntu
+
 WorkingDirectory=/opt/algosoft/bot
 EnvironmentFile=-/opt/algosoft/bot/config/algosoft.env
 ExecStart=/opt/algosoft/.pythonlibs/bin/python -m uvicorn web.server:app \

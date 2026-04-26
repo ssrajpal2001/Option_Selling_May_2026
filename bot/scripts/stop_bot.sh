@@ -7,13 +7,11 @@
 #
 # Usage:
 #   sudo bash bot/scripts/stop_bot.sh
-#   sudo bash bot/scripts/stop_bot.sh ubuntu    # specify the run user
 # =============================================================================
 
 set -euo pipefail
 
-BOT_USER="${1:-$(whoami)}"
-SERVICE="algosoft-bot@${BOT_USER}"
+SERVICE="algosoft-bot"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "ERROR: Run with sudo."

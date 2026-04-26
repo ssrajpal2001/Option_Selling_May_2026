@@ -11,8 +11,7 @@
 
 set -euo pipefail
 
-BOT_USER="${1:-$(whoami)}"
-SERVICE="algosoft-bot@${BOT_USER}"
+SERVICE="algosoft-bot"
 TIMER="algosoft-bot.timer"
 SYSTEMD_DIR="/etc/systemd/system"
 
@@ -22,14 +21,14 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 echo "→ Stopping and disabling ${TIMER}..."
-systemctl stop  "${TIMER}"  2>/dev/null || true
-systemctl disable "${TIMER}" 2>/dev/null || true
+systemctl stop    "${TIMER}"   2>/dev/null || true
+systemctl disable "${TIMER}"  2>/dev/null || true
 
 echo "→ Stopping ${SERVICE}..."
 systemctl stop "${SERVICE}" 2>/dev/null || true
 
 echo "→ Removing unit files..."
-rm -f "${SYSTEMD_DIR}/algosoft-bot@.service"
+rm -f "${SYSTEMD_DIR}/algosoft-bot.service"
 rm -f "${SYSTEMD_DIR}/algosoft-bot.timer"
 
 echo "→ Reloading systemd daemon..."

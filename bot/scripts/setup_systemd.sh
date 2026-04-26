@@ -4,31 +4,33 @@
 #
 # What this script does:
 #   1. Copies algosoft-bot.service and algosoft-bot.timer into /etc/systemd/system/
-#   2. Patches the WorkingDirectory and ExecStart paths to match THIS server
-#   3. Reloads systemd, enables the timer (starts automatically on every boot)
-#   4. Prints a status summary so you can confirm it worked
+#   2. Patches WorkingDirectory, ExecStart, User, and port to match THIS server
+#   3. Reloads systemd and enables the timer (fires at 08:00 AM IST Mon–Fri)
+#   4. Prints a status summary and a command cheatsheet
 #
 # Usage (run once, as root or with sudo):
-#   bash bot/scripts/setup_systemd.sh
+#   sudo bash bot/scripts/setup_systemd.sh
 #
-# To customise the run user or port, edit the variables below before running.
+# Override any default with environment variables:
+#   sudo INSTALL_ROOT=/opt/algosoft BOT_USER=ubuntu BOT_PORT=5000 \
+#       bash bot/scripts/setup_systemd.sh
 # =============================================================================
 
 set -euo pipefail
 
-# ── Configuration ────────────────────────────────────────────────────────────
-# Directory that contains the 'bot/' subfolder (parent of 'bot/')
+# ── Configuration ─────────────────────────────────────────────────────────────
+# Project root — parent of the 'bot/' directory
 INSTALL_ROOT="${INSTALL_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 
-# Linux user the service will run as (must exist on the server)
-BOT_USER="${BOT_USER:-$(whoami)}"
+# Linux user the service will run as (must exist on the server).
+# When run via sudo, prefer the original caller (SUDO_USER) over root.
+BOT_USER="${BOT_USER:-${SUDO_USER:-$(id -un)}}"
 
 # Port uvicorn listens on
 BOT_PORT="${BOT_PORT:-5000}"
 
-# Python interpreter — default: .pythonlibs virtualenv inside the project
+# Python interpreter — use the project's virtualenv if present; else system python3
 PYTHON_BIN="${PYTHON_BIN:-${INSTALL_ROOT}/.pythonlibs/bin/python}"
-# Fallback to system python3 if the venv doesn't exist yet
 if [ ! -f "$PYTHON_BIN" ]; then
     PYTHON_BIN="$(which python3)"
 fi
@@ -52,10 +54,10 @@ echo "  Run as user  : ${BOT_USER}"
 echo "  Port         : ${BOT_PORT}"
 echo ""
 
-# ── Preflight checks ─────────────────────────────────────────────────────────
+# ── Preflight checks ──────────────────────────────────────────────────────────
 if [ ! -f "$SERVICE_SRC" ] || [ ! -f "$TIMER_SRC" ]; then
-    echo "ERROR: Service/timer files not found. Run from the project root:"
-    echo "  bash bot/scripts/setup_systemd.sh"
+    echo "ERROR: Service/timer files not found in ${SCRIPTS_DIR}/"
+    echo "  Expected: algosoft-bot.service  algosoft-bot.timer"
     exit 1
 fi
 
@@ -74,20 +76,28 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# ── Copy and patch service file ───────────────────────────────────────────────
-echo "→ Installing service unit..."
-cp "$SERVICE_SRC" "${SYSTEMD_DIR}/algosoft-bot@.service"
+# Verify the run user actually exists
+if ! id "${BOT_USER}" &>/dev/null; then
+    echo "ERROR: User '${BOT_USER}' does not exist on this server."
+    echo "  Set BOT_USER to an existing account:  sudo BOT_USER=myuser bash setup_systemd.sh"
+    exit 1
+fi
 
-# Patch paths into the service file
+# ── Install and patch service file ────────────────────────────────────────────
+echo "→ Installing service unit (algosoft-bot.service)..."
+cp "$SERVICE_SRC" "${SYSTEMD_DIR}/algosoft-bot.service"
+
+# Patch all configurable values into the installed unit file
 sed -i \
-    -e "s|WorkingDirectory=.*|WorkingDirectory=${WORK_DIR}|g" \
+    -e "s|^User=.*|User=${BOT_USER}|" \
+    -e "s|^WorkingDirectory=.*|WorkingDirectory=${WORK_DIR}|" \
     -e "s|/opt/algosoft/.pythonlibs/bin/python|${PYTHON_BIN}|g" \
     -e "s|--port 5000|--port ${BOT_PORT}|g" \
     -e "s|EnvironmentFile=-/opt/algosoft/|EnvironmentFile=-${INSTALL_ROOT}/|g" \
-    "${SYSTEMD_DIR}/algosoft-bot@.service"
+    "${SYSTEMD_DIR}/algosoft-bot.service"
 
-# ── Copy timer file ───────────────────────────────────────────────────────────
-echo "→ Installing timer unit..."
+# ── Install timer file ────────────────────────────────────────────────────────
+echo "→ Installing timer unit (algosoft-bot.timer)..."
 cp "$TIMER_SRC" "${SYSTEMD_DIR}/algosoft-bot.timer"
 
 # ── Reload, enable, start ─────────────────────────────────────────────────────
@@ -111,9 +121,9 @@ echo "Next scheduled run:"
 systemctl list-timers algosoft-bot.timer --no-pager 2>/dev/null || true
 echo ""
 echo "Useful commands:"
-echo "  sudo systemctl start  algosoft-bot@${BOT_USER}   # start right now"
-echo "  sudo systemctl stop   algosoft-bot@${BOT_USER}   # stop gracefully"
-echo "  sudo systemctl status algosoft-bot@${BOT_USER}   # check status"
-echo "  sudo journalctl -u algosoft-bot@${BOT_USER} -f   # follow live logs"
-echo "  sudo journalctl -u algosoft-bot@${BOT_USER} -n 100  # last 100 lines"
+echo "  sudo systemctl start  algosoft-bot    # start right now"
+echo "  sudo systemctl stop   algosoft-bot    # stop gracefully"
+echo "  sudo systemctl status algosoft-bot    # check status"
+echo "  sudo journalctl -u algosoft-bot -f    # follow live logs"
+echo "  sudo journalctl -u algosoft-bot -n 100  # last 100 lines"
 echo ""
