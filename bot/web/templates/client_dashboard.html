@@ -1182,7 +1182,8 @@ async function loadBrokerData() {
     renderBrokerTabs();
     _checkStaleBrokerAlert();
     _checkMissingCredsAlert();
-    _checkReconnectLoops();
+    await _checkReconnectLoops();
+    _updateReconnectBanner();
 
     // Auto-select first instance
     if (!state.selectedBroker && state.instances.length > 0) {
@@ -1361,7 +1362,8 @@ async function _pollBrokerStatus() {
     renderBrokerTabs();
     _checkStaleBrokerAlert();
     _checkMissingCredsAlert();
-    _checkReconnectLoops();
+    await _checkReconnectLoops();
+    _updateReconnectBanner();
   } catch (e) {
     console.warn('[pollBrokerStatus]', e);
   }
