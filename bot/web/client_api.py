@@ -499,13 +499,9 @@ async def save_broker_config(body: BrokerSetup, user=Depends(get_current_user)):
     enc_totp = encrypt_secret(body.totp) if is_new_totp else (existing_row["totp_encrypted"] if existing_row else None)
     enc_uid = encrypt_secret(body.broker_user_id) if is_new_user_id else (existing_row["broker_user_id_encrypted"] if existing_row else None)
 
-    # For Dhan, we might want to store api_secret as access_token if provided as such
-    access_token_val = body.access_token
-    if (not access_token_val or access_token_val == "unchanged") and body.api_secret and body.api_secret != "unchanged":
-        access_token_val = body.api_secret
-        is_new_token = True
-
-    enc_token = encrypt_secret(access_token_val) if is_new_token else (existing_row["access_token_encrypted"] if existing_row else None)
+    # access_token is only provided by manual-token brokers (fyers, groww).
+    # Automated brokers omit it from the request; their token is set via the Connect endpoint.
+    enc_token = encrypt_secret(body.access_token) if is_new_token else (existing_row["access_token_encrypted"] if existing_row else None)
 
     token_ts = existing_row["token_updated_at"] if existing_row else None
     if is_new_token:
@@ -611,12 +607,16 @@ async def dhan_login_url(user=Depends(get_current_user)):
                 "Add it in Settings so tokens can be generated automatically."
             )
         dhan_client_id = broker_uid or api_key
-        _dhan_result = generate_dhan_token(
-            api_key=api_key,
-            client_id=dhan_client_id,
-            password=password,
-            totp_secret=totp_sec,
-        )
+        try:
+            _dhan_result = generate_dhan_token(
+                api_key=api_key,
+                client_id=dhan_client_id,
+                password=password,
+                totp_secret=totp_sec,
+            )
+        except Exception as e:
+            logger.error(f"[Dhan] generate_dhan_token raised: {e}")
+            raise HTTPException(500, f"Dhan token generation error: {str(e)[:200]}")
         token = _dhan_result['token']
         if token:
             enc_token = encrypt_secret(token)
@@ -1134,7 +1134,11 @@ async def aliceblue_login_url(user=Depends(get_current_user)):
         "password": decrypt_secret(instance.get("password_encrypted") or ""),
         "totp": decrypt_secret(instance.get("totp_encrypted") or ""),
     }
-    token = handle_alice_login_automated(creds)
+    try:
+        token = handle_alice_login_automated(creds)
+    except Exception as e:
+        logger.error(f"[AliceBlue] handle_alice_login_automated raised: {e}")
+        raise HTTPException(500, f"Alice Blue login error: {str(e)[:200]}")
     if not token:
         raise HTTPException(400, "Alice Blue automated login failed. Please verify your Client ID, API Key, PIN, and TOTP seed.")
 
@@ -1168,7 +1172,11 @@ async def groww_login_url(user=Depends(get_current_user)):
         "broker_user_id": decrypt_secret(instance.get("broker_user_id_encrypted") or ""),
         "access_token": decrypt_secret(instance["access_token_encrypted"]),
     }
-    token = handle_groww_login(creds)
+    try:
+        token = handle_groww_login(creds)
+    except Exception as e:
+        logger.error(f"[Groww] handle_groww_login raised: {e}")
+        raise HTTPException(500, f"Groww login error: {str(e)[:200]}")
     if not token:
         raise HTTPException(400, "Groww token is invalid or expired. Please update your access token in Settings.")
 

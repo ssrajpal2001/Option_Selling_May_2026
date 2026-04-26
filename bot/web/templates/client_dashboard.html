@@ -1942,7 +1942,34 @@ async function refreshToken() {
       case 'upstox':    d = await api('GET', '/upstox/login-url');     break;
       case 'angelone':  d = await api('GET', '/angelone/login-url');   break;
       case 'aliceblue': d = await api('GET', '/aliceblue/login-url');  break;
-      case 'groww':     d = await api('GET', '/groww/login-url');      break;
+      case 'groww': {
+        // Groww uses a manually-pasted Bearer access token.
+        // Try to validate the stored token; if missing or invalid, prompt the user to paste it.
+        try {
+          d = await api('GET', '/groww/login-url');
+        } catch (e) {
+          // Token missing or expired — ask user to paste a new one
+          const token = prompt(
+            'Groww requires a Bearer access token from the Groww developer portal.\n\n' +
+            'Paste your Groww Bearer access token below:'
+          );
+          if (!token || !token.trim()) { toast('No token provided.', 'warn'); break; }
+          const inst = state.instances.find(i => i.broker === 'groww');
+          await api('POST', '/broker', {
+            broker: 'groww',
+            access_token: token.trim(),
+            trading_mode: inst?.trading_mode || 'paper',
+            instrument: inst?.instrument || 'NIFTY',
+            quantity: inst?.quantity || 25,
+            strategy_version: 'V3',
+          });
+          toast('Groww access token saved — validating…', 'ok');
+          try {
+            d = await api('GET', '/groww/login-url');
+          } catch (ve) { toast(ve.message || 'Token validation failed', 'err'); break; }
+        }
+        break;
+      }
 
       case 'fyers': {
         // Fyers OAuth: open login page, user pastes auth code from redirect URL
