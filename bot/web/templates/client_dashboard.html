@@ -1957,6 +1957,7 @@ async function refreshToken() {
           const inst = state.instances.find(i => i.broker === 'groww');
           await api('POST', '/broker', {
             broker: 'groww',
+            api_key: inst?.api_key || '',
             access_token: token.trim(),
             trading_mode: inst?.trading_mode || 'paper',
             instrument: inst?.instrument || 'NIFTY',
