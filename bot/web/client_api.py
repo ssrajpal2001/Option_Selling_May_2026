@@ -1322,25 +1322,93 @@ async def get_broker_change_request(user=Depends(get_current_user)):
 
 class BacktestStartRequest(BaseModel):
     instrument: str
-    date: str
+    start_date: str
+    end_date: str
     quantity: int = 1
+
+
+def _compute_backtest_summary(trades: list) -> dict:
+    """Compute aggregate metrics from a list of trade-leg dicts."""
+    if not trades:
+        return None
+    total_pts = sum(float(t.get('pnl_pts') or 0) for t in trades)
+    total_rs  = sum(float(t.get('pnl_rs')  or 0) for t in trades)
+    wins      = [t for t in trades if float(t.get('pnl_pts') or 0) > 0]
+    losses    = [t for t in trades if float(t.get('pnl_pts') or 0) < 0]
+    n = len(trades)
+    avg_pts = total_pts / n if n else 0
+
+    # Max drawdown: worst peak-to-trough over cumulative PnL (trades oldest-first)
+    running = 0.0
+    peak    = 0.0
+    max_dd  = 0.0
+    for t in reversed(trades):          # trades list is newest-first → reverse for chronological
+        running += float(t.get('pnl_pts') or 0)
+        if running > peak:
+            peak = running
+        dd = peak - running
+        if dd > max_dd:
+            max_dd = dd
+
+    return {
+        "total_trades":      n,
+        "total_pnl_pts":     round(total_pts, 2),
+        "total_pnl_rs":      round(total_rs,  2),
+        "wins":              len(wins),
+        "losses":            len(losses),
+        "win_rate":          round(len(wins) / n * 100, 1) if n else 0,
+        "avg_pnl_pts":       round(avg_pts, 2),
+        "max_drawdown_pts":  round(max_dd, 2),
+    }
+
 
 @router.post("/backtest/start")
 async def start_client_backtest(body: BacktestStartRequest, user=Depends(get_current_user)):
     from web.admin_api import start_backtest, BacktestStartRequest as AdminBSR
-    # Reuse admin logic but scoped to client
-    # For now, we use a single global backtest process per server instance
-    return await start_backtest(AdminBSR(instrument=body.instrument, date=body.date, quantity=body.quantity), user)
+    if body.start_date == body.end_date:
+        date_str = body.start_date
+    else:
+        date_str = f"{body.start_date} to {body.end_date}"
+    return await start_backtest(
+        AdminBSR(instrument=body.instrument, date=date_str, quantity=body.quantity), user
+    )
+
 
 @router.get("/backtest/status")
 async def get_client_backtest_status(user=Depends(get_current_user)):
     from web.admin_api import get_backtest_status
-    return await get_backtest_status(user)
+    data = await get_backtest_status(user)
+    trades = data.get("trades", [])
+    if trades and not data.get("running"):
+        data["summary"] = _compute_backtest_summary(trades)
+    return data
+
 
 @router.post("/backtest/stop")
 async def stop_client_backtest(user=Depends(get_current_user)):
     from web.admin_api import stop_backtest
     return await stop_backtest(user)
+
+
+@router.get("/backtest/available-dates")
+async def backtest_available_dates(instrument: str = "NIFTY", user=Depends(get_current_user)):
+    """Return sorted list of dates that have recorded CSV data for the given instrument."""
+    import re
+    data_dir = Path("backtest_data")
+    if not data_dir.exists():
+        return {"dates": [], "instrument": instrument}
+
+    pattern = re.compile(
+        rf"^market_data_{re.escape(instrument.upper())}_(\d{{4}}-\d{{2}}-\d{{2}})\.csv$",
+        re.IGNORECASE,
+    )
+    dates = []
+    for f in data_dir.iterdir():
+        m = pattern.match(f.name)
+        if m:
+            dates.append(m.group(1))
+    dates.sort()
+    return {"dates": dates, "instrument": instrument.upper()}
 
 # ── Trade History ─────────────────────────────────────────────────────────────
 

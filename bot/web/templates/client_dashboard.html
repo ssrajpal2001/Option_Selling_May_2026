@@ -745,40 +745,105 @@
 
 <!-- ═══════════════════════════════════════════════════════════ BACKTEST PANE -->
 <div class="pane" id="pane-backtest">
-  <div class="card" style="padding:24px;max-width:560px">
-    <div class="sec-title" style="margin-bottom:4px">Backtest Engine</div>
-    <div class="sec-sub" style="margin-bottom:20px">Simulate your strategy on historical data</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+
+  <!-- Config card -->
+  <div class="card" style="padding:20px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <div class="sec-title">Backtest Engine</div>
+        <div class="sec-sub">Simulate your strategy on historical recorded data</div>
+      </div>
+      <div id="bt-available-badge" style="display:none;font-size:12px;color:var(--muted);padding:4px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;align-items:end">
+      <div>
+        <div class="inp-label">Start Date</div>
+        <input type="date" class="inp" id="bt-start-date">
+      </div>
+      <div>
+        <div class="inp-label">End Date</div>
+        <input type="date" class="inp" id="bt-end-date">
+      </div>
       <div>
         <div class="inp-label">Instrument</div>
-        <select class="inp" id="bt-instrument">
-          <option value="NIFTY">NIFTY</option>
-          <option value="BANKNIFTY">BANKNIFTY</option>
-          <option value="MIDCPNIFTY">MIDCPNIFTY</option>
-          <option value="FINNIFTY">FINNIFTY</option>
-          <option value="SENSEX">SENSEX</option>
-        </select>
+        <div class="inp" style="display:flex;align-items:center;font-weight:700;color:var(--primary);cursor:default" id="bt-instrument-display">NIFTY</div>
       </div>
       <div>
-        <div class="inp-label">Date</div>
-        <input type="date" class="inp" id="bt-date" value="">
+        <div class="inp-label">Lot Quantity</div>
+        <input type="number" class="inp" id="bt-qty" value="1" min="1">
       </div>
     </div>
-    <div style="margin-bottom:16px">
-      <div class="inp-label">Lot Quantity</div>
-      <input type="number" class="inp" id="bt-qty" value="1" min="1" style="width:120px">
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px">
-      <button class="btn btn-primary" onclick="startBacktest()" id="bt-start-btn">▶ Start Backtest</button>
+
+    <div id="bt-dates-notice" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:12px;color:var(--text-soft);line-height:1.6"></div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" onclick="startBacktest()" id="bt-start-btn">▶ Run Backtest</button>
       <button class="btn btn-ghost" onclick="stopBacktest()" id="bt-stop-btn" disabled>■ Stop</button>
+      <span id="bt-running-spinner" style="display:none;font-size:13px;color:var(--muted);display:none;align-items:center;gap:6px">
+        <span class="dot dot-blue" style="display:inline-block"></span>Running…
+      </span>
     </div>
-    <div id="bt-status-wrap" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div class="dot dot-blue"></div>
-        <span style="font-size:13px;color:var(--text)" id="bt-status-msg">Running...</span>
+  </div>
+
+  <!-- Results area -->
+  <div id="bt-results-wrap" style="display:none">
+
+    <div id="bt-status-msg" style="font-size:13px;color:var(--muted);margin-bottom:12px;padding:0 2px"></div>
+
+    <!-- Summary cards -->
+    <div id="bt-summary-cards" style="display:none;margin-bottom:16px">
+      <div class="pos-summary-bar card" style="border-radius:10px;margin:0;flex-wrap:wrap;gap:0;padding:0">
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Total P&amp;L (pts)</span>
+          <span class="pos-summary-val" id="bt-sum-pnl-pts">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Total P&amp;L (₹)</span>
+          <span class="pos-summary-val" id="bt-sum-pnl-rs">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Win Rate</span>
+          <span class="pos-summary-val" id="bt-sum-wr">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Max Drawdown</span>
+          <span class="pos-summary-val" id="bt-sum-dd">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Trades</span>
+          <span class="pos-summary-val" id="bt-sum-trades">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px">
+          <span class="pos-summary-lbl">Avg P&amp;L / Trade</span>
+          <span class="pos-summary-val" id="bt-sum-avg">—</span>
+        </div>
       </div>
-      <div id="bt-result" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px"></div>
     </div>
+
+    <!-- No data message -->
+    <div id="bt-no-data-msg" style="display:none;padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:16px"></div>
+
+    <!-- Trade table -->
+    <div id="bt-trade-wrap" style="display:none" class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:16px 16px 0">
+        <span class="sec-title">Trade-by-Trade Results</span>
+        <button class="btn btn-ghost btn-sm" onclick="downloadBacktestCSV()">⬇ Download CSV</button>
+      </div>
+      <div style="overflow-x:auto;padding:0 16px 16px">
+        <table class="trade-table" id="bt-trade-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Entry</th><th>Exit</th><th>Dir</th>
+              <th>Strike</th><th>Entry ₹</th><th>Exit ₹</th>
+              <th>P&amp;L (pts)</th><th>P&amp;L (₹)</th><th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="bt-trade-body"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1116,6 +1181,7 @@ function showPane(name) {
   document.getElementById('mob-' + name)?.classList.add('active');
   if (name === 'history') loadHistory();
   if (name === 'settings') loadSettingsPane();
+  if (name === 'backtest') loadAvailableDates();
 }
 
 function toggleUserMenu() {
@@ -2238,52 +2304,161 @@ async function loadHistory() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════ BACKTEST
-let btPollTimer;
-async function startBacktest() {
-  const btn = document.getElementById('bt-start-btn');
-  btn.disabled = true;
-  const body = {
-    instrument: document.getElementById('bt-instrument').value,
-    date: document.getElementById('bt-date').value,
-    quantity: parseInt(document.getElementById('bt-qty').value) || 1,
-  };
-  if (!body.date) { toast('Please select a date', 'warn'); btn.disabled = false; return; }
+// ═══════════════════════════════════════════════════════════ BACKTEST
+
+let btPollTimer = null;
+let _btTrades = [];
+
+async function loadAvailableDates() {
+  const instFromInstances = state.instances && state.instances.length > 0
+    ? (state.instances[0].instrument || 'NIFTY') : null;
+  const instrument = instFromInstances ||
+    document.getElementById('bt-instrument-display').textContent.trim() || 'NIFTY';
+  document.getElementById('bt-instrument-display').textContent = instrument;
+
   try {
-    await api('POST', '/backtest/start', body);
-    document.getElementById('bt-status-wrap').style.display = '';
-    document.getElementById('bt-status-msg').textContent = 'Backtest running...';
-    document.getElementById('bt-result').textContent = '';
-    document.getElementById('bt-stop-btn').disabled = false;
-    btPollTimer = setInterval(pollBacktest, 2000);
+    const d = await api('GET', `/backtest/available-dates?instrument=${instrument}`);
+    const dates = d.dates || [];
+    const badge = document.getElementById('bt-available-badge');
+    const notice = document.getElementById('bt-dates-notice');
+
+    badge.style.display = '';
+    if (dates.length === 0) {
+      badge.textContent = 'No recorded data available';
+      notice.style.display = '';
+      notice.innerHTML = '⚠ No CSV data has been recorded yet for ' + instrument +
+        '. Data is recorded automatically during live market hours when your bot is running.';
+      return;
+    }
+
+    badge.textContent = dates.length + ' day' + (dates.length !== 1 ? 's' : '') + ' of data available';
+    notice.style.display = '';
+    const chips = dates.map(dt =>
+      '<span style="display:inline-block;margin:2px 4px;padding:2px 8px;background:var(--card);border-radius:4px;border:1px solid var(--border)">' + dt + '</span>'
+    ).join('');
+    notice.innerHTML = '<strong style="color:var(--text)">Available dates:</strong><br><div style="margin-top:6px;line-height:2">' + chips + '</div>';
+
+    const startEl = document.getElementById('bt-start-date');
+    const endEl   = document.getElementById('bt-end-date');
+    if (!startEl.value) startEl.value = dates[0];
+    if (!endEl.value)   endEl.value   = dates[dates.length - 1];
+  } catch (e) { console.warn('available-dates:', e); }
+}
+
+async function startBacktest() {
+  const startDate  = document.getElementById('bt-start-date').value;
+  const endDate    = document.getElementById('bt-end-date').value;
+  const instrument = document.getElementById('bt-instrument-display').textContent.trim() || 'NIFTY';
+  const qty        = parseInt(document.getElementById('bt-qty').value) || 1;
+
+  if (!startDate || !endDate) { toast('Please select a start and end date', 'warn'); return; }
+  if (startDate > endDate)    { toast('Start date must be before end date', 'warn'); return; }
+
+  document.getElementById('bt-start-btn').disabled = true;
+  document.getElementById('bt-stop-btn').disabled  = false;
+  document.getElementById('bt-running-spinner').style.cssText = 'display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)';
+  document.getElementById('bt-results-wrap').style.display   = '';
+  document.getElementById('bt-status-msg').textContent       = 'Running backtest for ' + instrument + ' from ' + startDate + ' to ' + endDate + '…';
+  document.getElementById('bt-summary-cards').style.display  = 'none';
+  document.getElementById('bt-trade-wrap').style.display     = 'none';
+  document.getElementById('bt-no-data-msg').style.display    = 'none';
+  _btTrades = [];
+
+  try {
+    const r = await api('POST', '/backtest/start', {
+      instrument, start_date: startDate, end_date: endDate, quantity: qty
+    });
+    if (r && r.success === false) {
+      toast(r.message || 'Failed to start backtest', 'err');
+      _btResetBtns(); return;
+    }
+    btPollTimer = setInterval(pollBacktest, 2500);
   } catch (e) {
     toast(e.message || 'Backtest start failed', 'err');
-    btn.disabled = false;
+    _btResetBtns();
   }
+}
+
+function _btResetBtns() {
+  document.getElementById('bt-start-btn').disabled = false;
+  document.getElementById('bt-stop-btn').disabled  = true;
+  document.getElementById('bt-running-spinner').style.display = 'none';
 }
 
 async function pollBacktest() {
   try {
     const d = await api('GET', '/backtest/status');
-    if (!d.running) {
-      clearInterval(btPollTimer);
-      document.getElementById('bt-start-btn').disabled = false;
-      document.getElementById('bt-stop-btn').disabled = true;
-      document.getElementById('bt-status-msg').textContent = 'Backtest complete';
-      if (d.result) {
-        const r = d.result;
-        document.getElementById('bt-result').innerHTML = `
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div><span style="color:var(--muted)">Trades:</span> <strong>${r.total_trades||0}</strong></div>
-            <div><span style="color:var(--muted)">PnL:</span> <strong class="${(r.net_pnl||0)>=0?'text-green':'text-red'}">${(r.net_pnl||0)>=0?'+':''}${(r.net_pnl||0).toFixed(1)} pts</strong></div>
-            <div><span style="color:var(--muted)">Wins:</span> <strong>${r.wins||0}</strong></div>
-            <div><span style="color:var(--muted)">Losses:</span> <strong>${r.losses||0}</strong></div>
-            <div><span style="color:var(--muted)">Win Rate:</span> <strong>${r.win_rate||'—'}</strong></div>
-            <div><span style="color:var(--muted)">Avg PnL:</span> <strong>${r.avg_pnl||'—'}</strong></div>
-          </div>
-        `;
-      }
+    if (d.running) return;
+
+    clearInterval(btPollTimer);
+    _btResetBtns();
+
+    const trades  = d.trades  || [];
+    const summary = d.summary || null;
+    _btTrades = trades;
+
+    if (!trades.length) {
+      const sd = document.getElementById('bt-start-date').value;
+      const ed = document.getElementById('bt-end-date').value;
+      document.getElementById('bt-status-msg').textContent  = 'Backtest complete — no trades were recorded.';
+      document.getElementById('bt-no-data-msg').style.display = '';
+      document.getElementById('bt-no-data-msg').textContent =
+        'No recorded data available for ' + sd + ' to ' + ed +
+        '. Data is recorded automatically during live market hours.';
+      return;
     }
+
+    document.getElementById('bt-status-msg').textContent =
+      'Backtest complete — ' + trades.length + ' trade leg' + (trades.length !== 1 ? 's' : '') + ' simulated.';
+
+    if (summary) {
+      const pos = v => (v >= 0 ? '+' : '') + v;
+      const col = v => v >= 0 ? 'var(--success)' : 'var(--danger)';
+      const setEl = (id, html, color) => {
+        const el = document.getElementById(id);
+        el.innerHTML = html;
+        if (color) el.style.color = color;
+      };
+      setEl('bt-sum-pnl-pts', pos(summary.total_pnl_pts) + ' pts', col(summary.total_pnl_pts));
+      setEl('bt-sum-pnl-rs',  '₹' + pos(summary.total_pnl_rs),    col(summary.total_pnl_rs));
+      setEl('bt-sum-wr',      summary.win_rate + '%',
+            summary.win_rate >= 50 ? 'var(--success)' : 'var(--danger)');
+      setEl('bt-sum-dd',      summary.max_drawdown_pts + ' pts',   'var(--warning)');
+      setEl('bt-sum-trades',
+            summary.wins + 'W / ' + summary.losses + 'L (' + summary.total_trades + ' total)',
+            'var(--text)');
+      setEl('bt-sum-avg',     pos(summary.avg_pnl_pts) + ' pts',  col(summary.avg_pnl_pts));
+      document.getElementById('bt-summary-cards').style.display = '';
+    }
+
+    const tbody = document.getElementById('bt-trade-body');
+    tbody.innerHTML = '';
+    for (const t of trades) {
+      const pts = parseFloat(t.pnl_pts || 0);
+      const rs  = parseFloat(t.pnl_rs  || 0);
+      const ptsCol = pts >= 0 ? 'var(--success)' : 'var(--danger)';
+      const openedStr = String(t.opened_at || t.time || '');
+      const closedStr = String(t.closed_at || '');
+      const entryTime = openedStr.includes('T') ? openedStr.split('T')[1].substring(0, 8) : (t.time || '—');
+      const exitTime  = closedStr.includes('T') ? closedStr.split('T')[1].substring(0, 8) : '—';
+      const dir = String(t.direction || t.type || '').toUpperCase();
+      const dirLabel = dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir;
+      const dirCol   = dirLabel === 'CE' ? 'var(--info)' : dirLabel === 'PE' ? 'var(--warn)' : 'var(--text)';
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + (t.date || '—') + '</td>' +
+        '<td>' + entryTime + '</td>' +
+        '<td>' + exitTime + '</td>' +
+        '<td style="font-weight:700;color:' + dirCol + '">' + dirLabel + '</td>' +
+        '<td>' + (t.strike || '—') + '</td>' +
+        '<td>₹' + (t.entry_price || '—') + '</td>' +
+        '<td>₹' + (t.exit_price  || '—') + '</td>' +
+        '<td style="font-weight:700;color:' + ptsCol + '">' + (pts >= 0 ? '+' : '') + pts.toFixed(2) + '</td>' +
+        '<td style="color:' + ptsCol + '">₹' + (rs >= 0 ? '+' : '') + rs.toFixed(2) + '</td>' +
+        '<td style="font-size:11px;color:var(--text-soft)">' + (t.reason || '—') + '</td>';
+      tbody.appendChild(tr);
+    }
+    document.getElementById('bt-trade-wrap').style.display = '';
   } catch (e) { console.warn('backtest poll:', e); }
 }
 
@@ -2291,19 +2466,41 @@ async function stopBacktest() {
   try {
     await api('POST', '/backtest/stop');
     clearInterval(btPollTimer);
-    document.getElementById('bt-start-btn').disabled = false;
-    document.getElementById('bt-stop-btn').disabled = true;
+    _btResetBtns();
     document.getElementById('bt-status-msg').textContent = 'Backtest stopped.';
   } catch (e) { toast(e.message || 'Error', 'err'); }
 }
 
+function downloadBacktestCSV() {
+  if (!_btTrades.length) { toast('No results to download', 'warn'); return; }
+  const header = ['Date','Entry Time','Exit Time','Direction','Strike','Entry Price (Rs)','Exit Price (Rs)','PnL Points','PnL Rupees','Exit Reason'];
+  const rows = _btTrades.map(t => {
+    const openedStr = String(t.opened_at || '');
+    const closedStr = String(t.closed_at || '');
+    const entryTime = openedStr.includes('T') ? openedStr.split('T')[1].substring(0,8) : (t.time || '');
+    const exitTime  = closedStr.includes('T') ? closedStr.split('T')[1].substring(0,8) : '';
+    const dir = String(t.direction || t.type || '').toUpperCase();
+    return [
+      t.date || '', entryTime, exitTime,
+      dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir,
+      t.strike || '', t.entry_price || '', t.exit_price || '',
+      t.pnl_pts || 0, t.pnl_rs || 0,
+      String(t.reason || '').replace(/,/g, ';')
+    ].join(',');
+  });
+  const csv  = [header.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  const inst = document.getElementById('bt-instrument-display').textContent.trim();
+  const sd   = document.getElementById('bt-start-date').value;
+  const ed   = document.getElementById('bt-end-date').value;
+  a.download = 'backtest_' + inst + '_' + sd + '_to_' + ed + '.csv';
+  a.click();
+}
+
 // ═══════════════════════════════════════════════════════════════ INIT
 async function init() {
-  // Set default backtest date to yesterday
-  const yest = new Date();
-  yest.setDate(yest.getDate() - 1);
-  document.getElementById('bt-date').value = yest.toLocaleDateString('en-CA');
-
   // Load username + profile (static_ip needed for onboarding card)
   try {
     const profile = await api('GET', '/profile');
