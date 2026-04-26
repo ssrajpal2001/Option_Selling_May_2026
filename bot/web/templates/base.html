@@ -112,6 +112,16 @@
 
     /* ── Light/warm themes: override text-white ────────────────────── */
     [data-theme="light"] .text-white,[data-theme="saffron"] .text-white { color: var(--text) !important; }
+    /* ── Tailwind slate → CSS vars (theme-adaptive overrides) ────────── */
+    [data-theme] .text-slate-300 { color: var(--text-soft); }
+    [data-theme] .text-slate-400 { color: var(--text-soft); }
+    [data-theme] .text-slate-500 { color: var(--muted); }
+    [data-theme] .text-slate-600 { color: var(--muted); }
+    [data-theme] .border-slate-600 { border-color: var(--border); }
+    [data-theme] .border-slate-700 { border-color: var(--border); }
+    [data-theme] .border-slate-800 { border-color: var(--border-soft); }
+    [data-theme] .bg-slate-800 { background: var(--card); }
+    [data-theme] .bg-slate-900 { background: var(--surface); }
 
     /* ── Theme switcher ─────────────────────────────────────────────── */
     .theme-menu-btn { background:var(--card); border:1px solid var(--border); color:var(--text-soft); border-radius:8px; padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:border-color .2s; }
