@@ -4,22 +4,22 @@
 
 {% block content %}
 <div class="mb-6">
-  <a href="/admin/clients" class="text-xs mb-2 inline-block" style="color:#64748b">← Back to Clients</a>
+  <a href="/admin/clients" class="text-xs mb-2 inline-block" style="color:var(--muted)>← Back to Clients</a>
   <h1 class="text-2xl font-bold text-white" id="client-name">Loading...</h1>
-  <p class="text-sm mt-1" id="client-email" style="color:#64748b"></p>
+  <p class="text-sm mt-1" id="client-email" style="color:var(--muted)></p>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
   <div class="stat-card p-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Status</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Status</div>
     <div id="d-status" class="text-lg font-bold text-white">--</div>
   </div>
   <div class="stat-card p-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Subscription</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Subscription</div>
     <div id="d-tier" class="text-lg font-bold text-white">--</div>
   </div>
   <div class="stat-card p-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Joined</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Joined</div>
     <div id="d-joined" class="text-lg font-bold text-white">--</div>
   </div>
 </div>
@@ -34,8 +34,8 @@
 <div id="pane-info">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
     <div class="card p-4">
-      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Bot Instances</div>
-      <div id="instances-list" style="color:#64748b;font-size:13px">Loading...</div>
+      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)>Bot Instances</div>
+      <div id="instances-list" style="color:var(--muted)font-size:13px">Loading...</div>
       <div class="flex gap-2 mt-3">
         <button onclick="forceClose()" class="btn-danger px-3 py-1.5 text-xs">Force Stop Bot</button>
         <button id="toggle-active-btn" onclick="toggleActive()" class="btn-primary px-3 py-1.5 text-xs">Loading...</button>
@@ -44,27 +44,27 @@
     </div>
 
     <div class="card p-4">
-      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Order Failures</div>
-      <div id="failures-list" style="color:#64748b;font-size:13px">Loading...</div>
+      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)>Order Failures</div>
+      <div id="failures-list" style="color:var(--muted)font-size:13px">Loading...</div>
     </div>
   </div>
 
   <!-- ── Telegram Configuration ───────────────────────────────────────────── -->
   <div class="card p-4 mb-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Telegram Notifications</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)>Telegram Notifications</div>
     <div class="flex items-center gap-3">
       <span id="tg-badge" style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:12px;font-weight:600">--</span>
-      <span id="tg-chat-id" style="color:#94a3b8;font-size:12px;font-family:monospace"></span>
+      <span id="tg-chat-id" style="color:var(--text-soft)font-size:12px;font-family:monospace"></span>
     </div>
   </div>
 
   <!-- ── Assigned Static IP ────────────────────────────────────────────── -->
   <div class="card p-4 mb-4" id="static-ip-card">
     <div class="flex items-center justify-between mb-3">
-      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Assigned Static IP</div>
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)>Assigned Static IP</div>
       <span id="static-ip-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:9999px;background:#052e16;color:#34d399;font-weight:600">✓ Saved</span>
     </div>
-    <p class="text-xs mb-3" style="color:#475569">Enter the Elastic IP (public IP) assigned to this client on your EC2 instance. The client uses this IP to whitelist with their broker's developer portal.</p>
+    <p class="text-xs mb-3" style="color:var(--muted)>Enter the Elastic IP (public IP) assigned to this client on your EC2 instance. The client uses this IP to whitelist with their broker's developer portal.</p>
     <div class="flex gap-2 items-end">
       <div class="flex-1">
         <input type="text" id="static-ip-input" class="input-field w-full" placeholder="e.g. 13.234.56.78" pattern="^(\d{1,3}\.){3}\d{1,3}$">
@@ -77,24 +77,24 @@
   <!-- ── Plan Assignment ─────────────────────────────────────────────────── -->
   <div class="card p-4 mb-4">
     <div class="flex items-center justify-between mb-3">
-      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Subscription Plan</div>
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)>Subscription Plan</div>
       <span id="plan-expiry-badge" class="text-xs px-2 py-0.5 rounded" style="display:none"></span>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
-        <div class="text-xs" style="color:#64748b">Current Plan</div>
+      <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border)">
+        <div class="text-xs" style="color:var(--muted)>Current Plan</div>
         <div id="plan-current" class="text-white font-bold mt-0.5">--</div>
       </div>
-      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
-        <div class="text-xs" style="color:#64748b">Broker Slots</div>
+      <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border)">
+        <div class="text-xs" style="color:var(--muted)>Broker Slots</div>
         <div id="plan-slots" class="text-white font-bold mt-0.5">--</div>
       </div>
-      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
-        <div class="text-xs" style="color:#64748b">Slots Used</div>
+      <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border)">
+        <div class="text-xs" style="color:var(--muted)>Slots Used</div>
         <div id="plan-used" class="text-white font-bold mt-0.5">--</div>
       </div>
-      <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #334155">
-        <div class="text-xs" style="color:#64748b">Expires</div>
+      <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border)">
+        <div class="text-xs" style="color:var(--muted)>Expires</div>
         <div id="plan-expiry-date" class="text-white font-bold mt-0.5">--</div>
       </div>
     </div>
@@ -111,7 +111,7 @@
       <div class="min-w-32" style="max-width:140px">
         <label class="field-label">Broker Slot Override</label>
         <input type="number" id="plan-override-input" class="input-field" min="1" max="20" placeholder="From plan">
-        <p class="text-xs mt-0.5" style="color:#475569">Overrides plan default</p>
+        <p class="text-xs mt-0.5" style="color:var(--muted)>Overrides plan default</p>
       </div>
       <button onclick="assignPlan()" class="btn-primary px-5 py-2 text-sm font-bold whitespace-nowrap">Save Plan</button>
       <button onclick="clearExpiry()" class="btn-ghost px-4 py-2 text-xs whitespace-nowrap">Clear Expiry</button>
@@ -119,13 +119,13 @@
   </div>
 
   <div class="card p-4 mb-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Broker Change Requests</div>
-    <div id="bcr-detail-list" style="color:#64748b;font-size:13px">Loading...</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)>Broker Change Requests</div>
+    <div id="bcr-detail-list" style="color:var(--muted)font-size:13px">Loading...</div>
   </div>
 
   <div class="card p-4">
     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Trade History</div>
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)>Trade History</div>
       <div class="flex items-center gap-2 flex-wrap">
         <input type="date" id="export-from" class="input-field text-xs py-1 px-2" style="width:140px" title="From date">
         <input type="date" id="export-to" class="input-field text-xs py-1 px-2" style="width:140px" title="To date">
@@ -138,7 +138,7 @@
         <th>Entry</th><th>Exit</th><th>P&L pts</th><th>P&L ₹</th><th>Reason</th>
       </tr></thead>
       <tbody id="trades-body">
-        <tr><td colspan="9" class="text-center" style="color:#475569">Loading...</td></tr>
+        <tr><td colspan="9" class="text-center" style="color:var(--muted)>Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -150,22 +150,22 @@
   <!-- Live Risk Status -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
     <div class="stat-card p-4">
-      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Today's P&L</div>
-      <div id="risk-daily-pnl" class="text-2xl font-bold" style="color:#94a3b8">₹ --</div>
-      <div class="text-xs mt-1" style="color:#64748b">vs limit: <span id="risk-loss-limit-badge">--</span></div>
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Today's P&L</div>
+      <div id="risk-daily-pnl" class="text-2xl font-bold" style="color:var(--text-soft)>₹ --</div>
+      <div class="text-xs mt-1" style="color:var(--muted)>vs limit: <span id="risk-loss-limit-badge">--</span></div>
     </div>
     <div class="stat-card p-4">
-      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Trades Today</div>
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Trades Today</div>
       <div id="risk-trade-count" class="text-2xl font-bold text-white">--</div>
-      <div class="text-xs mt-1" style="color:#64748b">max: <span id="risk-max-trades-badge">--</span></div>
+      <div class="text-xs mt-1" style="color:var(--muted)>max: <span id="risk-max-trades-badge">--</span></div>
     </div>
     <div class="stat-card p-4">
-      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Capital Used %</div>
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Capital Used %</div>
       <div id="risk-capital-pct" class="text-2xl font-bold text-white">--</div>
-      <div class="text-xs mt-1" style="color:#64748b">Allocated: <span id="risk-capital-badge">₹ --</span></div>
+      <div class="text-xs mt-1" style="color:var(--muted)>Allocated: <span id="risk-capital-badge">₹ --</span></div>
     </div>
     <div class="stat-card p-4">
-      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Kill Switch</div>
+      <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Kill Switch</div>
       <div id="risk-lock-status" class="text-sm font-bold mt-1">Loading...</div>
       <div class="flex gap-2 mt-2">
         <button onclick="lockTrading()" class="btn-danger px-2 py-1 text-xs">🔒 Lock</button>
@@ -177,16 +177,16 @@
   <!-- P&L Usage Bar -->
   <div class="card p-4 mb-4">
     <div class="flex items-center justify-between mb-2">
-      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Daily Loss Usage</div>
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)>Daily Loss Usage</div>
       <div class="flex gap-2">
         <span id="risk-pnl-pct-text" class="text-xs font-bold text-white">--</span>
         <button onclick="resetDailyPnl()" class="text-xs text-slate-500 hover:text-slate-300 underline">Reset</button>
       </div>
     </div>
-    <div class="w-full rounded-full h-3 mb-1" style="background:#1e293b">
+    <div class="w-full rounded-full h-3 mb-1" style="background:var(--card)">
       <div id="risk-pnl-bar" class="h-3 rounded-full transition-all duration-500" style="width:0%;background:#22c55e"></div>
     </div>
-    <div class="flex justify-between text-xs mt-1" style="color:#64748b">
+    <div class="flex justify-between text-xs mt-1" style="color:var(--muted)>
       <span>₹0</span>
       <span id="risk-bar-limit">Limit: ₹0</span>
     </div>
@@ -194,7 +194,7 @@
 
   <!-- Risk Parameters Form -->
   <div class="card p-5 mb-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:#64748b">Risk & Money Management Parameters</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:var(--muted)>Risk & Money Management Parameters</div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
 
@@ -205,25 +205,25 @@
         <div>
           <label class="block text-xs text-slate-400 mb-1">Allocated Capital (₹)</label>
           <input type="number" id="r-capital" class="input-field w-full" min="0" step="1000" placeholder="e.g. 500000">
-          <p class="text-xs mt-0.5" style="color:#475569">Total capital assigned to this client's bot account.</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>Total capital assigned to this client's bot account.</p>
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Daily Loss Limit (₹) <span class="text-red-400">Kill Switch</span></label>
           <input type="number" id="r-daily-loss" class="input-field w-full" min="0" step="100" placeholder="e.g. 5000">
-          <p class="text-xs mt-0.5" style="color:#475569">Bot stops trading when daily loss exceeds this. Set 0 to disable.</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>Bot stops trading when daily loss exceeds this. Set 0 to disable.</p>
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Per-Trade Loss Limit (₹)</label>
           <input type="number" id="r-per-trade-loss" class="input-field w-full" min="0" step="100" placeholder="e.g. 1000">
-          <p class="text-xs mt-0.5" style="color:#475569">Max loss allowed on a single trade before forced exit. 0 = disabled.</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>Max loss allowed on a single trade before forced exit. 0 = disabled.</p>
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Max Drawdown % <span class="text-red-400">Kill Switch</span></label>
           <input type="number" id="r-drawdown" class="input-field w-full" min="0" max="100" step="0.5" placeholder="e.g. 10">
-          <p class="text-xs mt-0.5" style="color:#475569">Trading halts when drawdown exceeds this % of allocated capital. 0 = disabled.</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>Trading halts when drawdown exceeds this % of allocated capital. 0 = disabled.</p>
         </div>
       </div>
 
@@ -234,25 +234,25 @@
         <div>
           <label class="block text-xs text-slate-400 mb-1">Max Position Size (lots per trade)</label>
           <input type="number" id="r-pos-size" class="input-field w-full" min="1" step="1" placeholder="e.g. 2">
-          <p class="text-xs mt-0.5" style="color:#475569">Maximum number of lots in a single order. Default 1.</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>Maximum number of lots in a single order. Default 1.</p>
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Max Open Positions</label>
           <input type="number" id="r-open-pos" class="input-field w-full" min="1" step="1" placeholder="e.g. 2">
-          <p class="text-xs mt-0.5" style="color:#475569">Maximum concurrent open positions allowed at once.</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>Maximum concurrent open positions allowed at once.</p>
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Max Trades Per Day</label>
           <input type="number" id="r-daily-trades" class="input-field w-full" min="0" step="1" placeholder="e.g. 10">
-          <p class="text-xs mt-0.5" style="color:#475569">Hard cap on total trades in a session. 0 = unlimited.</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>Hard cap on total trades in a session. 0 = unlimited.</p>
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Risk Per Trade (% of capital)</label>
           <input type="number" id="r-risk-pct" class="input-field w-full" min="0.1" max="100" step="0.1" placeholder="e.g. 1.0">
-          <p class="text-xs mt-0.5" style="color:#475569">% of allocated capital risked on each trade (for position sizing calculations).</p>
+          <p class="text-xs mt-0.5" style="color:var(--muted)>% of allocated capital risked on each trade (for position sizing calculations).</p>
         </div>
       </div>
     </div>
@@ -264,7 +264,7 @@
   </div>
 
   <!-- Strategy Overrides Note -->
-  <div class="card p-4 mb-4" style="border-color:#334155">
+  <div class="card p-4 mb-4" style="border-color:var(--border)">
     <div class="flex items-start gap-3">
       <div class="text-xl mt-0.5">ℹ️</div>
       <div>
@@ -287,7 +287,7 @@
   <div id="monitor-idle" class="card p-8 text-center">
     <div class="text-4xl mb-3">📡</div>
     <div class="text-white font-bold text-lg mb-1">Bot Not Running</div>
-    <p class="text-sm" style="color:#64748b">This client's bot is not active. Live data will appear here when the bot is started.</p>
+    <p class="text-sm" style="color:var(--muted)>This client's bot is not active. Live data will appear here when the bot is started.</p>
   </div>
 
   <div id="monitor-live" class="hidden">
@@ -298,28 +298,28 @@
           <span id="m-bot-label">LIVE</span>
         </span>
       </div>
-      <div id="m-last-update" class="text-xs" style="color:#64748b">--</div>
+      <div id="m-last-update" class="text-xs" style="color:var(--muted)>--</div>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
       <div class="stat-card p-4">
-        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">ATM Strike</div>
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>ATM Strike</div>
         <div id="m-atm" class="text-2xl font-bold text-white">--</div>
-        <div class="text-xs mt-1" style="color:#64748b">Futures <span id="m-spot" class="text-slate-300">--</span></div>
+        <div class="text-xs mt-1" style="color:var(--muted)>Futures <span id="m-spot" class="text-slate-300">--</span></div>
       </div>
       <div class="stat-card p-4">
-        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Index (Spot)</div>
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Index (Spot)</div>
         <div id="m-index" class="text-2xl font-bold text-white">--</div>
       </div>
       <div class="stat-card p-4">
-        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Session P&L</div>
-        <div id="m-pnl" class="text-2xl font-bold" style="color:#94a3b8">₹ --</div>
-        <div class="text-xs mt-1" style="color:#64748b">Trades: <span id="m-trades">0</span></div>
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Session P&L</div>
+        <div id="m-pnl" class="text-2xl font-bold" style="color:var(--text-soft)>₹ --</div>
+        <div class="text-xs mt-1" style="color:var(--muted)>Trades: <span id="m-trades">0</span></div>
       </div>
       <div class="stat-card p-4">
-        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Mode</div>
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)>Mode</div>
         <div id="m-mode" class="text-2xl font-bold" style="color:#60a5fa">--</div>
-        <div class="text-xs mt-1" style="color:#64748b">Instrument: <span id="m-instrument">--</span></div>
+        <div class="text-xs mt-1" style="color:var(--muted)>Instrument: <span id="m-instrument">--</span></div>
       </div>
     </div>
 
@@ -329,26 +329,26 @@
           <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:#1e3a5f;color:#60a5fa">BUY SIDE</span>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+          <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold" style="color:#818cf8">CALL</span>
-              <span id="m-buy-call-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+              <span id="m-buy-call-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)>IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-buy-call-strike">--</div>
-            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:var(--muted)>
               <div>Entry <span id="m-buy-call-entry" class="text-slate-300">--</span></div>
               <div>LTP <span id="m-buy-call-ltp" class="text-slate-300">--</span></div>
               <div class="mt-1">Time <span id="m-buy-call-time" class="text-slate-300">--</span></div>
             </div>
             <div class="text-sm font-bold mt-2" id="m-buy-call-pnl">--</div>
           </div>
-          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+          <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold" style="color:#f472b6">PUT</span>
-              <span id="m-buy-put-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+              <span id="m-buy-put-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)>IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-buy-put-strike">--</div>
-            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:var(--muted)>
               <div>Entry <span id="m-buy-put-entry" class="text-slate-300">--</span></div>
               <div>LTP <span id="m-buy-put-ltp" class="text-slate-300">--</span></div>
               <div class="mt-1">Time <span id="m-buy-put-time" class="text-slate-300">--</span></div>
@@ -363,13 +363,13 @@
           <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:#3b1f00;color:#fb923c">SELL SIDE</span>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+          <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold" style="color:#818cf8">SELL CE</span>
-              <span id="m-sell-ce-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+              <span id="m-sell-ce-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)>IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-sell-ce-strike">--</div>
-            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:var(--muted)>
               <div>Entry <span id="m-sell-ce-entry" class="text-slate-300">--</span></div>
               <div>LTP <span id="m-sell-ce-ltp" class="text-slate-300">--</span></div>
               <div class="mt-1">Time <span id="m-sell-ce-time" class="text-slate-300">--</span></div>
@@ -377,13 +377,13 @@
             </div>
             <div class="text-sm font-bold mt-2" id="m-sell-ce-pnl">--</div>
           </div>
-          <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
+          <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold" style="color:#f472b6">SELL PE</span>
-              <span id="m-sell-pe-status" class="text-xs px-2 py-0.5 rounded" style="background:#1e293b;color:#64748b">IDLE</span>
+              <span id="m-sell-pe-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)>IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-sell-pe-strike">--</div>
-            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:#64748b">
+            <div class="grid grid-cols-2 gap-1 mt-2 text-xs" style="color:var(--muted)>
               <div>Entry <span id="m-sell-pe-entry" class="text-slate-300">--</span></div>
               <div>LTP <span id="m-sell-pe-ltp" class="text-slate-300">--</span></div>
               <div class="mt-1">Time <span id="m-sell-pe-time" class="text-slate-300">--</span></div>
@@ -397,7 +397,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
       <div class="card p-4">
-        <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">OI Snapshot</div>
+        <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)>OI Snapshot</div>
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs" style="color:#818cf8">Call OI</span>
           <span id="m-oi-call" class="text-sm font-bold text-white">--</span>
@@ -406,14 +406,14 @@
           <span class="text-xs" style="color:#f472b6">Put OI</span>
           <span id="m-oi-put" class="text-sm font-bold text-white">--</span>
         </div>
-        <div class="h-2 rounded-full" style="background:#1e293b">
+        <div class="h-2 rounded-full" style="background:var(--card)">
           <div id="m-oi-bar" class="h-2 rounded-full" style="background:#818cf8;width:50%;transition:width 0.5s"></div>
         </div>
       </div>
 
       <div class="card p-4 md:col-span-2">
         <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">V3 Strategy Monitor</span>
+          <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)>V3 Strategy Monitor</span>
           <span id="m-v3-monitor-status" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400">IDLE</span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -445,18 +445,18 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
       <div class="card p-4 md:col-span-3">
-        <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:#64748b">Heartbeat</div>
+        <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)>Heartbeat</div>
         <div id="m-heartbeat" class="text-sm" style="color:#34d399">--</div>
         <div id="m-stale-warning" class="text-xs mt-1 hidden" style="color:#fb923c"></div>
       </div>
     </div>
 
     <div class="card p-4 mb-4 hidden" id="m-v3-pool-card">
-      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">V3 Re-entry Pool Analysis (Scanning ATM ± offset)</div>
+      <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)>V3 Re-entry Pool Analysis (Scanning ATM ± offset)</div>
       <div class="overflow-x-auto max-h-64">
         <table class="w-full text-[11px]">
           <thead>
-            <tr class="text-slate-500 border-bottom" style="border-bottom:1px solid #1e293b">
+            <tr class="text-slate-500 border-bottom" style="border-bottom:1px solid var(--border-soft)">
               <th class="text-left py-1 pr-2">CE / PE Strike (LTP)</th>
               <th class="text-right py-1 pr-2">Combined Premium</th>
               <th class="text-center py-1 pr-2">RSI</th>
@@ -472,11 +472,11 @@
 
     <div class="card p-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Bot Log (last 50 lines)</span>
+        <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)>Bot Log (last 50 lines)</span>
         <button onclick="document.getElementById('m-log-box').scrollTop = document.getElementById('m-log-box').scrollHeight" class="text-xs" style="color:#00d4aa">↓ Bottom</button>
       </div>
-      <div id="m-log-box" class="rounded-lg p-3 h-48 overflow-y-auto" style="background:#040810;font-family:'Courier New',monospace;font-size:11px;color:#94a3b8">
-        <p style="color:#475569">Waiting for bot logs…</p>
+      <div id="m-log-box" class="rounded-lg p-3 h-48 overflow-y-auto" style="background:#040810;font-family:'Courier New',monospace;font-size:11px;color:var(--text-soft)>
+        <p style="color:var(--muted)>Waiting for bot logs…</p>
       </div>
     </div>
   </div>
@@ -545,7 +545,7 @@ async function loadRiskParams() {
     const locked = d.trading_locked_until && new Date(d.trading_locked_until) > new Date();
     if (locked) {
       const lockUntil = new Date(d.trading_locked_until).toLocaleString();
-      lockEl.innerHTML = `<span style="color:#f87171">🔒 LOCKED</span><div class="text-xs mt-0.5" style="color:#64748b">Until ${lockUntil}</div>`;
+      lockEl.innerHTML = `<span style="color:#f87171">🔒 LOCKED</span><div class="text-xs mt-0.5" style="color:var(--muted)>Until ${lockUntil}</div>`;
     } else {
       lockEl.innerHTML = `<span style="color:#34d399">🟢 ACTIVE</span>`;
     }
@@ -746,12 +746,12 @@ async function loadDetail() {
   if (d.instances && d.instances.length) {
     ilist.innerHTML = d.instances.map(i => {
       const tokenInfo = i.token_updated_at
-        ? `<span class="text-xs" style="color:#64748b">Token: ${(i.token_updated_at||'').substring(0,10)}</span>`
+        ? `<span class="text-xs" style="color:var(--muted)>Token: ${(i.token_updated_at||'').substring(0,10)}</span>`
         : '<span class="text-xs" style="color:#f87171">No token</span>';
-      return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid #1e293b">
+      return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid var(--border-soft)">
         <div>
           <div class="text-white font-bold">${escapeHtml((i.broker||'').toUpperCase())} · ${escapeHtml(i.instrument)} · ${i.quantity} lots</div>
-          <div class="text-xs mt-0.5" style="color:#64748b">${i.strategy_version} · ${i.trading_mode} · ${tokenInfo}</div>
+          <div class="text-xs mt-0.5" style="color:var(--muted)>${i.strategy_version} · ${i.trading_mode} · ${tokenInfo}</div>
         </div>
         <span class="${i.status === 'running' ? 'badge-ok' : 'badge-idle'}">${i.status}</span>
       </div>`;
@@ -771,12 +771,12 @@ async function loadDetail() {
             <button onclick="denyBCR(${r.id})" class="btn-ghost px-3 py-1 text-xs">Deny</button>
           </div>`
         : '';
-      return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid #1e293b">
+      return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid var(--border-soft)">
         <div>
           <span style="color:${statusColor};font-weight:700;font-size:11px">${statusLabel}</span>
           <span class="text-white ml-2">${escapeHtml((r.current_broker||'').toUpperCase())} → ${escapeHtml((r.requested_broker||'').toUpperCase())}</span>
-          ${r.reason ? '<span class="text-xs ml-2" style="color:#94a3b8">"' + escapeHtml(r.reason) + '"</span>' : ''}
-          <span class="text-xs ml-2" style="color:#64748b">${(r.created_at||'').substring(0,10)}</span>
+          ${r.reason ? '<span class="text-xs ml-2" style="color:var(--text-soft)>"' + escapeHtml(r.reason) + '"</span>' : ''}
+          <span class="text-xs ml-2" style="color:var(--muted)>${(r.created_at||'').substring(0,10)}</span>
         </div>
         ${actionBtns}
       </div>`;
@@ -788,12 +788,12 @@ async function loadDetail() {
   const flist = document.getElementById('failures-list');
   if (d.failures && d.failures.length) {
     flist.innerHTML = d.failures.map(f => `
-      <div class="py-1.5" style="border-bottom:1px solid #1e293b">
+      <div class="py-1.5" style="border-bottom:1px solid var(--border-soft)">
         <div class="flex items-center justify-between">
           <span style="color:#f87171">Leg ${escapeHtml(f.order_side)} failed</span>
-          <span style="color:#64748b;font-size:11px">${(f.created_at||'').substring(11,19)}</span>
+          <span style="color:var(--muted)font-size:11px">${(f.created_at||'').substring(11,19)}</span>
         </div>
-        <div class="text-xs mt-0.5" style="color:#64748b">${escapeHtml(f.failure_reason||'')} · Retry ${f.retry_attempt} · ${f.paired_leg_closed ? 'Paired leg closed ✓' : 'Paired leg open ⚠'}</div>
+        <div class="text-xs mt-0.5" style="color:var(--muted)>${escapeHtml(f.failure_reason||'')} · Retry ${f.retry_attempt} · ${f.paired_leg_closed ? 'Paired leg closed ✓' : 'Paired leg open ⚠'}</div>
       </div>
     `).join('');
   } else {
@@ -807,20 +807,20 @@ async function loadDetail() {
       const pSign = (t.pnl_pts||0) > 0 ? '+' : '';
       const rSign = (t.pnl_rs||0) > 0 ? '+' : '';
       return `<tr>
-        <td style="color:#64748b;font-size:12px">${(t.closed_at||'').substring(11,19)}</td>
+        <td style="color:var(--muted)font-size:12px">${(t.closed_at||'').substring(11,19)}</td>
         <td style="color:${t.trade_type==='BUY'?'#60a5fa':'#fb923c'};font-weight:700">${escapeHtml(t.trade_type||'')}</td>
         <td style="color:${(t.direction==='CE'||t.direction==='CALL')?'#818cf8':'#f472b6'}">${escapeHtml(t.direction||'')}</td>
         <td class="text-white">${t.strike||'--'}</td>
-        <td style="color:#64748b">${t.entry_index_price ? parseFloat(t.entry_index_price).toFixed(1) : '--'}</td>
-        <td style="color:#94a3b8">${t.entry_price ? parseFloat(t.entry_price).toFixed(2) : '--'}</td>
-        <td style="color:#94a3b8">${t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '--'}</td>
+        <td style="color:var(--muted)>${t.entry_index_price ? parseFloat(t.entry_index_price).toFixed(1) : '--'}</td>
+        <td style="color:var(--text-soft)>${t.entry_price ? parseFloat(t.entry_price).toFixed(2) : '--'}</td>
+        <td style="color:var(--text-soft)>${t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '--'}</td>
         <td style="color:${pnlColor};font-weight:700">${pSign}${t.pnl_pts !== null ? parseFloat(t.pnl_pts).toFixed(2) : '--'}</td>
         <td style="color:${pnlColor};font-weight:700">${rSign}${t.pnl_rs !== null ? parseFloat(t.pnl_rs).toFixed(0) : '--'}</td>
-        <td style="color:#64748b;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.exit_reason||'')}</td>
+        <td style="color:var(--muted)max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.exit_reason||'')}</td>
       </tr>`;
     }).join('');
   } else {
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="color:#475569">No trades yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="color:var(--muted)>No trades yet.</td></tr>';
   }
 
   // Load assigned static IP
