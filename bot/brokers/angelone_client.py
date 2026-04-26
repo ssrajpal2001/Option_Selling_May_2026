@@ -435,6 +435,7 @@ class AngelOneClient(BaseBroker):
 
     def place_order(self, contract, transaction_type, quantity, expiry, product_type='NRML', market_protection=None):
         if not self.smart_api: return None
+        self._validate_source_ip()
         try:
             # First, resolve instrument info
             try:

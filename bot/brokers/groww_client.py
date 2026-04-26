@@ -63,6 +63,7 @@ class GrowwClient(BaseBroker):
         if not self.access_token:
             logger.error(f"[GrowwClient] No access token. Cannot place order.")
             return None
+        self._validate_source_ip()
         try:
             symbol = self._resolve_symbol(contract)
             if not symbol:

@@ -180,17 +180,91 @@ class BaseBroker(ABC):
                 f"[{self.instance_name}] Could not mount SourceIPHTTPAdapter: {exc}"
             )
 
+    def _validate_source_ip(self) -> None:
+        """
+        Lightweight pre-flight check: confirm that self.source_ip is currently
+        bound to this machine before an order is placed.
+
+        Method: UDP socket bind to the IP (no connection needed, typically
+        < 1 ms).  If the bind fails the method:
+          1. Logs the error at ERROR level.
+          2. Fires a Telegram alert to the admin (force=True, bypasses global toggle).
+          3. Raises RuntimeError so the caller can block the order.
+
+        No-op when source_ip is not configured.
+        """
+        if not self.source_ip:
+            return
+
+        import time
+        t0 = time.monotonic()
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            probe.bind((self.source_ip, 0))
+            probe.close()
+            elapsed_ms = (time.monotonic() - t0) * 1000
+            logger.debug(
+                f"[{self.instance_name}] Static IP {self.source_ip} validated "
+                f"({elapsed_ms:.1f} ms)."
+            )
+        except OSError as exc:
+            probe.close()
+            elapsed_ms = (time.monotonic() - t0) * 1000
+            err_msg = (
+                f"[{self.instance_name}] Static IP {self.source_ip} is NOT bound "
+                f"to this machine — order blocked ({elapsed_ms:.1f} ms). Error: {exc}"
+            )
+            logger.error(err_msg)
+            self._alert_admin_ip_failure(exc)
+            raise RuntimeError(err_msg) from exc
+
+    def _alert_admin_ip_failure(self, exc: Exception) -> None:
+        """
+        Send a Telegram alert to the admin when the static IP binding check
+        fails.  Uses force=True so the alert fires even when Telegram alerts
+        are globally disabled.
+        """
+        try:
+            from utils.notifier import send_telegram, get_admin_chat_id
+            chat_id = get_admin_chat_id()
+            if not chat_id:
+                logger.warning(
+                    "[Telegram] Static IP failure alert: no admin chat_id configured — skipping."
+                )
+                return
+            alert = (
+                f"🚨 <b>Static IP Binding Failed — AlgoSoft</b>\n\n"
+                f"<b>Instance:</b> <code>{self.instance_name}</code>\n"
+                f"<b>Expected IP:</b> <code>{self.source_ip}</code>\n"
+                f"<b>Error:</b> {exc}\n\n"
+                f"The Elastic IP is <b>not attached</b> to this machine. "
+                f"All orders for this instance are <b>blocked</b> until the "
+                f"IP is re-attached.\n\n"
+                f"<i>Action: AWS Console → EC2 → Elastic IPs → re-associate.</i>"
+            )
+            send_telegram(chat_id, alert, force=True)
+        except Exception as notify_exc:
+            logger.warning(
+                f"[Telegram] Static IP alert dispatch failed: {notify_exc}"
+            )
+
     @contextmanager
     def _scoped_ip_patch(self):
         """
         Context manager for broker SDK calls that do NOT go through a
         requests.Session (e.g. pya3 / AliceBlue, fyers-apiv3, upstox auth).
 
-        When source_ip is set, temporarily patches socket.create_connection
-        and urllib3's create_connection for the duration of the ``with`` block
-        using a process-wide lock.  No-op when source_ip is None.
+        When source_ip is set:
+          1. Validates the IP is actually bound to this machine via
+             _validate_source_ip() — raises RuntimeError and alerts admin if not.
+          2. Temporarily patches socket.create_connection and urllib3's
+             create_connection for the duration of the ``with`` block using a
+             process-wide lock.
+
+        No-op when source_ip is None.
         """
         if self.source_ip:
+            self._validate_source_ip()
             with _scoped_socket_patch(self.source_ip):
                 yield
         else:

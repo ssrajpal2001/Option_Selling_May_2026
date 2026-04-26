@@ -646,6 +646,7 @@ class DhanClient(BaseBroker):
 
     def place_order(self, contract, transaction_type, quantity, expiry, product_type='NRML', market_protection=None):
         if not self.dhan: return None
+        self._validate_source_ip()
 
         if transaction_type == "BUY":
             dhan_transaction_type = self.dhan.BUY

@@ -399,6 +399,7 @@ class ZerodhaClient(BaseBroker):
         product_type: 'NRML' for carry-forward (sell strangle legs), 'MIS' for intraday (buy hedge legs).
         market_protection: Optional override for Zerodha's market protection feature (0-100 or -1).
         """
+        self._validate_source_ip()
         symbol = self.construct_zerodha_symbol(contract, signal_expiry_date)
         if not symbol:
             logger.error(f"Could not construct a valid symbol for contract: {contract.__dict__}")

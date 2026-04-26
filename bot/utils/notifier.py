@@ -235,6 +235,11 @@ def _get_admin_chat_id() -> str | None:
         return None
 
 
+def get_admin_chat_id() -> str | None:
+    """Public accessor: return the first admin's Telegram chat ID from the database."""
+    return _get_admin_chat_id()
+
+
 def notify_admin_startup(client_count: int, active_count: int) -> bool:
     """Alert admin on Telegram that the AlgoSoft server has started."""
     chat_id = _get_admin_chat_id()
