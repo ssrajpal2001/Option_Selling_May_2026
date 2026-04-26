@@ -1,15 +1,24 @@
 #!/bin/bash
 
-# Ensure we are in the project root
+# Ensure we are in the project root (bot/)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$( dirname "$SCRIPT_DIR" )"
 cd "$PROJECT_ROOT"
 
-echo "--- AlgoSoft Server Restart Tool v2 ---"
+PYENV_PYTHON="$HOME/.pyenv/versions/3.11.15/bin/python"
+PYENV_UVICORN="$HOME/.pyenv/versions/3.11.15/bin/uvicorn"
+
+echo "--- AlgoSoft Server Restart Tool v3 ---"
+
+# 0. Self-heal: install deps if uvicorn is not importable under Python 3.11
+if ! "$PYENV_PYTHON" -c "import uvicorn" 2>/dev/null; then
+    echo "uvicorn not found in Python 3.11 env — running setup_env.sh first..."
+    bash "$PROJECT_ROOT/setup_env.sh"
+fi
 
 # 1. Kill existing server process by name
-echo "Stopping existing server processes by name..."
-PID=$(pgrep -f "python3 web/server.py")
+echo "Stopping existing server processes..."
+PID=$(pgrep -f "uvicorn web.server:app")
 
 if [ -n "$PID" ]; then
     echo "Found server process at PID: $PID. Terminating..."
@@ -17,17 +26,15 @@ if [ -n "$PID" ]; then
     sleep 2
     echo "Process terminated."
 else
-    echo "No running server process found by name."
+    echo "No running server process found."
 fi
 
 # 2. Force clear Port 5000
 echo "Ensuring Port 5000 is clear..."
-# Aggressively kill anything on port 5000
 fuser -k 5000/tcp > /dev/null 2>&1
 lsof -t -i :5000 | xargs kill -9 > /dev/null 2>&1
 sleep 2
 
-# Check with lsof and loop until clear
 MAX_RETRIES=10
 RETRY_COUNT=0
 while [ -n "$(lsof -t -i :5000)" ] && [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
@@ -43,20 +50,18 @@ if [ -n "$(lsof -t -i :5000)" ]; then
     exit 1
 fi
 
-# Additional wait to ensure socket is released by OS
 sleep 2
 echo "Port 5000 is clear."
 
-# 3. Start server
+# 3. Start server using the pyenv Python 3.11 uvicorn
 echo "Starting web server from $PROJECT_ROOT..."
 export PYTHONPATH=.
-# Clear old log
 > server.log
-nohup python3 web/server.py > server.log 2>&1 &
+nohup "$PYENV_UVICORN" web.server:app --host 0.0.0.0 --port 5000 > server.log 2>&1 &
 
 # 4. Check status
 sleep 5
-NEW_PID=$(pgrep -f "python3 web/server.py")
+NEW_PID=$(pgrep -f "uvicorn web.server:app")
 if [ -n "$NEW_PID" ] && [ -n "$(lsof -t -i :5000)" ]; then
     echo "SUCCESS: Server started with PID: $NEW_PID"
     echo "URL: http://127.0.0.1:5000"
@@ -64,6 +69,6 @@ if [ -n "$NEW_PID" ] && [ -n "$(lsof -t -i :5000)" ]; then
 else
     echo "ERROR: Server failed to start or port 5000 not bound. Check server.log for details."
     echo "--- Last 20 lines of server.log ---"
-    cat server.log | tail -n 20
+    tail -n 20 server.log
     exit 1
 fi

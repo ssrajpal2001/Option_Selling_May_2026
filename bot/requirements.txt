@@ -29,4 +29,4 @@ bcrypt==4.1.2
 python-jose[cryptography]
 Dhan-Tradehull
 psutil>=5.9.0
-dulwich>=1.2.0
+dulwich>=0.19.0
