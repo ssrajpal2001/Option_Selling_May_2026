@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 APP_START_TIME: float = time.time()
 
 from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -29,6 +29,16 @@ BASE_DIR = Path(__file__).parent
 
 app = FastAPI(title="AlgoSoft", version="2.0.0")
 logger = logging.getLogger(__name__)
+
+
+@app.exception_handler(Exception)
+async def _global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred. Please try again."},
+    )
+
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))

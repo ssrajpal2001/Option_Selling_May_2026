@@ -469,7 +469,7 @@
       <div style="font-size:13px;font-weight:700;color:var(--warn)">Broker Token Expired</div>
       <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="stale-cred-text"></div>
     </div>
-    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:var(--badge-warn-bg);border:1px solid var(--badge-warn-br);color:var(--badge-warn-txt);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Refresh Token →</button>
+    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:var(--badge-warn-bg);border:1px solid var(--badge-warn-br);color:var(--badge-warn-txt);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Connect →</button>
   </div>
 
   <!-- Missing broker credentials banner -->
@@ -520,15 +520,15 @@
         <!-- Token status row -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px">
           <div>
-            <div style="font-size:12px;color:var(--muted)">Access Token</div>
+            <div style="font-size:12px;color:var(--muted)">Connection</div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
-              <span id="token-status-pill" class="token-pill token-stale">Not refreshed</span>
+              <span id="token-status-pill" class="token-pill token-stale">Not connected</span>
               <span id="token-updated-at" style="font-size:11px;color:var(--muted)"></span>
             </div>
           </div>
           <button class="btn btn-outline btn-sm" id="btn-refresh-token" onclick="refreshToken()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c-2.6 0-4.9-2-6.3-5M3 12a9 9 0 019-9m0 0c2.6 0 4.9 2 6.3 5"/></svg>
-            Refresh Token
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Connect
           </button>
         </div>
 
@@ -844,18 +844,18 @@
           <div id="dhan-mode-section" style="display:none;margin-bottom:14px">
             <div class="inp-label" style="margin-bottom:6px">Dhan Token Mode</div>
             <div class="dhan-mode-bar">
-              <div class="dhan-mode-btn active" id="dhan-mode-token" onclick="setDhanMode('token')">Access Token</div>
-              <div class="dhan-mode-btn" id="dhan-mode-api" onclick="setDhanMode('api_key')">API Key Mode</div>
+              <div class="dhan-mode-btn active" id="dhan-mode-token" onclick="setDhanMode('token')">Direct Token</div>
+              <div class="dhan-mode-btn" id="dhan-mode-api" onclick="setDhanMode('api_key')">API Key (Auto)</div>
             </div>
           </div>
 
           <!-- Credential form -->
           <div id="cred-form"></div>
 
-          <!-- Token refresh button inside settings -->
+          <!-- Connect button inside settings -->
           <div style="display:flex;gap:8px;margin-top:14px">
             <button class="btn btn-primary" style="flex:1" onclick="saveBrokerConfig()">💾 Save Credentials</button>
-            <button class="btn btn-outline" onclick="refreshToken()">🔄 Refresh Token</button>
+            <button class="btn btn-outline" onclick="refreshToken()">🔌 Connect</button>
           </div>
 
           <!-- Trading mode & instrument -->
@@ -1170,16 +1170,19 @@ function toast(msg, type = 'ok') {
 
 // ═══════════════════════════════════════════════════════════════ API HELPER
 async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch('/api/client' + path, opts);
+  let data;
   try {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) opts.body = JSON.stringify(body);
-    const r = await fetch('/api/client' + path, opts);
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || data.message || 'Request failed');
-    return data;
-  } catch (e) {
-    throw e;
+    data = await r.json();
+  } catch (_) {
+    throw new Error(r.status >= 500
+      ? 'Server error — please try again in a moment.'
+      : `Request failed (HTTP ${r.status})`);
   }
+  if (!r.ok) throw new Error(data.detail || data.message || 'Request failed');
+  return data;
 }
 
 // ═══════════════════════════════════════════════════════════════ MARKET STATUS
@@ -1355,7 +1358,7 @@ function _checkStaleBrokerAlert() {
   if (stale.length) {
     const names = stale.map(i => i.broker.charAt(0).toUpperCase() + i.broker.slice(1)).join(', ');
     document.getElementById('stale-cred-text').textContent =
-      `Token expired for: ${names}. Re-authenticate to resume live trading.`;
+      `Token expired for: ${names}. Click Connect to generate a new token.`;
     banner.style.display = 'flex';
   } else {
     banner.style.display = 'none';
@@ -1475,10 +1478,15 @@ function selectBroker(broker) {
     // Token freshness
     const fresh = inst.token_fresh;
     const pill = document.getElementById('token-status-pill');
-    pill.textContent = fresh ? '✓ Fresh' : '✗ Stale';
+    if (fresh) {
+      const ts = inst.token_updated_at ? inst.token_updated_at.slice(11,16) : '';
+      pill.textContent = ts ? `Connected ✓ ${ts}` : 'Connected ✓';
+    } else {
+      pill.textContent = 'Not connected';
+    }
     pill.className = 'token-pill ' + (fresh ? 'token-fresh' : 'token-stale');
     document.getElementById('token-updated-at').textContent =
-      inst.token_updated_at ? 'Updated ' + inst.token_updated_at.slice(0,16).replace('T',' ') : '';
+      inst.token_updated_at ? inst.token_updated_at.slice(0,10) : '';
     // Settings form prefill
     document.getElementById('set-mode').value = inst.trading_mode || 'paper';
     document.getElementById('set-instrument').value = inst.instrument || 'NIFTY';
@@ -1491,52 +1499,54 @@ function selectBroker(broker) {
 }
 
 // ─── Credential forms per broker ────────────────────────────────────────────
+// Automated brokers: token is generated from api_key + api_secret + password + totp — no manual token field.
+// Manual-token brokers (fyers, groww): show a dedicated paste section with explanation.
 const CRED_FIELDS = {
   zerodha: [
-    { id:'f-api-key',    label:'API Key',        ph:'Kite API Key',         req:true  },
-    { id:'f-api-secret', label:'API Secret',     ph:'Kite API Secret',      req:false },
-    { id:'f-token',      label:'Access Token',   ph:'Paste today\'s token', req:false },
-    { id:'f-pin',        label:'Password / PIN', ph:'Zerodha login password',req:false, hint:'Required for One-Click Connect' },
-    { id:'f-totp',       label:'TOTP Secret',    ph:'32-char seed',         req:false, hint:'Required for One-Click Connect' },
+    { id:'f-api-key',    label:'API Key',          ph:'Kite API Key',                req:true  },
+    { id:'f-api-secret', label:'API Secret',       ph:'Kite API Secret',             req:false },
+    { id:'f-pin',        label:'Password / PIN',   ph:'Zerodha login password',      req:false, hint:'Required for One-Click Connect' },
+    { id:'f-totp',       label:'TOTP Secret',      ph:'e.g. JBSWY3DPEHPK3PXP',      req:false, hint:'Base32 seed from your authenticator app (letters A–Z and digits 2–7) — NOT a 6-digit OTP code' },
   ],
   dhan: [
-    { id:'f-uid',        label:'Dhan Client ID', ph:'Your Dhan Client ID',  req:true  },
-    { id:'f-api-key',    label:'API Key (applicationId)', ph:'Enter API Key', req:false, show:'api_key' },
-    { id:'f-api-secret', label:'API Secret (UUID)', ph:'Permanent UUID secret', req:false },
-    { id:'f-token',      label:'Access Token',   ph:'24hr Dhan access token', req:false },
-    { id:'f-pin',        label:'Trading PIN',    ph:'4-6 digit PIN',        req:false, hint:'Required for One-Click Connect' },
-    { id:'f-totp',       label:'TOTP Secret',    ph:'32-char TOTP seed',    req:false, hint:'Required for One-Click Connect' },
+    { id:'f-uid',        label:'Dhan Client ID',              ph:'Your Dhan Client ID',      req:true  },
+    { id:'f-api-key',    label:'API Key (applicationId)',     ph:'Enter API Key',            req:false, show:'api_key' },
+    { id:'f-api-secret', label:'API Secret (UUID)',           ph:'Permanent UUID secret',    req:false, show:'token' },
+    { id:'f-token',      label:'Access Token',                ph:'24hr Dhan access token',   req:false, show:'token',
+      manualNote:'Direct Token mode — paste the access token from your Dhan account. Switch to API Key mode above for automatic token generation.' },
+    { id:'f-pin',        label:'Trading PIN',                 ph:'4-6 digit PIN',            req:false, hint:'Required for automatic token generation' },
+    { id:'f-totp',       label:'TOTP Secret',                 ph:'e.g. JBSWY3DPEHPK3PXP',   req:false, show:'api_key', hint:'Base32 seed from your authenticator app (letters A–Z and digits 2–7) — NOT a 6-digit OTP code' },
   ],
   upstox: [
-    { id:'f-api-key',    label:'API Key',        ph:'Upstox API Key',       req:true  },
-    { id:'f-api-secret', label:'API Secret',     ph:'Upstox API Secret',    req:false },
-    { id:'f-uid',        label:'User ID',        ph:'Upstox user ID',       req:false },
-    { id:'f-token',      label:'Access Token',   ph:'OAuth access token',   req:false },
-    { id:'f-pin',        label:'Password',       ph:'Upstox password',      req:false, hint:'Required for One-Click Connect' },
-    { id:'f-totp',       label:'TOTP Secret',    ph:'32-char seed',         req:false, hint:'Required for One-Click Connect' },
+    { id:'f-api-key',    label:'API Key',          ph:'Upstox API Key',              req:true  },
+    { id:'f-api-secret', label:'API Secret',       ph:'Upstox API Secret',           req:false },
+    { id:'f-uid',        label:'User ID',          ph:'Upstox user ID',              req:false },
+    { id:'f-pin',        label:'Password',         ph:'Upstox password',             req:false, hint:'Required for One-Click Connect' },
+    { id:'f-totp',       label:'TOTP Secret',      ph:'e.g. JBSWY3DPEHPK3PXP',      req:false, hint:'Base32 seed from your authenticator app (letters A–Z and digits 2–7) — NOT a 6-digit OTP code' },
   ],
   angelone: [
-    { id:'f-api-key',    label:'API Key',        ph:'SmartAPI key',         req:true  },
-    { id:'f-uid',        label:'Client Code',    ph:'Your AngelOne client code', req:true },
-    { id:'f-pin',        label:'PIN / MPIN',     ph:'4-digit MPIN',         req:false, hint:'Required for One-Click Connect' },
-    { id:'f-totp',       label:'TOTP Secret',    ph:'32-char TOTP seed',    req:false, hint:'Required for One-Click Connect' },
+    { id:'f-api-key',    label:'API Key',          ph:'SmartAPI key',                req:true  },
+    { id:'f-uid',        label:'Client Code',      ph:'Your AngelOne client code',   req:true  },
+    { id:'f-pin',        label:'PIN / MPIN',       ph:'4-digit MPIN',                req:false, hint:'Required for One-Click Connect' },
+    { id:'f-totp',       label:'TOTP Secret',      ph:'e.g. JBSWY3DPEHPK3PXP',      req:false, hint:'Base32 seed from your authenticator app (letters A–Z and digits 2–7) — NOT a 6-digit OTP code' },
   ],
   aliceblue: [
-    { id:'f-uid',        label:'Client ID',      ph:'Alice Blue Client ID', req:true  },
-    { id:'f-api-key',    label:'API Key',        ph:'Alice Blue API Key',   req:true  },
-    { id:'f-api-secret', label:'API Secret',     ph:'API Secret',           req:false },
-    { id:'f-pin',        label:'PIN',            ph:'Trading PIN',          req:false, hint:'Required for One-Click Connect' },
-    { id:'f-totp',       label:'TOTP Secret',    ph:'32-char TOTP seed',    req:false, hint:'Required for One-Click Connect' },
+    { id:'f-uid',        label:'Client ID',        ph:'Alice Blue Client ID',        req:true  },
+    { id:'f-api-key',    label:'API Key',          ph:'Alice Blue API Key',          req:true  },
+    { id:'f-api-secret', label:'API Secret',       ph:'API Secret',                  req:false },
+    { id:'f-pin',        label:'PIN',              ph:'Trading PIN',                 req:false, hint:'Required for One-Click Connect' },
+    { id:'f-totp',       label:'TOTP Secret',      ph:'e.g. JBSWY3DPEHPK3PXP',      req:false, hint:'Base32 seed from your authenticator app (letters A–Z and digits 2–7) — NOT a 6-digit OTP code' },
   ],
   fyers: [
-    { id:'f-uid',        label:'App ID',         ph:'Fyers App ID',         req:true  },
-    { id:'f-api-secret', label:'Secret ID',      ph:'Fyers Secret ID',      req:true  },
-    { id:'f-token',      label:'Access Token',   ph:'Fyers access token',   req:false },
+    { id:'f-uid',        label:'App ID',           ph:'Fyers App ID',                req:true  },
+    { id:'f-api-secret', label:'Secret ID',        ph:'Fyers Secret ID',             req:true  },
+    { id:'f-token',      label:'Access Token',     ph:'Paste Fyers access token',    req:false,
+      manualNote:'Fyers uses an OAuth login flow — automatic token generation is not supported. Click "Connect" to open the Fyers login page, complete the login, then paste the auth_code from the redirect URL when prompted.' },
   ],
   groww: [
-    { id:'f-uid',        label:'Client ID',      ph:'Groww Client ID',      req:true  },
-    { id:'f-totp',       label:'TOTP Token',     ph:'Static TOTP token',    req:false },
-    { id:'f-token',      label:'Access Token',   ph:'Groww access token',   req:false },
+    { id:'f-uid',        label:'Client ID',        ph:'Groww Client ID',             req:true  },
+    { id:'f-token',      label:'Access Token',     ph:'Paste Bearer access token',   req:false,
+      manualNote:'Groww requires a manually-pasted Bearer access token from the Groww developer portal. Automatic token generation is not supported for this broker.' },
   ],
 };
 
@@ -1546,16 +1556,33 @@ function renderCredForm(broker) {
   if (!wrap) return;
   wrap.innerHTML = '';
   const inst = state.instances.find(i => i.broker === broker) || {};
+
+  // For manual-token brokers: show a notice at the top before the form
+  const MANUAL_TOKEN_BROKERS = ['fyers', 'groww'];
+  if (MANUAL_TOKEN_BROKERS.includes(broker)) {
+    const noticeDiv = document.createElement('div');
+    noticeDiv.style.cssText = 'padding:10px 13px;border-radius:8px;font-size:12px;color:var(--warn);background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.35);margin-bottom:12px';
+    noticeDiv.innerHTML = `<strong>Manual token required</strong> — ${broker.charAt(0).toUpperCase()+broker.slice(1)} does not support automatic token generation. You must paste the access token obtained from the broker's website.`;
+    wrap.appendChild(noticeDiv);
+  }
+
   fields.forEach(f => {
-    if (f.show && f.show !== state.dhanMode) return; // only show api-key field in api_key mode
+    if (f.show && f.show !== state.dhanMode) return;
     const div = document.createElement('div');
     div.style.marginBottom = '10px';
     const hasVal = !!({
       'f-api-key': inst.broker_user_id ? false : null,
       'f-pin': inst.password, 'f-totp': inst.totp, 'f-uid': inst.broker_user_id
     }[f.id]);
+
+    // For fields with a manualNote (Fyers/Groww access token, Dhan direct token) add a note block
+    const noteHtml = f.manualNote
+      ? `<div style="font-size:11px;color:var(--text-soft);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 9px;margin-bottom:6px;margin-top:4px">${f.manualNote}</div>`
+      : '';
+
     div.innerHTML = `
       <div class="inp-label">${f.label}${f.req ? ' <span style="color:var(--error)">*</span>' : ''}</div>
+      ${noteHtml}
       <input type="${f.id.includes('secret')||f.id.includes('pin')||f.id.includes('totp')||f.id.includes('token') ? 'password' : 'text'}"
              class="inp" id="${f.id}"
              placeholder="${hasVal ? '(saved — leave blank to keep)' : f.ph}">
@@ -1925,7 +1952,7 @@ async function pollPositions() {
 async function refreshToken() {
   if (!state.selectedBroker) { toast('Select a broker first', 'warn'); return; }
   const btn = document.getElementById('btn-refresh-token');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Refreshing...'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Connecting...'; }
   try {
     let d;
     switch (state.selectedBroker) {
@@ -1972,7 +1999,7 @@ async function refreshToken() {
   } catch (e) {
     toast(e.message || 'Token refresh failed', 'err');
   }
-  if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Token'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Connect'; }
 }
 
 // ═══════════════════════════════════════════════════════════════ SETTINGS
