@@ -172,6 +172,10 @@ def handle_status(token: str, chat_id: str, client: dict) -> None:
 
     lines = [f"📊 <b>STATUS — {name}</b>", f"<i>{_ist_now_str()}</i>", ""]
 
+    # Read live status file once per client (one file written by the subprocess,
+    # shared across all of the client's broker instances).
+    live = _read_live_status(client_id)
+
     for inst in instances:
         broker    = (inst.get("broker") or "—").upper()
         instr     = (inst.get("instrument") or "—").upper()
@@ -186,24 +190,24 @@ def handle_status(token: str, chat_id: str, client: dict) -> None:
         lines.append(f"<b>{broker} / {instr}</b>  {mode_badge}")
         lines.append(f"  Status : {run_badge}")
         lines.append(f"  Trades : {daily_cnt}  |  Daily P&L : ₹{daily_pnl:+,.0f}")
-
-        # Try to enrich with live status file (only meaningful when subprocess is running)
-        live = _read_live_status(client_id)
-        if live:
-            session_pnl = live.get("session_pnl") or 0.0
-            open_pos    = live.get("open_positions") or []
-            if isinstance(open_pos, list) and open_pos:
-                lines.append(f"  Open positions : {len(open_pos)}")
-                for p in open_pos[:4]:
-                    side  = p.get("direction") or p.get("side") or "?"
-                    pnl_p = p.get("pnl_pts") or p.get("pnl") or 0.0
-                    pnl_r = p.get("pnl_rs") or 0.0
-                    icon  = "🟢" if float(pnl_r) >= 0 else "🔴"
-                    lines.append(f"    {icon} {side}: ₹{float(pnl_r):+,.0f}  ({float(pnl_p):+.1f} pts)")
-            elif live.get("strategy_state") in ("WAITING", "NO_POSITION", None):
-                lines.append("  Open positions : None (waiting for signal)")
-            lines.append(f"  Session P&L    : ₹{session_pnl:+,.0f}")
         lines.append("")
+
+    # Append live session data once (account-level, from status file)
+    if live:
+        session_pnl = live.get("session_pnl") or 0.0
+        open_pos    = live.get("open_positions") or []
+        lines.append("<b>Live session:</b>")
+        if isinstance(open_pos, list) and open_pos:
+            lines.append(f"  Open positions : {len(open_pos)}")
+            for p in open_pos[:4]:
+                side  = p.get("direction") or p.get("side") or "?"
+                pnl_p = p.get("pnl_pts") or p.get("pnl") or 0.0
+                pnl_r = p.get("pnl_rs") or 0.0
+                icon  = "🟢" if float(pnl_r) >= 0 else "🔴"
+                lines.append(f"    {icon} {side}: ₹{float(pnl_r):+,.0f}  ({float(pnl_p):+.1f} pts)")
+        else:
+            lines.append("  Open positions : None (waiting for signal)")
+        lines.append(f"  Session P&L    : ₹{session_pnl:+,.0f}")
 
     _send(token, chat_id, "\n".join(lines).rstrip())
 
@@ -326,10 +330,10 @@ def _poll_loop(token: str) -> None:
 
     while not _stop_event.is_set():
         try:
-            params: dict = {
-                "timeout": _POLL_TIMEOUT,
-                "allowed_updates": "message",
-            }
+            # allowed_updates must be a JSON array; encoding as plain string
+            # causes Telegram to return 400.  Omitting it is simpler and safe —
+            # non-message updates are already ignored by _process_update().
+            params: dict = {"timeout": _POLL_TIMEOUT}
             if offset:
                 params["offset"] = offset
 
