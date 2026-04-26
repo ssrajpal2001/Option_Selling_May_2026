@@ -1,0 +1,336 @@
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ # Confirm Python 3.11 is now active
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ pyenv local 3.11
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ python --version   # should say 3.11.x
+Python 3.11.15
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ 
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ # Remove the broken package line from requirements.txt
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ sed -i '/upstox-totp/d' requirements.txt
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ 
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ # Install all packages
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ python -m pip install -r requirements.txt
+Requirement already satisfied: numpy in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 1)) (2.4.4)
+Collecting scipy (from -r requirements.txt (line 2))
+  Using cached scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Requirement already satisfied: pandas in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 3)) (3.0.2)
+Collecting upstox-python-sdk (from -r requirements.txt (line 4))
+  Using cached upstox_python_sdk-2.24.0.tar.gz (162 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Requirement already satisfied: websockets in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 5)) (16.0)
+Requirement already satisfied: requests in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 6)) (2.31.0)
+Collecting pytest (from -r requirements.txt (line 7))
+  Using cached pytest-9.0.3-py3-none-any.whl.metadata (7.6 kB)
+Collecting pytest-asyncio (from -r requirements.txt (line 8))
+  Using cached pytest_asyncio-1.3.0-py3-none-any.whl.metadata (4.1 kB)
+Collecting pytest-mock (from -r requirements.txt (line 9))
+  Using cached pytest_mock-3.15.1-py3-none-any.whl.metadata (3.9 kB)
+Requirement already satisfied: aiohttp in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 10)) (3.9.3)
+Collecting pytz (from -r requirements.txt (line 11))
+  Using cached pytz-2026.1.post1-py2.py3-none-any.whl.metadata (22 kB)
+Collecting protobuf (from -r requirements.txt (line 12))
+  Using cached protobuf-7.34.1-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+Collecting sqlalchemy (from -r requirements.txt (line 13))
+  Using cached sqlalchemy-2.0.49-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+Collecting aiopg (from -r requirements.txt (line 14))
+  Using cached aiopg-1.4.0-py3-none-any.whl.metadata (15 kB)
+Collecting asyncpg (from -r requirements.txt (line 15))
+  Using cached asyncpg-0.31.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.4 kB)
+Requirement already satisfied: cryptography in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 16)) (47.0.0)
+Collecting redis (from -r requirements.txt (line 17))
+  Using cached redis-7.4.0-py3-none-any.whl.metadata (12 kB)
+Collecting hiredis (from -r requirements.txt (line 18))
+  Using cached hiredis-3.3.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (7.5 kB)
+Collecting smartapi-python (from -r requirements.txt (line 19))
+  Using cached smartapi_python-1.5.5-py3-none-any.whl.metadata (7.2 kB)
+Collecting pyotp (from -r requirements.txt (line 20))
+  Using cached pyotp-2.9.0-py3-none-any.whl.metadata (9.8 kB)
+Requirement already satisfied: kiteconnect in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 21)) (5.2.0)
+Requirement already satisfied: dhanhq in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 22)) (2.2.0)
+Collecting aiofiles (from -r requirements.txt (line 45))
+  Using cached aiofiles-25.1.0-py3-none-any.whl.metadata (6.3 kB)
+Requirement already satisfied: fastapi in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 46)) (0.136.1)
+Collecting jinja2 (from -r requirements.txt (line 47))
+  Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting python-multipart (from -r requirements.txt (line 48))
+  Using cached python_multipart-0.0.26-py3-none-any.whl.metadata (2.1 kB)
+Collecting bcrypt==4.1.2 (from -r requirements.txt (line 50))
+  Using cached bcrypt-4.1.2-cp39-abi3-manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+Collecting Dhan-Tradehull (from -r requirements.txt (line 52))
+  Downloading dhan_tradehull-3.2.1-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.4/46.4 kB 5.3 MB/s eta 0:00:00
+Collecting psutil>=5.9.0 (from -r requirements.txt (line 53))
+  Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+Collecting dulwich>=1.2.0 (from -r requirements.txt (line 54))
+  Downloading dulwich-1.2.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.0 kB)
+Requirement already satisfied: uvicorn[standard] in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from -r requirements.txt (line 49)) (0.46.0)
+Collecting python-jose[cryptography] (from -r requirements.txt (line 51))
+  Downloading python_jose-3.5.0-py2.py3-none-any.whl.metadata (5.5 kB)
+Requirement already satisfied: python-dateutil>=2.8.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pandas->-r requirements.txt (line 3)) (2.9.0.post0)
+Requirement already satisfied: urllib3>=1.15 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from upstox-python-sdk->-r requirements.txt (line 4)) (2.6.3)
+Requirement already satisfied: six>=1.10 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from upstox-python-sdk->-r requirements.txt (line 4)) (1.17.0)
+Requirement already satisfied: certifi in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from upstox-python-sdk->-r requirements.txt (line 4)) (2026.4.22)
+Requirement already satisfied: websocket-client in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from upstox-python-sdk->-r requirements.txt (line 4)) (1.6.1)
+Collecting uuid (from upstox-python-sdk->-r requirements.txt (line 4))
+  Downloading uuid-1.30.tar.gz (5.8 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Requirement already satisfied: charset-normalizer<4,>=2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests->-r requirements.txt (line 6)) (3.4.7)
+Requirement already satisfied: idna<4,>=2.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests->-r requirements.txt (line 6)) (3.13)
+Collecting iniconfig>=1.0.1 (from pytest->-r requirements.txt (line 7))
+  Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Requirement already satisfied: packaging>=22 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pytest->-r requirements.txt (line 7)) (26.2)
+Collecting pluggy<2,>=1.5 (from pytest->-r requirements.txt (line 7))
+  Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting pygments>=2.7.2 (from pytest->-r requirements.txt (line 7))
+  Downloading pygments-2.20.0-py3-none-any.whl.metadata (2.5 kB)
+Requirement already satisfied: typing-extensions>=4.12 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pytest-asyncio->-r requirements.txt (line 8)) (4.15.0)
+Requirement already satisfied: aiosignal>=1.1.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp->-r requirements.txt (line 10)) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp->-r requirements.txt (line 10)) (26.1.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp->-r requirements.txt (line 10)) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp->-r requirements.txt (line 10)) (6.7.1)
+Requirement already satisfied: yarl<2.0,>=1.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp->-r requirements.txt (line 10)) (1.23.0)
+Collecting greenlet>=1 (from sqlalchemy->-r requirements.txt (line 13))
+  Downloading greenlet-3.4.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.7 kB)
+Collecting psycopg2-binary>=2.9.5 (from aiopg->-r requirements.txt (line 14))
+  Downloading psycopg2_binary-2.9.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting async-timeout<5.0,>=3.0 (from aiopg->-r requirements.txt (line 14))
+  Downloading async_timeout-4.0.3-py3-none-any.whl.metadata (4.2 kB)
+Requirement already satisfied: cffi>=2.0.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from cryptography->-r requirements.txt (line 16)) (2.0.0)
+Requirement already satisfied: service_identity>=18.1.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from kiteconnect->-r requirements.txt (line 21)) (24.2.0)
+Requirement already satisfied: pyOpenSSL>=17.5.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from kiteconnect->-r requirements.txt (line 21)) (26.1.0)
+Requirement already satisfied: autobahn==19.11.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (19.11.2)
+Requirement already satisfied: txaio>=18.8.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn==19.11.2->autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (25.12.2)
+Requirement already satisfied: zope.interface>=3.6.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (8.4)
+Requirement already satisfied: Twisted>=12.1.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (25.5.0)
+Requirement already satisfied: starlette>=0.46.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fastapi->-r requirements.txt (line 46)) (1.0.0)
+Requirement already satisfied: pydantic>=2.9.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fastapi->-r requirements.txt (line 46)) (2.13.3)
+Requirement already satisfied: typing-inspection>=0.4.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fastapi->-r requirements.txt (line 46)) (0.4.2)
+Requirement already satisfied: annotated-doc>=0.0.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fastapi->-r requirements.txt (line 46)) (0.0.4)
+Collecting MarkupSafe>=2.0 (from jinja2->-r requirements.txt (line 47))
+  Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Requirement already satisfied: click>=7.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from uvicorn[standard]->-r requirements.txt (line 49)) (8.3.3)
+Requirement already satisfied: h11>=0.8 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from uvicorn[standard]->-r requirements.txt (line 49)) (0.16.0)
+Collecting httptools>=0.6.3 (from uvicorn[standard]->-r requirements.txt (line 49))
+  Downloading httptools-0.7.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+Collecting python-dotenv>=0.13 (from uvicorn[standard]->-r requirements.txt (line 49))
+  Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+Collecting pyyaml>=5.1 (from uvicorn[standard]->-r requirements.txt (line 49))
+  Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Collecting uvloop>=0.15.1 (from uvicorn[standard]->-r requirements.txt (line 49))
+  Downloading uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+Collecting watchfiles>=0.20 (from uvicorn[standard]->-r requirements.txt (line 49))
+  Downloading watchfiles-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+Collecting ecdsa!=0.15 (from python-jose[cryptography]->-r requirements.txt (line 51))
+  Downloading ecdsa-0.19.2-py2.py3-none-any.whl.metadata (29 kB)
+Collecting rsa!=4.1.1,!=4.4,<5.0,>=4.0 (from python-jose[cryptography]->-r requirements.txt (line 51))
+  Downloading rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Requirement already satisfied: pyasn1>=0.5.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from python-jose[cryptography]->-r requirements.txt (line 51)) (0.6.3)
+Collecting mibian>=0.1.3 (from Dhan-Tradehull->-r requirements.txt (line 52))
+  Downloading mibian-0.1.3.zip (4.3 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting requests (from -r requirements.txt (line 6))
+  Using cached requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
+Collecting websocket-client (from upstox-python-sdk->-r requirements.txt (line 4))
+  Downloading websocket_client-1.9.0-py3-none-any.whl.metadata (8.3 kB)
+Requirement already satisfied: pycparser in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from cffi>=2.0.0->cryptography->-r requirements.txt (line 16)) (3.0)
+Requirement already satisfied: annotated-types>=0.6.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pydantic>=2.9.0->fastapi->-r requirements.txt (line 46)) (0.7.0)
+Requirement already satisfied: pydantic-core==2.46.3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pydantic>=2.9.0->fastapi->-r requirements.txt (line 46)) (2.46.3)
+Requirement already satisfied: pyasn1-modules in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from service_identity>=18.1.0->kiteconnect->-r requirements.txt (line 21)) (0.4.2)
+Requirement already satisfied: anyio<5,>=3.6.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from starlette>=0.46.0->fastapi->-r requirements.txt (line 46)) (4.13.0)
+Requirement already satisfied: propcache>=0.2.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from yarl<2.0,>=1.0->aiohttp->-r requirements.txt (line 10)) (0.4.1)
+Requirement already satisfied: automat>=24.8.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (25.4.16)
+Requirement already satisfied: constantly>=15.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (23.10.4)
+Requirement already satisfied: hyperlink>=17.1.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (21.0.0)
+Requirement already satisfied: incremental>=24.7.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r requirements.txt (line 21)) (24.11.0)
+Downloading bcrypt-4.1.2-cp39-abi3-manylinux_2_28_x86_64.whl (698 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 698.9/698.9 kB 55.1 MB/s eta 0:00:00
+Downloading scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 81.5 MB/s eta 0:00:00
+Downloading pytest-9.0.3-py3-none-any.whl (375 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 375.2/375.2 kB 62.4 MB/s eta 0:00:00
+Downloading pytest_asyncio-1.3.0-py3-none-any.whl (15 kB)
+Downloading pytest_mock-3.15.1-py3-none-any.whl (10 kB)
+Downloading pytz-2026.1.post1-py2.py3-none-any.whl (510 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 510.5/510.5 kB 74.3 MB/s eta 0:00:00
+Downloading protobuf-7.34.1-cp310-abi3-manylinux2014_x86_64.whl (324 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 324.3/324.3 kB 52.6 MB/s eta 0:00:00
+Downloading sqlalchemy-2.0.49-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 128.3 MB/s eta 0:00:00
+Downloading aiopg-1.4.0-py3-none-any.whl (34 kB)
+Downloading asyncpg-0.31.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 127.0 MB/s eta 0:00:00
+Downloading redis-7.4.0-py3-none-any.whl (409 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 409.8/409.8 kB 61.2 MB/s eta 0:00:00
+Downloading hiredis-3.3.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (169 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 169.4/169.4 kB 35.8 MB/s eta 0:00:00
+Downloading smartapi_python-1.5.5-py3-none-any.whl (28 kB)
+Downloading pyotp-2.9.0-py3-none-any.whl (13 kB)
+Downloading aiofiles-25.1.0-py3-none-any.whl (14 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 25.0 MB/s eta 0:00:00
+Downloading python_multipart-0.0.26-py3-none-any.whl (28 kB)
+Downloading dhan_tradehull-3.2.1-py3-none-any.whl (36 kB)
+Downloading requests-2.33.1-py3-none-any.whl (64 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.9/64.9 kB 16.2 MB/s eta 0:00:00
+Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 155.6/155.6 kB 34.7 MB/s eta 0:00:00
+Downloading dulwich-1.2.0-cp311-cp311-manylinux_2_28_x86_64.whl (1.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 117.6 MB/s eta 0:00:00
+Downloading async_timeout-4.0.3-py3-none-any.whl (5.7 kB)
+Downloading ecdsa-0.19.2-py2.py3-none-any.whl (150 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150.8/150.8 kB 33.5 MB/s eta 0:00:00
+Downloading greenlet-3.4.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (613 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 613.5/613.5 kB 93.1 MB/s eta 0:00:00
+Downloading httptools-0.7.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (456 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 456.6/456.6 kB 70.2 MB/s eta 0:00:00
+Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+Downloading psycopg2_binary-2.9.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 139.2 MB/s eta 0:00:00
+Downloading pygments-2.20.0-py3-none-any.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 107.1 MB/s eta 0:00:00
+Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 97.3 MB/s eta 0:00:00
+Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Downloading uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.8/3.8 MB 133.8 MB/s eta 0:00:00
+Downloading watchfiles-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 456.1/456.1 kB 70.5 MB/s eta 0:00:00
+Downloading websocket_client-1.9.0-py3-none-any.whl (82 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 82.6/82.6 kB 17.0 MB/s eta 0:00:00
+Downloading python_jose-3.5.0-py2.py3-none-any.whl (34 kB)
+Building wheels for collected packages: upstox-python-sdk, mibian, uuid
+  Building wheel for upstox-python-sdk (pyproject.toml) ... done
+  Created wheel for upstox-python-sdk: filename=upstox_python_sdk-2.24.0-py3-none-any.whl size=533074 sha256=d6691cb8029bef0da3cd5bb41e09441d967080e9871098cb9b24800a5938c07b
+  Stored in directory: /home/ec2-user/.cache/pip/wheels/4e/48/fd/99fe167f1bd6218cf3c75bb21c63a589711d605c0a89be55f6
+  Building wheel for mibian (pyproject.toml) ... done
+  Created wheel for mibian: filename=mibian-0.1.3-py3-none-any.whl size=4070 sha256=9730b57c1743a85fe8376b7af8a7a0dc8f3d5181539bffa2c003861366ac817e
+  Stored in directory: /home/ec2-user/.cache/pip/wheels/e7/5e/5c/da32a012a1a27b1f6f61a7744eac2eb20ab4854aba3143b711
+  Building wheel for uuid (pyproject.toml) ... done
+  Created wheel for uuid: filename=uuid-1.30-py3-none-any.whl size=6503 sha256=23d8147325906cb577e72f13b59d6f07ed90ade059f5549b8e00b720ff309c94
+  Stored in directory: /home/ec2-user/.cache/pip/wheels/e0/01/df/bd20df409bd81f8b99e6cd343c5f49731dc0a20eefefdafae0
+Successfully built upstox-python-sdk mibian uuid
+Installing collected packages: uuid, pytz, mibian, websocket-client, uvloop, scipy, rsa, requests, redis, pyyaml, python-multipart, python-dotenv, pyotp, pygments, psycopg2-binary, psutil, protobuf, pluggy, MarkupSafe, iniconfig, httptools, hiredis, greenlet, ecdsa, dulwich, bcrypt, asyncpg, async-timeout, aiofiles, watchfiles, upstox-python-sdk, sqlalchemy, smartapi-python, python-jose, pytest, jinja2, aiopg, pytest-mock, pytest-asyncio, Dhan-Tradehull
+  Attempting uninstall: websocket-client
+    Found existing installation: websocket-client 1.6.1
+    Uninstalling websocket-client-1.6.1:
+      Successfully uninstalled websocket-client-1.6.1
+  Attempting uninstall: requests
+    Found existing installation: requests 2.31.0
+    Uninstalling requests-2.31.0:
+      Successfully uninstalled requests-2.31.0
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+fyers-apiv3 3.1.12 requires requests==2.31.0, but you have requests 2.33.1 which is incompatible.
+fyers-apiv3 3.1.12 requires websocket-client==1.6.1, but you have websocket-client 1.9.0 which is incompatible.
+Successfully installed Dhan-Tradehull-3.2.1 MarkupSafe-3.0.3 aiofiles-25.1.0 aiopg-1.4.0 async-timeout-4.0.3 asyncpg-0.31.0 bcrypt-4.1.2 dulwich-1.2.0 ecdsa-0.19.2 greenlet-3.4.0 hiredis-3.3.1 httptools-0.7.1 iniconfig-2.3.0 jinja2-3.1.6 mibian-0.1.3 pluggy-1.6.0 protobuf-7.34.1 psutil-7.2.2 psycopg2-binary-2.9.12 pygments-2.20.0 pyotp-2.9.0 pytest-9.0.3 pytest-asyncio-1.3.0 pytest-mock-3.15.1 python-dotenv-1.2.2 python-jose-3.5.0 python-multipart-0.0.26 pytz-2026.1.post1 pyyaml-6.0.3 redis-7.4.0 requests-2.33.1 rsa-4.9.1 scipy-1.17.1 smartapi-python-1.5.5 sqlalchemy-2.0.49 upstox-python-sdk-2.24.0 uuid-1.30 uvloop-0.22.1 watchfiles-1.1.1 websocket-client-1.9.0
+
+[notice] A new release of pip is available: 24.0 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ python -m pip install kiteconnect dhanhq fyers-apiv3 pya3 logzero
+Requirement already satisfied: kiteconnect in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (5.2.0)
+Requirement already satisfied: dhanhq in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (2.2.0)
+Requirement already satisfied: fyers-apiv3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (3.1.12)
+Requirement already satisfied: pya3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (1.0.30)
+Requirement already satisfied: logzero in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (1.7.0)
+Requirement already satisfied: service_identity>=18.1.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from kiteconnect) (24.2.0)
+Requirement already satisfied: requests>=2.18.4 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from kiteconnect) (2.33.1)
+Requirement already satisfied: six>=1.11.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from kiteconnect) (1.17.0)
+Requirement already satisfied: pyOpenSSL>=17.5.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from kiteconnect) (26.1.0)
+Requirement already satisfied: python-dateutil>=2.6.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from kiteconnect) (2.9.0.post0)
+Requirement already satisfied: autobahn==19.11.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn[twisted]==19.11.2->kiteconnect) (19.11.2)
+Requirement already satisfied: txaio>=18.8.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn==19.11.2->autobahn[twisted]==19.11.2->kiteconnect) (25.12.2)
+Requirement already satisfied: cryptography>=2.7 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn==19.11.2->autobahn[twisted]==19.11.2->kiteconnect) (47.0.0)
+Requirement already satisfied: zope.interface>=3.6.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn[twisted]==19.11.2->kiteconnect) (8.4)
+Requirement already satisfied: Twisted>=12.1.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from autobahn[twisted]==19.11.2->kiteconnect) (25.5.0)
+Requirement already satisfied: pandas>=1.4.3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from dhanhq) (3.0.2)
+Requirement already satisfied: websockets>=12.0.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from dhanhq) (16.0)
+Collecting requests>=2.18.4 (from kiteconnect)
+  Using cached requests-2.31.0-py3-none-any.whl.metadata (4.6 kB)
+Requirement already satisfied: asyncio==3.4.3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fyers-apiv3) (3.4.3)
+Requirement already satisfied: aiohttp==3.9.3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fyers-apiv3) (3.9.3)
+Requirement already satisfied: aws_lambda_powertools==1.25.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fyers-apiv3) (1.25.5)
+Collecting websocket-client==1.6.1 (from fyers-apiv3)
+  Using cached websocket_client-1.6.1-py3-none-any.whl.metadata (7.6 kB)
+Requirement already satisfied: setuptools==68.0.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from fyers-apiv3) (68.0.0)
+Requirement already satisfied: aiosignal>=1.1.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp==3.9.3->fyers-apiv3) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp==3.9.3->fyers-apiv3) (26.1.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp==3.9.3->fyers-apiv3) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp==3.9.3->fyers-apiv3) (6.7.1)
+Requirement already satisfied: yarl<2.0,>=1.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aiohttp==3.9.3->fyers-apiv3) (1.23.0)
+Requirement already satisfied: aws-xray-sdk<3.0.0,>=2.8.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aws_lambda_powertools==1.25.5->fyers-apiv3) (2.15.0)
+Requirement already satisfied: boto3<2.0,>=1.18 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aws_lambda_powertools==1.25.5->fyers-apiv3) (1.42.96)
+Requirement already satisfied: fastjsonschema<3.0.0,>=2.14.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aws_lambda_powertools==1.25.5->fyers-apiv3) (2.21.2)
+Requirement already satisfied: jmespath<0.11.0,>=0.10.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aws_lambda_powertools==1.25.5->fyers-apiv3) (0.10.0)
+Requirement already satisfied: charset-normalizer<4,>=2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.18.4->kiteconnect) (3.4.7)
+Requirement already satisfied: idna<4,>=2.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.18.4->kiteconnect) (3.13)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.18.4->kiteconnect) (2.6.3)
+Requirement already satisfied: certifi>=2017.4.17 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.18.4->kiteconnect) (2026.4.22)
+Requirement already satisfied: rel in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pya3) (0.4.9.26)
+Requirement already satisfied: numpy>=1.26.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pandas>=1.4.3->dhanhq) (2.4.4)
+Requirement already satisfied: typing-extensions>=4.9 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pyOpenSSL>=17.5.0->kiteconnect) (4.15.0)
+Requirement already satisfied: pyasn1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from service_identity>=18.1.0->kiteconnect) (0.6.3)
+Requirement already satisfied: pyasn1-modules in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from service_identity>=18.1.0->kiteconnect) (0.4.2)
+Requirement already satisfied: wrapt in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aws-xray-sdk<3.0.0,>=2.8.0->aws_lambda_powertools==1.25.5->fyers-apiv3) (2.1.2)
+Requirement already satisfied: botocore>=1.11.3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from aws-xray-sdk<3.0.0,>=2.8.0->aws_lambda_powertools==1.25.5->fyers-apiv3) (1.42.96)
+Requirement already satisfied: s3transfer<0.17.0,>=0.16.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from boto3<2.0,>=1.18->aws_lambda_powertools==1.25.5->fyers-apiv3) (0.16.1)
+Requirement already satisfied: cffi>=2.0.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from cryptography>=2.7->autobahn==19.11.2->autobahn[twisted]==19.11.2->kiteconnect) (2.0.0)
+Requirement already satisfied: automat>=24.8.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect) (25.4.16)
+Requirement already satisfied: constantly>=15.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect) (23.10.4)
+Requirement already satisfied: hyperlink>=17.1.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect) (21.0.0)
+Requirement already satisfied: incremental>=24.7.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect) (24.11.0)
+Requirement already satisfied: propcache>=0.2.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from yarl<2.0,>=1.0->aiohttp==3.9.3->fyers-apiv3) (0.4.1)
+Requirement already satisfied: pycparser in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from cffi>=2.0.0->cryptography>=2.7->autobahn==19.11.2->autobahn[twisted]==19.11.2->kiteconnect) (3.0)
+Requirement already satisfied: packaging>=17.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from incremental>=24.7.0->Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect) (26.2)
+Using cached requests-2.31.0-py3-none-any.whl (62 kB)
+Using cached websocket_client-1.6.1-py3-none-any.whl (56 kB)
+Installing collected packages: websocket-client, requests
+  Attempting uninstall: websocket-client
+    Found existing installation: websocket-client 1.9.0
+    Uninstalling websocket-client-1.9.0:
+      Successfully uninstalled websocket-client-1.9.0
+  Attempting uninstall: requests
+    Found existing installation: requests 2.33.1
+    Uninstalling requests-2.33.1:
+      Successfully uninstalled requests-2.33.1
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+dhan-tradehull 3.2.1 requires requests>=2.32.3, but you have requests 2.31.0 which is incompatible.
+dhan-tradehull 3.2.1 requires websocket-client>=1.8.0, but you have websocket-client 1.6.1 which is incompatible.
+Successfully installed requests-2.31.0 websocket-client-1.6.1
+
+[notice] A new release of pip is available: 24.0 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ 
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ # Start the bot
+ec2-user:~/environment/Option_Selling_May_2026-main/bot $ python -m uvicorn web.server:app --host 0.0.0.0 --port 5000
+INFO:     Started server process [905564]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:5000 (Press CTRL+C to quit)
+upstox-totp package not installed. Run 'pip install upstox-totp'
+Background login for upstox returned no token.
+INFO:     49.37.67.175:65296 - "GET / HTTP/1.1" 307 Temporary Redirect
+INFO:     49.37.67.175:65296 - "GET /login HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65296 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     49.37.67.175:65296 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65296 - "GET /admin HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65296 - "GET /api/admin/system-health HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /api/admin/overview HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65303 - "GET /health HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /api/admin/clients HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /admin/data-providers-page HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65303 - "GET /api/admin/data-providers HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /api/admin/data-providers/health HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /admin/audit-log HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /api/admin/audit-log?page=1&per_page=50 HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /admin/strategy HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /api/strategy HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /admin/subscription-plans HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /api/admin/plans HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /admin/platform-settings HTTP/1.1" 200 OK
+INFO:     49.37.67.175:65302 - "GET /api/admin/platform-settings HTTP/1.1" 200 OK

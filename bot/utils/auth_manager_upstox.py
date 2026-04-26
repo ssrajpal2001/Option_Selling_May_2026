@@ -11,7 +11,7 @@ def handle_upstox_login_automated(credentials):
     try:
         from upstox_totp import UpstoxTOTP
     except ImportError:
-        logger.error("upstox-totp package not installed. Run 'pip install upstox-totp'")
+        logger.debug("upstox-totp not available; automated Upstox TOTP login skipped")
         return None
 
     api_key = credentials.get('api_key')

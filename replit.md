@@ -29,6 +29,21 @@ pnpm workspace monorepo (TypeScript node services) + Python/FastAPI algorithmic 
 - `GET/POST/PUT/DELETE /api/admin/plans` — subscription plans CRUD
 - `GET /api/admin/data-providers/health` — feeder token health (days_remaining, expires_in, warn_expiry)
 - `POST /api/admin/data-providers/{provider}/connect` — trigger background automated login
+- `GET /api/admin/clients/{id}/trades/export?from_date=&to_date=` — download client trade history as CSV
+
+### Static IP Enforcement (Task #55)
+
+Each client can be assigned an Elastic IP (AWS) in the admin client detail page. The bot enforces source-IP binding at the socket level using:
+- `SourceIPHTTPAdapter` in `bot/brokers/base_broker.py` — patches `init_poolmanager()` with `source_address=(ip,0)`
+- `urllib3.util.connection.create_connection` monkey-patch as fallback for SDKs that bypass requests
+- `_set_source_ip()` / `_clear_source_ip()` wrappers called around every broker auth call
+- Upstox async path uses `aiohttp.TCPConnector(local_addr=(source_ip, 0))`
+
+### Client Dashboard UX (Task #60)
+
+- Broker tabs show coloured status dots: green=running+fresh, yellow=configured+stale, red=stale/error
+- Stale token banner auto-shows with "Refresh Token →" button when any broker token expires
+- `upstox-totp` warning removed from startup logs (package does not exist on PyPI)
 
 ### Subscription Plans
 

@@ -124,7 +124,14 @@
   </div>
 
   <div class="card p-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:#64748b">Trade History</div>
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:#64748b">Trade History</div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <input type="date" id="export-from" class="input-field text-xs py-1 px-2" style="width:140px" title="From date">
+        <input type="date" id="export-to" class="input-field text-xs py-1 px-2" style="width:140px" title="To date">
+        <button onclick="exportTradesCSV()" class="btn-primary px-3 py-1.5 text-xs font-bold whitespace-nowrap">⬇ Export CSV</button>
+      </div>
+    </div>
     <table>
       <thead><tr>
         <th>Time</th><th>Type</th><th>Dir</th><th>Strike</th><th>Nifty</th>
@@ -1084,6 +1091,16 @@ async function clearTrades() {
   const d = await r.json();
   showToast(d.message, d.success ? 'success' : 'error');
   loadDetail();
+}
+
+function exportTradesCSV() {
+  const from = document.getElementById('export-from').value;
+  const to = document.getElementById('export-to').value;
+  const params = new URLSearchParams();
+  if (from) params.append('from_date', from);
+  if (to) params.append('to_date', to);
+  const url = `/api/admin/clients/${clientId}/trades/export?${params.toString()}`;
+  window.open(url, '_blank');
 }
 
 async function toggleActive() {

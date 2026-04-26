@@ -1,5 +1,7 @@
 import urllib.parse
 import asyncio
+import csv
+import io
 import json
 import logging
 import os
@@ -7,7 +9,7 @@ import time
 from pathlib import Path
 import subprocess
 import configparser
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone, timedelta
@@ -16,7 +18,7 @@ from web.deps import require_admin, get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
 from web.auth import encrypt_secret, decrypt_secret
 from hub.instance_manager import instance_manager
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -632,6 +634,62 @@ async def clear_trade_history(client_id: int, admin=Depends(require_admin)):
     except Exception as e:
         logger.error(f"[Admin] Error in clear_trade_history for client {client_id}: {e}", exc_info=True)
         return {"success": False, "message": f"Failed to clear history: {str(e)}"}
+
+
+# ── Trade History CSV Export ─────────────────────────────────────────────────
+
+@router.get("/clients/{client_id}/trades/export")
+async def export_trade_history_csv(
+    client_id: int,
+    from_date: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
+    to_date: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
+    admin=Depends(require_admin)
+):
+    """Export a client's trade history as a CSV file."""
+    user = db_fetchone("SELECT id, username FROM users WHERE id=?", (client_id,))
+    if not user:
+        raise HTTPException(404, "Client not found")
+
+    params = [client_id]
+    date_clause = ""
+    if from_date:
+        date_clause += " AND date(closed_at) >= ?"
+        params.append(from_date)
+    if to_date:
+        date_clause += " AND date(closed_at) <= ?"
+        params.append(to_date)
+
+    trades = db_fetchall(f"""
+        SELECT closed_at, trade_type, direction, strike, instrument, broker,
+               trading_mode, entry_price, exit_price, quantity,
+               pnl_pts, pnl_rs, exit_reason, entry_index_price
+        FROM trade_history
+        WHERE client_id=? {date_clause}
+        ORDER BY closed_at DESC
+    """, params)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Date/Time", "Type", "Direction", "Strike", "Instrument", "Broker",
+        "Mode", "Entry Price", "Exit Price", "Qty",
+        "P&L (pts)", "P&L (₹)", "Exit Reason", "Index Price at Entry"
+    ])
+    for t in trades:
+        writer.writerow([
+            t["closed_at"], t["trade_type"], t["direction"], t["strike"],
+            t["instrument"], t["broker"], t["trading_mode"],
+            t["entry_price"], t["exit_price"], t["quantity"],
+            t["pnl_pts"], t["pnl_rs"], t["exit_reason"], t["entry_index_price"]
+        ])
+
+    output.seek(0)
+    filename = f"trades_{user['username']}_{from_date or 'all'}_{to_date or 'all'}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 # ── Admin live overview ──────────────────────────────────────────────────────

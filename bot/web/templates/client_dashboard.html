@@ -377,6 +377,16 @@
     </div>
   </div>
 
+  <!-- Stale broker token banner -->
+  <div id="stale-cred-banner" style="display:none;background:#1a1000;border:1.5px solid #f59e0b;border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
+    <span style="font-size:18px">⚠️</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:#fbbf24">Broker Token Expired</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="stale-cred-text"></div>
+    </div>
+    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:#92400e;border:1px solid #d97706;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Refresh Token →</button>
+  </div>
+
   <!-- Kill-switch locked banner -->
   <div id="kill-switch-banner" style="display:none;background:#1a0a0a;border:1.5px solid #ef4444;border-radius:10px;padding:13px 18px;margin-bottom:16px;align-items:center;gap:12px">
     <span style="font-size:22px">🔒</span>
@@ -1139,8 +1149,9 @@ async function loadBrokerData() {
       document.getElementById('ps-expired-badge').style.display = plan.expired ? '' : 'none';
     }
 
-    // Render broker tabs
+    // Render broker tabs + check for stale tokens
     renderBrokerTabs();
+    _checkStaleBrokerAlert();
 
     // Auto-select first instance
     if (!state.selectedBroker && state.instances.length > 0) {
@@ -1190,11 +1201,41 @@ function renderBrokerTabs() {
       const inst = state.instances.find(i => i.broker === b);
       const btn = document.createElement('button');
       btn.className = 'broker-tab' + (state.selectedBroker === b ? ` sel-${b}` : '');
-      btn.textContent = BROKER_LABELS[b] + (inst ? ' ✓' : '');
+
+      // Status dot: green=running+fresh, yellow=configured+stale, grey=not configured
+      let dotColor = '#475569'; // grey - not configured
+      let dotTitle = 'Not configured';
+      if (inst) {
+        if (inst.status === 'running' && inst.token_fresh) {
+          dotColor = '#34d399'; dotTitle = 'Connected & running';
+        } else if (inst.token_fresh) {
+          dotColor = '#fbbf24'; dotTitle = 'Token fresh, bot stopped';
+        } else {
+          dotColor = '#f87171'; dotTitle = 'Token stale — refresh needed';
+        }
+      }
+      const dot = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dotColor};margin-right:5px;flex-shrink:0" title="${dotTitle}"></span>`;
+      btn.innerHTML = dot + BROKER_LABELS[b] + (inst ? ' ✓' : '');
       btn.onclick = () => selectBroker(b);
       wrap.appendChild(btn);
     });
   });
+}
+
+function _checkStaleBrokerAlert() {
+  const configured = state.instances.filter(i => i.status !== 'removed');
+  if (!configured.length) return;
+  const stale = configured.filter(i => !i.token_fresh);
+  const banner = document.getElementById('stale-cred-banner');
+  if (!banner) return;
+  if (stale.length) {
+    const names = stale.map(i => i.broker.charAt(0).toUpperCase() + i.broker.slice(1)).join(', ');
+    document.getElementById('stale-cred-text').textContent =
+      `Token expired for: ${names}. Re-authenticate to resume live trading.`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 function selectBroker(broker) {
