@@ -48,7 +48,7 @@
     </div>
     <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
       <div class="text-xs mb-1" style="color:var(--muted)">Started At</div>
-      <div id="pm-started" class="font-bold text-sm" style="color:var(--text-soft)font-size:11px">--</div>
+      <div id="pm-started" class="font-bold text-sm" style="color:var(--text-soft);font-size:11px">--</div>
     </div>
     <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
       <div class="text-xs mb-1" style="color:var(--muted)">Active Sessions</div>
@@ -64,7 +64,7 @@
 <div class="grid grid-cols-1 gap-4 mb-6">
   <div class="card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)">Live Bot Instances</div>
-    <div id="live-list" style="color:var(--muted)font-size:13px">Loading...</div>
+    <div id="live-list" style="color:var(--muted);font-size:13px">Loading...</div>
   </div>
 </div>
 
@@ -85,7 +85,7 @@
     <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Pending Broker Change Requests</span>
     <span id="bcr-count" class="text-xs px-2 py-0.5 rounded" style="background:#3b1f00;color:#fb923c">0</span>
   </div>
-  <div id="bcr-list" style="color:var(--muted)font-size:13px">No pending requests.</div>
+  <div id="bcr-list" style="color:var(--muted);font-size:13px">No pending requests.</div>
 </div>
 
 <!-- ── System Health ─────────────────────────────────────────────────────── -->
@@ -162,7 +162,7 @@
 <!-- Rust rebuild modal -->
 <div id="rust-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);align-items:center;justify-content:center">
   <div class="card p-6" style="max-width:520px;width:90%;position:relative">
-    <button onclick="document.getElementById('rust-modal').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted)font-size:18px;cursor:pointer">✕</button>
+    <button onclick="document.getElementById('rust-modal').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button>
     <div class="text-sm font-bold text-white mb-3">⚡ Rust Engine — Rebuild Instructions</div>
     <p class="text-xs mb-3" style="color:var(--text-soft)">The Rust module accelerates RSI, VWAP, ROC and boolean-logic calculations. Run the command below on the server to compile and install it:</p>
     <div class="rounded-lg p-3 mb-4" style="background:var(--surface2);border:1px solid var(--border)">
@@ -387,7 +387,7 @@ async function loadHealth() {
       const ok = connected && !stale;
       const color = ok ? '#34d399' : connected ? '#fb923c' : '#f87171';
       const label = ok ? 'LIVE' : connected ? 'STALE' : 'OFFLINE';
-      return `<span style="color:${color};font-weight:700">${label}</span> <span style="color:var(--muted)font-size:10px">${name}</span>`;
+      return `<span style="color:${color};font-weight:700">${label}</span> <span style="color:var(--muted);font-size:10px">${name}</span>`;
     }
     document.getElementById('h-feed-primary').innerHTML = feedBadgeFlat(h.upstox_ws_connected, h.upstox_last_tick_secs_ago, 'Upstox');
     document.getElementById('h-feed-backup').innerHTML = feedBadgeFlat(h.dhan_ws_connected, h.dhan_last_tick_secs_ago, 'Dhan');

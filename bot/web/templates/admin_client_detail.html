@@ -35,7 +35,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
     <div class="card p-4">
       <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)">Bot Instances</div>
-      <div id="instances-list" style="color:var(--muted)font-size:13px">Loading...</div>
+      <div id="instances-list" style="color:var(--muted);font-size:13px">Loading...</div>
       <div class="flex gap-2 mt-3">
         <button onclick="forceClose()" class="btn-danger px-3 py-1.5 text-xs">Force Stop Bot</button>
         <button id="toggle-active-btn" onclick="toggleActive()" class="btn-primary px-3 py-1.5 text-xs">Loading...</button>
@@ -45,7 +45,7 @@
 
     <div class="card p-4">
       <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)">Order Failures</div>
-      <div id="failures-list" style="color:var(--muted)font-size:13px">Loading...</div>
+      <div id="failures-list" style="color:var(--muted);font-size:13px">Loading...</div>
     </div>
   </div>
 
@@ -54,7 +54,7 @@
     <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)">Telegram Notifications</div>
     <div class="flex items-center gap-3">
       <span id="tg-badge" style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:12px;font-weight:600">--</span>
-      <span id="tg-chat-id" style="color:var(--text-soft)font-size:12px;font-family:monospace"></span>
+      <span id="tg-chat-id" style="color:var(--text-soft);font-size:12px;font-family:monospace"></span>
     </div>
   </div>
 
@@ -120,7 +120,7 @@
 
   <div class="card p-4 mb-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)">Broker Change Requests</div>
-    <div id="bcr-detail-list" style="color:var(--muted)font-size:13px">Loading...</div>
+    <div id="bcr-detail-list" style="color:var(--muted);font-size:13px">Loading...</div>
   </div>
 
   <div class="card p-4">
@@ -475,7 +475,7 @@
         <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Bot Log (last 50 lines)</span>
         <button onclick="document.getElementById('m-log-box').scrollTop = document.getElementById('m-log-box').scrollHeight" class="text-xs" style="color:#00d4aa">↓ Bottom</button>
       </div>
-      <div id="m-log-box" class="rounded-lg p-3 h-48 overflow-y-auto" style="background:#040810;font-family:'Courier New',monospace;font-size:11px;color:var(--text-soft)">
+      <div id="m-log-box" class="rounded-lg p-3 h-48 overflow-y-auto" style="background:var(--bg);font-family:'Courier New',monospace;font-size:11px;color:var(--text-soft)">
         <p style="color:var(--muted)">Waiting for bot logs…</p>
       </div>
     </div>
@@ -791,7 +791,7 @@ async function loadDetail() {
       <div class="py-1.5" style="border-bottom:1px solid var(--border-soft)">
         <div class="flex items-center justify-between">
           <span style="color:#f87171">Leg ${escapeHtml(f.order_side)} failed</span>
-          <span style="color:var(--muted)font-size:11px">${(f.created_at||'').substring(11,19)}</span>
+          <span style="color:var(--muted);font-size:11px">${(f.created_at||'').substring(11,19)}</span>
         </div>
         <div class="text-xs mt-0.5" style="color:var(--muted)">${escapeHtml(f.failure_reason||'')} · Retry ${f.retry_attempt} · ${f.paired_leg_closed ? 'Paired leg closed ✓' : 'Paired leg open ⚠'}</div>
       </div>
@@ -807,7 +807,7 @@ async function loadDetail() {
       const pSign = (t.pnl_pts||0) > 0 ? '+' : '';
       const rSign = (t.pnl_rs||0) > 0 ? '+' : '';
       return `<tr>
-        <td style="color:var(--muted)font-size:12px">${(t.closed_at||'').substring(11,19)}</td>
+        <td style="color:var(--muted);font-size:12px">${(t.closed_at||'').substring(11,19)}</td>
         <td style="color:${t.trade_type==='BUY'?'#60a5fa':'#fb923c'};font-weight:700">${escapeHtml(t.trade_type||'')}</td>
         <td style="color:${(t.direction==='CE'||t.direction==='CALL')?'#818cf8':'#f472b6'}">${escapeHtml(t.direction||'')}</td>
         <td class="text-white">${t.strike||'--'}</td>
@@ -816,7 +816,7 @@ async function loadDetail() {
         <td style="color:var(--text-soft)">${t.exit_price ? parseFloat(t.exit_price).toFixed(2) : '--'}</td>
         <td style="color:${pnlColor};font-weight:700">${pSign}${t.pnl_pts !== null ? parseFloat(t.pnl_pts).toFixed(2) : '--'}</td>
         <td style="color:${pnlColor};font-weight:700">${rSign}${t.pnl_rs !== null ? parseFloat(t.pnl_rs).toFixed(0) : '--'}</td>
-        <td style="color:var(--muted)max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.exit_reason||'')}</td>
+        <td style="color:var(--muted);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.exit_reason||'')}</td>
       </tr>`;
     }).join('');
   } else {
@@ -938,8 +938,8 @@ async function loadBotStatus() {
       const pfx = 'm-buy-' + s;
       const statusEl = document.getElementById(pfx + '-status');
       statusEl.textContent = active ? 'ACTIVE' : 'IDLE';
-      statusEl.style.background = active ? '#064e3b' : '#1e293b';
-      statusEl.style.color = active ? '#34d399' : '#64748b';
+      statusEl.style.background = active ? '#064e3b' : 'var(--card)';
+      statusEl.style.color = active ? '#34d399' : 'var(--muted)';
       document.getElementById(pfx + '-strike').textContent = pos.strike || '--';
       document.getElementById(pfx + '-entry').textContent = fmt(pos.entry);
       document.getElementById(pfx + '-ltp').textContent = fmt(pos.ltp);
@@ -998,7 +998,7 @@ async function loadBotStatus() {
         document.getElementById('m-v3-pool-body').innerHTML = v3.pool.map(p => {
           const pass = p.slope_ok && p.rsi_ok && p.vwap_ok;
           return `
-            <tr style="border-bottom:1px solid #0f172a">
+            <tr style="border-bottom:1px solid var(--border-soft)">
               <td class="py-1.5 text-slate-300 font-mono">
                 ${p.ce} <span class="text-[10px] text-slate-500">(${p.ce_ltp})</span> /
                 ${p.pe} <span class="text-[10px] text-slate-500">(${p.pe_ltp})</span>
@@ -1033,8 +1033,8 @@ async function loadBotStatus() {
       const pfx = 'm-sell-' + s;
       const statusEl = document.getElementById(pfx + '-status');
       statusEl.textContent = active ? 'PLACED' : 'IDLE';
-      statusEl.style.background = active ? '#3b1f00' : '#1e293b';
-      statusEl.style.color = active ? '#fb923c' : '#64748b';
+      statusEl.style.background = active ? '#3b1f00' : 'var(--card)';
+      statusEl.style.color = active ? '#fb923c' : 'var(--muted)';
       document.getElementById(pfx + '-strike').textContent = pos.strike || '--';
       document.getElementById(pfx + '-entry').textContent = fmt(pos.entry);
       document.getElementById(pfx + '-ltp').textContent = fmt(pos.ltp);
