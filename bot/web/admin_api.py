@@ -1523,6 +1523,64 @@ async def tail_client_log(
         raise HTTPException(500, f"Error reading log file: {e}")
 
 
+@router.get("/elastic-ips")
+async def list_elastic_ips(admin=Depends(require_admin)):
+    """Return all EC2 Elastic IPs from AWS, annotated with which client is using each one."""
+    aws_key = os.environ.get("AWS_ACCESS_KEY_ID", "").strip()
+    aws_secret = os.environ.get("AWS_SECRET_ACCESS_KEY", "").strip()
+    aws_region = (os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION") or "").strip()
+
+    if not aws_key or not aws_secret:
+        return {
+            "success": False,
+            "error": "AWS credentials not configured. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets.",
+            "ips": [],
+        }
+
+    # Build a map of ip → client info from the DB so we can annotate each address
+    assigned_rows = db_fetchall(
+        "SELECT id, username, email, static_ip FROM users WHERE role='client' AND static_ip IS NOT NULL AND static_ip != ''"
+    )
+    assigned_map: dict[str, dict] = {
+        row["static_ip"].strip(): {"id": row["id"], "username": row["username"], "email": row["email"]}
+        for row in assigned_rows
+        if row.get("static_ip")
+    }
+
+    try:
+        import boto3
+        kwargs: dict = {"aws_access_key_id": aws_key, "aws_secret_access_key": aws_secret}
+        if aws_region:
+            kwargs["region_name"] = aws_region
+        ec2 = boto3.client("ec2", **kwargs)
+        response = ec2.describe_addresses()
+        addresses = response.get("Addresses", [])
+    except Exception as e:
+        logger.warning(f"[Admin] Failed to fetch EC2 Elastic IPs: {e}")
+        return {
+            "success": False,
+            "error": "Could not retrieve Elastic IPs from AWS. Check that your credentials are correct and have EC2 read permissions.",
+            "ips": [],
+        }
+
+    result = []
+    for addr in addresses:
+        public_ip = addr.get("PublicIp", "")
+        allocation_id = addr.get("AllocationId", "")
+        instance_id = addr.get("InstanceId")
+        assigned_client = assigned_map.get(public_ip)
+        result.append({
+            "public_ip": public_ip,
+            "allocation_id": allocation_id,
+            "instance_id": instance_id,
+            "ec2_associated": bool(instance_id),
+            "in_use_by": assigned_client,
+        })
+
+    result.sort(key=lambda x: (x["in_use_by"] is not None, x["public_ip"]))
+    return {"success": True, "ips": result}
+
+
 @router.get("/clients/{client_id}/static-ip")
 async def get_client_static_ip(client_id: int, admin=Depends(require_admin)):
     row = db_fetchone("SELECT static_ip FROM users WHERE id=?", (client_id,))
@@ -1541,7 +1599,19 @@ async def update_client_static_ip(client_id: int, body: StaticIPBody,
     row = db_fetchone("SELECT id FROM users WHERE id=?", (client_id,))
     if not row:
         raise HTTPException(404, "Client not found.")
-    db_execute("UPDATE users SET static_ip=? WHERE id=?", (body.static_ip.strip() or None, client_id))
+    ip_to_save = body.static_ip.strip() or None
+    if ip_to_save:
+        conflict = db_fetchone(
+            "SELECT id, username FROM users WHERE static_ip=? AND id != ? AND role='client'",
+            (ip_to_save, client_id),
+        )
+        if conflict:
+            raise HTTPException(
+                409,
+                f"IP {ip_to_save} is already assigned to client '{conflict['username']}' (id={conflict['id']}). "
+                "Remove it from that client before re-assigning."
+            )
+    db_execute("UPDATE users SET static_ip=? WHERE id=?", (ip_to_save, client_id))
     _audit(admin["id"], admin["role"], "client_static_ip_update", client_id, {"static_ip": body.static_ip})
     return {"success": True}
 

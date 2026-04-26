@@ -65,14 +65,40 @@
       <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Assigned Static IP</div>
       <span id="static-ip-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:9999px;background:var(--badge-ok-bg);color:var(--badge-ok-txt);font-weight:600">✓ Saved</span>
     </div>
-    <p class="text-xs mb-3" style="color:var(--muted)">Enter the Elastic IP (public IP) assigned to this client on your EC2 instance. The client uses this IP to whitelist with their broker's developer portal.</p>
-    <div class="flex gap-2 items-end">
-      <div class="flex-1">
-        <input type="text" id="static-ip-input" class="input-field w-full" placeholder="e.g. 13.234.56.78" pattern="^(\d{1,3}\.){3}\d{1,3}$">
+    <p class="text-xs mb-3" style="color:var(--muted)">Pick an Elastic IP from your AWS account or enter one manually. The client uses this IP to whitelist their broker's developer portal.</p>
+
+    <!-- Current assignment display -->
+    <div id="static-ip-current-wrap" class="mb-3 hidden">
+      <div class="text-xs mb-1" style="color:var(--muted)">Currently assigned</div>
+      <div class="flex items-center gap-2">
+        <code id="static-ip-current" class="text-sm font-mono font-bold" style="color:var(--accent)"></code>
+        <button onclick="clearStaticIP()" class="btn-ghost px-3 py-1 text-xs whitespace-nowrap">Remove</button>
       </div>
-      <button onclick="saveStaticIP()" class="btn-primary px-5 py-2 text-sm font-bold whitespace-nowrap">Save IP</button>
-      <button onclick="clearStaticIP()" class="btn-ghost px-4 py-2 text-sm whitespace-nowrap">Clear</button>
     </div>
+
+    <!-- AWS dropdown section -->
+    <div class="mb-3">
+      <div class="flex items-center gap-2 mb-2">
+        <label class="text-xs font-semibold" style="color:var(--muted)">Pick from AWS Elastic IPs</label>
+        <button onclick="loadElasticIPs()" id="elastic-ip-refresh-btn" class="btn-ghost px-3 py-1 text-xs whitespace-nowrap">⟳ Load</button>
+      </div>
+      <div id="elastic-ip-status" class="text-xs mb-2 hidden" style="color:var(--muted)"></div>
+      <div id="elastic-ip-dropdown-wrap" class="flex gap-2 items-center hidden">
+        <select id="elastic-ip-select" class="input-field flex-1">
+          <option value="">-- Select an Elastic IP --</option>
+        </select>
+        <button onclick="assignElasticIP()" class="btn-primary px-5 py-2 text-sm font-bold whitespace-nowrap">Assign</button>
+      </div>
+    </div>
+
+    <!-- Manual entry fallback -->
+    <details class="text-xs" style="color:var(--muted)">
+      <summary class="cursor-pointer select-none hover:opacity-80" style="color:var(--muted)">Enter IP manually instead</summary>
+      <div class="flex gap-2 items-end mt-2">
+        <input type="text" id="static-ip-input" class="input-field flex-1" placeholder="e.g. 13.234.56.78" pattern="^(\d{1,3}\.){3}\d{1,3}$">
+        <button onclick="saveStaticIP()" class="btn-primary px-5 py-2 text-sm font-bold whitespace-nowrap">Save</button>
+      </div>
+    </details>
   </div>
 
   <!-- ── Plan Assignment ─────────────────────────────────────────────────── -->
@@ -865,15 +891,26 @@ async function loadDetail() {
   try {
     const ipResp = await fetch(`/api/admin/clients/${clientId}/static-ip`);
     const ipData = await ipResp.json();
-    const ipEl = document.getElementById('static-ip-input');
-    if (ipEl) {
-      ipEl.value = ipData.static_ip || '';
-    }
+    _updateStaticIPDisplay(ipData.static_ip || '');
   } catch (_) {}
 }
 
-async function saveStaticIP() {
-  const ip = (document.getElementById('static-ip-input').value || '').trim();
+function _updateStaticIPDisplay(ip) {
+  const currentWrap = document.getElementById('static-ip-current-wrap');
+  const currentEl = document.getElementById('static-ip-current');
+  const manualEl = document.getElementById('static-ip-input');
+  if (ip) {
+    if (currentWrap) currentWrap.classList.remove('hidden');
+    if (currentEl) currentEl.textContent = ip;
+    if (manualEl) manualEl.value = ip;
+  } else {
+    if (currentWrap) currentWrap.classList.add('hidden');
+    if (currentEl) currentEl.textContent = '';
+    if (manualEl) manualEl.value = '';
+  }
+}
+
+async function _persistStaticIP(ip) {
   const res = await fetch(`/api/admin/clients/${clientId}/static-ip`, {
     method: 'PATCH',
     headers: {'Content-Type': 'application/json'},
@@ -881,21 +918,87 @@ async function saveStaticIP() {
   });
   const d = await res.json();
   const badge = document.getElementById('static-ip-badge');
-  if (d.success) {
-    badge.style.display = '';
-    setTimeout(() => { badge.style.display = 'none'; }, 3000);
-  } else {
-    alert('Failed to save static IP: ' + (d.error || 'unknown error'));
+  if (res.status === 409) {
+    alert('Cannot assign IP: ' + (d.detail || 'This IP is already assigned to another client.'));
+    return false;
   }
+  if (!res.ok || !d.success) {
+    alert('Failed to save static IP: ' + (d.detail || d.error || 'unknown error'));
+    return false;
+  }
+  _updateStaticIPDisplay(ip);
+  if (badge) { badge.style.display = ''; setTimeout(() => { badge.style.display = 'none'; }, 3000); }
+  // Refresh the dropdown so it reflects the new assignment state
+  const dropWrap = document.getElementById('elastic-ip-dropdown-wrap');
+  if (dropWrap && !dropWrap.classList.contains('hidden')) {
+    loadElasticIPs();
+  }
+  return true;
+}
+
+async function saveStaticIP() {
+  const ip = (document.getElementById('static-ip-input').value || '').trim();
+  if (!ip) { alert('Please enter an IP address.'); return; }
+  await _persistStaticIP(ip);
 }
 
 async function clearStaticIP() {
-  document.getElementById('static-ip-input').value = '';
-  await fetch(`/api/admin/clients/${clientId}/static-ip`, {
-    method: 'PATCH',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ static_ip: '' }),
-  });
+  if (!confirm('Remove the assigned static IP from this client?')) return;
+  await _persistStaticIP('');
+}
+
+async function loadElasticIPs() {
+  const btn = document.getElementById('elastic-ip-refresh-btn');
+  const statusEl = document.getElementById('elastic-ip-status');
+  const dropWrap = document.getElementById('elastic-ip-dropdown-wrap');
+  const sel = document.getElementById('elastic-ip-select');
+  if (btn) btn.textContent = '⟳ Loading…';
+  if (statusEl) { statusEl.textContent = ''; statusEl.classList.add('hidden'); }
+  try {
+    const resp = await fetch('/api/admin/elastic-ips');
+    const data = await resp.json();
+    if (!data.success) {
+      if (statusEl) { statusEl.textContent = data.error || 'Failed to fetch IPs.'; statusEl.classList.remove('hidden'); statusEl.style.color = 'var(--error)'; }
+      if (dropWrap) dropWrap.classList.add('hidden');
+      return;
+    }
+    const ips = data.ips || [];
+    if (ips.length === 0) {
+      if (statusEl) { statusEl.textContent = 'No Elastic IPs found in your AWS account.'; statusEl.classList.remove('hidden'); statusEl.style.color = 'var(--muted)'; }
+      if (dropWrap) dropWrap.classList.add('hidden');
+      return;
+    }
+    // Rebuild select options
+    if (sel) {
+      sel.innerHTML = '<option value="">-- Select an Elastic IP --</option>';
+      ips.forEach(ip => {
+        const opt = document.createElement('option');
+        opt.value = ip.public_ip;
+        if (ip.in_use_by) {
+          opt.disabled = true;
+          opt.textContent = `${ip.public_ip}  — in use by ${ip.in_use_by.username}`;
+          opt.style.color = 'var(--muted)';
+        } else {
+          opt.textContent = `${ip.public_ip}${ip.ec2_associated ? '  (EC2 associated)' : ''}`;
+        }
+        sel.appendChild(opt);
+      });
+    }
+    if (dropWrap) dropWrap.classList.remove('hidden');
+    if (statusEl) statusEl.classList.add('hidden');
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = 'Network error fetching IPs.'; statusEl.classList.remove('hidden'); statusEl.style.color = 'var(--error)'; }
+  } finally {
+    if (btn) btn.textContent = '⟳ Refresh';
+  }
+}
+
+async function assignElasticIP() {
+  const sel = document.getElementById('elastic-ip-select');
+  const ip = sel ? sel.value.trim() : '';
+  if (!ip) { alert('Please select an Elastic IP from the list.'); return; }
+  const ok = await _persistStaticIP(ip);
+  if (ok && sel) sel.value = '';
 }
 
 function fmt(v) { return v !== null && v !== undefined ? parseFloat(v).toFixed(2) : '--'; }
@@ -1251,6 +1354,7 @@ function scrollLogBottom() {
 
 loadPlans();
 loadDetail();
+loadElasticIPs();
 loadBotStatus();
 setInterval(loadBotStatus, 5000);
 </script>
