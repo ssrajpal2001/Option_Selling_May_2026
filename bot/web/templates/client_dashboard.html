@@ -1238,12 +1238,12 @@ function renderBrokerTabs() {
       let dotTitle = 'Not configured';
       let dotExtra = '';
       if (inst) {
-        const reconnSt = _reconnectState[b];
-        if (reconnSt) {
+        const reconnSt = inst.reconnect_status;
+        if (reconnSt && reconnSt.active) {
           dotColor = '#0ea5e9';
-          dotTitle = `Auto-reconnecting (${reconnSt.attempts}/${RECONNECT_MAX})`;
+          dotTitle = `Auto-reconnecting (${reconnSt.attempts}/${reconnSt.max_attempts})`;
           dotExtra = `<span style="font-size:9px;color:#38bdf8;margin-left:3px">↺${reconnSt.attempts}</span>`;
-        } else if (!inst.has_api_key) {
+        } else if (!inst.has_credentials) {
           dotColor = '#6366f1'; dotTitle = 'Credentials missing — click to add';
         } else if (inst.status === 'running' && inst.token_fresh) {
           dotColor = '#34d399'; dotTitle = 'Connected & running';
@@ -1264,7 +1264,7 @@ function renderBrokerTabs() {
 function _checkStaleBrokerAlert() {
   const configured = state.instances.filter(i => i.status !== 'removed');
   if (!configured.length) return;
-  const stale = configured.filter(i => i.has_api_key && !i.token_fresh);
+  const stale = configured.filter(i => i.has_credentials && !i.token_fresh);
   const banner = document.getElementById('stale-cred-banner');
   if (!banner) return;
   if (stale.length) {
@@ -1283,7 +1283,7 @@ function _checkMissingCredsAlert() {
     document.getElementById('missing-creds-banner').style.display = 'none';
     return;
   }
-  const missing = configured.filter(i => !i.has_api_key);
+  const missing = configured.filter(i => !i.has_credentials);
   const banner = document.getElementById('missing-creds-banner');
   if (!banner) return;
   if (missing.length) {
@@ -1297,72 +1297,20 @@ function _checkMissingCredsAlert() {
 }
 
 // ═══════════════════════════════════════════════════════ AUTO-RECONNECT
-// Per-broker reconnect state: { attempts, timer }
-const _reconnectState = {};
+// Reconnect state is managed by the backend hub (ReconnectManager).
+// The UI requests start/cancel via POST and reads progress from inst.reconnect_status.
 const RECONNECT_MAX = 5;
-const RECONNECT_INTERVAL_MS = 60000;
 
-function _startReconnectLoop(broker) {
-  if (_reconnectState[broker] && _reconnectState[broker].timer) return; // already running
-  if (!_reconnectState[broker]) _reconnectState[broker] = { attempts: 0 };
-  _reconnectState[broker].attempts = 0;
-  _scheduleNextReconnect(broker);
-  _updateReconnectBanner();
-}
-
-function _scheduleNextReconnect(broker) {
-  if (_reconnectState[broker] && _reconnectState[broker].timer) {
-    clearTimeout(_reconnectState[broker].timer);
-  }
-  _reconnectState[broker].timer = setTimeout(() => _doReconnect(broker), RECONNECT_INTERVAL_MS);
-}
-
-async function _doReconnect(broker) {
-  if (!_reconnectState[broker]) return;
-  _reconnectState[broker].attempts += 1;
-  const attempt = _reconnectState[broker].attempts;
-  _updateReconnectBanner();
-  try {
-    const r = await fetch(`/api/client/broker/${broker}/reconnect`, { method: 'POST' });
-    if (r.ok) {
-      // Success — refresh broker data and stop loop
-      _stopReconnectLoop(broker);
-      await loadBrokerData();
-      toast(`${BROKER_LABELS[broker] || broker} reconnected successfully.`, 'ok');
-      return;
-    }
-  } catch (_) {}
-
-  // Failed attempt
-  if (attempt >= RECONNECT_MAX) {
-    _stopReconnectLoop(broker);
-    toast(`Auto-reconnect failed after ${RECONNECT_MAX} attempts for ${BROKER_LABELS[broker] || broker}. Please reconnect manually.`, 'err');
-    _updateReconnectBanner();
-    return;
-  }
-  // Schedule next
-  _scheduleNextReconnect(broker);
-  _updateReconnectBanner();
-}
-
-function _stopReconnectLoop(broker) {
-  if (_reconnectState[broker]) {
-    if (_reconnectState[broker].timer) clearTimeout(_reconnectState[broker].timer);
-    delete _reconnectState[broker];
-  }
-  _updateReconnectBanner();
-}
-
-function _cancelAllReconnects() {
-  Object.keys(_reconnectState).forEach(b => {
-    if (_reconnectState[b] && _reconnectState[b].timer) clearTimeout(_reconnectState[b].timer);
-    delete _reconnectState[b];
-  });
-  _updateReconnectBanner();
+async function _cancelAllReconnects() {
+  const active = state.instances.filter(i => i.reconnect_status && i.reconnect_status.active);
+  await Promise.allSettled(
+    active.map(i => fetch(`/api/client/broker/${i.broker}/reconnect/cancel`, { method: 'POST' }))
+  );
+  await _pollBrokerStatus();
 }
 
 function _updateReconnectBanner() {
-  const active = Object.entries(_reconnectState);
+  const active = (state.instances || []).filter(i => i.reconnect_status && i.reconnect_status.active);
   const banner = document.getElementById('reconnect-banner');
   const text = document.getElementById('reconnect-banner-text');
   if (!banner) return;
@@ -1371,29 +1319,26 @@ function _updateReconnectBanner() {
     return;
   }
   banner.style.display = 'flex';
-  const lines = active.map(([b, s]) => {
-    const attempts = s.attempts || 0;
-    return `${BROKER_LABELS[b] || b}: attempt ${attempts}/${RECONNECT_MAX}`;
+  const lines = active.map(i => {
+    const s = i.reconnect_status;
+    return `${BROKER_LABELS[i.broker] || i.broker}: attempt ${s.attempts}/${s.max_attempts}`;
   });
   text.textContent = lines.join(' · ') + ' — checking every 60s';
 }
 
-function _checkReconnectLoops() {
-  state.instances.forEach(inst => {
+async function _checkReconnectLoops() {
+  for (const inst of state.instances) {
     const broker = inst.broker;
-    // Auto-reconnect when credentials + auto-login present AND:
-    //   a) token is stale (expired since last 6 AM IST gate), OR
-    //   b) a live connection just dropped (was running, now stopped/error)
-    const tokenStale = inst.has_api_key && !inst.token_fresh && inst.has_auto_login;
+    // Trigger backend reconnect loop when: credentials present + auto-login + stale OR dropped
+    const tokenStale = inst.has_credentials && !inst.token_fresh && inst.has_auto_login;
     const connectionDropped = !!inst._connection_dropped && inst.has_auto_login;
-    const shouldReconnect = tokenStale || connectionDropped;
-    const alreadyRunning = !!_reconnectState[broker];
-    if (shouldReconnect && !alreadyRunning) {
-      _startReconnectLoop(broker);
-    } else if (!shouldReconnect && alreadyRunning && inst.token_fresh && inst.status === 'running') {
-      _stopReconnectLoop(broker);
+    const shouldStart = (tokenStale || connectionDropped) && !(inst.reconnect_status && inst.reconnect_status.active);
+    if (shouldStart) {
+      try {
+        await fetch(`/api/client/broker/${broker}/reconnect/start`, { method: 'POST' });
+      } catch (_) {}
     }
-  });
+  }
 }
 
 // ═══════════════════════════════════════════════════════ BROKER STATUS POLL
