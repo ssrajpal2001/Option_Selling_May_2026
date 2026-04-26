@@ -6,19 +6,18 @@ PROJECT_ROOT="$( dirname "$SCRIPT_DIR" )"
 cd "$PROJECT_ROOT"
 
 PYENV_PYTHON="$HOME/.pyenv/versions/3.11.15/bin/python"
-PYENV_UVICORN="$HOME/.pyenv/versions/3.11.15/bin/uvicorn"
 
 echo "--- AlgoSoft Server Restart Tool v3 ---"
 
 # 0. Self-heal: install deps if uvicorn is not importable under Python 3.11
 if ! "$PYENV_PYTHON" -c "import uvicorn" 2>/dev/null; then
     echo "uvicorn not found in Python 3.11 env — running setup_env.sh first..."
-    bash "$PROJECT_ROOT/setup_env.sh"
+    bash "$PROJECT_ROOT/setup_env.sh" || { echo "FATAL: setup_env.sh failed. Aborting."; exit 1; }
 fi
 
 # 1. Kill existing server process by name
-echo "Stopping existing server processes..."
-PID=$(pgrep -f "uvicorn web.server:app")
+echo "Stopping existing server processes by name..."
+PID=$(pgrep -f "python.*web/server.py")
 
 if [ -n "$PID" ]; then
     echo "Found server process at PID: $PID. Terminating..."
@@ -26,7 +25,7 @@ if [ -n "$PID" ]; then
     sleep 2
     echo "Process terminated."
 else
-    echo "No running server process found."
+    echo "No running server process found by name."
 fi
 
 # 2. Force clear Port 5000
@@ -53,15 +52,15 @@ fi
 sleep 2
 echo "Port 5000 is clear."
 
-# 3. Start server using the pyenv Python 3.11 uvicorn
+# 3. Start server using the pyenv Python 3.11 interpreter (preserves reload=True in server.py __main__)
 echo "Starting web server from $PROJECT_ROOT..."
 export PYTHONPATH=.
 > server.log
-nohup "$PYENV_UVICORN" web.server:app --host 0.0.0.0 --port 5000 > server.log 2>&1 &
+nohup "$PYENV_PYTHON" web/server.py > server.log 2>&1 &
 
 # 4. Check status
 sleep 5
-NEW_PID=$(pgrep -f "uvicorn web.server:app")
+NEW_PID=$(pgrep -f "python.*web/server.py")
 if [ -n "$NEW_PID" ] && [ -n "$(lsof -t -i :5000)" ]; then
     echo "SUCCESS: Server started with PID: $NEW_PID"
     echo "URL: http://127.0.0.1:5000"
