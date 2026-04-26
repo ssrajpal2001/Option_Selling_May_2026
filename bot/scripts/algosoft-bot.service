@@ -3,6 +3,9 @@ Description=AlgoSoft Algorithmic Trading Bot
 Documentation=https://github.com/ssrajpal2001/Option_Selling_May_2026
 After=network-online.target
 Wants=network-online.target
+# Allow up to 3 restarts within 60 s; after that systemd stops trying
+StartLimitIntervalSec=60
+StartLimitBurst=3
 
 [Service]
 Type=simple
@@ -18,11 +21,9 @@ ExecStart=/opt/algosoft/.pythonlibs/bin/python -m uvicorn web.server:app \
     --workers 1 \
     --log-level info
 
-# Restart on crash — up to 3 times within 60 s, then give up for this session
+# Restart on crash (StartLimitBurst/Interval are set in [Unit] above)
 Restart=on-failure
 RestartSec=10s
-StartLimitIntervalSec=60
-StartLimitBurst=3
 
 # Graceful shutdown: send SIGTERM and wait up to 30 s, then SIGKILL
 KillMode=mixed

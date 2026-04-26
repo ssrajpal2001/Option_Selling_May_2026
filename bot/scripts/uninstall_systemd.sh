@@ -24,8 +24,9 @@ echo "→ Stopping and disabling ${TIMER}..."
 systemctl stop    "${TIMER}"   2>/dev/null || true
 systemctl disable "${TIMER}"  2>/dev/null || true
 
-echo "→ Stopping ${SERVICE}..."
-systemctl stop "${SERVICE}" 2>/dev/null || true
+echo "→ Stopping and disabling ${SERVICE}..."
+systemctl stop    "${SERVICE}" 2>/dev/null || true
+systemctl disable "${SERVICE}" 2>/dev/null || true
 
 echo "→ Removing unit files..."
 rm -f "${SYSTEMD_DIR}/algosoft-bot.service"
