@@ -6,7 +6,7 @@
   <title>AlgoSoft Dashboard</title>
   <script>
     (function(){
-      var t=localStorage.getItem('algosoft-theme')||'dark';
+      var t=localStorage.getItem('algosoft-theme')||'{{ default_theme() }}';
       document.documentElement.setAttribute('data-theme',t);
     })();
   </script>
@@ -164,7 +164,7 @@
       if(m)m.classList.add('hidden');
     }
   });
-  _apply(localStorage.getItem('algosoft-theme')||'dark');
+  _apply(localStorage.getItem('algosoft-theme')||'{{ default_theme() }}');
 })();
 
 function showToast(msg,type){

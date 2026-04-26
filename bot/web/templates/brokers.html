@@ -5,7 +5,7 @@
 <div class="mb-6 flex items-center justify-between">
   <div>
     <h1 class="text-2xl font-bold text-white">Broker Management</h1>
-    <p class="text-xs mt-1" style="color:#64748b">Credential changes require a bot restart to take effect.</p>
+    <p class="text-xs mt-1" style="color:var(--muted)">Credential changes require a bot restart to take effect.</p>
   </div>
   <button onclick="restartBot()" class="btn-primary px-5 py-2 text-sm">↻ Restart Bot</button>
 </div>
@@ -13,17 +13,17 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
   <div class="card p-5">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:#64748b">Upstox — Daily Token Refresh</div>
-    <p class="text-xs mb-3" style="color:#94a3b8">Paste today's Upstox access token here. The bot will restart automatically.</p>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:var(--muted)">Upstox — Daily Token Refresh</div>
+    <p class="text-xs mb-3" style="color:var(--text-soft)">Paste today's Upstox access token here. The bot will restart automatically.</p>
     <div class="mb-3">
-      <label class="block text-xs mb-1" style="color:#94a3b8">Select Broker Account</label>
+      <label class="block text-xs mb-1" style="color:var(--text-soft)">Select Broker Account</label>
       <select id="token-broker" class="input-field">
         <option value="upstox_1">upstox_1</option>
         <option value="upstox_2">upstox_2</option>
       </select>
     </div>
     <div class="mb-4">
-      <label class="block text-xs mb-1" style="color:#94a3b8">New Access Token</label>
+      <label class="block text-xs mb-1" style="color:var(--text-soft)">New Access Token</label>
       <textarea id="token-value" class="input-field h-24 resize-none text-xs" placeholder="eyJ0eXAiOiJKV1Qi..."></textarea>
     </div>
     <button onclick="updateToken(true)" class="btn-primary w-full py-2 text-sm">Update Token &amp; Restart Bot</button>
@@ -31,25 +31,25 @@
   </div>
 
   <div class="card p-5">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Zerodha — Daily Login</div>
-    <p class="text-xs mb-3" style="color:#94a3b8">Zerodha tokens expire every night. Follow the two steps below each morning before starting the bot.</p>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Zerodha — Daily Login</div>
+    <p class="text-xs mb-3" style="color:var(--text-soft)">Zerodha tokens expire every night. Follow the two steps below each morning before starting the bot.</p>
 
-    <div class="rounded-lg p-3 mb-4" style="background:#0f172a;border:1px solid #1e293b">
-      <div class="text-xs font-semibold mb-2" style="color:#94a3b8">Step 1 — Open Zerodha login page</div>
+    <div class="rounded-lg p-3 mb-4" style="background:var(--surface);border:1px solid var(--border)">
+      <div class="text-xs font-semibold mb-2" style="color:var(--text-soft)">Step 1 — Open Zerodha login page</div>
       <div class="mb-3">
-        <label class="block text-xs mb-1" style="color:#94a3b8">Account</label>
+        <label class="block text-xs mb-1" style="color:var(--text-soft)">Account</label>
         <select id="zerodha-account" class="input-field text-xs">
           <option value="">Loading…</option>
         </select>
       </div>
       <button onclick="openZerodhaLogin()" class="btn-ghost w-full py-2 text-sm">Open Kite Login Page ↗</button>
-      <p class="text-xs mt-2" style="color:#64748b">After logging in, Kite will redirect you to a URL containing <code style="color:#00d4aa">request_token=XXXXXXX</code>. Copy that value.</p>
+      <p class="text-xs mt-2" style="color:var(--muted)">After logging in, Kite will redirect you to a URL containing <code style="color:#00d4aa">request_token=XXXXXXX</code>. Copy that value.</p>
     </div>
 
-    <div class="rounded-lg p-3" style="background:#0f172a;border:1px solid #1e293b">
-      <div class="text-xs font-semibold mb-2" style="color:#94a3b8">Step 2 — Paste request_token &amp; generate access token</div>
+    <div class="rounded-lg p-3" style="background:var(--surface);border:1px solid var(--border)">
+      <div class="text-xs font-semibold mb-2" style="color:var(--text-soft)">Step 2 — Paste request_token &amp; generate access token</div>
       <div class="mb-3">
-        <label class="block text-xs mb-1" style="color:#94a3b8">Request Token (from redirect URL)</label>
+        <label class="block text-xs mb-1" style="color:var(--text-soft)">Request Token (from redirect URL)</label>
         <input type="text" id="zerodha-request-token" class="input-field text-xs font-mono" placeholder="e.g. KSd7fGHj2nXq..."/>
       </div>
       <button onclick="zerodhaExchangeToken(true)" class="btn-primary w-full py-2 text-sm">Generate Token &amp; Restart Bot</button>
@@ -58,13 +58,13 @@
   </div>
 
   <div class="card p-5">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:#64748b">Active Broker</div>
-    <p class="text-xs mb-3" style="color:#94a3b8">Select which broker handles trade execution. Bot restart required.</p>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:var(--muted)">Active Broker</div>
+    <p class="text-xs mb-3" style="color:var(--text-soft)">Select which broker handles trade execution. Bot restart required.</p>
     <div id="broker-list" class="space-y-2 mb-4">
-      <div style="color:#64748b" class="text-sm">Loading brokers…</div>
+      <div style="color:var(--muted)" class="text-sm">Loading brokers…</div>
     </div>
     <div class="mb-3">
-      <label class="block text-xs mb-1" style="color:#94a3b8">Active Broker (comma separated)</label>
+      <label class="block text-xs mb-1" style="color:var(--text-soft)">Active Broker (comma separated)</label>
       <input type="text" id="active-broker-input" class="input-field" placeholder="PaperTrade"/>
     </div>
     <button onclick="setActiveBroker()" class="btn-ghost w-full py-2 text-sm">Set Active Broker</button>
@@ -73,11 +73,11 @@
 </div>
 
 <div class="card p-5 mb-4">
-  <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:#64748b">Configured Brokers</div>
+  <div class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:var(--muted)">Configured Brokers</div>
   <div id="brokers-table" class="overflow-x-auto">
     <table class="w-full text-sm">
       <thead>
-        <tr style="color:#64748b;border-bottom:1px solid #334155">
+        <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
           <th class="text-left pb-2 pr-4">Account Name</th>
           <th class="text-left pb-2 pr-4">API Key</th>
           <th class="text-left pb-2 pr-4">Token (partial)</th>
@@ -85,7 +85,7 @@
         </tr>
       </thead>
       <tbody id="brokers-tbody">
-        <tr><td colspan="4" style="color:#64748b" class="py-4 text-center">Loading…</td></tr>
+        <tr><td colspan="4" style="color:var(--muted)" class="py-4 text-center">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -95,24 +95,24 @@
   <div class="card p-6 w-full max-w-lg mx-4">
     <div class="flex items-center justify-between mb-4">
       <h2 class="font-bold text-white" id="modal-title">Edit Credentials</h2>
-      <button onclick="closeModal()" style="color:#64748b" class="text-xl">×</button>
+      <button onclick="closeModal()" style="color:var(--muted)" class="text-xl">×</button>
     </div>
     <input type="hidden" id="modal-broker"/>
     <div class="space-y-3">
       <div>
-        <label class="block text-xs mb-1" style="color:#94a3b8">API Key</label>
+        <label class="block text-xs mb-1" style="color:var(--text-soft)">API Key</label>
         <input type="text" id="modal-api-key" class="input-field"/>
       </div>
       <div>
-        <label class="block text-xs mb-1" style="color:#94a3b8">API Secret</label>
+        <label class="block text-xs mb-1" style="color:var(--text-soft)">API Secret</label>
         <input type="password" id="modal-api-secret" class="input-field" placeholder="Leave blank to keep existing"/>
       </div>
       <div>
-        <label class="block text-xs mb-1" style="color:#94a3b8">Client ID</label>
+        <label class="block text-xs mb-1" style="color:var(--text-soft)">Client ID</label>
         <input type="text" id="modal-client-id" class="input-field"/>
       </div>
       <div>
-        <label class="block text-xs mb-1" style="color:#94a3b8">Access Token</label>
+        <label class="block text-xs mb-1" style="color:var(--text-soft)">Access Token</label>
         <textarea id="modal-token" class="input-field h-20 resize-none text-xs" placeholder="eyJ..."></textarea>
       </div>
     </div>
@@ -144,8 +144,8 @@ function renderBrokers() {
   const list = document.getElementById('broker-list');
 
   if (!brokersData.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:#64748b">No brokers configured</td></tr>';
-    list.innerHTML = '<div style="color:#64748b" class="text-sm">No brokers found</div>';
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--muted)">No brokers configured</td></tr>';
+    list.innerHTML = '<div style="color:var(--muted)" class="text-sm">No brokers found</div>';
     return;
   }
 
@@ -153,12 +153,12 @@ function renderBrokers() {
     const f = b.fields || {};
     const key = f.api_key || '--';
     const token = f.access_token || '--';
-    return `<tr style="border-bottom:1px solid #1e293b">
+    return `<tr style="border-bottom:1px solid var(--border-soft)">
       <td class="py-3 pr-4 font-mono text-xs text-white">${b.name}</td>
-      <td class="py-3 pr-4 text-xs" style="color:#94a3b8">${key}</td>
-      <td class="py-3 pr-4 text-xs" style="color:#94a3b8">${token}</td>
+      <td class="py-3 pr-4 text-xs" style="color:var(--text-soft)">${key}</td>
+      <td class="py-3 pr-4 text-xs" style="color:var(--text-soft)">${token}</td>
       <td class="py-3">
-        <button onclick="openModal('${b.name}')" class="text-xs px-3 py-1 rounded" style="background:#1e293b;color:#00d4aa">Edit</button>
+        <button onclick="openModal('${b.name}')" class="text-xs px-3 py-1 rounded" style="background:var(--card);color:var(--primary)">Edit</button>
       </td>
     </tr>`;
   }).join('');
@@ -166,7 +166,7 @@ function renderBrokers() {
   list.innerHTML = brokersData.map(b => `
     <div class="flex items-center gap-2 text-sm">
       <span class="w-2 h-2 rounded-full" style="background:#34d399"></span>
-      <span style="color:#e2e8f0">${b.name}</span>
+      <span style="color:var(--text)">${b.name}</span>
     </div>
   `).join('');
 }

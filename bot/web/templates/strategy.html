@@ -5,7 +5,7 @@
 <div class="mb-5 flex items-center justify-between">
   <div>
     <h1 class="text-2xl font-bold text-white">Strategy Settings</h1>
-    <p class="text-xs mt-1" style="color:#64748b">All changes write to strategy_logic.json instantly — bot picks up on next tick, no restart needed.</p>
+    <p class="text-xs mt-1" style="color:var(--muted)">All changes write to strategy_logic.json instantly — bot picks up on next tick, no restart needed.</p>
   </div>
   <div class="flex items-center gap-4">
     <div class="flex items-center gap-2">
@@ -38,10 +38,10 @@
     <div class="card p-5">
       <div class="section-label">Master Switches</div>
       <div class="space-y-3">
-        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid #334155;margin-bottom:4px;">
+        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px;">
           <div>
             <span class="text-sm font-semibold" style="color:#00d4aa;">V3 Mode</span>
-            <span class="text-xs ml-2" style="color:#64748b;">When ON, Buy/Sell toggles are managed by V3</span>
+            <span class="text-xs ml-2" style="color:var(--muted)">When ON, Buy/Sell toggles are managed by V3</span>
           </div>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" id="v3-mode-toggle" data-path="v3_mode" onclick="toggleV3Mode(this)">
             <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
@@ -519,7 +519,7 @@
             <input type="number" class="input-field" step="0.1" data-path="sell.exit_indicators.combined_vwap_slope.threshold" data-pct="true"/>
           </div>
         </div>
-        <p class="text-xs mt-1" style="color:#64748b">Exit both CE+PE when combined VWAP rises above this % from prev TF. E.g. 1 = 1%.</p>
+        <p class="text-xs mt-1" style="color:var(--muted)">Exit both CE+PE when combined VWAP rises above this % from prev TF. E.g. 1 = 1%.</p>
       </div>
     </div>
 
@@ -593,10 +593,10 @@
     <div class="card p-5" style="border-color:#00d4aa33;">
       <div class="section-label" style="color:#00d4aa;">V3 Strategy Status</div>
       <div class="space-y-3">
-        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid #334155;">
+        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid var(--border);">
           <div>
             <span class="text-sm font-semibold" style="color:#00d4aa;">V3 Mode (Master Switch)</span>
-            <span class="text-xs ml-2" style="color:#64748b;">Enables V3 strategy globally</span>
+            <span class="text-xs ml-2" style="color:var(--muted)">Enables V3 strategy globally</span>
           </div>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" id="v3-mode-toggle-v3tab" data-path="v3_mode" onclick="toggleV3ModeSync(this)">
             <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
@@ -697,10 +697,10 @@
     <div class="card p-5" style="border-color:#00d4aa33;">
       <div class="section-label" style="color:#00d4aa;">V3 ROLLOVER / SMART ROLL</div>
       <div class="space-y-3">
-        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid #334155;margin-bottom:4px;">
+        <div class="flex items-center justify-between" style="padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px;">
           <div>
             <span class="text-sm font-semibold" style="color:#00d4aa;">Smart Rolling (Master)</span>
-            <span class="text-xs ml-2" style="color:#64748b;">Allows continuous trading without stopping</span>
+            <span class="text-xs ml-2" style="color:var(--muted)">Allows continuous trading without stopping</span>
           </div>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.smart_rolling_enabled" onclick="toggleSwitch(this)">
             <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
@@ -720,7 +720,7 @@
           <div>
           </div>
         </div>
-        <div class="flex items-center justify-between py-2" style="border-top:1px solid #334155;">
+        <div class="flex items-center justify-between py-2" style="border-top:1px solid var(--border);">
           <span class="text-sm font-semibold">LTP Decay Enabled</span>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.ltp_decay_enabled" onclick="toggleSwitch(this)">
             <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
@@ -732,7 +732,7 @@
             <input type="number" class="input-field" data-path="sell.v3.ltp_exit_min"/>
           </div>
         </div>
-        <div class="flex items-center justify-between py-2" style="border-top:1px solid #334155;">
+        <div class="flex items-center justify-between py-2" style="border-top:1px solid var(--border);">
           <span class="text-sm font-semibold">Ratio Exit (3:1)</span>
           <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.v3.ratio_exit.enabled" onclick="toggleSwitch(this)">
             <span class="toggle-knob absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
@@ -815,7 +815,7 @@
             <input type="number" class="input-field" data-path="sell.v3.tsl_scalable.step_lock"/>
           </div>
         </div>
-        <p class="text-xs" style="color:#64748b;">After ₹<span id="v3-base-profit-hint">1000</span> profit → lock ₹<span id="v3-base-lock-hint">200</span>. Every +₹<span id="v3-step-profit-hint">250</span> → trail up by ₹<span id="v3-step-lock-hint">200</span>.</p>
+        <p class="text-xs" style="color:var(--muted)">After ₹<span id="v3-base-profit-hint">1000</span> profit → lock ₹<span id="v3-base-lock-hint">200</span>. Every +₹<span id="v3-step-profit-hint">250</span> → trail up by ₹<span id="v3-step-lock-hint">200</span>.</p>
       </div>
     </div>
 
@@ -836,7 +836,7 @@
             <div><label class="field-label">SL</label><input type="number" class="input-field" data-path="sell.v3.guardrail_roc.stoploss" placeholder="-40" step="0.1"/></div>
           </div>
         </div>
-        <div class="pt-3" style="border-top:1px solid #334155;">
+        <div class="pt-3" style="border-top:1px solid var(--border);">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Session PnL Exit (Points)</span>
             <button class="toggle-btn w-10 h-5 rounded-full relative transition-colors" data-path="sell.v3.guardrail_pnl.enabled" onclick="toggleSwitch(this)">
@@ -848,7 +848,7 @@
             <div><label class="field-label">SL Pts</label><input type="number" class="input-field" data-path="sell.v3.guardrail_pnl.stoploss_pts" placeholder="-40" step="0.1"/></div>
           </div>
         </div>
-        <div class="pt-3" style="border-top:1px solid #334155;">
+        <div class="pt-3" style="border-top:1px solid var(--border);">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">VWAP Rise SL (1m)</span>
             <button class="toggle-btn w-12 h-6 rounded-full relative transition-colors" data-path="sell.exit_indicators.combined_vwap_slope.enabled" onclick="toggleSwitch(this)">
@@ -896,7 +896,7 @@
 
     <div class="card p-5" style="border-color:#1e3a5f">
       <div class="section-label" style="color:#60a5fa">How OI Exit Works</div>
-      <div class="space-y-2 text-xs" style="color:#94a3b8">
+      <div class="space-y-2 text-xs" style="color:var(--text-soft)">
         <p>OI is collected live from Upstox websocket every tick for the <strong class="text-white">ATM ± strikes_range</strong> contracts.</p>
         <p class="mt-2">Every <strong class="text-white">check_interval_seconds</strong>, the monitor compares current OI to the OI at position entry:</p>
         <div class="mt-2 p-3 rounded" style="background:#0f1b2d">

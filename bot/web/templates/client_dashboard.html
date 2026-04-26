@@ -6,7 +6,7 @@
   <title>Dashboard — AlgoSoft</title>
   <script>
     (function(){
-      var t=localStorage.getItem('algosoft-theme')||'dark';
+      var t=localStorage.getItem('algosoft-theme')||'{{ default_theme() }}';
       document.documentElement.setAttribute('data-theme',t);
     })();
   </script>

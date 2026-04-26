@@ -6,7 +6,7 @@
 <div class="mb-6 flex items-center justify-between">
   <div>
     <h1 class="text-2xl font-bold text-white">Client Management</h1>
-    <p class="text-sm mt-1" style="color:#64748b">Activate, view and manage all registered clients</p>
+    <p class="text-sm mt-1" style="color:var(--muted)">Activate, view and manage all registered clients</p>
   </div>
 </div>
 
@@ -21,7 +21,7 @@
       <th>Username</th><th>Email</th><th>Status</th><th>Tier</th>
       <th>Broker(s)</th><th>Running</th><th>Joined</th><th>Actions</th>
     </tr></thead>
-    <tbody id="clients-tbody"><tr><td colspan="8" class="text-center" style="color:#475569">Loading...</td></tr></tbody>
+    <tbody id="clients-tbody"><tr><td colspan="8" class="text-center" style="color:var(--muted)">Loading...</td></tr></tbody>
   </table>
 </div>
 {% endblock %}
@@ -31,9 +31,6 @@
 let allClients = [];
 let _plans = [];
 let currentFilter = 'all';
-
-const tabStyle = 'background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:7px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;';
-const tabActiveStyle = 'background:#00d4aa;color:#0a0f1e;border:1px solid #00d4aa;border-radius:7px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;';
 
 async function loadClients() {
   const [clientsResp, plansResp] = await Promise.all([
@@ -62,7 +59,7 @@ function renderClients() {
   });
   const tbody = document.getElementById('clients-tbody');
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color:#475569">No clients in this view.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color:var(--muted)">No clients in this view.</td></tr>`;
     return;
   }
   tbody.innerHTML = filtered.map(c => {
@@ -73,11 +70,11 @@ function renderClients() {
     const date = c.created_at ? c.created_at.substring(0,10) : '--';
     return `<tr>
       <td class="text-white font-medium">${escapeHtml(c.username)}</td>
-      <td style="color:#64748b">${escapeHtml(c.email)}</td>
+      <td style="color:var(--muted)">${escapeHtml(c.email)}</td>
       <td>${statusBadge}</td>
       <td><span class="badge-idle">${c.subscription_tier}</span></td>
-      <td style="color:#94a3b8">${(function(){
-        if (!c.brokers) return '<span style="color:#475569">Not Set</span>';
+      <td style="color:var(--text-soft)">${(function(){
+        if (!c.brokers) return '<span style="color:var(--muted)">Not Set</span>';
         return c.brokers.split(',').map(function(b) {
           var name = b.trim();
           var label = name.charAt(0).toUpperCase() + name.slice(1);
@@ -85,7 +82,7 @@ function renderClients() {
         }).join(', ');
       })()}</td>
       <td style="color:#818cf8">${c.running_count || 0}</td>
-      <td style="color:#64748b;font-size:12px">${date}</td>
+      <td style="color:var(--muted);font-size:12px">${date}</td>
       <td>
         <div class="flex gap-2">
           ${toggleBtn}

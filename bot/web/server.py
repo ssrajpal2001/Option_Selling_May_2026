@@ -33,6 +33,15 @@ logger = logging.getLogger(__name__)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+def _get_default_theme() -> str:
+    try:
+        row = db_fetchone("SELECT value FROM platform_settings WHERE key='default_theme'")
+        return row["value"] if row and row["value"] in ("dark", "light", "midnight", "saffron") else "dark"
+    except Exception:
+        return "dark"
+
+templates.env.globals["default_theme"] = _get_default_theme
+
 # Existing bot APIs
 app.include_router(config_router, prefix="/api")
 app.include_router(broker_router, prefix="/api")

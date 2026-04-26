@@ -6,7 +6,7 @@
 <div class="mb-6 flex items-center justify-between">
   <div>
     <h1 class="text-2xl font-bold text-white">Audit Log</h1>
-    <p class="text-sm mt-1" style="color:#64748b">Admin actions on user accounts and subscriptions</p>
+    <p class="text-sm mt-1" style="color:var(--muted)">Admin actions on user accounts and subscriptions</p>
   </div>
   <button onclick="exportCSV()" class="btn-ghost px-4 py-2 text-xs">Export CSV</button>
 </div>
@@ -56,16 +56,16 @@
 <!-- Stats row -->
 <div class="grid grid-cols-3 gap-4 mb-4">
   <div class="stat-card p-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Total Entries</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Total Entries</div>
     <div id="al-total" class="text-2xl font-bold text-white">--</div>
   </div>
   <div class="stat-card p-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">Today</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Today</div>
     <div id="al-today" class="text-2xl font-bold" style="color:#818cf8">--</div>
   </div>
   <div class="stat-card p-4">
-    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:#64748b">This Page</div>
-    <div id="al-page" class="text-2xl font-bold" style="color:#00d4aa">--</div>
+    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">This Page</div>
+    <div id="al-page" class="text-2xl font-bold" style="color:var(--primary)">--</div>
   </div>
 </div>
 
@@ -81,14 +81,14 @@
         <th>Details</th>
       </tr></thead>
       <tbody id="audit-body">
-        <tr><td colspan="5" class="text-center" style="color:#475569">Loading…</td></tr>
+        <tr><td colspan="5" class="text-center" style="color:var(--muted)">Loading…</td></tr>
       </tbody>
     </table>
   </div>
 
   <!-- Pagination -->
-  <div class="flex items-center justify-between mt-4 pt-3" style="border-top:1px solid #1e293b">
-    <span id="al-pagination-info" class="text-xs" style="color:#64748b">--</span>
+  <div class="flex items-center justify-between mt-4 pt-3" style="border-top:1px solid var(--border-soft)">
+    <span id="al-pagination-info" class="text-xs" style="color:var(--muted)">--</span>
     <div class="flex gap-2">
       <button id="btn-prev" onclick="changePage(-1)" class="btn-ghost px-3 py-1 text-xs" disabled>← Prev</button>
       <button id="btn-next" onclick="changePage(1)" class="btn-ghost px-3 py-1 text-xs" disabled>Next →</button>
@@ -143,18 +143,18 @@ function actionBadge(action) {
   if (cfg) {
     return `<span class="text-xs font-bold px-2 py-0.5 rounded" style="background:${cfg[0]};color:${cfg[1]}">${cfg[2]}</span>`;
   }
-  return `<span class="text-xs font-bold px-2 py-0.5 rounded" style="background:#1e293b;color:#94a3b8">${action || 'unknown'}</span>`;
+  return `<span class="text-xs font-bold px-2 py-0.5 rounded" style="background:var(--card);color:var(--text-soft)">${action || 'unknown'}</span>`;
 }
 
 function fmtDetails(row) {
-  if (!row.details) return '<span style="color:#475569">—</span>';
+  if (!row.details) return '<span style="color:var(--muted)">—</span>';
   try {
     const obj = typeof row.details === 'string' ? JSON.parse(row.details) : row.details;
     return Object.entries(obj).map(([k, v]) =>
-      `<span style="color:#64748b">${escapeHtml(k)}:</span> <span class="text-white">${escapeHtml(String(v))}</span>`
+      `<span style="color:var(--muted)">${escapeHtml(k)}:</span> <span class="text-white">${escapeHtml(String(v))}</span>`
     ).join(' &nbsp;·&nbsp; ');
   } catch(e) {
-    return `<span style="color:#94a3b8">${escapeHtml(String(row.details))}</span>`;
+    return `<span style="color:var(--text-soft)">${escapeHtml(String(row.details))}</span>`;
   }
 }
 
@@ -176,7 +176,7 @@ async function loadLogs(page) {
   if (to)     params.set('to_date', to);
 
   const tbody = document.getElementById('audit-body');
-  tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:#475569">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--muted)">Loading…</td></tr>';
 
   const r = await fetch('/api/admin/audit-log?' + params);
   const d = await r.json();
@@ -193,20 +193,20 @@ async function loadLogs(page) {
   document.getElementById('btn-next').disabled = page >= totalPages;
 
   if (!d.items || !d.items.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:#475569">No log entries found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--muted)">No log entries found.</td></tr>';
     return;
   }
 
   tbody.innerHTML = d.items.map(row => {
     const ts = row.created_at ? row.created_at.replace('T', ' ').substring(0, 19) : '--';
     return `<tr>
-      <td class="text-xs" style="color:#64748b;white-space:nowrap">${escapeHtml(ts)}</td>
+      <td class="text-xs" style="color:var(--muted);white-space:nowrap">${escapeHtml(ts)}</td>
       <td class="text-white font-medium">${escapeHtml(row.admin_username || 'admin')}</td>
       <td>${actionBadge(row.action)}</td>
       <td>
         ${row.target_client_id
           ? `<a href="/admin/clients/${row.target_client_id}" style="color:#93c5fd;font-weight:600">${escapeHtml(row.target_username || String(row.target_client_id))}</a>`
-          : '<span style="color:#475569">—</span>'}
+          : '<span style="color:var(--muted)">—</span>'}
       </td>
       <td class="text-xs" style="max-width:320px;overflow:hidden;text-overflow:ellipsis">${fmtDetails(row)}</td>
     </tr>`;
