@@ -1023,6 +1023,35 @@ async def _hub_reconnect_scanner():
         await asyncio.sleep(SCAN_INTERVAL_SECONDS)
 
 
+async def _log_cleanup_scheduler():
+    """Run daily at 02:00 AM IST — delete stale rotated and inactive-client log files."""
+    while True:
+        try:
+            now = datetime.now(IST)
+            target = now.replace(hour=2, minute=0, second=0, microsecond=0)
+            if now >= target:
+                target += timedelta(days=1)
+            await asyncio.sleep((target - now).total_seconds())
+
+            logger.info("[Scheduler] Running scheduled log cleanup...")
+            try:
+                from utils.log_cleanup import cleanup_old_logs
+                result = cleanup_old_logs()
+                logger.info(
+                    f"[Scheduler] Log cleanup complete — "
+                    f"deleted={len(result['deleted'])} kept={len(result['kept'])} "
+                    f"errors={len(result['errors'])}"
+                )
+            except Exception as e:
+                logger.error(f"[Scheduler] Log cleanup inner error: {e}")
+
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"[Scheduler] Log cleanup scheduler error: {e}")
+            await asyncio.sleep(60)
+
+
 @app.on_event("startup")
 async def startup_event():
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
@@ -1041,6 +1070,8 @@ async def startup_event():
     asyncio.create_task(_kill_switch_enforcer())
     # Hub-driven broker reconnect scanner (startup + every 30 min)
     asyncio.create_task(_hub_reconnect_scanner())
+    # Daily log file cleanup (02:00 AM IST)
+    asyncio.create_task(_log_cleanup_scheduler())
 
 if __name__ == "__main__":
     import uvicorn

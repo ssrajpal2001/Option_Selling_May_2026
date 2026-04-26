@@ -10,7 +10,7 @@ from pathlib import Path
 import subprocess
 import configparser
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from datetime import datetime, timezone, timedelta
 
@@ -1571,3 +1571,49 @@ async def reset_client_daily_pnl(client_id: int, admin=Depends(require_admin)):
     )
     _audit(admin["id"], admin["role"], "client_daily_pnl_reset", inst["id"], {})
     return {"success": True}
+
+
+# ── Log File Management ────────────────────────────────────────────────────────
+
+class LogCleanupRequest(BaseModel):
+    max_backup_age_days: int = 7
+    max_inactive_age_days: int = 14
+    dry_run: bool = False
+
+    @field_validator("max_backup_age_days", "max_inactive_age_days")
+    @classmethod
+    def _must_be_positive(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("must be at least 1 day")
+        return v
+
+
+@router.get("/logs/disk-usage")
+async def get_log_disk_usage(admin=Depends(require_admin)):
+    """Return a summary of current disk usage in the logs/ directory."""
+    from utils.log_cleanup import get_log_disk_usage as _usage
+    return _usage()
+
+
+@router.post("/logs/cleanup")
+async def trigger_log_cleanup(body: LogCleanupRequest, admin=Depends(require_admin)):
+    """
+    Manually trigger a log file cleanup.
+
+    Deletes rotated backup files older than max_backup_age_days and primary log files
+    for inactive clients that have not been touched in max_inactive_age_days.
+    Set dry_run=true to preview what would be removed without deleting anything.
+    """
+    from utils.log_cleanup import cleanup_old_logs
+    result = cleanup_old_logs(
+        max_backup_age_days=body.max_backup_age_days,
+        max_inactive_age_days=body.max_inactive_age_days,
+        dry_run=body.dry_run,
+    )
+    _audit(admin["id"], admin["role"], "log_cleanup", None, {
+        "dry_run": body.dry_run,
+        "deleted_count": len(result["deleted"]),
+        "max_backup_age_days": body.max_backup_age_days,
+        "max_inactive_age_days": body.max_inactive_age_days,
+    })
+    return {"success": True, **result}
