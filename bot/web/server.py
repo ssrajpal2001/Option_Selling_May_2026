@@ -1079,6 +1079,16 @@ async def startup_event():
     except Exception as _tgp_exc:
         logger.warning(f"[TgPoller] Failed to start polling thread: {_tgp_exc}")
 
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        from utils.tg_poller import stop_poller
+        stop_poller(timeout=5.0)
+    except Exception as _tgp_exc:
+        logger.warning(f"[TgPoller] Error during shutdown: {_tgp_exc}")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("web.server:app", host="0.0.0.0", port=5000, reload=True)

@@ -9,8 +9,13 @@ Supported commands (case-insensitive):
   SUMMARY — Show today's closed-trade stats: count, wins/losses, net P&L
   HELP    — List available commands
 
-The poller runs as a single background daemon thread started at server startup.
-It silently no-ops if the Telegram bot token is not configured in platform_settings.
+Lifecycle
+---------
+start_poller() — Starts the daemon thread; silently no-ops if the Telegram bot
+                 token is not configured in platform_settings at the time of the
+                 call.
+stop_poller()  — Signals the thread to exit cleanly and waits up to 5 s for it
+                 to finish.  Called automatically by the FastAPI shutdown hook.
 """
 import json
 import threading
@@ -24,9 +29,13 @@ from utils.logger import logger
 
 _POLL_TIMEOUT = 25          # seconds for Telegram long-poll
 _RETRY_BACKOFF = 10         # seconds to wait after a network error
-_TOKEN_RECHECK_INTERVAL = 60  # seconds between token re-reads when missing
 
 _BASE_DIR = Path(__file__).resolve().parent.parent  # bot/
+
+# ── Module-level state ────────────────────────────────────────────────────────
+
+_stop_event: threading.Event = threading.Event()
+_poller_thread: threading.Thread | None = None
 
 
 # ── Telegram API helpers ──────────────────────────────────────────────────────
@@ -145,6 +154,7 @@ def _read_live_status(client_id: int) -> dict | None:
 
 _IST = timezone(timedelta(hours=5, minutes=30))
 
+
 def _ist_now_str() -> str:
     return datetime.now(_IST).strftime("%d %b %Y  %H:%M IST")
 
@@ -163,9 +173,9 @@ def handle_status(token: str, chat_id: str, client: dict) -> None:
     lines = [f"📊 <b>STATUS — {name}</b>", f"<i>{_ist_now_str()}</i>", ""]
 
     for inst in instances:
-        broker   = (inst.get("broker") or "—").upper()
-        instr    = (inst.get("instrument") or "—").upper()
-        mode     = (inst.get("trading_mode") or "PAPER").upper()
+        broker    = (inst.get("broker") or "—").upper()
+        instr     = (inst.get("instrument") or "—").upper()
+        mode      = (inst.get("trading_mode") or "PAPER").upper()
         db_status = (inst.get("status") or "idle").lower()
         daily_pnl = inst.get("daily_pnl") or 0.0
         daily_cnt = inst.get("daily_trade_count") or 0
@@ -185,10 +195,10 @@ def handle_status(token: str, chat_id: str, client: dict) -> None:
             if isinstance(open_pos, list) and open_pos:
                 lines.append(f"  Open positions : {len(open_pos)}")
                 for p in open_pos[:4]:
-                    side    = p.get("direction") or p.get("side") or "?"
-                    pnl_p   = p.get("pnl_pts") or p.get("pnl") or 0.0
-                    pnl_r   = p.get("pnl_rs") or 0.0
-                    icon    = "🟢" if float(pnl_r) >= 0 else "🔴"
+                    side  = p.get("direction") or p.get("side") or "?"
+                    pnl_p = p.get("pnl_pts") or p.get("pnl") or 0.0
+                    pnl_r = p.get("pnl_rs") or 0.0
+                    icon  = "🟢" if float(pnl_r) >= 0 else "🔴"
                     lines.append(f"    {icon} {side}: ₹{float(pnl_r):+,.0f}  ({float(pnl_p):+.1f} pts)")
             elif live.get("strategy_state") in ("WAITING", "NO_POSITION", None):
                 lines.append("  Open positions : None (waiting for signal)")
@@ -229,15 +239,14 @@ def handle_summary(token: str, chat_id: str, client: dict) -> None:
     ]
 
     # Show last 3 trades as a quick recap
-    if trades:
-        lines.append("\n<b>Recent trades:</b>")
-        for t in trades[-3:]:
-            pts   = float(t.get("pnl_pts") or 0)
-            rs    = float(t.get("pnl_rs")  or 0)
-            dirn  = t.get("direction") or "?"
-            icon  = "🟢" if pts >= 0 else "🔴"
-            reason = (t.get("exit_reason") or "—")[:18]
-            lines.append(f"  {icon} {dirn}  {pts:+.1f} pts (₹{rs:+,.0f})  [{reason}]")
+    lines.append("\n<b>Recent trades:</b>")
+    for t in trades[-3:]:
+        pts    = float(t.get("pnl_pts") or 0)
+        rs     = float(t.get("pnl_rs")  or 0)
+        dirn   = t.get("direction") or "?"
+        icon   = "🟢" if pts >= 0 else "🔴"
+        reason = (t.get("exit_reason") or "—")[:18]
+        lines.append(f"  {icon} {dirn}  {pts:+.1f} pts (₹{rs:+,.0f})  [{reason}]")
 
     _send(token, chat_id, "\n".join(lines))
 
@@ -259,6 +268,14 @@ def handle_unknown(token: str, chat_id: str) -> None:
           "❓ Unknown command.\n\nType <b>HELP</b> to see available commands.")
 
 
+def handle_unregistered(token: str, chat_id: str) -> None:
+    """Polite reply when the chat_id is not linked to any active client account."""
+    _send(token, chat_id,
+          "⚠️ <b>Account not linked</b>\n\n"
+          "This Telegram chat is not associated with an active AlgoSoft account.\n"
+          "Please contact your administrator to link your Telegram ID.")
+
+
 # ── Poller loop ───────────────────────────────────────────────────────────────
 
 def _process_update(token: str, update: dict) -> None:
@@ -277,10 +294,11 @@ def _process_update(token: str, update: dict) -> None:
         text = text[1:]
     cmd = text.upper().split()[0] if text else ""
 
-    # Resolve client — ignore messages from unregistered chat IDs
+    # Resolve client
     client = _resolve_client(chat_id)
     if not client:
-        logger.debug(f"[TgPoller] Message from unknown chat_id={chat_id} — ignored.")
+        logger.info(f"[TgPoller] Message from unregistered chat_id={chat_id} — sending account-not-linked reply.")
+        handle_unregistered(token, chat_id)
         return
 
     logger.info(f"[TgPoller] Command '{cmd}' from client_id={client['id']} (chat={chat_id})")
@@ -295,27 +313,20 @@ def _process_update(token: str, update: dict) -> None:
         handle_unknown(token, chat_id)
 
 
-def _poll_loop() -> None:
+def _poll_loop(token: str) -> None:
     """
-    Main polling loop.  Runs forever in a background daemon thread.
-    - Reads the bot token from platform_settings on each cycle so admin token
-      changes take effect without a server restart.
+    Main polling loop.  Runs until _stop_event is set.
     - Uses getUpdates long-polling (timeout=25 s) with offset tracking.
-    - On network error → backs off for _RETRY_BACKOFF seconds.
-    - If token is missing → sleeps _TOKEN_RECHECK_INTERVAL seconds and retries.
+    - On network error → backs off _RETRY_BACKOFF seconds, honouring stop_event.
+    - Token is fixed at thread-start time; the thread must be restarted if the
+      token changes (server restart required).
     """
     logger.info("[TgPoller] Polling thread started.")
     offset = 0
 
-    while True:
-        token = _get_token()
-        if not token:
-            logger.debug("[TgPoller] Bot token not configured — sleeping.")
-            time.sleep(_TOKEN_RECHECK_INTERVAL)
-            continue
-
+    while not _stop_event.is_set():
         try:
-            params = {
+            params: dict = {
                 "timeout": _POLL_TIMEOUT,
                 "allowed_updates": "message",
             }
@@ -324,18 +335,22 @@ def _poll_loop() -> None:
 
             result = _tg_get(token, "getUpdates", params)
 
+            if _stop_event.is_set():
+                break
+
             if result is None:
-                # Network error or API unreachable
-                time.sleep(_RETRY_BACKOFF)
+                _stop_event.wait(timeout=_RETRY_BACKOFF)
                 continue
 
             if not result.get("ok"):
                 logger.warning(f"[TgPoller] getUpdates returned not-ok: {result}")
-                time.sleep(_RETRY_BACKOFF)
+                _stop_event.wait(timeout=_RETRY_BACKOFF)
                 continue
 
             updates = result.get("result", [])
             for upd in updates:
+                if _stop_event.is_set():
+                    break
                 uid = upd.get("update_id", 0)
                 if uid >= offset:
                     offset = uid + 1
@@ -346,28 +361,56 @@ def _poll_loop() -> None:
 
         except Exception as exc:
             logger.error(f"[TgPoller] Unexpected error in poll loop: {exc}", exc_info=True)
-            time.sleep(_RETRY_BACKOFF)
+            _stop_event.wait(timeout=_RETRY_BACKOFF)
+
+    logger.info("[TgPoller] Polling thread stopped.")
 
 
-# ── Public start function ─────────────────────────────────────────────────────
-
-_poller_thread: threading.Thread | None = None
-
+# ── Public start / stop API ───────────────────────────────────────────────────
 
 def start_poller() -> None:
     """
-    Start the Telegram polling daemon thread.  Safe to call multiple times —
-    subsequent calls are no-ops if the thread is already alive.
+    Start the Telegram polling daemon thread.
+
+    - Silently returns (no-op) if the Telegram bot token is not configured in
+      platform_settings at the time of the call.
+    - Also a no-op if the thread is already alive (idempotent).
+    - Resets the stop event so the thread can run after a previous stop_poller()
+      call.
     """
     global _poller_thread
+
     if _poller_thread is not None and _poller_thread.is_alive():
         logger.debug("[TgPoller] Already running — skipping re-start.")
         return
 
+    token = _get_token()
+    if not token:
+        logger.info("[TgPoller] Bot token not configured in platform_settings — poller not started.")
+        return
+
+    _stop_event.clear()
     _poller_thread = threading.Thread(
         target=_poll_loop,
+        args=(token,),
         name="TelegramPoller",
         daemon=True,
     )
     _poller_thread.start()
     logger.info("[TgPoller] Daemon thread launched.")
+
+
+def stop_poller(timeout: float = 5.0) -> None:
+    """
+    Signal the polling thread to exit and wait up to `timeout` seconds for it
+    to finish.  Safe to call even if the thread was never started.
+    """
+    global _poller_thread
+    _stop_event.set()
+    if _poller_thread is not None and _poller_thread.is_alive():
+        _poller_thread.join(timeout=timeout)
+        if _poller_thread.is_alive():
+            logger.warning("[TgPoller] Thread did not stop within timeout — it will exit on next iteration.")
+        else:
+            logger.info("[TgPoller] Thread stopped cleanly.")
+    _poller_thread = None
