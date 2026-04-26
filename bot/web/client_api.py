@@ -1327,6 +1327,12 @@ async def get_market_status(user=Depends(get_current_user)):
     today_str = now.strftime("%Y-%m-%d")
     weekday = now.weekday()  # 0=Mon, 6=Sun
 
+    try:
+        from hub.sell_v3.rust_bridge import RUST_AVAILABLE as _rust
+        rust_available = bool(_rust)
+    except Exception:
+        rust_available = False
+
     is_holiday = today_str in _NSE_HOLIDAYS
     is_weekend = weekday >= 5
     market_open_time  = now.replace(hour=9, minute=15, second=0, microsecond=0)
@@ -1352,6 +1358,7 @@ async def get_market_status(user=Depends(get_current_user)):
             "minutes_to_open": None,
             "minutes_to_close": None,
             "server_time": now.isoformat(),
+            "rust_available": rust_available,
         }
 
     before_open  = now < market_open_time
@@ -1368,6 +1375,7 @@ async def get_market_status(user=Depends(get_current_user)):
             "minutes_to_open": mins_to_open, "minutes_to_close": None,
             "next_open": market_open_time.isoformat(),
             "server_time": now.isoformat(),
+            "rust_available": rust_available,
         }
     elif after_close:
         # Find next trading day
@@ -1383,6 +1391,7 @@ async def get_market_status(user=Depends(get_current_user)):
             "status": "CLOSED", "reason": "Market closed for today",
             "is_market_hours": False, "minutes_to_open": None, "minutes_to_close": None,
             "next_open": next_open, "server_time": now.isoformat(),
+            "rust_available": rust_available,
         }
     else:
         mins_to_close = max(0, int((market_close_time - now).total_seconds() / 60))
@@ -1391,4 +1400,5 @@ async def get_market_status(user=Depends(get_current_user)):
             "is_market_hours": True, "minutes_to_open": 0,
             "minutes_to_close": mins_to_close,
             "next_open": None, "server_time": now.isoformat(),
+            "rust_available": rust_available,
         }

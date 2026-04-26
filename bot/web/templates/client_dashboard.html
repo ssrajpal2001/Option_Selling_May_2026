@@ -326,6 +326,10 @@
     <span class="mbar-label">Plan:</span>
     <span id="mbar-plan" style="color:var(--text)">—</span>
   </div>
+  <div class="mbar-sep" id="mbar-engine-sep" style="display:none"></div>
+  <div class="mbar-item" id="mbar-engine-wrap" style="display:none">
+    <span id="mbar-engine-badge" class="mbar-status"></span>
+  </div>
 </div>
 
 <div class="page">
@@ -1084,6 +1088,24 @@ async function loadMarketStatus() {
       }
     } else {
       nextWrap.style.display = 'none';
+    }
+
+    // Engine mode badge
+    const engSep = document.getElementById('mbar-engine-sep');
+    const engWrap = document.getElementById('mbar-engine-wrap');
+    const engBadge = document.getElementById('mbar-engine-badge');
+    if (typeof d.rust_available === 'boolean') {
+      engSep.style.display = '';
+      engWrap.style.display = '';
+      if (d.rust_available) {
+        engBadge.textContent = '⚡ Accelerated';
+        engBadge.className = 'mbar-status mbar-open';
+        engBadge.title = 'Running on the high-performance Rust engine';
+      } else {
+        engBadge.textContent = '⚙ Standard';
+        engBadge.className = 'mbar-status mbar-pre';
+        engBadge.title = 'Running on the Python engine';
+      }
     }
   } catch (e) {
     console.warn('Market status load failed:', e);
