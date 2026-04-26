@@ -122,6 +122,7 @@
     .dot-blue  { background: #60a5fa; animation: pulse 2s infinite; }
     .dot-yellow{ background: #fbbf24; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 
     /* Token pill */
     .token-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
@@ -385,6 +386,26 @@
       <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="stale-cred-text"></div>
     </div>
     <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:#92400e;border:1px solid #d97706;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Refresh Token →</button>
+  </div>
+
+  <!-- Missing broker credentials banner -->
+  <div id="missing-creds-banner" style="display:none;background:#0a0f2e;border:1.5px solid #6366f1;border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
+    <span style="font-size:18px">🔑</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:#a5b4fc">Broker Credentials Missing</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="missing-creds-text"></div>
+    </div>
+    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:#312e81;border:1px solid #6366f1;color:#c7d2fe;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Add credentials →</button>
+  </div>
+
+  <!-- Auto-reconnect status banner -->
+  <div id="reconnect-banner" style="display:none;background:#061a2e;border:1.5px solid #0ea5e9;border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
+    <span style="font-size:16px;animation:spin 2s linear infinite;display:inline-block">↺</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:#38bdf8">Attempting Auto-Reconnect</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="reconnect-banner-text"></div>
+    </div>
+    <button onclick="_cancelAllReconnects()" style="padding:6px 14px;border-radius:7px;background:#0c2340;border:1px solid #0369a1;color:#7dd3fc;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Cancel</button>
   </div>
 
   <!-- Kill-switch locked banner -->
@@ -1149,9 +1170,11 @@ async function loadBrokerData() {
       document.getElementById('ps-expired-badge').style.display = plan.expired ? '' : 'none';
     }
 
-    // Render broker tabs + check for stale tokens
+    // Render broker tabs + check alerts + start/stop reconnect loops
     renderBrokerTabs();
     _checkStaleBrokerAlert();
+    _checkMissingCredsAlert();
+    _checkReconnectLoops();
 
     // Auto-select first instance
     if (!state.selectedBroker && state.instances.length > 0) {
@@ -1202,11 +1225,19 @@ function renderBrokerTabs() {
       const btn = document.createElement('button');
       btn.className = 'broker-tab' + (state.selectedBroker === b ? ` sel-${b}` : '');
 
-      // Status dot: green=running+fresh, yellow=configured+stale, grey=not configured
+      // Status dot: green=running+fresh, yellow=configured+stale, grey=not configured/missing creds
       let dotColor = '#475569'; // grey - not configured
       let dotTitle = 'Not configured';
+      let dotExtra = '';
       if (inst) {
-        if (inst.status === 'running' && inst.token_fresh) {
+        const reconnSt = _reconnectState[b];
+        if (reconnSt) {
+          dotColor = '#0ea5e9';
+          dotTitle = `Auto-reconnecting (${reconnSt.attempts}/${RECONNECT_MAX})`;
+          dotExtra = `<span style="font-size:9px;color:#38bdf8;margin-left:3px">↺${reconnSt.attempts}</span>`;
+        } else if (!inst.has_api_key) {
+          dotColor = '#6366f1'; dotTitle = 'Credentials missing — click to add';
+        } else if (inst.status === 'running' && inst.token_fresh) {
           dotColor = '#34d399'; dotTitle = 'Connected & running';
         } else if (inst.token_fresh) {
           dotColor = '#fbbf24'; dotTitle = 'Token fresh, bot stopped';
@@ -1215,7 +1246,7 @@ function renderBrokerTabs() {
         }
       }
       const dot = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dotColor};margin-right:5px;flex-shrink:0" title="${dotTitle}"></span>`;
-      btn.innerHTML = dot + BROKER_LABELS[b] + (inst ? ' ✓' : '');
+      btn.innerHTML = dot + BROKER_LABELS[b] + (inst ? ' ✓' : '') + dotExtra;
       btn.onclick = () => selectBroker(b);
       wrap.appendChild(btn);
     });
@@ -1225,7 +1256,7 @@ function renderBrokerTabs() {
 function _checkStaleBrokerAlert() {
   const configured = state.instances.filter(i => i.status !== 'removed');
   if (!configured.length) return;
-  const stale = configured.filter(i => !i.token_fresh);
+  const stale = configured.filter(i => i.has_api_key && !i.token_fresh);
   const banner = document.getElementById('stale-cred-banner');
   if (!banner) return;
   if (stale.length) {
@@ -1236,6 +1267,121 @@ function _checkStaleBrokerAlert() {
   } else {
     banner.style.display = 'none';
   }
+}
+
+function _checkMissingCredsAlert() {
+  const configured = state.instances.filter(i => i.status !== 'removed');
+  if (!configured.length) {
+    document.getElementById('missing-creds-banner').style.display = 'none';
+    return;
+  }
+  const missing = configured.filter(i => !i.has_api_key);
+  const banner = document.getElementById('missing-creds-banner');
+  if (!banner) return;
+  if (missing.length) {
+    const names = missing.map(i => BROKER_LABELS[i.broker] || i.broker).join(', ');
+    document.getElementById('missing-creds-text').textContent =
+      `Credentials not set for: ${names}. Enter your API key and credentials to connect.`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════ AUTO-RECONNECT
+// Per-broker reconnect state: { attempts, timer }
+const _reconnectState = {};
+const RECONNECT_MAX = 5;
+const RECONNECT_INTERVAL_MS = 60000;
+
+function _startReconnectLoop(broker) {
+  if (_reconnectState[broker] && _reconnectState[broker].timer) return; // already running
+  if (!_reconnectState[broker]) _reconnectState[broker] = { attempts: 0 };
+  _reconnectState[broker].attempts = 0;
+  _scheduleNextReconnect(broker);
+  _updateReconnectBanner();
+}
+
+function _scheduleNextReconnect(broker) {
+  if (_reconnectState[broker] && _reconnectState[broker].timer) {
+    clearTimeout(_reconnectState[broker].timer);
+  }
+  _reconnectState[broker].timer = setTimeout(() => _doReconnect(broker), RECONNECT_INTERVAL_MS);
+}
+
+async function _doReconnect(broker) {
+  if (!_reconnectState[broker]) return;
+  _reconnectState[broker].attempts += 1;
+  const attempt = _reconnectState[broker].attempts;
+  _updateReconnectBanner();
+  try {
+    const r = await fetch(`/api/client/broker/${broker}/reconnect`, { method: 'POST' });
+    if (r.ok) {
+      // Success — refresh broker data and stop loop
+      _stopReconnectLoop(broker);
+      await loadBrokerData();
+      toast(`${BROKER_LABELS[broker] || broker} reconnected successfully.`, 'ok');
+      return;
+    }
+  } catch (_) {}
+
+  // Failed attempt
+  if (attempt >= RECONNECT_MAX) {
+    _stopReconnectLoop(broker);
+    toast(`Auto-reconnect failed after ${RECONNECT_MAX} attempts for ${BROKER_LABELS[broker] || broker}. Please reconnect manually.`, 'err');
+    _updateReconnectBanner();
+    return;
+  }
+  // Schedule next
+  _scheduleNextReconnect(broker);
+  _updateReconnectBanner();
+}
+
+function _stopReconnectLoop(broker) {
+  if (_reconnectState[broker]) {
+    if (_reconnectState[broker].timer) clearTimeout(_reconnectState[broker].timer);
+    delete _reconnectState[broker];
+  }
+  _updateReconnectBanner();
+}
+
+function _cancelAllReconnects() {
+  Object.keys(_reconnectState).forEach(b => {
+    if (_reconnectState[b] && _reconnectState[b].timer) clearTimeout(_reconnectState[b].timer);
+    delete _reconnectState[b];
+  });
+  _updateReconnectBanner();
+}
+
+function _updateReconnectBanner() {
+  const active = Object.entries(_reconnectState);
+  const banner = document.getElementById('reconnect-banner');
+  const text = document.getElementById('reconnect-banner-text');
+  if (!banner) return;
+  if (active.length === 0) {
+    banner.style.display = 'none';
+    return;
+  }
+  banner.style.display = 'flex';
+  const lines = active.map(([b, s]) => {
+    const attempts = s.attempts || 0;
+    return `${BROKER_LABELS[b] || b}: attempt ${attempts}/${RECONNECT_MAX}`;
+  });
+  text.textContent = lines.join(' · ') + ' — checking every 60s';
+}
+
+function _checkReconnectLoops() {
+  state.instances.forEach(inst => {
+    const broker = inst.broker;
+    // Only auto-reconnect when: has credentials, token stale, has auto-login capability, not already running
+    const shouldReconnect = inst.has_api_key && !inst.token_fresh && inst.has_auto_login;
+    const alreadyRunning = !!_reconnectState[broker];
+    if (shouldReconnect && !alreadyRunning) {
+      _startReconnectLoop(broker);
+    } else if (!shouldReconnect && alreadyRunning) {
+      _stopReconnectLoop(broker);
+    }
+  });
 }
 
 function selectBroker(broker) {

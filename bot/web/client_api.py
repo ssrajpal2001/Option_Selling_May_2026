@@ -96,7 +96,7 @@ class BrokerSetup(BaseModel):
 async def get_broker_config(user=Depends(get_current_user)):
     rows = db_fetchall("""
         SELECT id, broker, broker_user_id_encrypted, password_encrypted, totp_encrypted,
-               api_secret_encrypted,
+               api_key_encrypted, api_secret_encrypted,
                trading_mode, instrument, quantity, strategy_version,
                status, last_heartbeat, token_updated_at
         FROM client_broker_instances
@@ -109,6 +109,8 @@ async def get_broker_config(user=Depends(get_current_user)):
         d["broker_user_id"] = "..." if d.get("broker_user_id_encrypted") else ""
         d["password"] = "..." if d.get("password_encrypted") else ""
         d["totp"] = "..." if d.get("totp_encrypted") else ""
+        d["has_api_key"] = bool(d.get("api_key_encrypted"))
+        d["has_auto_login"] = bool(d.get("password_encrypted") and d.get("totp_encrypted"))
 
         if d["broker"] == "dhan":
             _api_sec = decrypt_secret(d["api_secret_encrypted"]) if d.get("api_secret_encrypted") else ""
@@ -118,6 +120,7 @@ async def get_broker_config(user=Depends(get_current_user)):
         else:
             d["token_fresh"] = _is_token_fresh(d.get("token_updated_at"))
 
+        del d["api_key_encrypted"]
         del d["api_secret_encrypted"]
         result.append(d)
     # Resolve plan info + effective broker cap (handles plan expiry)
@@ -152,6 +155,84 @@ async def get_broker_config(user=Depends(get_current_user)):
             "expired": plan_expired,
         }
     }
+
+
+@router.post("/broker/{broker}/reconnect")
+async def reconnect_broker(broker: str, user=Depends(get_current_user)):
+    """
+    Attempt a headless (automated) re-login for the given broker when the session
+    token has expired. Only succeeds when Password + TOTP are stored.
+    Called by the auto-reconnect loop on the client dashboard (max 5 retries, 60s gap).
+    """
+    VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+    if broker not in VALID_BROKERS:
+        raise HTTPException(400, "Invalid broker.")
+
+    instance = db_fetchone(
+        "SELECT * FROM client_broker_instances WHERE client_id=? AND broker=? AND status != 'removed'",
+        (user["id"], broker)
+    )
+    if not instance:
+        raise HTTPException(404, "Broker not configured.")
+
+    if not instance.get("api_key_encrypted"):
+        raise HTTPException(400, "missing_credentials")
+
+    has_auto_login = instance.get("password_encrypted") and instance.get("totp_encrypted")
+    if not has_auto_login:
+        raise HTTPException(400, "no_auto_login")
+
+    creds = {
+        "api_key":        decrypt_secret(instance["api_key_encrypted"]),
+        "api_secret":     decrypt_secret(instance["api_secret_encrypted"]) if instance.get("api_secret_encrypted") else "",
+        "broker_user_id": decrypt_secret(instance["broker_user_id_encrypted"]) if instance.get("broker_user_id_encrypted") else "",
+        "password":       decrypt_secret(instance["password_encrypted"]),
+        "totp":           decrypt_secret(instance["totp_encrypted"]),
+    }
+
+    token = None
+    try:
+        if broker == "zerodha":
+            from utils.auth_manager_zerodha import handle_zerodha_login_automated
+            token = handle_zerodha_login_automated(creds)
+        elif broker == "dhan":
+            from utils.auth_manager_dhan import handle_dhan_login_automated
+            token = handle_dhan_login_automated(creds)
+        elif broker == "angelone":
+            from utils.auth_manager_angelone import handle_angelone_login
+            creds["client_code"] = creds["broker_user_id"]
+            creds["pin"] = creds["password"]
+            smart_api = handle_angelone_login(creds)
+            if smart_api:
+                token = smart_api.access_token
+        elif broker == "upstox":
+            from utils.auth_manager_upstox import handle_upstox_login_automated
+            token = handle_upstox_login_automated(creds)
+        elif broker == "aliceblue":
+            from utils.auth_manager_alice import handle_alice_login_automated
+            token = handle_alice_login_automated(creds)
+        elif broker == "groww":
+            from utils.auth_manager_groww import handle_groww_login_automated
+            token = handle_groww_login_automated(creds)
+        elif broker == "fyers":
+            raise HTTPException(400, "no_auto_login")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"[Reconnect] {broker} headless login error for user {user['id']}: {e}")
+        raise HTTPException(503, "reconnect_failed")
+
+    if not token:
+        raise HTTPException(503, "reconnect_failed")
+
+    enc_token = encrypt_secret(token)
+    now_ist = datetime.now(IST).isoformat()
+    db_execute(
+        "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+        (enc_token, now_ist, instance["id"])
+    )
+    _audit_client(user["id"], "BROKER_TOKEN_REFRESH", {"broker": broker, "method": "auto_reconnect"})
+    return {"success": True, "message": f"{broker.capitalize()} reconnected successfully."}
 
 
 @router.delete("/broker/{broker}")
