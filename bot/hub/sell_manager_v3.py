@@ -270,11 +270,57 @@ class SellManagerV3:
 
         logger.info(f"╚══════════════════════════════════════════════════════════════════════╝")
 
+    def _today_ist(self) -> str:
+        """Return today's date string in IST (YYYY-MM-DD)."""
+        return datetime.datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d')
+
+    def reset_for_new_day(self):
+        """
+        Reset all session-scoped variables at the start of a new calendar day.
+        Persistent crash-recovery variables (active_trades, etc.) are also cleared
+        because an open position from yesterday cannot be managed today — the options
+        have likely expired or the session context is gone.
+        Historical trade data in the database is untouched.
+        """
+        logger.info(
+            f"[SellManagerV3] New trading day detected — resetting all session state "
+            f"for {self.instrument_name}. Previous day data preserved in database."
+        )
+        self.active_trades = {}
+        self.last_entry_bucket = None
+        self.session_min_vwap = float('inf')
+        self.session_points_pnl = 0.0
+        self.trades_completed_today = 0
+        self.tsl_high_lock = 0.0
+        self.last_trade_locked_pnl = 0.0
+        self.strangle_closed = False
+        self.workflow_phase = 'BEGINNING'
+        self._last_eod_sqoff_bucket = None
+        self._last_entry_pulse_ts = None
+
     def load_state(self):
         if os.path.exists(self.state_file):
             try:
                 with open(self.state_file, 'r') as f:
                     state = json.load(f)
+
+                    # ── New-day detection ──────────────────────────────────────────
+                    # If the state file was saved on a different calendar day (IST),
+                    # discard all session variables and start fresh. This prevents the
+                    # strangle_closed=True flag from yesterday freezing today's bot,
+                    # and ensures trades_completed_today / session_points_pnl are clean.
+                    # Backtest mode is exempt: it calls reset_for_new_day() explicitly
+                    # via clear_for_new_run() between dates.
+                    saved_date = state.get('saved_date')
+                    today_ist = self._today_ist()
+                    is_backtest = getattr(self.orchestrator, 'is_backtest', False)
+
+                    if not is_backtest and saved_date != today_ist:
+                        self.reset_for_new_day()
+                        self.save_state()
+                        return  # State file now has today's clean state; nothing more to load
+                    # ── End new-day detection ──────────────────────────────────────
+
                     self.active_trades = state.get('active_trades', {})
 
                     # Convert entry_time strings back to datetime objects
@@ -302,6 +348,7 @@ class SellManagerV3:
 
     def save_state(self):
         state = {
+            'saved_date': self._today_ist(),
             'active_trades': self.active_trades,
             'last_entry_bucket': self.last_entry_bucket,
             'session_min_vwap': self.session_min_vwap,
