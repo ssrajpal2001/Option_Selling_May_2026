@@ -1009,9 +1009,12 @@ async def _admin_day_end_digest_scheduler():
             try:
                 today = datetime.now(IST).strftime("%Y-%m-%d")
                 clients = db_fetchall(
-                    "SELECT u.id, u.username "
+                    "SELECT u.id, u.username, "
+                    "MIN(cbi.trading_mode) as default_mode, MIN(cbi.instrument) as instrument "
                     "FROM users u "
-                    "WHERE u.role='client' AND u.is_active=1"
+                    "LEFT JOIN client_broker_instances cbi ON cbi.client_id=u.id "
+                    "WHERE u.role='client' AND u.is_active=1 "
+                    "GROUP BY u.id, u.username"
                 )
                 summary_rows = []
                 for c in clients:
@@ -1021,18 +1024,19 @@ async def _admin_day_end_digest_scheduler():
                             "WHERE client_id=? AND date(closed_at)=?",
                             (c["id"], today)
                         )
-                        if not rows:
-                            continue
                         total_pnl = sum(r.get("pnl_rs") or 0 for r in rows)
-                        modes = {(r.get("trading_mode") or "").upper() for r in rows}
-                        if "LIVE" in modes and "PAPER" in modes:
-                            mode_label = "MIXED"
-                        elif "LIVE" in modes:
-                            mode_label = "LIVE"
-                        elif "PAPER" in modes:
-                            mode_label = "PAPER"
+                        if rows:
+                            modes = {(r.get("trading_mode") or "").upper() for r in rows}
+                            if "LIVE" in modes and "PAPER" in modes:
+                                mode_label = "MIXED"
+                            elif "LIVE" in modes:
+                                mode_label = "LIVE"
+                            elif "PAPER" in modes:
+                                mode_label = "PAPER"
+                            else:
+                                mode_label = ""
                         else:
-                            mode_label = ""
+                            mode_label = (c.get("default_mode") or "").upper()
                         summary_rows.append({
                             "username": c["username"],
                             "trades": len(rows),
@@ -1044,7 +1048,7 @@ async def _admin_day_end_digest_scheduler():
 
                 from utils.notifier import notify_admin_day_end
                 notify_admin_day_end(summary_rows)
-                logger.info(f"[AdminDigest] Digest sent — {len(summary_rows)} clients with trades today.")
+                logger.info(f"[AdminDigest] Digest sent — {len(summary_rows)} clients total.")
             except Exception as e:
                 logger.error(f"[AdminDigest] Inner error: {e}")
 
@@ -1219,7 +1223,9 @@ async def startup_event():
     try:
         counts = db_fetchone(
             "SELECT COUNT(*) as total, "
-            "SUM(CASE WHEN is_active=1 THEN 1 ELSE 0 END) as active "
+            "SUM(CASE WHEN is_active=1 AND "
+            "  (plan_expiry_date IS NULL OR plan_expiry_date >= date('now')) "
+            "  THEN 1 ELSE 0 END) as active "
             "FROM users WHERE role='client'"
         ) or {}
         from utils.notifier import notify_admin_startup
