@@ -1072,6 +1072,12 @@ async def startup_event():
     asyncio.create_task(_hub_reconnect_scanner())
     # Daily log file cleanup (02:00 AM IST)
     asyncio.create_task(_log_cleanup_scheduler())
+    # Telegram keyword-command poller (client chat queries: STATUS, SUMMARY, HELP)
+    try:
+        from utils.tg_poller import start_poller
+        start_poller()
+    except Exception as _tgp_exc:
+        logger.warning(f"[TgPoller] Failed to start polling thread: {_tgp_exc}")
 
 if __name__ == "__main__":
     import uvicorn
