@@ -182,6 +182,8 @@ async def reconnect_broker(broker: str, user=Depends(get_current_user)):
     if not has_auto_login:
         raise HTTPException(400, "no_auto_login")
 
+    logger.info(f"[Reconnect] Attempting headless re-login for {broker} (user {user['id']})...")
+
     creds = {
         "api_key":        decrypt_secret(instance["api_key_encrypted"]),
         "api_secret":     decrypt_secret(instance["api_secret_encrypted"]) if instance.get("api_secret_encrypted") else "",
@@ -223,8 +225,10 @@ async def reconnect_broker(broker: str, user=Depends(get_current_user)):
         raise HTTPException(503, "reconnect_failed")
 
     if not token:
+        logger.warning(f"[Reconnect] {broker} headless login FAILED for user {user['id']} (no token returned)")
         raise HTTPException(503, "reconnect_failed")
 
+    logger.info(f"[Reconnect] {broker} headless login SUCCESS for user {user['id']}")
     enc_token = encrypt_secret(token)
     now_ist = datetime.now(IST).isoformat()
     db_execute(

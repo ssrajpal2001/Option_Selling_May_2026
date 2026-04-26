@@ -1026,6 +1026,7 @@ let state = {
   todayPnlPts: 0,
   todayPnlRs: 0,
   dhanMode: 'token',     // 'token' or 'api_key'
+  prevBrokerStatuses: {}, // broker -> {status, token_fresh} for drop detection
 };
 
 function getBotRunning() { return state.botRunning; }
@@ -1169,6 +1170,13 @@ async function loadBrokerData() {
       document.getElementById('ps-expiry').textContent = expiry ? expiry.slice(0,10) : 'No expiry';
       document.getElementById('ps-expired-badge').style.display = plan.expired ? '' : 'none';
     }
+
+    // Seed prevBrokerStatuses baseline so first poll doesn't false-fire drops
+    state.instances.forEach(inst => {
+      if (!state.prevBrokerStatuses[inst.broker]) {
+        state.prevBrokerStatuses[inst.broker] = { status: inst.status, token_fresh: inst.token_fresh };
+      }
+    });
 
     // Render broker tabs + check alerts + start/stop reconnect loops
     renderBrokerTabs();
@@ -1373,15 +1381,45 @@ function _updateReconnectBanner() {
 function _checkReconnectLoops() {
   state.instances.forEach(inst => {
     const broker = inst.broker;
-    // Only auto-reconnect when: has credentials, token stale, has auto-login capability, not already running
-    const shouldReconnect = inst.has_api_key && !inst.token_fresh && inst.has_auto_login;
+    // Auto-reconnect when credentials + auto-login present AND:
+    //   a) token is stale (expired since last 6 AM IST gate), OR
+    //   b) a live connection just dropped (was running, now stopped/error)
+    const tokenStale = inst.has_api_key && !inst.token_fresh && inst.has_auto_login;
+    const connectionDropped = !!inst._connection_dropped && inst.has_auto_login;
+    const shouldReconnect = tokenStale || connectionDropped;
     const alreadyRunning = !!_reconnectState[broker];
     if (shouldReconnect && !alreadyRunning) {
       _startReconnectLoop(broker);
-    } else if (!shouldReconnect && alreadyRunning) {
+    } else if (!shouldReconnect && alreadyRunning && inst.token_fresh && inst.status === 'running') {
       _stopReconnectLoop(broker);
     }
   });
+}
+
+// ═══════════════════════════════════════════════════════ BROKER STATUS POLL
+async function _pollBrokerStatus() {
+  try {
+    const d = await api('GET', '/broker');
+    const newInstances = d.instances || [];
+
+    // Compare with previous statuses to detect connection drops
+    newInstances.forEach(inst => {
+      const prev = state.prevBrokerStatuses[inst.broker];
+      if (prev && prev.status === 'running' && inst.status !== 'running') {
+        inst._connection_dropped = true;
+      }
+      // Update prev map
+      state.prevBrokerStatuses[inst.broker] = { status: inst.status, token_fresh: inst.token_fresh };
+    });
+
+    state.instances = newInstances;
+    renderBrokerTabs();
+    _checkStaleBrokerAlert();
+    _checkMissingCredsAlert();
+    _checkReconnectLoops();
+  } catch (e) {
+    console.warn('[pollBrokerStatus]', e);
+  }
 }
 
 function selectBroker(broker) {
@@ -2207,6 +2245,7 @@ async function init() {
 
   // Poll intervals
   setInterval(pollBotStatus, 8000);
+  setInterval(_pollBrokerStatus, 30000); // Refresh broker connection status every 30s
   setInterval(pollPositions, 2000);  // Fast 2s refresh for live P&L on Positions tab
   setInterval(loadMarketStatus, 60000);
   setInterval(tickClock, 1000);
