@@ -1320,11 +1320,16 @@ async def get_broker_change_request(user=Depends(get_current_user)):
 
 # ── Backtest Engine ──────────────────────────────────────────────────────────
 
+import uuid as _uuid
+
 class BacktestStartRequest(BaseModel):
     instrument: str
     start_date: str
     end_date: str
     quantity: int = 1
+
+
+_current_bt_job_id: Optional[str] = None
 
 
 def _compute_backtest_summary(trades: list) -> dict:
@@ -1338,11 +1343,11 @@ def _compute_backtest_summary(trades: list) -> dict:
     n = len(trades)
     avg_pts = total_pts / n if n else 0
 
-    # Max drawdown: worst peak-to-trough over cumulative PnL (trades oldest-first)
+    # Max drawdown: worst peak-to-trough cumulative PnL (trades list is newest-first)
     running = 0.0
     peak    = 0.0
     max_dd  = 0.0
-    for t in reversed(trades):          # trades list is newest-first → reverse for chronological
+    for t in reversed(trades):
         running += float(t.get('pnl_pts') or 0)
         if running > peak:
             peak = running
@@ -1362,25 +1367,65 @@ def _compute_backtest_summary(trades: list) -> dict:
     }
 
 
-@router.post("/backtest/start")
-async def start_client_backtest(body: BacktestStartRequest, user=Depends(get_current_user)):
+
+@router.get("/backtest/available-dates")
+async def backtest_available_dates(instrument: str = "NIFTY", user=Depends(get_current_user)):
+    """Return sorted list of dates that have recorded CSV data for the given instrument."""
+    import re as _re
+    data_dir = Path("backtest_data")
+    if not data_dir.exists():
+        return {"dates": [], "instrument": instrument.upper()}
+
+    pattern = _re.compile(
+        rf"^market_data_{_re.escape(instrument.upper())}_(\d{{4}}-\d{{2}}-\d{{2}})\.csv$",
+        _re.IGNORECASE,
+    )
+    dates = []
+    for f in data_dir.iterdir():
+        m = pattern.match(f.name)
+        if m:
+            dates.append(m.group(1))
+    dates.sort()
+    return {"dates": dates, "instrument": instrument.upper()}
+
+
+@router.post("/backtest/run")
+async def run_client_backtest(body: BacktestStartRequest, user=Depends(get_current_user)):
+    """Start a backtest run; returns a job_id for polling via /backtest/status/{job_id}."""
+    global _current_bt_job_id
     from web.admin_api import start_backtest, BacktestStartRequest as AdminBSR
-    if body.start_date == body.end_date:
-        date_str = body.start_date
-    else:
-        date_str = f"{body.start_date} to {body.end_date}"
-    return await start_backtest(
+    import web.admin_api as _admin_mod
+
+    _proc = _admin_mod._backtest_proc_handle
+    if _proc is not None and _proc.poll() is None:
+        return {
+            "success": False,
+            "message": "A backtest is already running.",
+            "job_id": _current_bt_job_id,
+        }
+
+    date_str = body.start_date if body.start_date == body.end_date \
+               else f"{body.start_date} to {body.end_date}"
+    result = await start_backtest(
         AdminBSR(instrument=body.instrument, date=date_str, quantity=body.quantity), user
     )
+    if result.get("success", True) is not False:
+        _current_bt_job_id = _uuid.uuid4().hex[:8]
+        result["job_id"] = _current_bt_job_id
+    return result
 
 
-@router.get("/backtest/status")
-async def get_client_backtest_status(user=Depends(get_current_user)):
+@router.get("/backtest/status/{job_id}")
+async def get_client_backtest_status_by_job(job_id: str, user=Depends(get_current_user)):
+    """Poll status for a specific backtest job_id."""
     from web.admin_api import get_backtest_status
     data = await get_backtest_status(user)
+    data["job_id"] = job_id
     trades = data.get("trades", [])
-    if trades and not data.get("running"):
-        data["summary"] = _compute_backtest_summary(trades)
+    if not data.get("running"):
+        if trades:
+            data["summary"] = _compute_backtest_summary(trades)
+        data["no_trades"] = len(trades) == 0
     return data
 
 
@@ -1390,25 +1435,16 @@ async def stop_client_backtest(user=Depends(get_current_user)):
     return await stop_backtest(user)
 
 
-@router.get("/backtest/available-dates")
-async def backtest_available_dates(instrument: str = "NIFTY", user=Depends(get_current_user)):
-    """Return sorted list of dates that have recorded CSV data for the given instrument."""
-    import re
-    data_dir = Path("backtest_data")
-    if not data_dir.exists():
-        return {"dates": [], "instrument": instrument}
+# Legacy aliases kept for backward compatibility
+@router.post("/backtest/start")
+async def start_client_backtest(body: BacktestStartRequest, user=Depends(get_current_user)):
+    return await run_client_backtest(body, user)
 
-    pattern = re.compile(
-        rf"^market_data_{re.escape(instrument.upper())}_(\d{{4}}-\d{{2}}-\d{{2}})\.csv$",
-        re.IGNORECASE,
-    )
-    dates = []
-    for f in data_dir.iterdir():
-        m = pattern.match(f.name)
-        if m:
-            dates.append(m.group(1))
-    dates.sort()
-    return {"dates": dates, "instrument": instrument.upper()}
+
+@router.get("/backtest/status")
+async def get_client_backtest_status(user=Depends(get_current_user)):
+    job_id = _current_bt_job_id or "current"
+    return await get_client_backtest_status_by_job(job_id, user)
 
 # ── Trade History ─────────────────────────────────────────────────────────────
 

@@ -759,11 +759,15 @@
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;align-items:end">
       <div>
         <div class="inp-label">Start Date</div>
-        <input type="date" class="inp" id="bt-start-date">
+        <input type="date" class="inp" id="bt-start-date"
+               onchange="_btDateHint(this.value,'bt-start-hint')">
+        <div id="bt-start-hint" style="display:none;font-size:11px;color:var(--warn);margin-top:3px"></div>
       </div>
       <div>
         <div class="inp-label">End Date</div>
-        <input type="date" class="inp" id="bt-end-date">
+        <input type="date" class="inp" id="bt-end-date"
+               onchange="_btDateHint(this.value,'bt-end-hint')">
+        <div id="bt-end-hint" style="display:none;font-size:11px;color:var(--warn);margin-top:3px"></div>
       </div>
       <div>
         <div class="inp-label">Instrument</div>
@@ -834,8 +838,10 @@
         <table class="trade-table" id="bt-trade-table">
           <thead>
             <tr>
-              <th>Date</th><th>Entry</th><th>Exit</th><th>Dir</th>
-              <th>Strike</th><th>Entry ₹</th><th>Exit ₹</th>
+              <th>Date</th><th>Entry</th><th>Exit</th>
+              <th style="color:var(--info)">CE Strike</th>
+              <th style="color:var(--warn)">PE Strike</th>
+              <th>Entry ₹</th><th>Exit ₹</th>
               <th>P&amp;L (pts)</th><th>P&amp;L (₹)</th><th>Reason</th>
             </tr>
           </thead>
@@ -2306,8 +2312,10 @@ async function loadHistory() {
 
 // ═══════════════════════════════════════════════════════════ BACKTEST
 
-let btPollTimer = null;
-let _btTrades = [];
+let btPollTimer   = null;
+let _btJobId      = null;
+let _btTrades     = [];
+let _btAvailDates = [];   // populated by loadAvailableDates()
 
 async function loadAvailableDates() {
   const instFromInstances = state.instances && state.instances.length > 0
@@ -2317,32 +2325,47 @@ async function loadAvailableDates() {
   document.getElementById('bt-instrument-display').textContent = instrument;
 
   try {
-    const d = await api('GET', `/backtest/available-dates?instrument=${instrument}`);
-    const dates = d.dates || [];
-    const badge = document.getElementById('bt-available-badge');
+    const d = await api('GET', '/backtest/available-dates?instrument=' + instrument);
+    _btAvailDates = d.dates || [];
+    const badge  = document.getElementById('bt-available-badge');
     const notice = document.getElementById('bt-dates-notice');
-
     badge.style.display = '';
-    if (dates.length === 0) {
-      badge.textContent = 'No recorded data available';
+
+    if (_btAvailDates.length === 0) {
+      badge.textContent = 'No recorded data';
       notice.style.display = '';
-      notice.innerHTML = '⚠ No CSV data has been recorded yet for ' + instrument +
-        '. Data is recorded automatically during live market hours when your bot is running.';
+      notice.innerHTML = '<strong style="color:var(--warn)">⚠ No recorded data for ' + instrument + '</strong><br>' +
+        'Data is recorded automatically during live market hours when your bot is active.';
       return;
     }
 
-    badge.textContent = dates.length + ' day' + (dates.length !== 1 ? 's' : '') + ' of data available';
+    badge.textContent = _btAvailDates.length + ' day' + (_btAvailDates.length !== 1 ? 's' : '') + ' of data';
     notice.style.display = '';
-    const chips = dates.map(dt =>
-      '<span style="display:inline-block;margin:2px 4px;padding:2px 8px;background:var(--card);border-radius:4px;border:1px solid var(--border)">' + dt + '</span>'
+    const chips = _btAvailDates.map(dt =>
+      '<span style="display:inline-block;margin:2px 4px;padding:2px 8px;background:var(--card);' +
+      'border-radius:4px;border:1px solid var(--border);font-family:monospace">' + dt + '</span>'
     ).join('');
-    notice.innerHTML = '<strong style="color:var(--text)">Available dates:</strong><br><div style="margin-top:6px;line-height:2">' + chips + '</div>';
+    notice.innerHTML = '<strong style="color:var(--text)">Available dates:</strong>' +
+      '<div style="margin-top:6px;line-height:2">' + chips + '</div>';
 
     const startEl = document.getElementById('bt-start-date');
     const endEl   = document.getElementById('bt-end-date');
-    if (!startEl.value) startEl.value = dates[0];
-    if (!endEl.value)   endEl.value   = dates[dates.length - 1];
+    if (!startEl.value) startEl.value = _btAvailDates[0];
+    if (!endEl.value)   endEl.value   = _btAvailDates[_btAvailDates.length - 1];
   } catch (e) { console.warn('available-dates:', e); }
+}
+
+function _btDateHint(dateVal, elId) {
+  const warn = document.getElementById(elId);
+  if (!warn) return;
+  if (!dateVal || !_btAvailDates.length) { warn.style.display = 'none'; return; }
+  const inRange = _btAvailDates.some(d => d === dateVal);
+  if (!inRange) {
+    warn.textContent = '⚠ No data recorded for this date';
+    warn.style.display = '';
+  } else {
+    warn.style.display = 'none';
+  }
 }
 
 async function startBacktest() {
@@ -2354,24 +2377,33 @@ async function startBacktest() {
   if (!startDate || !endDate) { toast('Please select a start and end date', 'warn'); return; }
   if (startDate > endDate)    { toast('Start date must be before end date', 'warn'); return; }
 
+  const datesInRange = _btAvailDates.filter(d => d >= startDate && d <= endDate);
+  if (_btAvailDates.length > 0 && datesInRange.length === 0) {
+    toast('No recorded CSV data exists for the selected date range', 'warn'); return;
+  }
+
   document.getElementById('bt-start-btn').disabled = true;
   document.getElementById('bt-stop-btn').disabled  = false;
-  document.getElementById('bt-running-spinner').style.cssText = 'display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)';
-  document.getElementById('bt-results-wrap').style.display   = '';
-  document.getElementById('bt-status-msg').textContent       = 'Running backtest for ' + instrument + ' from ' + startDate + ' to ' + endDate + '…';
-  document.getElementById('bt-summary-cards').style.display  = 'none';
-  document.getElementById('bt-trade-wrap').style.display     = 'none';
-  document.getElementById('bt-no-data-msg').style.display    = 'none';
+  document.getElementById('bt-running-spinner').style.cssText =
+    'display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)';
+  document.getElementById('bt-results-wrap').style.display  = '';
+  document.getElementById('bt-status-msg').textContent      =
+    'Running backtest for ' + instrument + ' · ' + startDate + ' → ' + endDate + '…';
+  document.getElementById('bt-summary-cards').style.display = 'none';
+  document.getElementById('bt-trade-wrap').style.display    = 'none';
+  document.getElementById('bt-no-data-msg').style.display   = 'none';
   _btTrades = [];
+  _btJobId  = null;
 
   try {
-    const r = await api('POST', '/backtest/start', {
+    const r = await api('POST', '/backtest/run', {
       instrument, start_date: startDate, end_date: endDate, quantity: qty
     });
     if (r && r.success === false) {
       toast(r.message || 'Failed to start backtest', 'err');
       _btResetBtns(); return;
     }
+    _btJobId = r.job_id || 'current';
     btPollTimer = setInterval(pollBacktest, 2500);
   } catch (e) {
     toast(e.message || 'Backtest start failed', 'err');
@@ -2387,7 +2419,8 @@ function _btResetBtns() {
 
 async function pollBacktest() {
   try {
-    const d = await api('GET', '/backtest/status');
+    const jobSeg = _btJobId ? '/' + _btJobId : '/current';
+    const d      = await api('GET', '/backtest/status' + jobSeg);
     if (d.running) return;
 
     clearInterval(btPollTimer);
@@ -2398,25 +2431,34 @@ async function pollBacktest() {
     _btTrades = trades;
 
     if (!trades.length) {
+      // Distinguish: no CSV data in range vs. CSV ran but strategy produced no trades
       const sd = document.getElementById('bt-start-date').value;
       const ed = document.getElementById('bt-end-date').value;
-      document.getElementById('bt-status-msg').textContent  = 'Backtest complete — no trades were recorded.';
+      const datesInRange = _btAvailDates.filter(dt => dt >= sd && dt <= ed);
+      const noCSV = datesInRange.length === 0;
+      document.getElementById('bt-status-msg').textContent =
+        noCSV ? 'No data — missing CSV for selected range.'
+              : 'Backtest complete — strategy found no entry conditions in this range.';
+      const msg = noCSV
+        ? 'No recorded data available for ' + sd + ' to ' + ed +
+          '. Data is recorded automatically during live market hours.'
+        : 'The backtest ran successfully but the strategy did not enter any trades ' +
+          'on the selected dates. Try a wider date range or check your strategy parameters.';
+      document.getElementById('bt-no-data-msg').textContent = msg;
       document.getElementById('bt-no-data-msg').style.display = '';
-      document.getElementById('bt-no-data-msg').textContent =
-        'No recorded data available for ' + sd + ' to ' + ed +
-        '. Data is recorded automatically during live market hours.';
       return;
     }
 
     document.getElementById('bt-status-msg').textContent =
-      'Backtest complete — ' + trades.length + ' trade leg' + (trades.length !== 1 ? 's' : '') + ' simulated.';
+      'Backtest complete — ' + trades.length + ' trade leg' +
+      (trades.length !== 1 ? 's' : '') + ' simulated.';
 
+    // ── Summary cards ──
     if (summary) {
       const pos = v => (v >= 0 ? '+' : '') + v;
       const col = v => v >= 0 ? 'var(--success)' : 'var(--danger)';
       const setEl = (id, html, color) => {
-        const el = document.getElementById(id);
-        el.innerHTML = html;
+        const el = document.getElementById(id); el.innerHTML = html;
         if (color) el.style.color = color;
       };
       setEl('bt-sum-pnl-pts', pos(summary.total_pnl_pts) + ' pts', col(summary.total_pnl_pts));
@@ -2431,35 +2473,94 @@ async function pollBacktest() {
       document.getElementById('bt-summary-cards').style.display = '';
     }
 
+    // ── Trade table: pair CE + PE legs ──
     const tbody = document.getElementById('bt-trade-body');
     tbody.innerHTML = '';
-    for (const t of trades) {
-      const pts = parseFloat(t.pnl_pts || 0);
-      const rs  = parseFloat(t.pnl_rs  || 0);
-      const ptsCol = pts >= 0 ? 'var(--success)' : 'var(--danger)';
-      const openedStr = String(t.opened_at || t.time || '');
-      const closedStr = String(t.closed_at || '');
-      const entryTime = openedStr.includes('T') ? openedStr.split('T')[1].substring(0, 8) : (t.time || '—');
-      const exitTime  = closedStr.includes('T') ? closedStr.split('T')[1].substring(0, 8) : '—';
-      const dir = String(t.direction || t.type || '').toUpperCase();
-      const dirLabel = dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir;
-      const dirCol   = dirLabel === 'CE' ? 'var(--info)' : dirLabel === 'PE' ? 'var(--warn)' : 'var(--text)';
+    const pairs = _btPairLegs(trades);
+    for (const row of pairs) {
       const tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td>' + (t.date || '—') + '</td>' +
-        '<td>' + entryTime + '</td>' +
-        '<td>' + exitTime + '</td>' +
-        '<td style="font-weight:700;color:' + dirCol + '">' + dirLabel + '</td>' +
-        '<td>' + (t.strike || '—') + '</td>' +
-        '<td>₹' + (t.entry_price || '—') + '</td>' +
-        '<td>₹' + (t.exit_price  || '—') + '</td>' +
-        '<td style="font-weight:700;color:' + ptsCol + '">' + (pts >= 0 ? '+' : '') + pts.toFixed(2) + '</td>' +
-        '<td style="color:' + ptsCol + '">₹' + (rs >= 0 ? '+' : '') + rs.toFixed(2) + '</td>' +
-        '<td style="font-size:11px;color:var(--text-soft)">' + (t.reason || '—') + '</td>';
+      if (row.type === 'pair') {
+        const c = row.call, p = row.put;
+        const totalPts = parseFloat(c.pnl_pts || 0) + parseFloat(p.pnl_pts || 0);
+        const totalRs  = parseFloat(c.pnl_rs  || 0) + parseFloat(p.pnl_rs  || 0);
+        const ptsCol   = totalPts >= 0 ? 'var(--success)' : 'var(--danger)';
+        const cEntry   = _btTime(c.opened_at || c.time);
+        const cExit    = _btTime(c.closed_at);
+        tr.innerHTML =
+          '<td>' + (c.date || p.date || '—') + '</td>' +
+          '<td>' + cEntry + '</td>' +
+          '<td>' + cExit  + '</td>' +
+          '<td style="font-weight:700;color:var(--info)">' + (c.strike || '—') + '</td>' +
+          '<td style="font-weight:700;color:var(--warn)">' + (p.strike || '—') + '</td>' +
+          '<td>₹' + (c.entry_price || '—') + ' / ₹' + (p.entry_price || '—') + '</td>' +
+          '<td>₹' + (c.exit_price  || '—') + ' / ₹' + (p.exit_price  || '—') + '</td>' +
+          '<td style="font-weight:700;color:' + ptsCol + '">' + (totalPts >= 0 ? '+' : '') + totalPts.toFixed(2) + '</td>' +
+          '<td style="color:' + ptsCol + '">₹' + (totalRs >= 0 ? '+' : '') + totalRs.toFixed(2) + '</td>' +
+          '<td style="font-size:11px;color:var(--text-soft)">' + (c.reason || p.reason || '—') + '</td>';
+      } else {
+        const t      = row.trade;
+        const pts    = parseFloat(t.pnl_pts || 0);
+        const rs     = parseFloat(t.pnl_rs  || 0);
+        const ptsCol = pts >= 0 ? 'var(--success)' : 'var(--danger)';
+        const dir    = String(t.direction || t.type || '').toUpperCase();
+        const label  = dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir;
+        const dirCol = label === 'CE' ? 'var(--info)' : label === 'PE' ? 'var(--warn)' : 'var(--text)';
+        tr.innerHTML =
+          '<td>' + (t.date || '—') + '</td>' +
+          '<td>' + _btTime(t.opened_at || t.time) + '</td>' +
+          '<td>' + _btTime(t.closed_at) + '</td>' +
+          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'CE' ? t.strike : '—') + '</td>' +
+          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'PE' ? t.strike : '—') + '</td>' +
+          '<td>₹' + (t.entry_price || '—') + '</td>' +
+          '<td>₹' + (t.exit_price  || '—') + '</td>' +
+          '<td style="font-weight:700;color:' + ptsCol + '">' + (pts >= 0 ? '+' : '') + pts.toFixed(2) + '</td>' +
+          '<td style="color:' + ptsCol + '">₹' + (rs >= 0 ? '+' : '') + rs.toFixed(2) + '</td>' +
+          '<td style="font-size:11px;color:var(--text-soft)">' + (t.reason || '—') + '</td>';
+      }
       tbody.appendChild(tr);
     }
     document.getElementById('bt-trade-wrap').style.display = '';
   } catch (e) { console.warn('backtest poll:', e); }
+}
+
+function _btTime(val) {
+  const s = String(val || '');
+  if (s.includes('T')) return s.split('T')[1].substring(0, 8);
+  if (s.length >= 8 && s.includes(':')) return s.substring(0, 8);
+  return s || '—';
+}
+
+function _btPairLegs(trades) {
+  const used  = new Set();
+  const pairs = [];
+  for (let i = 0; i < trades.length; i++) {
+    if (used.has(i)) continue;
+    const t   = trades[i];
+    const dir = String(t.direction || t.type || '').toUpperCase();
+    let partner = null, pIdx = -1;
+    for (let j = i + 1; j < trades.length; j++) {
+      if (used.has(j)) continue;
+      const t2   = trades[j];
+      const dir2 = String(t2.direction || t2.type || '').toUpperCase();
+      const sameEntry   = t.opened_at && t2.opened_at && t.opened_at === t2.opened_at;
+      const sameDate    = !sameEntry && (t.date === t2.date);
+      const oppositeDir = (dir.includes('CALL') && dir2.includes('PUT')) ||
+                          (dir.includes('PUT')  && dir2.includes('CALL'));
+      if ((sameEntry || sameDate) && oppositeDir) {
+        partner = t2; pIdx = j; break;
+      }
+    }
+    if (partner) {
+      used.add(i); used.add(pIdx);
+      const callLeg = dir.includes('CALL') ? t : partner;
+      const putLeg  = dir.includes('PUT')  ? t : partner;
+      pairs.push({ type: 'pair', call: callLeg, put: putLeg });
+    } else {
+      used.add(i);
+      pairs.push({ type: 'single', trade: t });
+    }
+  }
+  return pairs;
 }
 
 async function stopBacktest() {
@@ -2473,21 +2574,38 @@ async function stopBacktest() {
 
 function downloadBacktestCSV() {
   if (!_btTrades.length) { toast('No results to download', 'warn'); return; }
-  const header = ['Date','Entry Time','Exit Time','Direction','Strike','Entry Price (Rs)','Exit Price (Rs)','PnL Points','PnL Rupees','Exit Reason'];
-  const rows = _btTrades.map(t => {
-    const openedStr = String(t.opened_at || '');
-    const closedStr = String(t.closed_at || '');
-    const entryTime = openedStr.includes('T') ? openedStr.split('T')[1].substring(0,8) : (t.time || '');
-    const exitTime  = closedStr.includes('T') ? closedStr.split('T')[1].substring(0,8) : '';
-    const dir = String(t.direction || t.type || '').toUpperCase();
-    return [
-      t.date || '', entryTime, exitTime,
-      dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir,
-      t.strike || '', t.entry_price || '', t.exit_price || '',
-      t.pnl_pts || 0, t.pnl_rs || 0,
-      String(t.reason || '').replace(/,/g, ';')
-    ].join(',');
-  });
+  const header = ['Date','Entry Time','Exit Time','CE Strike','PE Strike',
+                  'CE Entry Rs','CE Exit Rs','PE Entry Rs','PE Exit Rs',
+                  'PnL Points','PnL Rupees','Exit Reason'];
+  const rows = [];
+  for (const row of _btPairLegs(_btTrades)) {
+    if (row.type === 'pair') {
+      const c = row.call, p = row.put;
+      const totalPts = (parseFloat(c.pnl_pts || 0) + parseFloat(p.pnl_pts || 0)).toFixed(2);
+      const totalRs  = (parseFloat(c.pnl_rs  || 0) + parseFloat(p.pnl_rs  || 0)).toFixed(2);
+      rows.push([
+        c.date || p.date || '',
+        _btTime(c.opened_at || c.time), _btTime(c.closed_at),
+        c.strike || '', p.strike || '',
+        c.entry_price || '', c.exit_price || '',
+        p.entry_price || '', p.exit_price || '',
+        totalPts, totalRs,
+        String(c.reason || p.reason || '').replace(/,/g, ';')
+      ].join(','));
+    } else {
+      const t   = row.trade;
+      const dir = String(t.direction || t.type || '').toUpperCase();
+      const isCE = dir.includes('CALL');
+      rows.push([
+        t.date || '', _btTime(t.opened_at || t.time), _btTime(t.closed_at),
+        isCE ? (t.strike || '') : '', isCE ? '' : (t.strike || ''),
+        isCE ? (t.entry_price || '') : '', isCE ? (t.exit_price || '') : '',
+        isCE ? '' : (t.entry_price || ''), isCE ? '' : (t.exit_price || ''),
+        t.pnl_pts || 0, t.pnl_rs || 0,
+        String(t.reason || '').replace(/,/g, ';')
+      ].join(','));
+    }
+  }
   const csv  = [header.join(','), ...rows].join('\n');
   const blob = new Blob([csv], {type: 'text/csv'});
   const a    = document.createElement('a');
