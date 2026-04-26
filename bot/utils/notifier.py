@@ -219,3 +219,42 @@ def notify_kill_switch(chat_id: str, username: str, reason: str, pnl_rs: float) 
         f"<i>Bot has been halted for today. Contact admin if needed.</i>"
     )
     return send_telegram(chat_id, msg)
+
+
+def _get_admin_chat_id() -> str | None:
+    """Return the first admin user's Telegram chat ID from the database."""
+    try:
+        from web.db import db_fetchone
+        row = db_fetchone(
+            "SELECT telegram_chat_id FROM users "
+            "WHERE role='admin' AND telegram_chat_id IS NOT NULL AND telegram_chat_id != '' "
+            "LIMIT 1"
+        )
+        return row["telegram_chat_id"] if row else None
+    except Exception:
+        return None
+
+
+def notify_rust_fallback() -> bool:
+    """
+    Send a one-time Telegram alert to the admin when the Rust engine is
+    unavailable and the bot has fallen back to Python.
+
+    Called once at module import time from rust_bridge.py — Python's module
+    cache guarantees the alert is sent at most once per process start.
+    """
+    chat_id = _get_admin_chat_id()
+    if not chat_id:
+        logger.warning("[Telegram] Rust fallback alert: no admin chat_id found — skipping.")
+        return False
+
+    msg = (
+        "⚠️ <b>Rust Engine Unavailable — AlgoSoft</b>\n\n"
+        "The Rust acceleration module (<code>rust_core</code>) failed to load "
+        "on this startup. The bot is running on <b>Python fallback mode</b>, "
+        "which is slower but fully functional.\n\n"
+        "<b>Action required:</b> Rebuild the Rust module on the server:\n"
+        "<code>bash bot/scripts/install_rust_core.sh</code>\n\n"
+        "<i>Then restart the bot to activate hardware acceleration.</i>"
+    )
+    return send_telegram(chat_id, msg, force=True)

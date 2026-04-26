@@ -16,6 +16,13 @@ except ImportError:
 
 from utils.logger import logger
 
+if not RUST_AVAILABLE:
+    try:
+        from utils.notifier import notify_rust_fallback
+        notify_rust_fallback()
+    except Exception as _e:
+        logger.warning(f"[RustBridge] Could not send Rust fallback Telegram alert: {_e}")
+
 class RustBridge:
     """
     ULTRA-LOW LATENCY BRIDGE:
