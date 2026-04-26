@@ -96,7 +96,7 @@ class InstanceManager:
             logger.error(f"[InstanceManager] Failed to start instance {instance_id}: {e}")
             return False, f"Failed to start bot: {e}", None
 
-    def stop_instance(self, instance_id: int) -> tuple[bool, str]:
+    def stop_instance(self, instance_id: int, reason: str = "") -> tuple[bool, str]:
         stopped = False
         proc = self._processes.get(instance_id)
         if proc:
@@ -151,6 +151,7 @@ class InstanceManager:
                         inst_row["username"], "stopped",
                         inst_row.get("trading_mode", ""),
                         inst_row.get("instrument", ""),
+                        reason=reason,
                     )
             except Exception as _tge:
                 logger.debug(f"[InstanceManager] Admin Telegram stop alert failed: {_tge}")

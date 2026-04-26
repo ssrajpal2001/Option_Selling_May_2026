@@ -722,7 +722,7 @@ async def _kill_switch_enforcer():
 
                         # Stop the instance and lock
                         from hub.instance_manager import instance_manager as _im
-                        _im.stop_instance(inst["id"])
+                        _im.stop_instance(inst["id"], reason=trigger_reason)
                         db_execute(
                             "UPDATE client_broker_instances SET status='idle', bot_pid=NULL, "
                             "trading_locked_until=? WHERE id=?",
@@ -864,6 +864,59 @@ def _get_nse_holidays() -> frozenset:
     except Exception:
         pass
     return _NSE_HOLIDAYS_DEFAULT
+
+
+async def _instance_crash_monitor():
+    """
+    Poll every 60 seconds for client bot subprocesses that have exited unexpectedly.
+    Fires an admin Telegram alert when a 'running' DB row has a dead process.
+    Updates the DB row to idle so the monitor doesn't re-fire for the same crash.
+    """
+    while True:
+        try:
+            await asyncio.sleep(60)
+            running_rows = db_fetchall(
+                "SELECT cbi.id, cbi.bot_pid, u.username, cbi.trading_mode, cbi.instrument "
+                "FROM client_broker_instances cbi "
+                "JOIN users u ON u.id = cbi.client_id "
+                "WHERE cbi.status='running' AND cbi.bot_pid IS NOT NULL"
+            )
+            for row in running_rows:
+                pid = row.get("bot_pid")
+                if not pid:
+                    continue
+                try:
+                    import os as _os
+                    _os.kill(int(pid), 0)
+                    # Process is alive — no action needed
+                except ProcessLookupError:
+                    # Process is gone but DB still says running — crash detected
+                    logger.warning(
+                        f"[CrashMonitor] Instance {row['id']} (PID {pid}) for "
+                        f"'{row['username']}' exited unexpectedly — marking idle."
+                    )
+                    db_execute(
+                        "UPDATE client_broker_instances SET status='idle', bot_pid=NULL "
+                        "WHERE id=?",
+                        (row["id"],)
+                    )
+                    try:
+                        from utils.notifier import notify_admin_instance_event
+                        notify_admin_instance_event(
+                            row["username"], "stopped",
+                            row.get("trading_mode", ""),
+                            row.get("instrument", ""),
+                            reason=f"Process crashed (PID {pid} exited unexpectedly)",
+                        )
+                    except Exception as _tge:
+                        logger.error(f"[CrashMonitor] Admin Telegram alert failed: {_tge}")
+                except Exception:
+                    pass  # Other OS errors — skip
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"[CrashMonitor] Error: {e}")
+            await asyncio.sleep(60)
 
 
 async def _day_end_summary_scheduler():
@@ -1146,6 +1199,8 @@ async def startup_event():
     asyncio.create_task(_day_end_summary_scheduler())
     # Admin day-end digest (15:45 IST, weekdays only)
     asyncio.create_task(_admin_day_end_digest_scheduler())
+    # Instance crash monitor (polls every 60s for unexpected subprocess exits)
+    asyncio.create_task(_instance_crash_monitor())
     # Dhan token auto-renewal (hourly, renews when token age > 22h)
     asyncio.create_task(_dhan_auto_renewal_scheduler())
     # Daily loss kill-switch enforcer (runs every 5 minutes during market hours)
