@@ -66,7 +66,7 @@ externalPort = 3002
 
 [nix]
 channel = "stable-25_05"
-packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
+packages = ["cargo", "gitFull", "glibcLocales", "gnupg", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
 
 [userenv]
 

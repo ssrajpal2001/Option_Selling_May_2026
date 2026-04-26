@@ -17,6 +17,7 @@ cryptography
 redis
 hiredis
 smartapi-python
+logzero
 pyotp
 kiteconnect
 dhanhq

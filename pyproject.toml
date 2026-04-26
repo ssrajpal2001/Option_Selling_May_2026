@@ -27,4 +27,5 @@ dependencies = [
     "upstox-totp>=1.0.8",
     "uvicorn[standard]>=0.46.0",
     "websockets>=16.0",
+    "logzero>=1.7.0",
 ]
