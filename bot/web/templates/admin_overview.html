@@ -15,19 +15,19 @@
   </div>
   <div class="stat-card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Active</div>
-    <div id="o-active" class="text-2xl font-bold" style="color:#34d399">--</div>
+    <div id="o-active" class="text-2xl font-bold" style="color:var(--success)">--</div>
   </div>
   <div class="stat-card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Pending</div>
-    <div id="o-pending" class="text-2xl font-bold" style="color:#fb923c">--</div>
+    <div id="o-pending" class="text-2xl font-bold" style="color:var(--warn)">--</div>
   </div>
   <div class="stat-card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Running Bots</div>
-    <div id="o-running" class="text-2xl font-bold" style="color:#818cf8">--</div>
+    <div id="o-running" class="text-2xl font-bold" style="color:var(--info)">--</div>
   </div>
   <div class="stat-card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Failures (24h)</div>
-    <div id="o-failures" class="text-2xl font-bold" style="color:#f87171">--</div>
+    <div id="o-failures" class="text-2xl font-bold" style="color:var(--error)">--</div>
   </div>
 </div>
 
@@ -56,7 +56,7 @@
     </div>
     <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
       <div class="text-xs mb-1" style="color:var(--muted)">PID</div>
-      <div id="pm-pid" class="font-bold text-sm" style="color:#818cf8">--</div>
+      <div id="pm-pid" class="font-bold text-sm" style="color:var(--info)">--</div>
     </div>
   </div>
 </div>
@@ -83,7 +83,7 @@
 <div id="broker-requests-panel" class="card p-4 mb-6" style="display:none">
   <div class="flex items-center justify-between mb-3">
     <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Pending Broker Change Requests</span>
-    <span id="bcr-count" class="text-xs px-2 py-0.5 rounded" style="background:#3b1f00;color:#fb923c">0</span>
+    <span id="bcr-count" class="text-xs px-2 py-0.5 rounded" style="background:var(--badge-warn-bg);color:var(--warn)">0</span>
   </div>
   <div id="bcr-list" style="color:var(--muted);font-size:13px">No pending requests.</div>
 </div>
@@ -127,7 +127,7 @@
       <span>Memory</span><span id="h-mem-pct">--%</span>
     </div>
     <div class="rounded-full overflow-hidden" style="background:var(--card);height:6px">
-      <div id="h-mem-bar" class="h-full rounded-full transition-all" style="width:0%;background:#818cf8"></div>
+      <div id="h-mem-bar" class="h-full rounded-full transition-all" style="width:0%;background:var(--info)"></div>
     </div>
   </div>
   <!-- Feed status -->
@@ -166,9 +166,9 @@
     <div class="text-sm font-bold text-white mb-3">⚡ Rust Engine — Rebuild Instructions</div>
     <p class="text-xs mb-3" style="color:var(--text-soft)">The Rust module accelerates RSI, VWAP, ROC and boolean-logic calculations. Run the command below on the server to compile and install it:</p>
     <div class="rounded-lg p-3 mb-4" style="background:var(--surface2);border:1px solid var(--border)">
-      <code class="text-xs" style="color:#34d399;word-break:break-all">bash bot/scripts/install_rust_core.sh</code>
+      <code class="text-xs" style="color:var(--success);word-break:break-all">bash bot/scripts/install_rust_core.sh</code>
     </div>
-    <p class="text-xs" style="color:var(--muted)">After a successful build restart the AlgoSoft server process. The Engine badge will switch to <span style="color:#34d399;font-weight:700">⚡ Rust ACTIVE</span>.</p>
+    <p class="text-xs" style="color:var(--muted)">After a successful build restart the AlgoSoft server process. The Engine badge will switch to <span style="color:var(--success);font-weight:700">⚡ Rust ACTIVE</span>.</p>
   </div>
 </div>
 
@@ -203,10 +203,10 @@ async function loadOverview() {
   if (d.live_instances && d.live_instances.length > 0) {
     liveList.innerHTML = d.live_instances.map(i => {
       const pnl = i.session_pnl || 0;
-      const pnlColor = pnl > 0 ? '#34d399' : pnl < 0 ? '#f87171' : '#94a3b8';
-      const dot = i.stale ? '<span style="color:#fb923c">●</span>' : '<span style="color:#34d399">●</span>';
+      const pnlColor = pnl > 0 ? 'var(--success)' : pnl < 0 ? 'var(--error)' : 'var(--text-soft)';
+      const dot = i.stale ? '<span style="color:var(--warn)">●</span>' : '<span style="color:var(--success)">●</span>';
       return `<div class="flex items-center justify-between py-1.5" style="border-bottom:1px solid var(--border-soft)">
-        <span>${dot} <a href="/admin/clients/${i.client_id}" style="color:#93c5fd">${escapeHtml(i.username||'')}</a> · ${escapeHtml(i.broker||'')} · ${escapeHtml(i.instrument||'')}</span>
+        <span>${dot} <a href="/admin/clients/${i.client_id}" style="color:var(--link)">${escapeHtml(i.username||'')}</a> · ${escapeHtml(i.broker||'')} · ${escapeHtml(i.instrument||'')}</span>
         <span style="color:${pnlColor};font-weight:700">\u20B9${parseFloat(pnl).toFixed(0)}</span>
       </div>`;
     }).join('');
@@ -214,12 +214,12 @@ async function loadOverview() {
     detailPanel.style.display = 'block';
     liveBody.innerHTML = d.live_instances.map(i => {
       const pnl = i.session_pnl || 0;
-      const pnlColor = pnl > 0 ? '#34d399' : pnl < 0 ? '#f87171' : '#94a3b8';
+      const pnlColor = pnl > 0 ? 'var(--success)' : pnl < 0 ? 'var(--error)' : 'var(--text-soft)';
       const hb = i.heartbeat ? new Date(i.heartbeat * 1000).toLocaleTimeString() : '--';
-      const hbColor = i.stale ? '#fb923c' : '#34d399';
-      const modeColor = (i.trading_mode === 'live') ? '#34d399' : '#60a5fa';
+      const hbColor = i.stale ? 'var(--warn)' : 'var(--success)';
+      const modeColor = (i.trading_mode === 'live') ? 'var(--success)' : 'var(--link)';
       return `<tr>
-        <td><a href="/admin/clients/${i.client_id}" style="color:#93c5fd;font-weight:600">${escapeHtml(i.username||'')}</a></td>
+        <td><a href="/admin/clients/${i.client_id}" style="color:var(--link);font-weight:600">${escapeHtml(i.username||'')}</a></td>
         <td class="text-white">${escapeHtml((i.broker||'').toUpperCase())}</td>
         <td class="text-white">${escapeHtml(i.instrument||'')}</td>
         <td style="color:${modeColor};font-weight:700">${(i.trading_mode||'').toUpperCase()}</td>
@@ -245,7 +245,7 @@ async function loadOverview() {
     bcrList.innerHTML = reqs.map(r => `
       <div class="flex items-center justify-between py-2" style="border-bottom:1px solid var(--border-soft)">
         <div>
-          <a href="/admin/clients/${r.client_id}" style="color:#93c5fd;font-weight:600">${escapeHtml(r.username)}</a>
+          <a href="/admin/clients/${r.client_id}" style="color:var(--link);font-weight:600">${escapeHtml(r.username)}</a>
           <span class="text-xs" style="color:var(--muted)">wants to switch from</span>
           <span class="text-white font-bold">${escapeHtml((r.current_broker||'').toUpperCase())}</span>
           <span class="text-xs" style="color:var(--muted)">to</span>
@@ -285,7 +285,7 @@ async function loadClients() {
       <td style="color:var(--muted)">${escapeHtml(c.email)}</td>
       <td>${statusBadge}</td>
       <td><span class="badge-idle">${c.subscription_tier}</span></td>
-      <td style="color:#818cf8">${c.running_count || 0}</td>
+      <td style="color:var(--info)">${c.running_count || 0}</td>
       <td class="flex gap-2">
         ${btn}
         <a href="/admin/clients/${c.id}" class="btn-ghost px-2 py-1 text-xs">View</a>
@@ -347,7 +347,7 @@ async function loadHealth() {
 
     // CPU
     const cpu = h.cpu_percent || 0;
-    const cpuColor = cpu > 80 ? '#f87171' : cpu > 60 ? '#fb923c' : '#00d4aa';
+    const cpuColor = cpu > 80 ? 'var(--error)' : cpu > 60 ? 'var(--warn)' : '#00d4aa';
     document.getElementById('h-cpu').textContent = cpu.toFixed(1) + '%';
     document.getElementById('h-cpu').style.color = cpuColor;
     document.getElementById('h-cpu-pct').textContent = cpu.toFixed(1) + '%';
@@ -356,7 +356,7 @@ async function loadHealth() {
 
     // Memory (flat fields from API)
     const memPct = h.memory_percent || 0;
-    const memColor = memPct > 85 ? '#f87171' : memPct > 70 ? '#fb923c' : '#818cf8';
+    const memColor = memPct > 85 ? 'var(--error)' : memPct > 70 ? 'var(--warn)' : 'var(--info)';
     const memUsed = h.memory_used_mb ? (h.memory_used_mb / 1024).toFixed(1) + ' GB' : '--';
     const memTotal = h.memory_total_mb ? (h.memory_total_mb / 1024).toFixed(1) + ' GB' : '--';
     document.getElementById('h-mem').textContent = `${memUsed} / ${memTotal}`;
@@ -372,20 +372,20 @@ async function loadHealth() {
     const ticksEl = document.getElementById('h-ticks');
     if (bestSecs === Infinity) {
       ticksEl.textContent = 'No feed';
-      ticksEl.style.color = '#f87171';
+      ticksEl.style.color = 'var(--error)';
     } else if (bestSecs < 60) {
       ticksEl.textContent = Math.round(bestSecs) + 's ago';
-      ticksEl.style.color = '#34d399';
+      ticksEl.style.color = 'var(--success)';
     } else {
       ticksEl.textContent = (bestSecs / 60).toFixed(1) + 'm ago';
-      ticksEl.style.color = '#fb923c';
+      ticksEl.style.color = 'var(--warn)';
     }
 
     // Feed providers — flat fields from API
     function feedBadgeFlat(connected, secsAgo, name) {
       const stale = secsAgo == null || secsAgo > 60;
       const ok = connected && !stale;
-      const color = ok ? '#34d399' : connected ? '#fb923c' : '#f87171';
+      const color = ok ? 'var(--success)' : connected ? 'var(--warn)' : 'var(--error)';
       const label = ok ? 'LIVE' : connected ? 'STALE' : 'OFFLINE';
       return `<span style="color:${color};font-weight:700">${label}</span> <span style="color:var(--muted);font-size:10px">${name}</span>`;
     }
@@ -399,11 +399,11 @@ async function loadHealth() {
     // Event loop health
     const loopEl = document.getElementById('h-event-loop');
     if (h.event_loop_closed) {
-      loopEl.textContent = 'CLOSED'; loopEl.style.color = '#f87171';
+      loopEl.textContent = 'CLOSED'; loopEl.style.color = 'var(--error)';
     } else if (h.event_loop_running) {
-      loopEl.textContent = 'RUNNING'; loopEl.style.color = '#34d399';
+      loopEl.textContent = 'RUNNING'; loopEl.style.color = 'var(--success)';
     } else {
-      loopEl.textContent = 'STOPPED'; loopEl.style.color = '#fb923c';
+      loopEl.textContent = 'STOPPED'; loopEl.style.color = 'var(--warn)';
     }
 
     // Rust engine badge
@@ -411,11 +411,11 @@ async function loadHealth() {
     if (rustEl) {
       if (h.rust_available === true) {
         rustEl.textContent = '⚡ Rust ACTIVE';
-        rustEl.style.color = '#34d399';
+        rustEl.style.color = 'var(--success)';
         rustEl.title = 'Rust module is loaded — indicator calculations run at native speed. Click for details.';
       } else {
         rustEl.textContent = '⚠️ Python fallback';
-        rustEl.style.color = '#fb923c';
+        rustEl.style.color = 'var(--warn)';
         rustEl.title = 'Rust module not loaded — using slower Python. Click to see rebuild instructions.';
       }
     }
@@ -439,16 +439,16 @@ async function loadProcessManager() {
     const h = await r.json();
     const isOk = h.status === 'ok';
 
-    if (dot) { dot.style.background = isOk ? '#34d399' : '#f87171'; }
-    if (lbl) { lbl.textContent = isOk ? 'ONLINE' : 'DEGRADED'; lbl.style.color = isOk ? '#34d399' : '#f87171'; }
+    if (dot) { dot.style.background = isOk ? 'var(--success)' : 'var(--error)'; }
+    if (lbl) { lbl.textContent = isOk ? 'ONLINE' : 'DEGRADED'; lbl.style.color = isOk ? 'var(--success)' : 'var(--error)'; }
 
     // Reset field colors on recovery (may have been set red during an outage)
     ['pm-uptime','pm-sessions'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.style.color = '#ffffff';
+      if (el) el.style.color = 'var(--text)';
     });
     const pidEl = document.getElementById('pm-pid');
-    if (pidEl) pidEl.style.color = '#818cf8';
+    if (pidEl) pidEl.style.color = 'var(--info)';
 
     if (h.uptime) document.getElementById('pm-uptime').textContent = h.uptime;
     if (h.started_at) {
@@ -462,11 +462,11 @@ async function loadProcessManager() {
   } catch (e) {
     const dot = document.getElementById('pm-dot');
     const lbl = document.getElementById('pm-status-lbl');
-    if (dot) dot.style.background = '#f87171';
-    if (lbl) { lbl.textContent = 'OFFLINE'; lbl.style.color = '#f87171'; }
+    if (dot) dot.style.background = 'var(--error)';
+    if (lbl) { lbl.textContent = 'OFFLINE'; lbl.style.color = 'var(--error)'; }
     ['pm-uptime','pm-sessions','pm-pid'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) { el.textContent = '--'; el.style.color = '#f87171'; }
+      if (el) { el.textContent = '--'; el.style.color = 'var(--error)'; }
     });
   }
 }

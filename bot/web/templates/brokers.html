@@ -165,7 +165,7 @@ function renderBrokers() {
 
   list.innerHTML = brokersData.map(b => `
     <div class="flex items-center gap-2 text-sm">
-      <span class="w-2 h-2 rounded-full" style="background:#34d399"></span>
+      <span class="w-2 h-2 rounded-full" style="background:var(--success)"></span>
       <span style="color:var(--text)">${b.name}</span>
     </div>
   `).join('');

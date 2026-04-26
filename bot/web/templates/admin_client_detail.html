@@ -39,7 +39,7 @@
       <div class="flex gap-2 mt-3">
         <button onclick="forceClose()" class="btn-danger px-3 py-1.5 text-xs">Force Stop Bot</button>
         <button id="toggle-active-btn" onclick="toggleActive()" class="btn-primary px-3 py-1.5 text-xs">Loading...</button>
-        <button onclick="clearTrades()" class="btn-ghost px-3 py-1.5 text-xs" style="color:#f87171;border-color:#450a0a">Clear Trade History</button>
+        <button onclick="clearTrades()" class="btn-ghost px-3 py-1.5 text-xs" style="color:var(--error);border-color:#450a0a">Clear Trade History</button>
       </div>
     </div>
 
@@ -62,7 +62,7 @@
   <div class="card p-4 mb-4" id="static-ip-card">
     <div class="flex items-center justify-between mb-3">
       <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Assigned Static IP</div>
-      <span id="static-ip-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:9999px;background:#052e16;color:#34d399;font-weight:600">✓ Saved</span>
+      <span id="static-ip-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:9999px;background:var(--badge-ok-bg);color:var(--badge-ok-txt);font-weight:600">✓ Saved</span>
     </div>
     <p class="text-xs mb-3" style="color:var(--muted)">Enter the Elastic IP (public IP) assigned to this client on your EC2 instance. The client uses this IP to whitelist with their broker's developer portal.</p>
     <div class="flex gap-2 items-end">
@@ -169,7 +169,7 @@
       <div id="risk-lock-status" class="text-sm font-bold mt-1">Loading...</div>
       <div class="flex gap-2 mt-2">
         <button onclick="lockTrading()" class="btn-danger px-2 py-1 text-xs">🔒 Lock</button>
-        <button onclick="unlockTrading()" class="btn-ghost px-2 py-1 text-xs" style="color:#34d399;border-color:#065f46">🔓 Unlock</button>
+        <button onclick="unlockTrading()" class="btn-ghost px-2 py-1 text-xs" style="color:var(--success);border-color:#065f46">🔓 Unlock</button>
       </div>
     </div>
   </div>
@@ -184,7 +184,7 @@
       </div>
     </div>
     <div class="w-full rounded-full h-3 mb-1" style="background:var(--card)">
-      <div id="risk-pnl-bar" class="h-3 rounded-full transition-all duration-500" style="width:0%;background:#22c55e"></div>
+      <div id="risk-pnl-bar" class="h-3 rounded-full transition-all duration-500" style="width:0%;background:var(--success)"></div>
     </div>
     <div class="flex justify-between text-xs mt-1" style="color:var(--muted)">
       <span>₹0</span>
@@ -293,8 +293,8 @@
   <div id="monitor-live" class="hidden">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <span id="m-bot-badge" class="flex items-center gap-2 text-sm px-3 py-1 rounded-full" style="background:#064e3b;border:1px solid #059669;color:#34d399">
-          <span class="pulse-dot pulse-green" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#34d399;animation:pulse 2s infinite"></span>
+        <span id="m-bot-badge" class="flex items-center gap-2 text-sm px-3 py-1 rounded-full" style="background:var(--badge-ok-bg);border:1px solid var(--badge-ok-br);color:var(--badge-ok-txt)">
+          <span class="pulse-dot pulse-green" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--success);animation:pulse 2s infinite"></span>
           <span id="m-bot-label">LIVE</span>
         </span>
       </div>
@@ -318,7 +318,7 @@
       </div>
       <div class="stat-card p-4">
         <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Mode</div>
-        <div id="m-mode" class="text-2xl font-bold" style="color:#60a5fa">--</div>
+        <div id="m-mode" class="text-2xl font-bold" style="color:var(--link)">--</div>
         <div class="text-xs mt-1" style="color:var(--muted)">Instrument: <span id="m-instrument">--</span></div>
       </div>
     </div>
@@ -326,12 +326,12 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       <div class="card p-5">
         <div class="flex items-center gap-2 mb-4">
-          <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:#1e3a5f;color:#60a5fa">BUY SIDE</span>
+          <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:#1e3a5f;color:var(--link)">BUY SIDE</span>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold" style="color:#818cf8">CALL</span>
+              <span class="text-xs font-bold" style="color:var(--info)">CALL</span>
               <span id="m-buy-call-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)">IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-buy-call-strike">--</div>
@@ -344,7 +344,7 @@
           </div>
           <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold" style="color:#f472b6">PUT</span>
+              <span class="text-xs font-bold" style="color:var(--put-color)">PUT</span>
               <span id="m-buy-put-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)">IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-buy-put-strike">--</div>
@@ -360,12 +360,12 @@
 
       <div class="card p-5">
         <div class="flex items-center gap-2 mb-4">
-          <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:#3b1f00;color:#fb923c">SELL SIDE</span>
+          <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style="background:var(--badge-warn-bg);color:var(--badge-warn-txt)">SELL SIDE</span>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold" style="color:#818cf8">SELL CE</span>
+              <span class="text-xs font-bold" style="color:var(--info)">SELL CE</span>
               <span id="m-sell-ce-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)">IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-sell-ce-strike">--</div>
@@ -379,7 +379,7 @@
           </div>
           <div class="rounded-lg p-3" style="background:var(--surface2);border:1px solid var(--border-soft)">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold" style="color:#f472b6">SELL PE</span>
+              <span class="text-xs font-bold" style="color:var(--put-color)">SELL PE</span>
               <span id="m-sell-pe-status" class="text-xs px-2 py-0.5 rounded" style="background:var(--card);color:var(--muted)">IDLE</span>
             </div>
             <div class="text-lg font-bold text-white" id="m-sell-pe-strike">--</div>
@@ -399,15 +399,15 @@
       <div class="card p-4">
         <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)">OI Snapshot</div>
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs" style="color:#818cf8">Call OI</span>
+          <span class="text-xs" style="color:var(--info)">Call OI</span>
           <span id="m-oi-call" class="text-sm font-bold text-white">--</span>
         </div>
         <div class="flex items-center justify-between mb-3">
-          <span class="text-xs" style="color:#f472b6">Put OI</span>
+          <span class="text-xs" style="color:var(--put-color)">Put OI</span>
           <span id="m-oi-put" class="text-sm font-bold text-white">--</span>
         </div>
         <div class="h-2 rounded-full" style="background:var(--card)">
-          <div id="m-oi-bar" class="h-2 rounded-full" style="background:#818cf8;width:50%;transition:width 0.5s"></div>
+          <div id="m-oi-bar" class="h-2 rounded-full" style="background:var(--info);width:50%;transition:width 0.5s"></div>
         </div>
       </div>
 
@@ -446,8 +446,8 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
       <div class="card p-4 md:col-span-3">
         <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Heartbeat</div>
-        <div id="m-heartbeat" class="text-sm" style="color:#34d399">--</div>
-        <div id="m-stale-warning" class="text-xs mt-1 hidden" style="color:#fb923c"></div>
+        <div id="m-heartbeat" class="text-sm" style="color:var(--success)">--</div>
+        <div id="m-stale-warning" class="text-xs mt-1 hidden" style="color:var(--warn)"></div>
       </div>
     </div>
 
@@ -524,7 +524,7 @@ async function loadRiskParams() {
 
     const pnlEl = document.getElementById('risk-daily-pnl');
     pnlEl.textContent = `₹ ${pnl >= 0 ? '+' : ''}${pnl.toFixed(0)}`;
-    pnlEl.style.color = pnl >= 0 ? '#34d399' : '#f87171';
+    pnlEl.style.color = pnl >= 0 ? 'var(--success)' : 'var(--error)';
 
     document.getElementById('risk-loss-limit-badge').textContent = limit > 0 ? `₹${limit.toLocaleString()}` : 'No limit';
     document.getElementById('risk-trade-count').textContent = tradeCount;
@@ -545,9 +545,9 @@ async function loadRiskParams() {
     const locked = d.trading_locked_until && new Date(d.trading_locked_until) > new Date();
     if (locked) {
       const lockUntil = new Date(d.trading_locked_until).toLocaleString();
-      lockEl.innerHTML = `<span style="color:#f87171">🔒 LOCKED</span><div class="text-xs mt-0.5" style="color:var(--muted)">Until ${lockUntil}</div>`;
+      lockEl.innerHTML = `<span style="color:var(--error)">🔒 LOCKED</span><div class="text-xs mt-0.5" style="color:var(--muted)">Until ${lockUntil}</div>`;
     } else {
-      lockEl.innerHTML = `<span style="color:#34d399">🟢 ACTIVE</span>`;
+      lockEl.innerHTML = `<span style="color:var(--success)">🟢 ACTIVE</span>`;
     }
 
     // P&L bar
@@ -681,14 +681,14 @@ async function loadDetail() {
   const tgChatEl = document.getElementById('tg-chat-id');
   if (c.telegram_chat_id) {
     tgBadge.textContent = '✅ Configured';
-    tgBadge.style.background = '#052e16'; tgBadge.style.color = '#34d399';
+    tgBadge.style.background = '#052e16'; tgBadge.style.color = 'var(--success)';
     // Mask middle digits: show first 3 and last 2 chars only
     const raw = String(c.telegram_chat_id);
     const masked = raw.length > 6 ? raw.slice(0, 3) + '·'.repeat(raw.length - 5) + raw.slice(-2) : raw;
     tgChatEl.textContent = `Chat ID: ${masked}`;
   } else {
     tgBadge.textContent = '⚠ Not configured';
-    tgBadge.style.background = '#1c1917'; tgBadge.style.color = '#94a3b8';
+    tgBadge.style.background = '#1c1917'; tgBadge.style.color = 'var(--text-soft)';
     tgChatEl.textContent = 'Client has not set a Telegram Chat ID';
   }
   document.getElementById('d-status').innerHTML = c.is_active
@@ -701,7 +701,7 @@ async function loadDetail() {
   const usedCount = (d.instances || []).length;
   document.getElementById('plan-current').textContent = c.plan_display_name || c.subscription_tier || '--';
   document.getElementById('plan-slots').textContent = effMax === 999 ? '∞ (Unlimited)' : effMax;
-  document.getElementById('plan-used').innerHTML = `<span style="color:${usedCount >= effMax ? '#f87171' : '#34d399'}">${usedCount}</span> / ${effMax === 999 ? '∞' : effMax}`;
+  document.getElementById('plan-used').innerHTML = `<span style="color:${usedCount >= effMax ? 'var(--error)' : 'var(--success)'}">${usedCount}</span> / ${effMax === 999 ? '∞' : effMax}`;
   // Expiry
   const expiryEl = document.getElementById('plan-expiry-date');
   const expiryBadge = document.getElementById('plan-expiry-badge');
@@ -709,14 +709,14 @@ async function loadDetail() {
     const exp = new Date(c.plan_expiry_date);
     const isExpired = exp < new Date();
     expiryEl.textContent = exp.toLocaleDateString();
-    expiryEl.style.color = isExpired ? '#f87171' : (exp - Date.now() < 7 * 86400000 ? '#fb923c' : '#34d399');
+    expiryEl.style.color = isExpired ? 'var(--error)' : (exp - Date.now() < 7 * 86400000 ? 'var(--warn)' : 'var(--success)');
     expiryBadge.style.display = '';
     expiryBadge.textContent = isExpired ? '⚠ EXPIRED' : 'Expires soon';
-    expiryBadge.style.background = isExpired ? '#450a0a' : '#3b1f00';
-    expiryBadge.style.color = isExpired ? '#f87171' : '#fb923c';
+    expiryBadge.style.background = isExpired ? 'var(--badge-err-bg)' : 'var(--badge-warn-bg)';
+    expiryBadge.style.color = isExpired ? 'var(--error)' : 'var(--warn)';
   } else {
     expiryEl.textContent = 'No expiry';
-    expiryEl.style.color = '#64748b';
+    expiryEl.style.color = 'var(--muted)';
     expiryBadge.style.display = 'none';
   }
   // Pre-select current plan in dropdown
@@ -733,8 +733,8 @@ async function loadDetail() {
   if (c.is_active) {
     activeBtn.textContent = 'Deactivate Account';
     activeBtn.className = 'btn-ghost px-3 py-1.5 text-xs';
-    activeBtn.style.color = '#fb923c';
-    activeBtn.style.borderColor = '#431407';
+    activeBtn.style.color = 'var(--warn)';
+    activeBtn.style.borderColor = 'var(--badge-warn-bg)';
   } else {
     activeBtn.textContent = 'Activate Account';
     activeBtn.className = 'btn-primary px-3 py-1.5 text-xs';
@@ -747,7 +747,7 @@ async function loadDetail() {
     ilist.innerHTML = d.instances.map(i => {
       const tokenInfo = i.token_updated_at
         ? `<span class="text-xs" style="color:var(--muted)">Token: ${(i.token_updated_at||'').substring(0,10)}</span>`
-        : '<span class="text-xs" style="color:#f87171">No token</span>';
+        : '<span class="text-xs" style="color:var(--error)">No token</span>';
       return `<div class="flex items-center justify-between py-2" style="border-bottom:1px solid var(--border-soft)">
         <div>
           <div class="text-white font-bold">${escapeHtml((i.broker||'').toUpperCase())} · ${escapeHtml(i.instrument)} · ${i.quantity} lots</div>
@@ -763,7 +763,7 @@ async function loadDetail() {
   const bcrList = document.getElementById('bcr-detail-list');
   if (d.broker_requests && d.broker_requests.length) {
     bcrList.innerHTML = d.broker_requests.map(r => {
-      const statusColor = r.status === 'approved' ? '#34d399' : r.status === 'denied' ? '#f87171' : '#fb923c';
+      const statusColor = r.status === 'approved' ? 'var(--success)' : r.status === 'denied' ? 'var(--error)' : 'var(--warn)';
       const statusLabel = r.status.toUpperCase();
       const actionBtns = r.status === 'pending'
         ? `<div class="flex gap-2 ml-auto">
@@ -790,7 +790,7 @@ async function loadDetail() {
     flist.innerHTML = d.failures.map(f => `
       <div class="py-1.5" style="border-bottom:1px solid var(--border-soft)">
         <div class="flex items-center justify-between">
-          <span style="color:#f87171">Leg ${escapeHtml(f.order_side)} failed</span>
+          <span style="color:var(--error)">Leg ${escapeHtml(f.order_side)} failed</span>
           <span style="color:var(--muted);font-size:11px">${(f.created_at||'').substring(11,19)}</span>
         </div>
         <div class="text-xs mt-0.5" style="color:var(--muted)">${escapeHtml(f.failure_reason||'')} · Retry ${f.retry_attempt} · ${f.paired_leg_closed ? 'Paired leg closed ✓' : 'Paired leg open ⚠'}</div>
@@ -803,13 +803,13 @@ async function loadDetail() {
   const tbody = document.getElementById('trades-body');
   if (d.trades && d.trades.length) {
     tbody.innerHTML = d.trades.map(t => {
-      const pnlColor = (t.pnl_pts||0) > 0 ? '#34d399' : (t.pnl_pts||0) < 0 ? '#f87171' : '#64748b';
+      const pnlColor = (t.pnl_pts||0) > 0 ? 'var(--success)' : (t.pnl_pts||0) < 0 ? 'var(--error)' : '#64748b';
       const pSign = (t.pnl_pts||0) > 0 ? '+' : '';
       const rSign = (t.pnl_rs||0) > 0 ? '+' : '';
       return `<tr>
         <td style="color:var(--muted);font-size:12px">${(t.closed_at||'').substring(11,19)}</td>
-        <td style="color:${t.trade_type==='BUY'?'#60a5fa':'#fb923c'};font-weight:700">${escapeHtml(t.trade_type||'')}</td>
-        <td style="color:${(t.direction==='CE'||t.direction==='CALL')?'#818cf8':'#f472b6'}">${escapeHtml(t.direction||'')}</td>
+        <td style="color:${t.trade_type==='BUY'?'var(--link)':'var(--warn)'};font-weight:700">${escapeHtml(t.trade_type||'')}</td>
+        <td style="color:${(t.direction==='CE'||t.direction==='CALL')?'var(--info)':'#f472b6'}">${escapeHtml(t.direction||'')}</td>
         <td class="text-white">${t.strike||'--'}</td>
         <td style="color:var(--muted)">${t.entry_index_price ? parseFloat(t.entry_index_price).toFixed(1) : '--'}</td>
         <td style="color:var(--text-soft)">${t.entry_price ? parseFloat(t.entry_price).toFixed(2) : '--'}</td>
@@ -863,8 +863,8 @@ async function clearStaticIP() {
 function fmt(v) { return v !== null && v !== undefined ? parseFloat(v).toFixed(2) : '--'; }
 function fmtOI(v) { return v ? (v/100000).toFixed(1) + 'L' : '--'; }
 function pnlClass(v) {
-  if (!v && v !== 0) return '#94a3b8';
-  return v > 0 ? '#34d399' : v < 0 ? '#f87171' : '#94a3b8';
+  if (!v && v !== 0) return 'var(--text-soft)';
+  return v > 0 ? 'var(--success)' : v < 0 ? 'var(--error)' : 'var(--text-soft)';
 }
 
 async function loadBotStatus() {
@@ -894,14 +894,14 @@ async function loadBotStatus() {
     const label = document.getElementById('m-bot-label');
     const isLive = (d.instance.trading_mode === 'live');
     if (isLive) {
-      badge.style.background = '#064e3b';
-      badge.style.borderColor = '#059669';
-      badge.style.color = '#34d399';
+      badge.style.background = 'var(--badge-ok-bg)';
+      badge.style.borderColor = 'var(--badge-ok-br)';
+      badge.style.color = 'var(--success)';
       label.textContent = 'LIVE · ' + (d.instance.broker || 'zerodha').toUpperCase();
     } else {
-      badge.style.background = '#1e3a5f';
-      badge.style.borderColor = '#2563eb';
-      badge.style.color = '#60a5fa';
+      badge.style.background = 'var(--surface)';
+      badge.style.borderColor = 'var(--link)';
+      badge.style.color = 'var(--link)';
       label.textContent = 'PAPER · ' + (d.instance.broker || 'zerodha').toUpperCase();
     }
 
@@ -920,7 +920,7 @@ async function loadBotStatus() {
     if (bd.heartbeat) {
       document.getElementById('m-last-update').textContent = 'Last update: ' + new Date(bd.heartbeat * 1000).toLocaleTimeString();
       document.getElementById('m-heartbeat').textContent = 'Last heartbeat: ' + new Date(bd.heartbeat * 1000).toLocaleTimeString();
-      document.getElementById('m-heartbeat').style.color = bd.stale ? '#fb923c' : '#34d399';
+      document.getElementById('m-heartbeat').style.color = bd.stale ? 'var(--warn)' : 'var(--success)';
     }
     const staleEl = document.getElementById('m-stale-warning');
     if (bd.stale) {
@@ -939,7 +939,7 @@ async function loadBotStatus() {
       const statusEl = document.getElementById(pfx + '-status');
       statusEl.textContent = active ? 'ACTIVE' : 'IDLE';
       statusEl.style.background = active ? '#064e3b' : 'var(--card)';
-      statusEl.style.color = active ? '#34d399' : 'var(--muted)';
+      statusEl.style.color = active ? 'var(--success)' : 'var(--muted)';
       document.getElementById(pfx + '-strike').textContent = pos.strike || '--';
       document.getElementById(pfx + '-entry').textContent = fmt(pos.entry);
       document.getElementById(pfx + '-ltp').textContent = fmt(pos.ltp);
@@ -952,7 +952,7 @@ async function loadBotStatus() {
         pEl.style.color = pnlClass(pos.pnl);
       } else {
         pEl.textContent = '--';
-        pEl.style.color = '#94a3b8';
+        pEl.style.color = 'var(--text-soft)';
       }
     });
 
@@ -979,10 +979,10 @@ async function loadBotStatus() {
         `<span class="text-slate-400 font-normal">C:</span> ${vCurr} (${cSl})<br/>` +
         `<span class="text-slate-400 font-normal">P:</span> ${vPrev} (${pSl})`;
 
-      document.getElementById('m-v3-box-rsi').style.background = v3.rsi_ok ? '#064e3b' : '#2d1010';
-      document.getElementById('m-v3-box-vwap').style.background = v3.vwap_ok ? '#064e3b' : '#2d1010';
-      document.getElementById('m-v3-box-slope').style.background = v3.slope_ok ? '#064e3b' : '#2d1010';
-    document.getElementById('m-v3-monitor-slope').style.color = v3.slope_ok ? '#34d399' : '#f87171';
+      document.getElementById('m-v3-box-rsi').style.background = v3.rsi_ok ? 'var(--badge-ok-bg)' : 'var(--badge-err-bg)';
+      document.getElementById('m-v3-box-vwap').style.background = v3.vwap_ok ? 'var(--badge-ok-bg)' : 'var(--badge-err-bg)';
+      document.getElementById('m-v3-box-slope').style.background = v3.slope_ok ? 'var(--badge-ok-bg)' : 'var(--badge-err-bg)';
+    document.getElementById('m-v3-monitor-slope').style.color = v3.slope_ok ? 'var(--success)' : 'var(--error)';
 
       var mr = 'WAITING';
       if (!v3.slope_ok) mr = 'SLOPE RISE';
@@ -990,7 +990,7 @@ async function loadBotStatus() {
       else if (!v3.rsi_ok) mr = 'RSI > THRESH';
       else mr = 'ALL OK';
       document.getElementById('m-v3-monitor-reason').textContent = mr;
-      document.getElementById('m-v3-monitor-reason').style.color = (mr === 'ALL OK') ? '#34d399' : '#f87171';
+      document.getElementById('m-v3-monitor-reason').style.color = (mr === 'ALL OK') ? 'var(--success)' : 'var(--error)';
 
       // Update Pool Table
       if (v3.pool && v3.pool.length) {
@@ -1004,9 +1004,9 @@ async function loadBotStatus() {
                 ${p.pe} <span class="text-[10px] text-slate-500">(${p.pe_ltp})</span>
               </td>
               <td class="py-1.5 text-right font-bold text-white">${p.total}</td>
-              <td class="py-1.5 text-center font-bold" style="color:${p.rsi_ok ? '#34d399' : '#f87171'}">${p.rsi || '--'}</td>
-              <td class="py-1.5 text-center font-bold" style="color:${p.vwap_ok ? '#34d399' : '#f87171'}">${p.total} < ${p.vwap}</td>
-              <td class="py-1.5 text-center font-mono text-[10px]" style="color:${p.curr_slope <= 0 ? '#34d399' : '#f87171'}">${p.v_curr} (${p.curr_slope > 0 ? '+' : ''}${p.curr_slope.toFixed(2)}) / ${p.v_prev} (${p.prev_slope > 0 ? '+' : ''}${p.prev_slope.toFixed(2)})</td>
+              <td class="py-1.5 text-center font-bold" style="color:${p.rsi_ok ? 'var(--success)' : 'var(--error)'}">${p.rsi || '--'}</td>
+              <td class="py-1.5 text-center font-bold" style="color:${p.vwap_ok ? 'var(--success)' : 'var(--error)'}">${p.total} < ${p.vwap}</td>
+              <td class="py-1.5 text-center font-mono text-[10px]" style="color:${p.curr_slope <= 0 ? 'var(--success)' : 'var(--error)'}">${p.v_curr} (${p.curr_slope > 0 ? '+' : ''}${p.curr_slope.toFixed(2)}) / ${p.v_prev} (${p.prev_slope > 0 ? '+' : ''}${p.prev_slope.toFixed(2)})</td>
               <td class="py-1.5 text-center">
                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${pass ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}">${pass ? 'PASS' : 'REJECT'}</span>
               </td>
@@ -1033,8 +1033,8 @@ async function loadBotStatus() {
       const pfx = 'm-sell-' + s;
       const statusEl = document.getElementById(pfx + '-status');
       statusEl.textContent = active ? 'PLACED' : 'IDLE';
-      statusEl.style.background = active ? '#3b1f00' : 'var(--card)';
-      statusEl.style.color = active ? '#fb923c' : 'var(--muted)';
+      statusEl.style.background = active ? 'var(--badge-warn-bg)' : 'var(--card)';
+      statusEl.style.color = active ? 'var(--warn)' : 'var(--muted)';
       document.getElementById(pfx + '-strike').textContent = pos.strike || '--';
       document.getElementById(pfx + '-entry').textContent = fmt(pos.entry);
       document.getElementById(pfx + '-ltp').textContent = fmt(pos.ltp);
@@ -1048,7 +1048,7 @@ async function loadBotStatus() {
         pEl.style.color = pnlClass(pos.pnl);
       } else {
         pEl.textContent = '--';
-        pEl.style.color = '#94a3b8';
+        pEl.style.color = 'var(--text-soft)';
       }
     });
 
@@ -1064,11 +1064,11 @@ async function loadBotStatus() {
       const box = document.getElementById('m-log-box');
       const atBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 20;
       box.innerHTML = bd.log_tail.map(function(l) {
-        let color = '#94a3b8';
-        if (l.includes('ERROR')) color = '#f87171';
-        else if (l.includes('WARNING') || l.includes('WARN')) color = '#fb923c';
-        else if (l.includes('[BUY]') || l.includes('[SELL]')) color = '#34d399';
-        else if (l.includes('INFO')) color = '#93c5fd';
+        let color = 'var(--text-soft)';
+        if (l.includes('ERROR')) color = 'var(--error)';
+        else if (l.includes('WARNING') || l.includes('WARN')) color = 'var(--warn)';
+        else if (l.includes('[BUY]') || l.includes('[SELL]')) color = 'var(--success)';
+        else if (l.includes('INFO')) color = 'var(--link)';
         return '<div style="color:' + color + '">' + escapeHtml(l) + '</div>';
       }).join('');
       if (atBottom) box.scrollTop = box.scrollHeight;

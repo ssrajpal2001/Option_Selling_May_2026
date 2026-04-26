@@ -753,7 +753,7 @@
         <div><label class="field-label">SL Pts</label><input type="number" step="0.1" class="input-field" data-path="sell.v3.single_trade_stoploss_pts"/></div>
       </div>
 
-      <div class="section-label" style="color:#3b82f6; font-size:10px; margin-top:15px;">Day-Wise Target/SL Overrides</div>
+      <div class="section-label" style="color:var(--link); font-size:10px; margin-top:15px;">Day-Wise Target/SL Overrides</div>
       <div class="space-y-2">
         <div class="grid grid-cols-3 gap-2 font-bold text-[8px] text-slate-500 uppercase px-1">
           <div>Day</div><div>Target</div><div>Stop Loss</div>
@@ -895,13 +895,13 @@
     </div>
 
     <div class="card p-5" style="border-color:var(--border)">
-      <div class="section-label" style="color:#60a5fa">How OI Exit Works</div>
+      <div class="section-label" style="color:var(--link)">How OI Exit Works</div>
       <div class="space-y-2 text-xs" style="color:var(--text-soft)">
         <p>OI is collected live from Upstox websocket every tick for the <strong class="text-white">ATM ± strikes_range</strong> contracts.</p>
         <p class="mt-2">Every <strong class="text-white">check_interval_seconds</strong>, the monitor compares current OI to the OI at position entry:</p>
         <div class="mt-2 p-3 rounded" style="background:var(--surface2)">
           <p><span style="color:#f59e0b">Call OI rise</span> &gt; threshold → Exit <span style="color:#f59e0b">Sell PE</span> + Buy CE</p>
-          <p class="mt-1"><span style="color:#a78bfa">Put OI rise</span> &gt; threshold → Exit <span style="color:#a78bfa">Sell CE</span> + Buy PE</p>
+          <p class="mt-1"><span style="color:var(--info)">Put OI rise</span> &gt; threshold → Exit <span style="color:var(--info)">Sell CE</span> + Buy PE</p>
         </div>
         <p class="mt-2">OI data is collected unconditionally — toggling <strong class="text-white">OI Exit Enabled</strong> only controls whether the exit action fires.</p>
       </div>

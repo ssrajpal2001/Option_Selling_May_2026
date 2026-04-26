@@ -61,7 +61,7 @@
   </div>
   <div class="stat-card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Today</div>
-    <div id="al-today" class="text-2xl font-bold" style="color:#818cf8">--</div>
+    <div id="al-today" class="text-2xl font-bold" style="color:var(--info)">--</div>
   </div>
   <div class="stat-card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">This Page</div>
@@ -123,25 +123,25 @@ function changePage(delta) {
 }
 
 const ACTION_COLORS = {
-  set_tier:      ['#0c4a6e', '#38bdf8', 'Plan Changed'],
-  activate_client:   ['#14532d', '#4ade80', 'Activated'],
-  deactivate_client: ['#431407', '#fb923c', 'Deactivated'],
-  force_close:   ['#450a0a', '#f87171', 'Force Closed'],
-  clear_history: ['#1e1b4b', '#818cf8', 'History Cleared'],
-  approve_broker_request: ['#052e16', '#34d399', 'BCR Approved'],
-  deny_broker_request:    ['#450a0a', '#f87171', 'BCR Denied'],
-  create_user:   ['#0c4a6e', '#60a5fa', 'User Created'],
-  delete_user:   ['#450a0a', '#f87171', 'User Deleted'],
-  client_static_ip_update:    ['#1c1917', '#a8a29e', 'IP Updated'],
-  client_risk_params_update:  ['#1e1b4b', '#818cf8', 'Risk Params'],
-  client_daily_pnl_reset:     ['#0c4a6e', '#38bdf8', 'P&L Reset'],
-  platform_settings_update:   ['#14532d', '#4ade80', 'Platform Settings'],
+  set_tier:                   ['ab-blue',   'Plan Changed'],
+  activate_client:            ['ab-green',  'Activated'],
+  deactivate_client:          ['ab-amber',  'Deactivated'],
+  force_close:                ['ab-red',    'Force Closed'],
+  clear_history:              ['ab-purple', 'History Cleared'],
+  approve_broker_request:     ['ab-green',  'BCR Approved'],
+  deny_broker_request:        ['ab-red',    'BCR Denied'],
+  create_user:                ['ab-blue',   'User Created'],
+  delete_user:                ['ab-red',    'User Deleted'],
+  client_static_ip_update:    ['ab-stone',  'IP Updated'],
+  client_risk_params_update:  ['ab-purple', 'Risk Params'],
+  client_daily_pnl_reset:     ['ab-blue',   'P&L Reset'],
+  platform_settings_update:   ['ab-green',  'Platform Settings'],
 };
 
 function actionBadge(action) {
   const cfg = ACTION_COLORS[action];
   if (cfg) {
-    return `<span class="text-xs font-bold px-2 py-0.5 rounded" style="background:${cfg[0]};color:${cfg[1]}">${cfg[2]}</span>`;
+    return `<span class="text-xs font-bold px-2 py-0.5 rounded ${cfg[0]}">${cfg[1]}</span>`;
   }
   return `<span class="text-xs font-bold px-2 py-0.5 rounded" style="background:var(--card);color:var(--text-soft)">${action || 'unknown'}</span>`;
 }
@@ -205,7 +205,7 @@ async function loadLogs(page) {
       <td>${actionBadge(row.action)}</td>
       <td>
         ${row.target_client_id
-          ? `<a href="/admin/clients/${row.target_client_id}" style="color:#93c5fd;font-weight:600">${escapeHtml(row.target_username || String(row.target_client_id))}</a>`
+          ? `<a href="/admin/clients/${row.target_client_id}" style="color:var(--link);font-weight:600">${escapeHtml(row.target_username || String(row.target_client_id))}</a>`
           : '<span style="color:var(--muted)">—</span>'}
       </td>
       <td class="text-xs" style="max-width:320px;overflow:hidden;text-overflow:ellipsis">${fmtDetails(row)}</td>

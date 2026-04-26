@@ -78,10 +78,10 @@ function renderClients() {
         return c.brokers.split(',').map(function(b) {
           var name = b.trim();
           var label = name.charAt(0).toUpperCase() + name.slice(1);
-          return '<span style="color:#34d399">' + escapeHtml(label) + ' &#10003;</span>';
+          return '<span style="color:var(--success)">' + escapeHtml(label) + ' &#10003;</span>';
         }).join(', ');
       })()}</td>
-      <td style="color:#818cf8">${c.running_count || 0}</td>
+      <td style="color:var(--info)">${c.running_count || 0}</td>
       <td style="color:var(--muted);font-size:12px">${date}</td>
       <td>
         <div class="flex gap-2">
