@@ -78,7 +78,7 @@
           Create a bot: open Telegram → search <strong>@BotFather</strong> → /newbot → copy the token
         </div>
       </div>
-      <div class="flex items-center gap-3 mb-4 p-3 rounded-lg" style="background:#0f172a;border:1px solid #334155">
+      <div class="flex items-center gap-3 mb-4 p-3 rounded-lg" style="background:var(--surface2);border:1px solid var(--border)">
         <input type="checkbox" id="telegram_alerts_enabled" class="h-4 w-4 accent-emerald-500" checked>
         <div>
           <div class="text-sm font-semibold text-white">Enable Telegram Alerts</div>
@@ -92,20 +92,45 @@
       <div id="tg-msg" class="mt-3 text-sm hidden"></div>
     </div>
 
+    <!-- Default Theme Card -->
+    <div class="card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">🎨</div>
+        <div>
+          <div class="font-bold" style="color:var(--text)">Default Dashboard Theme</div>
+          <div class="text-xs" style="color:var(--muted)">Applied to users who have not selected a personal theme yet</div>
+        </div>
+      </div>
+      <div class="max-w-xs mb-4">
+        <label class="block text-xs font-semibold mb-2" style="color:var(--text-soft)">Default Theme</label>
+        <select id="default_theme" class="input-field">
+          <option value="dark">🌑 Dark (default)</option>
+          <option value="light">☀️ Light</option>
+          <option value="midnight">🌌 Midnight Blue</option>
+          <option value="saffron">🌅 Saffron / Warm</option>
+        </select>
+        <p class="text-xs mt-2" style="color:var(--muted)">Preview this theme: <a href="#" onclick="applyTheme(document.getElementById('default_theme').value);return false;" style="color:var(--primary)">Apply to my browser</a></p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="saveDefaultTheme()" class="btn-primary px-5 py-2 text-sm">💾 Save Default Theme</button>
+      </div>
+      <div id="theme-msg" class="mt-3 text-sm hidden"></div>
+    </div>
+
     <!-- Expiry check info card -->
-    <div class="card p-6" style="background:#0d1524;border-color:#1e293b">
-      <div class="font-bold text-white mb-2">🕐 Scheduled Jobs</div>
-      <div class="grid grid-cols-1 gap-3 text-sm" style="color:#94a3b8">
+    <div class="card p-6" style="background:var(--surface2);border-color:var(--border-soft)">
+      <div class="font-bold mb-2" style="color:var(--text)">🕐 Scheduled Jobs</div>
+      <div class="grid grid-cols-1 gap-3 text-sm" style="color:var(--text-soft)">
         <div class="flex items-center gap-3">
-          <span style="color:#00d4aa">09:15 AM IST</span>
+          <span style="color:var(--primary)">09:15 AM IST</span>
           <span>Subscription expiry check — alerts clients &amp; admin when plans expire in 7 or 1 days</span>
         </div>
         <div class="flex items-center gap-3">
-          <span style="color:#00d4aa">03:30 PM IST</span>
+          <span style="color:var(--primary)">03:30 PM IST</span>
           <span>Day-end Telegram summary — sends daily PnL report to all active clients with a Chat ID (weekdays only)</span>
         </div>
         <div class="flex items-center gap-3">
-          <span style="color:#00d4aa">08:30 AM IST</span>
+          <span style="color:var(--primary)">08:30 AM IST</span>
           <span>Global data provider reconnect — auto-refreshes Upstox &amp; Dhan access tokens</span>
         </div>
       </div>
@@ -123,14 +148,38 @@ async function loadSettings() {
     document.getElementById('smtp_host').value = s.smtp_host || '';
     document.getElementById('smtp_port').value = s.smtp_port || '';
     document.getElementById('smtp_username').value = s.smtp_username || '';
-    document.getElementById('smtp_password').value = s.smtp_password || '';  // shows •••• if set
+    document.getElementById('smtp_password').value = s.smtp_password || '';
     document.getElementById('smtp_from_name').value = s.smtp_from_name || '';
     document.getElementById('smtp_from_addr').value = s.smtp_from_addr || '';
     document.getElementById('smtp_use_tls').checked = s.smtp_use_tls !== 'false';
     document.getElementById('telegram_bot_token').value = s.telegram_bot_token || '';
     document.getElementById('telegram_alerts_enabled').checked = s.telegram_alerts_enabled !== 'false';
+    const themeEl = document.getElementById('default_theme');
+    if (themeEl && s.default_theme) themeEl.value = s.default_theme;
   } catch (e) {
     console.error('load settings:', e);
+  }
+}
+
+async function saveDefaultTheme() {
+  const theme = document.getElementById('default_theme').value;
+  const msg = document.getElementById('theme-msg');
+  msg.className = 'mt-3 text-sm';
+  msg.textContent = '⏳ Saving...';
+  msg.classList.remove('hidden');
+  try {
+    const r = await fetch('/api/admin/platform-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: { default_theme: theme } }),
+    });
+    const d = await r.json();
+    msg.textContent = '✅ Default theme saved!';
+    msg.style.color = 'var(--primary)';
+    showToast('Default theme updated', 'success');
+  } catch (e) {
+    msg.textContent = '❌ Error: ' + e.message;
+    msg.style.color = '#f87171';
   }
 }
 

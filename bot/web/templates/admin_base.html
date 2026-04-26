@@ -1,51 +1,127 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}Admin{% endblock %} — AlgoSoft</title>
+  <script>
+    (function(){
+      var t=localStorage.getItem('algosoft-theme')||'dark';
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #0a0f1e; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; }
-    .stat-card { background: linear-gradient(135deg, #1e293b 0%, #162032 100%); border: 1px solid #334155; border-radius: 12px; }
-    .nav-link { color: #94a3b8; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 500; }
-    .nav-link:hover, .nav-link.active { color: #00d4aa; background: #0f172a; }
-    .btn-primary { background: #00d4aa; color: #0a0f1e; font-weight: 700; border-radius: 8px; transition: all 0.2s; }
-    .btn-primary:hover { background: #00a882; }
-    .btn-danger { background: #dc2626; color: white; font-weight: 700; border-radius: 8px; }
-    .btn-ghost { background: #334155; color: #e2e8f0; font-weight: 600; border-radius: 8px; }
-    .btn-ghost:hover { background: #475569; }
-    .input-field { background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 8px 12px; width: 100%; }
-    .input-field:focus { outline: none; border-color: #00d4aa; }
-    .badge-ok { background: #064e3b; color: #34d399; border: 1px solid #059669; border-radius: 6px; padding: 2px 8px; font-size: 12px; }
-    .badge-warn { background: #451a03; color: #fb923c; border: 1px solid #c2410c; border-radius: 6px; padding: 2px 8px; font-size: 12px; }
-    .badge-err { background: #450a0a; color: #f87171; border: 1px solid #dc2626; border-radius: 6px; padding: 2px 8px; font-size: 12px; }
-    .badge-idle { background: #1e293b; color: #64748b; border: 1px solid #334155; border-radius: 6px; padding: 2px 8px; font-size: 12px; }
-    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; padding: 12px 20px; border-radius: 8px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
-    .toast.show { opacity: 1; }
-    .toast-success { background: #064e3b; color: #34d399; border: 1px solid #059669; }
-    .toast-error { background: #450a0a; color: #f87171; border: 1px solid #dc2626; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .pulse-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
-    .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 7px; padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .tab-btn:hover { color: #e2e8f0; }
-    .tab-btn.active { background: #00d4aa; color: #0a0f1e; border-color: #00d4aa; }
-    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; margin-bottom: 14px; }
-    .field-label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
-    select.input-field option { background: #1e293b; }
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; padding: 8px 12px; border-bottom: 1px solid #334155; }
-    td { padding: 10px 12px; border-bottom: 1px solid #1e293b; font-size: 13px; }
-    tr:hover td { background: #162032; }
+    /* ── Theme palettes ────────────────────────────────────────────── */
+    [data-theme="dark"] {
+      --bg:#0a0f1e; --surface:#111827; --card:#1e293b; --surface2:#0f172a;
+      --border:#334155; --border-soft:#1e293b;
+      --muted:#64748b; --text-soft:#94a3b8; --text:#e2e8f0;
+      --primary:#00d4aa; --primary2:#00a882; --primary-text:#0a0f1e;
+      --row-hover:#162032;
+      --badge-ok-bg:#064e3b; --badge-ok-txt:#34d399; --badge-ok-br:#059669;
+      --badge-warn-bg:#451a03; --badge-warn-txt:#fb923c; --badge-warn-br:#c2410c;
+      --badge-err-bg:#450a0a; --badge-err-txt:#f87171; --badge-err-br:#dc2626;
+      --badge-idle-bg:#1e293b; --badge-idle-txt:#64748b; --badge-idle-br:#334155;
+      --toast-ok-bg:#064e3b; --toast-ok-txt:#34d399; --toast-ok-br:#059669;
+      --toast-err-bg:#450a0a; --toast-err-txt:#f87171; --toast-err-br:#dc2626;
+    }
+    [data-theme="light"] {
+      --bg:#f1f5f9; --surface:#ffffff; --card:#ffffff; --surface2:#f8fafc;
+      --border:#e2e8f0; --border-soft:#e2e8f0;
+      --muted:#64748b; --text-soft:#475569; --text:#0f172a;
+      --primary:#00a882; --primary2:#007a60; --primary-text:#ffffff;
+      --row-hover:#f8fafc;
+      --badge-ok-bg:#d1fae5; --badge-ok-txt:#065f46; --badge-ok-br:#6ee7b7;
+      --badge-warn-bg:#ffedd5; --badge-warn-txt:#9a3412; --badge-warn-br:#fdba74;
+      --badge-err-bg:#fee2e2; --badge-err-txt:#991b1b; --badge-err-br:#fca5a5;
+      --badge-idle-bg:#f1f5f9; --badge-idle-txt:#64748b; --badge-idle-br:#cbd5e1;
+      --toast-ok-bg:#d1fae5; --toast-ok-txt:#065f46; --toast-ok-br:#6ee7b7;
+      --toast-err-bg:#fee2e2; --toast-err-txt:#991b1b; --toast-err-br:#fca5a5;
+    }
+    [data-theme="midnight"] {
+      --bg:#0b0c1e; --surface:#10122a; --card:#181a3b; --surface2:#0b0c1e;
+      --border:#2d3068; --border-soft:#1a1d42;
+      --muted:#6b7db3; --text-soft:#8892c0; --text:#d4d8f0;
+      --primary:#7c8eff; --primary2:#5b6de0; --primary-text:#ffffff;
+      --row-hover:#1e2150;
+      --badge-ok-bg:#0d2a4e; --badge-ok-txt:#93c5fd; --badge-ok-br:#3b82f6;
+      --badge-warn-bg:#2d1e00; --badge-warn-txt:#fbbf24; --badge-warn-br:#d97706;
+      --badge-err-bg:#2a0a0a; --badge-err-txt:#fca5a5; --badge-err-br:#ef4444;
+      --badge-idle-bg:#181a3b; --badge-idle-txt:#6b7db3; --badge-idle-br:#2d3068;
+      --toast-ok-bg:#0d2a4e; --toast-ok-txt:#93c5fd; --toast-ok-br:#3b82f6;
+      --toast-err-bg:#2a0a0a; --toast-err-txt:#fca5a5; --toast-err-br:#ef4444;
+    }
+    [data-theme="saffron"] {
+      --bg:#1a0e00; --surface:#2b1800; --card:#3a2208; --surface2:#1a0e00;
+      --border:#5a3510; --border-soft:#2b1800;
+      --muted:#9c7040; --text-soft:#c99a5e; --text:#fde8c8;
+      --primary:#f59e0b; --primary2:#d97706; --primary-text:#1a0e00;
+      --row-hover:#3a2208;
+      --badge-ok-bg:#0d2a0d; --badge-ok-txt:#4ade80; --badge-ok-br:#16a34a;
+      --badge-warn-bg:#3a1a00; --badge-warn-txt:#fbbf24; --badge-warn-br:#d97706;
+      --badge-err-bg:#3a0808; --badge-err-txt:#fca5a5; --badge-err-br:#dc2626;
+      --badge-idle-bg:#3a2208; --badge-idle-txt:#9c7040; --badge-idle-br:#5a3510;
+      --toast-ok-bg:#0d2a0d; --toast-ok-txt:#4ade80; --toast-ok-br:#16a34a;
+      --toast-err-bg:#3a0808; --toast-err-txt:#fca5a5; --toast-err-br:#dc2626;
+    }
+
+    /* ── Base styles (use CSS vars) ─────────────────────────────────── */
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; }
+    .stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; }
+    .nav-link { color:var(--text-soft); transition:color 0.2s; padding:6px 12px; border-radius:6px; font-size:14px; font-weight:500; }
+    .nav-link:hover, .nav-link.active { color:var(--primary); background:var(--surface2); }
+    .btn-primary { background:var(--primary); color:var(--primary-text); font-weight:700; border-radius:8px; transition:all 0.2s; }
+    .btn-primary:hover { background:var(--primary2); }
+    .btn-danger { background:#dc2626; color:white; font-weight:700; border-radius:8px; }
+    .btn-danger:hover { background:#b91c1c; }
+    .btn-ghost { background:var(--border); color:var(--text); font-weight:600; border-radius:8px; }
+    .btn-ghost:hover { background:var(--muted); }
+    .input-field { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:8px 12px; width:100%; }
+    .input-field:focus { outline:none; border-color:var(--primary); }
+    .badge-ok   { background:var(--badge-ok-bg);   color:var(--badge-ok-txt);   border:1px solid var(--badge-ok-br);   border-radius:6px; padding:2px 8px; font-size:12px; }
+    .badge-warn { background:var(--badge-warn-bg); color:var(--badge-warn-txt); border:1px solid var(--badge-warn-br); border-radius:6px; padding:2px 8px; font-size:12px; }
+    .badge-err  { background:var(--badge-err-bg);  color:var(--badge-err-txt);  border:1px solid var(--badge-err-br);  border-radius:6px; padding:2px 8px; font-size:12px; }
+    .badge-idle { background:var(--badge-idle-bg); color:var(--badge-idle-txt); border:1px solid var(--badge-idle-br); border-radius:6px; padding:2px 8px; font-size:12px; }
+    .toast { position:fixed; bottom:24px; right:24px; z-index:9999; padding:12px 20px; border-radius:8px; font-weight:600; opacity:0; transition:opacity 0.3s; }
+    .toast.show { opacity:1; }
+    .toast-success { background:var(--toast-ok-bg);  color:var(--toast-ok-txt);  border:1px solid var(--toast-ok-br); }
+    .toast-error   { background:var(--toast-err-bg); color:var(--toast-err-txt); border:1px solid var(--toast-err-br); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .pulse-dot { display:inline-block; width:8px; height:8px; border-radius:50%; animation:pulse 2s infinite; }
+    .tab-btn { background:var(--card); color:var(--text-soft); border:1px solid var(--border); border-radius:7px; padding:6px 16px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { background:var(--primary); color:var(--primary-text); border-color:var(--primary); }
+    .section-label { font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+    .field-label { display:block; font-size:11px; color:var(--text-soft); margin-bottom:4px; }
+    select.input-field option { background:var(--card); }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); padding:8px 12px; border-bottom:1px solid var(--border); }
+    td { padding:10px 12px; border-bottom:1px solid var(--border-soft); font-size:13px; color:var(--text); }
+    tr:hover td { background:var(--row-hover); }
+
+    /* ── Light/warm themes: override Tailwind text-white for content ── */
+    [data-theme="light"] .text-white,
+    [data-theme="light"] .text-white\/90,
+    [data-theme="saffron"] .text-white,
+    [data-theme="saffron"] .text-white\/90 { color: var(--text) !important; }
+
+    /* ── Theme switcher dropdown ────────────────────────────────────── */
+    .theme-menu-btn { background:var(--card); border:1px solid var(--border); color:var(--text-soft); border-radius:8px; padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:border-color .2s; }
+    .theme-menu-btn:hover { border-color:var(--primary); color:var(--text); }
+    .theme-dropdown { position:absolute; right:0; top:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; z-index:300; min-width:160px; box-shadow:0 8px 32px rgba(0,0,0,.35); }
+    .theme-option { width:100%; text-align:left; padding:9px 16px; font-size:13px; background:transparent; border:none; cursor:pointer; color:var(--text); display:flex; align-items:center; gap:8px; transition:background .15s; }
+    .theme-option:hover { background:var(--surface2); }
+    .theme-option.active { color:var(--primary); font-weight:700; }
   </style>
 </head>
 <body>
-<nav style="background:#111827;border-bottom:1px solid #1e293b;" class="px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+<nav style="background:var(--surface);border-bottom:1px solid var(--border-soft);" class="px-6 py-3 flex items-center justify-between sticky top-0 z-50">
   <div class="flex items-center gap-3">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#00d4aa"/><path d="M6 20 L10 14 L14 17 L18 10 L22 14" stroke="#0a0f1e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span class="text-white font-bold text-lg">Algo<span style="color:#00d4aa">Soft</span></span>
-    <span class="text-xs px-2 py-0.5 rounded ml-1" style="background:#1e293b;color:#fb923c;border:1px solid #431407;">ADMIN</span>
+    <span style="color:var(--text)" class="font-bold text-lg">Algo<span style="color:var(--primary)">Soft</span></span>
+    <span class="text-xs px-2 py-0.5 rounded ml-1" style="background:var(--card);color:#fb923c;border:1px solid #431407;">ADMIN</span>
   </div>
   <div class="flex items-center gap-2">
     <a href="/admin" class="nav-link {% if active_page=='overview' %}active{% endif %}">Overview</a>
@@ -57,7 +133,20 @@
     <a href="/admin/platform-settings" class="nav-link {% if active_page=='platform' %}active{% endif %}">⚙️ Settings</a>
   </div>
   <div class="flex items-center gap-3">
-    <span class="text-sm" style="color:#64748b">admin</span>
+    <!-- Theme switcher -->
+    <div class="relative" id="theme-switcher">
+      <button class="theme-menu-btn" onclick="toggleThemeMenu()" title="Switch theme">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <span id="theme-label">Theme</span>
+      </button>
+      <div id="theme-menu" class="theme-dropdown hidden">
+        <button class="theme-option" data-theme="dark"     onclick="applyTheme('dark')">🌑 Dark</button>
+        <button class="theme-option" data-theme="light"    onclick="applyTheme('light')">☀️ Light</button>
+        <button class="theme-option" data-theme="midnight" onclick="applyTheme('midnight')">🌌 Midnight</button>
+        <button class="theme-option" data-theme="saffron"  onclick="applyTheme('saffron')">🌅 Saffron</button>
+      </div>
+    </div>
+    <span class="text-sm" style="color:var(--muted)">admin</span>
     <a href="/logout" class="btn-ghost px-3 py-1.5 text-xs">Sign out</a>
   </div>
 </nav>
@@ -68,13 +157,44 @@
 
 <div id="toast" class="toast"></div>
 <script>
-function showToast(msg, type='success') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = `toast toast-${type} show`;
-  setTimeout(() => el.classList.remove('show'), 4000);
+/* ── Theme system ─────────────────────────────────────────────────── */
+(function(){
+  var LABELS={dark:'Dark',light:'Light',midnight:'Midnight',saffron:'Saffron'};
+  function _apply(t){
+    document.documentElement.setAttribute('data-theme',t);
+    localStorage.setItem('algosoft-theme',t);
+    var lbl=document.getElementById('theme-label');
+    if(lbl)lbl.textContent=LABELS[t]||t;
+    document.querySelectorAll('.theme-option').forEach(function(el){
+      el.classList.toggle('active',el.dataset.theme===t);
+    });
+    var m=document.getElementById('theme-menu');
+    if(m)m.classList.add('hidden');
+  }
+  window.applyTheme=_apply;
+  window.toggleThemeMenu=function(){
+    var m=document.getElementById('theme-menu');
+    if(m)m.classList.toggle('hidden');
+  };
+  document.addEventListener('click',function(e){
+    var sw=document.getElementById('theme-switcher');
+    if(sw&&!sw.contains(e.target)){
+      var m=document.getElementById('theme-menu');
+      if(m)m.classList.add('hidden');
+    }
+  });
+  _apply(localStorage.getItem('algosoft-theme')||'dark');
+})();
+
+/* ── Toast & helpers ──────────────────────────────────────────────── */
+function showToast(msg,type){
+  type=type||'success';
+  var el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast toast-'+type+' show';
+  setTimeout(function(){el.classList.remove('show');},4000);
 }
-function escapeHtml(s) {
+function escapeHtml(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 </script>
