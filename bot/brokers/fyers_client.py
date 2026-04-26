@@ -16,11 +16,8 @@ class FyersClient(BaseBroker):
 
         if self.db_config:
             try:
-                self._set_source_ip()
-                try:
+                with self._scoped_ip_patch():
                     self.fyers = handle_fyers_login(self.db_config)
-                finally:
-                    self._clear_source_ip()
                 if self.fyers:
                     logger.info(f"[FyersClient] Initialised for user {self.user_id}.")
                 else:
@@ -62,11 +59,8 @@ class FyersClient(BaseBroker):
                 "offlineOrder": False,
                 "orderTag": "algosoft",
             }
-            self._set_source_ip()
-            try:
+            with self._scoped_ip_patch():
                 resp = self.fyers.place_order(data=data)
-            finally:
-                self._clear_source_ip()
             if resp and (resp.get("s") == "ok" or resp.get("code") == 200):
                 order_id = resp.get("id") or resp.get("data", {}).get("id")
                 logger.info(f"[FyersClient] Order placed: {order_id}")
@@ -81,11 +75,8 @@ class FyersClient(BaseBroker):
         if not self.fyers:
             return []
         try:
-            self._set_source_ip()
-            try:
+            with self._scoped_ip_patch():
                 resp = self.fyers.positions()
-            finally:
-                self._clear_source_ip()
             if resp and resp.get("s") == "ok":
                 return resp.get("netPositions", [])
             return []
@@ -97,11 +88,8 @@ class FyersClient(BaseBroker):
         if not self.fyers:
             return {}
         try:
-            self._set_source_ip()
-            try:
+            with self._scoped_ip_patch():
                 resp = self.fyers.funds()
-            finally:
-                self._clear_source_ip()
             if resp and resp.get("s") == "ok":
                 fund_data = resp.get("fund_limit", [])
                 for item in fund_data:

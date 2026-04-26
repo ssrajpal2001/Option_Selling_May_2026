@@ -33,11 +33,8 @@ class UpstoxClient(BaseBroker):
                     # 1. Automated Login
                     if self.db_config.get('password') and self.db_config.get('totp'):
                         from utils.auth_manager_upstox import handle_upstox_login_automated
-                        self._set_source_ip()
-                        try:
+                        with self._scoped_ip_patch():
                             access_token = handle_upstox_login_automated(self.db_config)
-                        finally:
-                            self._clear_source_ip()
 
                     # 2. Token Fallback
                     if not access_token:
@@ -277,11 +274,8 @@ class UpstoxClient(BaseBroker):
                 is_amo=False,
             )
 
-            self._set_source_ip()
-            try:
+            with self._scoped_ip_patch():
                 resp = order_api.place_order(body=req, api_version="2.0")
-            finally:
-                self._clear_source_ip()
             order_id = getattr(resp, "data", None)
             order_id = getattr(order_id, "order_id", None) if order_id else None
 

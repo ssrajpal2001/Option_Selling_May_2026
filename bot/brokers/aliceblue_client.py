@@ -17,11 +17,8 @@ class AliceblueClient(BaseBroker):
 
         if self.db_config:
             try:
-                self._set_source_ip()
-                try:
+                with self._scoped_ip_patch():
                     self.alice = handle_alice_login(self.db_config)
-                finally:
-                    self._clear_source_ip()
                 if self.alice:
                     logger.info(f"[AliceblueClient] Initialised for user {self.user_id}.")
                 else:
@@ -53,8 +50,7 @@ class AliceblueClient(BaseBroker):
             tx = TransactionType.Buy if transaction_type.upper() == "BUY" else TransactionType.Sell
             prod = ProductType.Normal if product_type == "NRML" else ProductType.Intraday
 
-            self._set_source_ip()
-            try:
+            with self._scoped_ip_patch():
                 order_id = self.alice.place_order(
                     transaction_type=tx,
                     instrument=self.alice.get_instrument_by_symbol("NFO", symbol),
@@ -62,8 +58,6 @@ class AliceblueClient(BaseBroker):
                     order_type=OrderType.Market,
                     product_type=prod,
                 )
-            finally:
-                self._clear_source_ip()
             if order_id:
                 logger.info(f"[AliceblueClient] Order placed: {order_id}")
                 return order_id
@@ -77,11 +71,8 @@ class AliceblueClient(BaseBroker):
         if not self.alice:
             return []
         try:
-            self._set_source_ip()
-            try:
+            with self._scoped_ip_patch():
                 positions = self.alice.get_netwise_positions_list()
-            finally:
-                self._clear_source_ip()
             return positions if isinstance(positions, list) else []
         except Exception as e:
             logger.error(f"[AliceblueClient] get_positions error: {e}")
@@ -91,11 +82,8 @@ class AliceblueClient(BaseBroker):
         if not self.alice:
             return {}
         try:
-            self._set_source_ip()
-            try:
+            with self._scoped_ip_patch():
                 balance = self.alice.get_balance()
-            finally:
-                self._clear_source_ip()
             if isinstance(balance, list) and balance:
                 for item in balance:
                     if "Net" in str(item.get("type", "")):

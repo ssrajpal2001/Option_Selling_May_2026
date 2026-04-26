@@ -26,11 +26,8 @@ class AngelOneClient(BaseBroker):
         # Commercial Path: Always attempt login if db_config provided
         if self.db_config:
             try:
-                self._set_source_ip()
-                try:
+                with self._scoped_ip_patch():
                     self.smart_api = handle_angelone_login(self.db_config)
-                finally:
-                    self._clear_source_ip()
                 if self.smart_api:
                     logger.info(f"AngelOne client initialized from DB for User ID: {self.user_id}.")
             except Exception as e:

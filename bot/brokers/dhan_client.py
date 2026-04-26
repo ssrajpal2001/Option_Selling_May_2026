@@ -38,11 +38,8 @@ class DhanClient(BaseBroker):
                     # 1. Attempt Automated Token Generation if Password/TOTP exist
                     if self.db_config.get('password') and self.db_config.get('totp'):
                         from utils.auth_manager_dhan import handle_dhan_login_automated
-                        self._set_source_ip()
-                        try:
+                        with self._scoped_ip_patch():
                             token = handle_dhan_login_automated(self.db_config)
-                        finally:
-                            self._clear_source_ip()
                         if token:
                             self.dhan = dhanhq(client_id, token)
                             logger.info(f"Dhan automated client initialized for User ID: {self.user_id}.")

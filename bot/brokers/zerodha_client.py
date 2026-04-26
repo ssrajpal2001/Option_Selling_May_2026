@@ -34,11 +34,8 @@ class ZerodhaClient(BaseBroker):
                     from utils.auth_manager_zerodha import handle_zerodha_login_automated
                     # Ensure access_token is set in self.db_config if we want to use existing session
                     # But handle_zerodha_login_automated now generates a fresh one.
-                    self._set_source_ip()
-                    try:
+                    with self._scoped_ip_patch():
                         token = handle_zerodha_login_automated(self.db_config)
-                    finally:
-                        self._clear_source_ip()
                     if token:
                         self.kite = KiteConnect(api_key=self.api_key)
                         self.kite.set_access_token(token)
