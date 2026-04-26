@@ -2400,8 +2400,17 @@ async function startBacktest() {
       instrument, start_date: startDate, end_date: endDate, quantity: qty
     });
     if (r && r.success === false) {
-      toast(r.message || 'Failed to start backtest', 'err');
-      _btResetBtns(); return;
+      if (r.job_id) {
+        // Another run is already in progress — attach to it instead of erroring
+        _btJobId = r.job_id;
+        document.getElementById('bt-status-msg').textContent =
+          'A backtest is already running — showing live progress…';
+        btPollTimer = setInterval(pollBacktest, 2500);
+      } else {
+        toast(r.message || 'Failed to start backtest', 'err');
+        _btResetBtns();
+      }
+      return;
     }
     _btJobId = r.job_id || 'current';
     btPollTimer = setInterval(pollBacktest, 2500);
