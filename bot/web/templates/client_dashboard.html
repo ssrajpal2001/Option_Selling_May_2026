@@ -2491,7 +2491,7 @@ async function loadBrokerSettings(broker) {
 
     // Rollover / Smart Roll
     _setVal('bs-roll-smart', s.smart_rolling_enabled != null ? s.smart_rolling_enabled : adm.smart_rolling_enabled);
-    _setHint('bs-roll-smart-adm', adm.smart_rolling_enabled != null ? `Admin: ${adm.smart_rolling_enabled ? 'On' : 'Off'}` : null);
+    _setHint('bs-roll-smart-adm', adm.smart_rolling_enabled != null ? (adm.smart_rolling_enabled ? 'On' : 'Off') : null);
     _setVal('bs-roll-profit-en', s.profit_target_enabled != null ? s.profit_target_enabled : adm.profit_target_enabled);
     _setVal('bs-roll-profit-pct', s.profit_target_pct);
     _setHint('bs-roll-profit-pct-adm', adm.profit_target_pct);
