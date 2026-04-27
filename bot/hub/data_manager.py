@@ -508,28 +508,27 @@ class DataManager:
                 try:
                     df = await self._fetch_and_prepare_api_data(real_key, check_date, check_date, interval)
 
-                    # Optimization: If the FIRST check (1 day back) yields no data for an OPTION,
-                    # it likely hasn't been listed yet, so stop searching immediately to avoid 400s.
-                    if (df is None or df.empty) and "NSE_FO" in real_key and i == 1:
-                        self._api_failure_cache.add(instrument_key)
-                        break
+                    # Empty 200 means a holiday or weekend — continue to an earlier day.
+                    # Truly unlisted/expired options return HTTP 400, caught by the except
+                    # block below, which adds them to _api_failure_cache immediately.
+                    if df is None or df.empty:
+                        continue
 
-                    if not df.empty:
-                        combined_df = pd.concat([df, combined_df]).sort_index()
+                    combined_df = pd.concat([df, combined_df]).sort_index()
 
-                        # Standardize and save to local cache
-                        hist_dir = Path("data_history")
-                        safe_key = instrument_key.replace('|', '_').replace(':', '_').replace(' ', '_')
-                        day_file = hist_dir / f"{broker_name}_{safe_key}_{check_date.strftime('%Y-%m-%d')}.csv"
-                        if not day_file.exists():
-                             # Save with standard headers: timestamp,open,high,low,close,volume
-                             # Ensure the index is named 'timestamp' for consistency
-                             df.index.name = 'timestamp'
-                             df.to_csv(day_file)
-                             logger.info(f"[DataManager] Saved technical history: {day_file.name}")
+                    # Standardize and save to local cache
+                    hist_dir = Path("data_history")
+                    safe_key = instrument_key.replace('|', '_').replace(':', '_').replace(' ', '_')
+                    day_file = hist_dir / f"{broker_name}_{safe_key}_{check_date.strftime('%Y-%m-%d')}.csv"
+                    if not day_file.exists():
+                        # Save with standard headers: timestamp,open,high,low,close,volume
+                        # Ensure the index is named 'timestamp' for consistency
+                        df.index.name = 'timestamp'
+                        df.to_csv(day_file)
+                        logger.info(f"[DataManager] Saved technical history: {day_file.name}")
 
-                        # Stop if we got any data for a day
-                        break
+                    # Stop as soon as we find any data for a day
+                    break
                 except Exception as e:
                     if "400" in str(e):
                         self._api_failure_cache.add(instrument_key)
