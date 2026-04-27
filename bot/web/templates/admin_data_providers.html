@@ -372,14 +372,14 @@ async function pollMasterStatus() {
 }
 setInterval(pollMasterStatus, 5000);
 
-function openConfig(provider) {
+async function openConfig(provider) {
   const modal = document.getElementById('config-modal');
   modal.classList.add('open');
   modal.classList.remove('hidden');
   const title = document.getElementById('modal-title');
 
   document.getElementById('provider-id').value = provider;
-  title.textContent = 'Configure ' + provider.toUpperCase();
+  title.textContent = 'Configure ' + provider.toUpperCase() + ' — Loading…';
 
   const dhanSection = document.getElementById('dhan-fields-section');
   const genericSection = document.getElementById('generic-fields-section');
@@ -420,6 +420,29 @@ function openConfig(provider) {
       redirectGroup.classList.add('hidden');
     }
   }
+
+  // Pre-fill existing saved credentials
+  try {
+    const r = await fetch(`/api/admin/data-providers/${provider}/config`);
+    const data = await r.json();
+    if (provider === 'dhan') {
+      document.getElementById('dhan-client-id').value  = data.api_key    || '';
+      document.getElementById('dhan-app-id').value     = data.user_id    || '';
+      document.getElementById('dhan-api-secret').value = data.api_secret || '';
+      document.getElementById('dhan-pin').value         = data.password   || '';
+      document.getElementById('dhan-totp').value        = data.totp       || '';
+    } else {
+      document.getElementById('api-key').value  = data.api_key    || '';
+      document.getElementById('api-secret').value = data.api_secret || '';
+      document.getElementById('user-id').value  = data.user_id    || '';
+      document.getElementById('password').value = data.password   || '';
+      document.getElementById('totp').value     = data.totp       || '';
+    }
+  } catch (e) {
+    console.warn('Could not pre-fill credentials:', e);
+  }
+
+  title.textContent = 'Configure ' + provider.toUpperCase();
 }
 
 function toggleField(id, btn) {

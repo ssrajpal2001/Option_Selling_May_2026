@@ -54,8 +54,8 @@ def _sync_upstox_to_credentials(api_key: str, access_token: str, api_secret: str
 
 class ProviderConfigRequest(BaseModel):
     provider: str
-    api_key: str
-    api_secret: str
+    api_key: Optional[str] = None
+    api_secret: Optional[str] = None
     user_id: Optional[str] = None
     password: Optional[str] = None
     totp: Optional[str] = None
@@ -69,6 +69,20 @@ class ManualTokenRequest(BaseModel):
 async def list_data_providers(admin=Depends(require_admin)):
     providers = db_fetchall("SELECT provider, status, updated_at FROM data_providers")
     return providers
+
+@router.get("/data-providers/{provider}/config")
+async def get_data_provider_config(provider: str, admin=Depends(require_admin)):
+    """Return decrypted credentials for a provider so the configure modal can pre-fill fields."""
+    dp = db_fetchone("SELECT * FROM data_providers WHERE provider=?", (provider,))
+    if not dp:
+        return {"api_key": "", "api_secret": "", "user_id": "", "password": "", "totp": ""}
+    return {
+        "api_key":    decrypt_secret(dp.get("api_key_encrypted")    or "") or "",
+        "api_secret": decrypt_secret(dp.get("api_secret_encrypted") or "") or "",
+        "user_id":    decrypt_secret(dp.get("user_id_encrypted")    or "") or "",
+        "password":   decrypt_secret(dp.get("password_encrypted")   or "") or "",
+        "totp":       decrypt_secret(dp.get("totp_encrypted")       or "") or "",
+    }
 
 @router.get("/data-providers/{provider}/auth")
 async def global_provider_auth(provider: str, request: Request, admin=Depends(require_admin)):
@@ -286,37 +300,42 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
 @router.post("/data-providers")
 async def update_data_provider(body: ProviderConfigRequest, admin=Depends(require_admin)):
     try:
-        enc_key = encrypt_secret(body.api_key)
-        enc_secret = encrypt_secret(body.api_secret)
-        enc_user = encrypt_secret(body.user_id) if body.user_id else None
-        enc_pass = encrypt_secret(body.password) if body.password else None
-        enc_totp = encrypt_secret(body.totp) if body.totp else None
-
         now = datetime.now(timezone.utc).isoformat()
 
-        # Dhan: 5-field auto-login mode.
-        # api_key  → api_key_encrypted  (Client ID / loginId)
-        # user_id  → user_id_encrypted  (Application ID / applicationId)
-        # api_secret → api_secret_encrypted (UUID permanent secret)
-        # password → password_encrypted (PIN)
-        # totp    → totp_encrypted     (TOTP secret)
-        # access_token_encrypted is NOT touched here — it is written only by the /connect endpoint.
-        if body.provider == 'dhan':
-            db_execute(
-                "UPDATE data_providers SET api_key_encrypted=?, api_secret_encrypted=?, user_id_encrypted=?, password_encrypted=?, totp_encrypted=?, status='configured', updated_at=?, updated_by=? WHERE provider=?",
-                (enc_key, enc_secret, enc_user, enc_pass, enc_totp, now, admin["id"], body.provider)
-            )
-        else:
-            # For Upstox/Others, keep access_token separate.
-            # We don't overwrite access_token here unless we are intentionally clearing it.
-            db_execute(
-                "UPDATE data_providers SET api_key_encrypted=?, api_secret_encrypted=?, user_id_encrypted=?, password_encrypted=?, totp_encrypted=?, updated_at=?, updated_by=? WHERE provider=?",
-                (enc_key, enc_secret, enc_user, enc_pass, enc_totp, now, admin["id"], body.provider)
-            )
+        # Build a dynamic SET clause — only update fields that have non-empty submitted values.
+        # This prevents accidental credential wipes when the admin only changes one field.
+        field_map = [
+            ("api_key_encrypted",    body.api_key),
+            ("api_secret_encrypted", body.api_secret),
+            ("user_id_encrypted",    body.user_id),
+            ("password_encrypted",   body.password),
+            ("totp_encrypted",       body.totp),
+        ]
+        set_parts = []
+        params = []
+        for col, val in field_map:
+            if val:
+                set_parts.append(f"{col}=?")
+                params.append(encrypt_secret(val))
 
-        # Global providers are now read directly from DB by the bot.
-        # No need to sync to credentials.ini anymore.
-        logger.info(f"Admin updated global provider {body.provider} in database.")
+        if not set_parts:
+            return {"success": False, "message": "No credentials provided to save."}
+
+        set_parts.append("updated_at=?")
+        params.append(now)
+        set_parts.append("updated_by=?")
+        params.append(admin["id"])
+
+        if body.provider == 'dhan':
+            set_parts.append("status='configured'")
+
+        params.append(body.provider)
+        db_execute(
+            f"UPDATE data_providers SET {', '.join(set_parts)} WHERE provider=?",
+            tuple(params)
+        )
+
+        logger.info(f"Admin updated global provider {body.provider} fields: {[f[0] for f in field_map if f[1]]}")
         return {"success": True}
     except Exception as e:
         return {"success": False, "message": str(e)}
