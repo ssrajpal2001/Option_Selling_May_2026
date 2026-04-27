@@ -30,13 +30,37 @@ class UpstoxClient(BaseBroker):
                             return False
 
                     access_token = None
-                    # 1. Automated Login
+                    # 1. Automated TOTP Login
+                    # The TOTP login uses curl_cffi over regular HTTPS — it does NOT need to
+                    # originate from the static IP (that restriction is for order placement only).
+                    # Do NOT wrap in _scoped_ip_patch(): that calls _validate_source_ip() first,
+                    # which raises if the static IP is not bound — preventing the login entirely.
                     if self.db_config.get('password') and self.db_config.get('totp'):
                         from utils.auth_manager_upstox import handle_upstox_login_automated
-                        with self._scoped_ip_patch():
-                            access_token = handle_upstox_login_automated(self.db_config)
+                        access_token = handle_upstox_login_automated(self.db_config)
 
-                    # 2. Token Fallback
+                        # Persist the fresh token to the DB immediately so it survives even
+                        # if RestApiClient construction fails below (e.g. static IP not bound).
+                        # The WebSocket and any subsequent startup will then find a valid token.
+                        if access_token:
+                            try:
+                                from web.db import db_execute
+                                from web.auth import encrypt_secret
+                                import datetime as _dt
+                                enc = encrypt_secret(access_token)
+                                now_ist = _dt.datetime.now().isoformat()
+                                _inst_id = self.db_config.get('id')
+                                if _inst_id:
+                                    db_execute(
+                                        "UPDATE client_broker_instances "
+                                        "SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+                                        (enc, now_ist, _inst_id)
+                                    )
+                                    logger.info(f"[UpstoxClient] Fresh token saved to DB for user {self.user_id}.")
+                            except Exception as _db_err:
+                                logger.warning(f"[UpstoxClient] Could not persist fresh token to DB: {_db_err}")
+
+                    # 2. Token Fallback — use stored token if automated login was skipped/failed
                     if not access_token:
                         access_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
 

@@ -47,6 +47,7 @@ class BrokerManager:
         instance_name = f"client_{client_cfg.client_id}_{broker_name}"
 
         db_config = {
+            'id': client_cfg.instance_id,          # client_broker_instances.id — used by token DB save
             'client_id': client_cfg.client_id,
             'mode': client_cfg.trading_mode,
             'api_key': client_cfg.api_key,
