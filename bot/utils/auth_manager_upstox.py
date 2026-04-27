@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 def handle_upstox_login_automated(credentials):
     """
     Automated Upstox login using Mobile Number, PIN and TOTP.
-    Returns the access token.
+    Returns a dict: {"token": <str>, "error": None} on success,
+                    {"token": None, "error": <str>} on failure.
+    Returns None only for hard pre-flight failures (missing library / credentials).
     """
     try:
         from upstox_totp import UpstoxTOTP
@@ -19,7 +21,6 @@ def handle_upstox_login_automated(credentials):
     api_secret = credentials.get('api_secret')
     user_id = credentials.get('user_id') or credentials.get('broker_user_id') or credentials.get('username')
     password = credentials.get('password') or credentials.get('pin')
-    # Support both 'totp' (from DB flow) and 'totp_secret' (from credentials.ini direct read)
     totp_secret = (
         credentials.get('totp') or
         credentials.get('totp_secret') or
@@ -31,8 +32,9 @@ def handle_upstox_login_automated(credentials):
             'api_key': api_key, 'api_secret': api_secret,
             'user_id': user_id, 'password': password, 'totp_secret': totp_secret
         }.items() if not v]
-        logger.warning(f"Upstox Automated Login: Missing credentials {missing} for user: {user_id}")
-        return None
+        msg = f"Missing credentials: {missing}"
+        logger.warning(f"Upstox Automated Login: {msg} for user: {user_id}")
+        return {"token": None, "error": msg}
 
     try:
         logger.info(f"Attempting background Upstox login for {user_id}...")
@@ -55,10 +57,16 @@ def handle_upstox_login_automated(credentials):
         resp = upx.app_token.get_access_token()
         if resp.success and resp.data:
             logger.info(f"Background Upstox login SUCCESS for {user_id}")
-            return resp.data.access_token
+            return {"token": resp.data.access_token, "error": None}
         else:
-            logger.error(f"Background Upstox login FAILED for {user_id}: {getattr(resp, 'error', 'unknown error')}")
-            return None
+            err = (
+                getattr(resp, 'error', None) or
+                getattr(resp, 'message', None) or
+                "Unknown error from Upstox"
+            )
+            logger.error(f"Background Upstox login FAILED for {user_id}: {err}")
+            return {"token": None, "error": str(err)}
+
     except Exception as e:
         logger.error(f"Upstox background auth error for {user_id}: {e}")
-        return None
+        return {"token": None, "error": str(e)}

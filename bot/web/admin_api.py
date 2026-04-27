@@ -125,7 +125,22 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
     try:
         token = None
         _dhan_error = None
+        _upstox_error = None
         if provider == 'upstox':
+            # Skip re-login if the existing token was issued within the last 30 minutes
+            _issued_at = dp.get("token_issued_at")
+            if _issued_at:
+                try:
+                    _issued_dt = datetime.fromisoformat(_issued_at)
+                    if _issued_dt.tzinfo is None:
+                        _issued_dt = _issued_dt.replace(tzinfo=timezone.utc)
+                    _age_minutes = (datetime.now(timezone.utc) - _issued_dt).total_seconds() / 60
+                    if _age_minutes < 30:
+                        logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
+                        return {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
+                except Exception:
+                    pass
+
             from utils.auth_manager_upstox import handle_upstox_login_automated
             creds = {
                 "api_key": decrypt_secret(dp["api_key_encrypted"]),
@@ -134,7 +149,13 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 "password": decrypt_secret(dp.get("password_encrypted", "")),
                 "totp": decrypt_secret(dp.get("totp_encrypted", "")),
             }
-            token = handle_upstox_login_automated(creds)
+            _result = handle_upstox_login_automated(creds)
+            if _result is None:
+                _upstox_error = "upstox-totp library not installed or credentials incomplete"
+                token = None
+            else:
+                token = _result.get("token")
+                _upstox_error = _result.get("error")
             if token:
                 _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
@@ -194,7 +215,7 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             if provider == 'dhan':
                 msg = f"Dhan: {_dhan_error}" if _dhan_error else "Dhan token generation failed. Verify your Client ID, PIN and TOTP secret."
             elif provider == 'upstox':
-                msg = "Upstox login failed. Check your User ID, Password, and TOTP secret in the configure panel."
+                msg = f"Upstox login failed: {_upstox_error}" if _upstox_error else "Upstox login failed. Check your User ID, Password, and TOTP secret."
             else:
                 msg = f"{provider.capitalize()} login returned no token. Verify credentials."
             return {"success": False, "message": msg}
@@ -216,7 +237,23 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
         try:
             token = None
             _dhan_error = None
+            _upstox_error = None
             if provider == "upstox":
+                # Skip re-login if the existing token is less than 30 minutes old
+                _issued_at = dp.get("token_issued_at")
+                if _issued_at:
+                    try:
+                        _issued_dt = datetime.fromisoformat(_issued_at)
+                        if _issued_dt.tzinfo is None:
+                            _issued_dt = _issued_dt.replace(tzinfo=timezone.utc)
+                        _age_minutes = (datetime.now(timezone.utc) - _issued_dt).total_seconds() / 60
+                        if _age_minutes < 30:
+                            logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
+                            results[provider] = {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
+                            continue
+                    except Exception:
+                        pass
+
                 from utils.auth_manager_upstox import handle_upstox_login_automated
                 creds = {
                     "api_key": decrypt_secret(dp["api_key_encrypted"]),
@@ -225,7 +262,13 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     "password": decrypt_secret(dp.get("password_encrypted", "")),
                     "totp": decrypt_secret(dp.get("totp_encrypted", "")),
                 }
-                token = handle_upstox_login_automated(creds)
+                _result = handle_upstox_login_automated(creds)
+                if _result is None:
+                    _upstox_error = "upstox-totp library not installed or credentials incomplete"
+                    token = None
+                else:
+                    token = _result.get("token")
+                    _upstox_error = _result.get("error")
                 if token:
                     _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
@@ -285,6 +328,8 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
             else:
                 if provider == "dhan":
                     _fail_msg = f"Dhan: {_dhan_error}" if _dhan_error else "Dhan login returned no token."
+                elif provider == "upstox":
+                    _fail_msg = f"Upstox login failed: {_upstox_error}" if _upstox_error else "Upstox login returned no token."
                 else:
                     _fail_msg = f"{provider.capitalize()} login returned no token."
                 results[provider] = {"success": False, "message": _fail_msg}
