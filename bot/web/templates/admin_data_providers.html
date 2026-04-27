@@ -424,22 +424,27 @@ async function openConfig(provider) {
   // Pre-fill existing saved credentials
   try {
     const r = await fetch(`/api/admin/data-providers/${provider}/config`);
-    const data = await r.json();
-    if (provider === 'dhan') {
-      document.getElementById('dhan-client-id').value  = data.api_key    || '';
-      document.getElementById('dhan-app-id').value     = data.user_id    || '';
-      document.getElementById('dhan-api-secret').value = data.api_secret || '';
-      document.getElementById('dhan-pin').value         = data.password   || '';
-      document.getElementById('dhan-totp').value        = data.totp       || '';
+    if (!r.ok) {
+      showToast(`Could not load saved credentials (${r.status}). Enter them manually.`, 'error');
     } else {
-      document.getElementById('api-key').value  = data.api_key    || '';
-      document.getElementById('api-secret').value = data.api_secret || '';
-      document.getElementById('user-id').value  = data.user_id    || '';
-      document.getElementById('password').value = data.password   || '';
-      document.getElementById('totp').value     = data.totp       || '';
+      const data = await r.json();
+      if (provider === 'dhan') {
+        document.getElementById('dhan-client-id').value  = data.api_key    || '';
+        document.getElementById('dhan-app-id').value     = data.user_id    || '';
+        document.getElementById('dhan-api-secret').value = data.api_secret || '';
+        document.getElementById('dhan-pin').value         = data.password   || '';
+        document.getElementById('dhan-totp').value        = data.totp       || '';
+      } else {
+        document.getElementById('api-key').value   = data.api_key    || '';
+        document.getElementById('api-secret').value = data.api_secret || '';
+        document.getElementById('user-id').value   = data.user_id    || '';
+        document.getElementById('password').value  = data.password   || '';
+        document.getElementById('totp').value      = data.totp       || '';
+      }
     }
   } catch (e) {
     console.warn('Could not pre-fill credentials:', e);
+    showToast('Could not load saved credentials. Enter them manually.', 'error');
   }
 
   title.textContent = 'Configure ' + provider.toUpperCase();

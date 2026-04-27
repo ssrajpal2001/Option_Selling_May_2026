@@ -75,7 +75,7 @@ async def get_data_provider_config(provider: str, admin=Depends(require_admin)):
     """Return decrypted credentials for a provider so the configure modal can pre-fill fields."""
     dp = db_fetchone("SELECT * FROM data_providers WHERE provider=?", (provider,))
     if not dp:
-        return {"api_key": "", "api_secret": "", "user_id": "", "password": "", "totp": ""}
+        raise HTTPException(404, f"Provider '{provider}' not found.")
     return {
         "api_key":    decrypt_secret(dp.get("api_key_encrypted")    or "") or "",
         "api_secret": decrypt_secret(dp.get("api_secret_encrypted") or "") or "",
@@ -314,7 +314,7 @@ async def update_data_provider(body: ProviderConfigRequest, admin=Depends(requir
         set_parts = []
         params = []
         for col, val in field_map:
-            if val:
+            if val and val.strip():
                 set_parts.append(f"{col}=?")
                 params.append(encrypt_secret(val))
 
