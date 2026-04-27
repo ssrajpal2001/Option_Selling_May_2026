@@ -149,13 +149,9 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 "password": decrypt_secret(dp.get("password_encrypted", "")),
                 "totp": decrypt_secret(dp.get("totp_encrypted", "")),
             }
-            _result = handle_upstox_login_automated(creds)
-            if _result is None:
-                _upstox_error = "upstox-totp library not installed or credentials incomplete"
-                token = None
-            else:
-                token = _result.get("token")
-                _upstox_error = _result.get("error")
+            _result = handle_upstox_login_automated(creds, return_error=True)
+            token = (_result or {}).get("token")
+            _upstox_error = (_result or {}).get("error")
             if token:
                 _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
@@ -262,13 +258,9 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     "password": decrypt_secret(dp.get("password_encrypted", "")),
                     "totp": decrypt_secret(dp.get("totp_encrypted", "")),
                 }
-                _result = handle_upstox_login_automated(creds)
-                if _result is None:
-                    _upstox_error = "upstox-totp library not installed or credentials incomplete"
-                    token = None
-                else:
-                    token = _result.get("token")
-                    _upstox_error = _result.get("error")
+                _result = handle_upstox_login_automated(creds, return_error=True)
+                token = (_result or {}).get("token")
+                _upstox_error = (_result or {}).get("error")
                 if token:
                     _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
