@@ -238,40 +238,84 @@ class ProviderFactory:
                 if dp and dp['status'] == 'configured':
                     cid = decrypt_secret(dp['api_key_encrypted'])
                     access_token = decrypt_secret(dp['access_token_encrypted'])
-                    updated_at = dp.get('updated_at')
 
-                    # Daily Token Refresh check for Global Dhan
+                    # Use token_issued_at (set only on actual token issuance) rather than
+                    # updated_at (also touched by admin config saves) for freshness check.
+                    # Dhan tokens from generateAccessToken live exactly 24 hours, so we
+                    # treat "same calendar day (UTC)" as still valid.
+                    # When a token exists, require token_issued_at to be today; if it's
+                    # NULL, force a refresh so the field gets populated going forward.
+                    token_issued_at = dp.get('token_issued_at')
+                    updated_at = dp.get('updated_at')
+                    if access_token:
+                        check_ts = token_issued_at          # strict: must be today's issuance
+                    else:
+                        check_ts = token_issued_at or updated_at  # no token yet: coarse fallback
+
                     needs_refresh = True
-                    if updated_at:
+                    if check_ts:
                         try:
-                            upd_dt = datetime.fromisoformat(updated_at).date()
+                            upd_dt = datetime.fromisoformat(check_ts).date()
                             if upd_dt == datetime.now(timezone.utc).date():
                                 needs_refresh = False
                         except: pass
 
                     if needs_refresh:
-                        logger.info("Global Dhan token fresh day started. Validating stored token...")
-                        creds = {
+                        from utils.auth_manager_dhan import handle_dhan_login_automated, generate_dhan_token
+                        pin = decrypt_secret(dp.get("password_encrypted", ""))
+                        totp_secret = decrypt_secret(dp.get("totp_encrypted", ""))
+
+                        # Step 1: validate existing token via a lightweight REST ping
+                        logger.info("[Global Dhan] Token needs refresh. Validating stored token...")
+                        validated = handle_dhan_login_automated({
                             "api_key": cid,
                             "client_id": cid,
-                            "access_token": access_token,  # explicitly pass stored token for validation
-                            "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                            "password": decrypt_secret(dp.get("password_encrypted", "")),
-                            "totp": decrypt_secret(dp.get("totp_encrypted", ""))
-                        }
-                        from utils.auth_manager_dhan import handle_dhan_login_automated
-                        new_token = handle_dhan_login_automated(creds)
-                        if new_token:
-                            access_token = new_token
-                            enc_token = encrypt_secret(new_token)
+                            "access_token": access_token,
+                        })
+
+                        if validated:
+                            # Still alive — save the confirmed timestamp so tomorrow's check works
+                            access_token = validated
+                            enc_token = encrypt_secret(validated)
                             now_str = datetime.now(timezone.utc).isoformat()
-                            # Only update updated_at; token_issued_at stays unchanged (same 30-day token)
-                            db_execute("UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='dhan'", (enc_token, now_str))
-                            logger.info("Global Dhan token validated successfully.")
+                            db_execute(
+                                "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='dhan'",
+                                (enc_token, now_str, now_str)
+                            )
+                            logger.info("[Global Dhan] Stored token still valid. Timestamp refreshed.")
+                        else:
+                            # Token expired — generate a fresh 24-hour token using PIN + TOTP
+                            logger.info("[Global Dhan] Stored token expired. Generating fresh token...")
+                            if pin and totp_secret:
+                                result = generate_dhan_token(
+                                    api_key=cid,
+                                    client_id=cid,
+                                    password=pin,
+                                    totp_secret=totp_secret
+                                )
+                                if result.get('token'):
+                                    access_token = result['token']
+                                    enc_token = encrypt_secret(access_token)
+                                    now_str = datetime.now(timezone.utc).isoformat()
+                                    db_execute(
+                                        "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='dhan'",
+                                        (enc_token, now_str, now_str)
+                                    )
+                                    logger.info("[Global Dhan] Fresh token generated and saved successfully.")
+                                else:
+                                    logger.error(
+                                        f"[Global Dhan] Token generation failed: {result.get('error')}. "
+                                        "WebSocket will start with stale token — expect immediate server close."
+                                    )
+                            else:
+                                logger.warning(
+                                    "[Global Dhan] PIN or TOTP secret not saved in data_providers. "
+                                    "Cannot auto-generate token. Update credentials in Admin → Data Providers."
+                                )
 
                     dhan_ws = DhanWebSocketManager(cid, access_token)
                     active_feeds.append(('dhan', dhan_ws))
-                    logger.info("Global Dhan data provider initialized.")
+                    logger.info("[Global Dhan] Data provider initialized.")
                 else:
                     logger.warning("Global Dhan data provider requested but not configured in DB.")
             except Exception as e:
