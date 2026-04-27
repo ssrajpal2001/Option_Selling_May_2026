@@ -68,12 +68,18 @@ class DhanWebSocketManager(DataFeed):
         # Resolve the correct feed class across dhanhq versions:
         #   2.0.x → marketfeed.DhanFeed
         #   2.1+  → class name may differ; fall back to scanning for any Feed-like class
+        # Each named candidate is verified to be a class (isinstance(..., type)) to
+        # guard against future SDK versions that export one of these names as a non-class.
+        def _get_cls(mod, name):
+            obj = getattr(mod, name, None)
+            return obj if isinstance(obj, type) else None
+
         _DhanFeedCls = (
-            getattr(marketfeed, 'DhanFeed', None) or
-            getattr(marketfeed, 'Feed', None) or
-            getattr(marketfeed, 'MarketFeed', None) or
-            getattr(marketfeed, 'DhanMarketFeed', None) or
-            getattr(marketfeed, 'DhanHQ', None) or
+            _get_cls(marketfeed, 'DhanFeed') or
+            _get_cls(marketfeed, 'Feed') or
+            _get_cls(marketfeed, 'MarketFeed') or
+            _get_cls(marketfeed, 'DhanMarketFeed') or
+            _get_cls(marketfeed, 'DhanHQ') or
             next(
                 (v for k, v in vars(marketfeed).items()
                  if isinstance(v, type) and ('feed' in k.lower() or 'Feed' in k)),

@@ -167,12 +167,18 @@ class DhanClient(BaseBroker):
         # In v2.0.2, the constructor only takes client_id, access_token, and instruments.
         # We specify version='v2' to avoid HTTP 400 errors.
         # Resolve feed class across dhanhq versions (2.0.x → DhanFeed; later may differ)
+        # Each named candidate is verified to be a class (isinstance(..., type)) to
+        # guard against future SDK versions that export one of these names as a non-class.
+        def _get_feed_cls(mod, name):
+            obj = getattr(mod, name, None)
+            return obj if isinstance(obj, type) else None
+
         _DhanFeedCls = (
-            getattr(market_feed, 'DhanFeed', None) or
-            getattr(market_feed, 'Feed', None) or
-            getattr(market_feed, 'MarketFeed', None) or
-            getattr(market_feed, 'DhanMarketFeed', None) or
-            getattr(market_feed, 'DhanHQ', None) or
+            _get_feed_cls(market_feed, 'DhanFeed') or
+            _get_feed_cls(market_feed, 'Feed') or
+            _get_feed_cls(market_feed, 'MarketFeed') or
+            _get_feed_cls(market_feed, 'DhanMarketFeed') or
+            _get_feed_cls(market_feed, 'DhanHQ') or
             next(
                 (v for k, v in vars(market_feed).items()
                  if isinstance(v, type) and ('feed' in k.lower() or 'Feed' in k)),
