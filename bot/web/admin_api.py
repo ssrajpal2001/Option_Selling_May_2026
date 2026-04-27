@@ -63,6 +63,7 @@ class ProviderConfigRequest(BaseModel):
 class ManualTokenRequest(BaseModel):
     provider: str
     raw_value: str
+    redirect_uri: Optional[str] = None
 
 @router.get("/data-providers")
 async def list_data_providers(admin=Depends(require_admin)):
@@ -80,7 +81,9 @@ async def global_provider_auth(provider: str, request: Request, admin=Depends(re
         from web.auth import _fernet
         state_payload = f"admin:{int(time.time())}"
         state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
-        redirect_uri = "https://google.com"
+        raw_host = request.headers.get('host') or str(request.base_url).split('/')[2]
+        proto = request.headers.get('x-forwarded-proto', 'http')
+        redirect_uri = f"{proto}://{raw_host}/auth/upstox/callback"
         auth_dialog = "https://api.upstox.com/v2/login/authorization/dialog"
         url = f"{auth_dialog}?response_type=code&client_id={api_key}&redirect_uri={urllib.parse.quote(redirect_uri)}&state={urllib.parse.quote(state_encrypted)}"
         return RedirectResponse(url)
@@ -343,9 +346,10 @@ async def exchange_manual_token(body: ManualTokenRequest, admin=Depends(require_
             api_key = decrypt_secret(dp["api_key_encrypted"])
             api_secret = decrypt_secret(dp.get("api_secret_encrypted", ""))
 
-            # Since the user was redirected to Google, the 'redirect_uri' used in the original
-            # auth dialog must be used for the exchange.
-            redirect_uri = "https://google.com"
+            # redirect_uri must match exactly what was used in the original auth dialog.
+            # Callers using the server-callback flow pass redirect_uri explicitly;
+            # legacy google.com flows omit it and we fall back to the old hardcoded value.
+            redirect_uri = body.redirect_uri or "https://google.com"
 
             import requests as http_requests
             resp = http_requests.post(

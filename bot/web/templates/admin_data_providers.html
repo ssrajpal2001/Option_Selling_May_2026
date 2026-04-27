@@ -138,16 +138,16 @@
       <div id="generic-fields-section" class="inner-section">
 
         <!-- Upstox-specific redirect notice — shown only when provider = upstox -->
-        <div id="upstox-redirect-notice" class="hidden mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-          <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1.5">&#9888; Token Flow: Two Options</p>
+        <div id="upstox-redirect-notice" class="hidden mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+          <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1.5">&#10003; Token Flow</p>
           <div class="space-y-2 text-[10px] text-slate-400">
             <div class="flex gap-2">
-              <span class="text-emerald-400 font-bold shrink-0">Option A (Automated):</span>
-              <span>Set redirect URI to <code class="bg-slate-800 px-1 rounded text-slate-300">http://&lt;EC2-IP&gt;:5000/auth/upstox/callback</code> in your Upstox Developer Portal. Token is captured automatically after login.</span>
+              <span class="text-emerald-400 font-bold shrink-0">Recommended:</span>
+              <span>Set the redirect URI shown below in your Upstox Developer Portal. After login the token is captured automatically — no copy-paste needed.</span>
             </div>
             <div class="flex gap-2">
-              <span class="text-blue-400 font-bold shrink-0">Option B (Current):</span>
-              <span>If redirect URI is <code class="bg-slate-800 px-1 rounded text-slate-300">https://google.com</code>, click <strong class="text-slate-300">Fallback: Manual Browser Auth</strong> below → log in → copy the full URL from the browser bar (it starts with google.com?code=...) → paste it in the <strong class="text-slate-300">Paste Redirect URL</strong> box at the bottom.</span>
+              <span class="text-slate-500 font-bold shrink-0">Legacy:</span>
+              <span>If you configured <code class="bg-slate-800 px-1 rounded text-slate-300">https://google.com</code> as the redirect URI, use the <strong class="text-slate-300">Paste Redirect URL</strong> box at the bottom to exchange the code manually.</span>
             </div>
           </div>
         </div>
@@ -208,10 +208,10 @@
         </div>
 
         <div class="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
-           <label class="block text-[9px] text-slate-500 uppercase mb-1">Paste Redirect URL / Manual Token</label>
-           <p class="text-[9px] text-slate-600 mb-2">After Upstox login, copy the full URL from your browser (e.g. <span class="text-slate-400">https://google.com?code=ABC123&amp;...</span>) and paste it here. The bot extracts the code and saves your token automatically.</p>
+           <label class="block text-[9px] text-slate-500 uppercase mb-1">Paste Redirect URL / Manual Token (Legacy)</label>
+           <p class="text-[9px] text-slate-600 mb-2">Only needed if your Upstox Developer Portal is still set to <span class="text-slate-400">https://google.com</span>. Paste the full redirect URL from your browser here — the token code is extracted automatically.</p>
            <div class="flex gap-2">
-             <input type="text" id="manual-token-input-generic" class="input-field flex-1 text-[10px]" placeholder="Paste full https://google.com?code=... redirect URL here">
+             <input type="text" id="manual-token-input-generic" class="input-field flex-1 text-[10px]" placeholder="Paste full redirect URL (e.g. https://google.com?code=...)">
              <button type="button" onclick="saveManualTokenGeneric()" class="btn-primary px-3 py-1 text-[10px]">Exchange &amp; Save</button>
            </div>
         </div>
@@ -409,9 +409,8 @@ function openConfig(provider) {
       const host = window.location.host;
       redirectInput.value = `${proto}//${host}/auth/upstox/callback`;
       if (upstoxNotice) upstoxNotice.classList.remove('hidden');
-      // Update placeholder to be Upstox-specific
       const pasteInput = document.getElementById('manual-token-input-generic');
-      if (pasteInput) pasteInput.placeholder = 'Paste full google.com?code=... redirect URL here';
+      if (pasteInput) pasteInput.placeholder = 'Paste full redirect URL (e.g. https://google.com?code=...) — legacy only';
     } else {
       if (upstoxNotice) upstoxNotice.classList.add('hidden');
       keyLabel.textContent = 'API Key';
@@ -479,11 +478,7 @@ function updateMasterStatus(connected) {
 function triggerGlobalAuth(provider) {
   if (!provider) return;
   window.open(`/api/admin/data-providers/${provider}/auth`, '_blank');
-  if (provider === 'upstox') {
-    showToast('Upstox login window opened. After signing in, copy the full URL from your browser address bar and paste it in the "Paste Redirect URL" box below.', 'info');
-  } else {
-    showToast(`${provider.toUpperCase()} auth window opened. Sign in and the token will be captured.`, 'success');
-  }
+  showToast(`${provider.toUpperCase()} login window opened. Sign in and the token will be captured automatically.`, 'success');
 }
 
 function triggerGlobalAuthFromModal() {
@@ -588,7 +583,10 @@ async function saveManualTokenGeneric() {
   const provider = document.getElementById('provider-id').value;
   const rawValue = document.getElementById('manual-token-input-generic').value.trim();
   if (!rawValue) return;
-  await _exchangeToken(provider, rawValue);
+  const redirectUri = provider === 'upstox'
+    ? (document.getElementById('redirect-uri')?.value || null)
+    : null;
+  await _exchangeToken(provider, rawValue, redirectUri);
 }
 
 async function saveManualToken() {
@@ -598,13 +596,15 @@ async function saveManualToken() {
   await _exchangeToken(provider, rawValue);
 }
 
-async function _exchangeToken(provider, rawValue) {
+async function _exchangeToken(provider, rawValue, redirectUri = null) {
 
   try {
+    const payload = { provider, raw_value: rawValue };
+    if (redirectUri) payload.redirect_uri = redirectUri;
     const r = await fetch('/api/admin/data-providers/exchange-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider, raw_value: rawValue })
+      body: JSON.stringify(payload)
     });
     const d = await r.json();
     if (d.success) {
