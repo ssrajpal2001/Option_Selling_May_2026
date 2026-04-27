@@ -1,0 +1,153 @@
+ec2-user:~/environment/Option_Selling_May_2026-main (main) $ pip install -r bot/requirements.txt
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: numpy in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 1)) (2.0.2)
+Requirement already satisfied: scipy in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 2)) (1.13.1)
+Requirement already satisfied: pandas in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 3)) (2.3.3)
+Requirement already satisfied: upstox-python-sdk in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 4)) (2.19.0)
+Collecting curl_cffi>=0.7
+  Downloading curl_cffi-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.3 MB)
+     |████████████████████████████████| 8.3 MB 19.0 MB/s            
+Requirement already satisfied: websockets in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 6)) (15.0.1)
+Requirement already satisfied: requests in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 7)) (2.31.0)
+Requirement already satisfied: pytest in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 8)) (8.4.2)
+Requirement already satisfied: pytest-asyncio in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 9)) (1.2.0)
+Requirement already satisfied: pytest-mock in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 10)) (3.15.1)
+Requirement already satisfied: aiohttp==3.9.3 in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 11)) (3.9.3)
+Requirement already satisfied: pytz in /usr/lib/python3.9/site-packages (from -r bot/requirements.txt (line 12)) (2022.7.1)
+Requirement already satisfied: protobuf in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 13)) (6.33.5)
+Requirement already satisfied: sqlalchemy in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 14)) (2.0.47)
+Requirement already satisfied: aiopg in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 15)) (1.4.0)
+Requirement already satisfied: asyncpg in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 16)) (0.31.0)
+Requirement already satisfied: cryptography in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 17)) (46.0.5)
+Requirement already satisfied: redis in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 18)) (7.0.1)
+Requirement already satisfied: hiredis in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 19)) (3.3.0)
+Requirement already satisfied: smartapi-python in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 20)) (1.5.5)
+Requirement already satisfied: logzero in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 21)) (1.7.0)
+Requirement already satisfied: pyotp in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 22)) (2.9.0)
+Requirement already satisfied: kiteconnect in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 23)) (5.1.0)
+Requirement already satisfied: dhanhq in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 24)) (2.0.2)
+Collecting aiofiles
+  Using cached aiofiles-25.1.0-py3-none-any.whl (14 kB)
+Requirement already satisfied: fastapi in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 26)) (0.128.8)
+Requirement already satisfied: jinja2 in /usr/lib/python3.9/site-packages (from -r bot/requirements.txt (line 27)) (2.11.3)
+Requirement already satisfied: python-multipart in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 28)) (0.0.20)
+Requirement already satisfied: uvicorn[standard] in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 29)) (0.39.0)
+Collecting bcrypt==4.1.2
+  Using cached bcrypt-4.1.2-cp39-abi3-manylinux_2_28_x86_64.whl (698 kB)
+Requirement already satisfied: python-jose[cryptography] in /home/ec2-user/.local/lib/python3.9/site-packages (from -r bot/requirements.txt (line 31)) (3.5.0)
+Collecting Dhan-Tradehull
+  Using cached dhan_tradehull-3.1.2-py3-none-any.whl (28 kB)
+Collecting psutil>=5.9.0
+  Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+Collecting dulwich>=0.19.0
+  Downloading dulwich-0.24.10-cp39-cp39-manylinux_2_28_x86_64.whl (1.4 MB)
+     |████████████████████████████████| 1.4 MB 21.4 MB/s            
+Requirement already satisfied: async-timeout<5.0,>=4.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from aiohttp==3.9.3->-r bot/requirements.txt (line 11)) (4.0.3)
+Requirement already satisfied: frozenlist>=1.1.1 in /home/ec2-user/.local/lib/python3.9/site-packages (from aiohttp==3.9.3->-r bot/requirements.txt (line 11)) (1.8.0)
+Requirement already satisfied: attrs>=17.3.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from aiohttp==3.9.3->-r bot/requirements.txt (line 11)) (25.4.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /home/ec2-user/.local/lib/python3.9/site-packages (from aiohttp==3.9.3->-r bot/requirements.txt (line 11)) (6.7.1)
+Requirement already satisfied: aiosignal>=1.1.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from aiohttp==3.9.3->-r bot/requirements.txt (line 11)) (1.4.0)
+Requirement already satisfied: yarl<2.0,>=1.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from aiohttp==3.9.3->-r bot/requirements.txt (line 11)) (1.22.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from pandas->-r bot/requirements.txt (line 3)) (2.9.0.post0)
+Requirement already satisfied: tzdata>=2022.7 in /home/ec2-user/.local/lib/python3.9/site-packages (from pandas->-r bot/requirements.txt (line 3)) (2025.3)
+Requirement already satisfied: urllib3>=1.15 in /usr/lib/python3.9/site-packages (from upstox-python-sdk->-r bot/requirements.txt (line 4)) (1.25.10)
+Requirement already satisfied: six>=1.10 in /usr/lib/python3.9/site-packages (from upstox-python-sdk->-r bot/requirements.txt (line 4)) (1.15.0)
+Requirement already satisfied: certifi in /home/ec2-user/.local/lib/python3.9/site-packages (from upstox-python-sdk->-r bot/requirements.txt (line 4)) (2026.2.25)
+Requirement already satisfied: websocket-client in /home/ec2-user/.local/lib/python3.9/site-packages (from upstox-python-sdk->-r bot/requirements.txt (line 4)) (1.6.1)
+Requirement already satisfied: uuid in /home/ec2-user/.local/lib/python3.9/site-packages (from upstox-python-sdk->-r bot/requirements.txt (line 4)) (1.30)
+Requirement already satisfied: cffi>=1.12.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from curl_cffi>=0.7->-r bot/requirements.txt (line 5)) (2.0.0)
+Requirement already satisfied: charset-normalizer<4,>=2 in /home/ec2-user/.local/lib/python3.9/site-packages (from requests->-r bot/requirements.txt (line 7)) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in /usr/lib/python3.9/site-packages (from requests->-r bot/requirements.txt (line 7)) (2.10)
+Requirement already satisfied: exceptiongroup>=1 in /home/ec2-user/.local/lib/python3.9/site-packages (from pytest->-r bot/requirements.txt (line 8)) (1.3.1)
+Requirement already satisfied: tomli>=1 in /home/ec2-user/.local/lib/python3.9/site-packages (from pytest->-r bot/requirements.txt (line 8)) (2.4.0)
+Requirement already satisfied: packaging>=20 in /usr/lib/python3.9/site-packages (from pytest->-r bot/requirements.txt (line 8)) (21.3)
+Requirement already satisfied: iniconfig>=1 in /home/ec2-user/.local/lib/python3.9/site-packages (from pytest->-r bot/requirements.txt (line 8)) (2.1.0)
+Requirement already satisfied: pluggy<2,>=1.5 in /home/ec2-user/.local/lib/python3.9/site-packages (from pytest->-r bot/requirements.txt (line 8)) (1.6.0)
+Requirement already satisfied: pygments>=2.7.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from pytest->-r bot/requirements.txt (line 8)) (2.19.2)
+Requirement already satisfied: backports-asyncio-runner<2,>=1.1 in /home/ec2-user/.local/lib/python3.9/site-packages (from pytest-asyncio->-r bot/requirements.txt (line 9)) (1.2.0)
+Requirement already satisfied: typing-extensions>=4.12 in /home/ec2-user/.local/lib/python3.9/site-packages (from pytest-asyncio->-r bot/requirements.txt (line 9)) (4.15.0)
+Requirement already satisfied: greenlet>=1 in /home/ec2-user/.local/lib/python3.9/site-packages (from sqlalchemy->-r bot/requirements.txt (line 14)) (3.2.5)
+Requirement already satisfied: psycopg2-binary>=2.9.5 in /home/ec2-user/.local/lib/python3.9/site-packages (from aiopg->-r bot/requirements.txt (line 15)) (2.9.11)
+Requirement already satisfied: service_identity>=18.1.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from kiteconnect->-r bot/requirements.txt (line 23)) (24.2.0)
+Requirement already satisfied: autobahn[twisted]==19.11.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from kiteconnect->-r bot/requirements.txt (line 23)) (19.11.2)
+Requirement already satisfied: pyOpenSSL>=17.5.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from kiteconnect->-r bot/requirements.txt (line 23)) (25.3.0)
+Requirement already satisfied: txaio>=18.8.1 in /home/ec2-user/.local/lib/python3.9/site-packages (from autobahn[twisted]==19.11.2->kiteconnect->-r bot/requirements.txt (line 23)) (23.6.1)
+Requirement already satisfied: zope.interface>=3.6.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from autobahn[twisted]==19.11.2->kiteconnect->-r bot/requirements.txt (line 23)) (8.0.1)
+Requirement already satisfied: Twisted>=12.1.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from autobahn[twisted]==19.11.2->kiteconnect->-r bot/requirements.txt (line 23)) (25.5.0)
+Requirement already satisfied: annotated-doc>=0.0.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from fastapi->-r bot/requirements.txt (line 26)) (0.0.4)
+Requirement already satisfied: starlette<1.0.0,>=0.40.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from fastapi->-r bot/requirements.txt (line 26)) (0.49.3)
+Requirement already satisfied: pydantic>=2.7.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from fastapi->-r bot/requirements.txt (line 26)) (2.12.5)
+Requirement already satisfied: typing-inspection>=0.4.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from fastapi->-r bot/requirements.txt (line 26)) (0.4.2)
+Requirement already satisfied: MarkupSafe>=0.23 in /usr/lib64/python3.9/site-packages (from jinja2->-r bot/requirements.txt (line 27)) (1.1.1)
+Requirement already satisfied: h11>=0.8 in /home/ec2-user/.local/lib/python3.9/site-packages (from uvicorn[standard]->-r bot/requirements.txt (line 29)) (0.16.0)
+Requirement already satisfied: click>=7.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from uvicorn[standard]->-r bot/requirements.txt (line 29)) (8.1.8)
+Requirement already satisfied: pyyaml>=5.1 in /usr/lib64/python3.9/site-packages (from uvicorn[standard]->-r bot/requirements.txt (line 29)) (5.4.1)
+Collecting httptools>=0.6.3
+  Downloading httptools-0.7.1-cp39-cp39-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (441 kB)
+     |████████████████████████████████| 441 kB 30.5 MB/s            
+Collecting watchfiles>=0.13
+  Downloading watchfiles-1.1.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (457 kB)
+     |████████████████████████████████| 457 kB 61.9 MB/s            
+Collecting uvloop>=0.15.1
+  Downloading uvloop-0.22.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.7 MB)
+     |████████████████████████████████| 3.7 MB 22.3 MB/s            
+Collecting python-dotenv>=0.13
+  Downloading python_dotenv-1.2.1-py3-none-any.whl (21 kB)
+Requirement already satisfied: ecdsa!=0.15 in /home/ec2-user/.local/lib/python3.9/site-packages (from python-jose[cryptography]->-r bot/requirements.txt (line 31)) (0.19.1)
+Requirement already satisfied: rsa!=4.1.1,!=4.4,<5.0,>=4.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from python-jose[cryptography]->-r bot/requirements.txt (line 31)) (4.9.1)
+Requirement already satisfied: pyasn1>=0.5.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from python-jose[cryptography]->-r bot/requirements.txt (line 31)) (0.6.2)
+Collecting pytz
+  Downloading pytz-2026.1.post1-py2.py3-none-any.whl (510 kB)
+     |████████████████████████████████| 510 kB 65.7 MB/s            
+Collecting mibian>=0.1.3
+  Downloading mibian-0.1.3.zip (4.3 kB)
+  Preparing metadata (setup.py) ... done
+Collecting websocket-client
+  Downloading websocket_client-1.9.0-py3-none-any.whl (82 kB)
+     |████████████████████████████████| 82 kB 1.4 MB/s             
+Collecting requests
+  Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+     |████████████████████████████████| 64 kB 4.8 MB/s             
+Collecting dhanhq
+  Downloading dhanhq-2.2.0-py3-none-any.whl (36 kB)
+Collecting urllib3>=1.15
+  Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+     |████████████████████████████████| 131 kB 50.2 MB/s            
+Requirement already satisfied: pycparser in /usr/lib/python3.9/site-packages (from cffi>=1.12.0->curl_cffi>=0.7->-r bot/requirements.txt (line 5)) (2.20)
+Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /usr/lib/python3.9/site-packages (from packaging>=20->pytest->-r bot/requirements.txt (line 8)) (2.4.7)
+Requirement already satisfied: annotated-types>=0.6.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from pydantic>=2.7.0->fastapi->-r bot/requirements.txt (line 26)) (0.7.0)
+Requirement already satisfied: pydantic-core==2.41.5 in /home/ec2-user/.local/lib/python3.9/site-packages (from pydantic>=2.7.0->fastapi->-r bot/requirements.txt (line 26)) (2.41.5)
+Requirement already satisfied: pyasn1-modules in /home/ec2-user/.local/lib/python3.9/site-packages (from service_identity>=18.1.0->kiteconnect->-r bot/requirements.txt (line 23)) (0.4.2)
+Requirement already satisfied: anyio<5,>=3.6.2 in /home/ec2-user/.local/lib/python3.9/site-packages (from starlette<1.0.0,>=0.40.0->fastapi->-r bot/requirements.txt (line 26)) (4.12.1)
+Requirement already satisfied: propcache>=0.2.1 in /home/ec2-user/.local/lib/python3.9/site-packages (from yarl<2.0,>=1.0->aiohttp==3.9.3->-r bot/requirements.txt (line 11)) (0.4.1)
+Requirement already satisfied: incremental>=24.7.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r bot/requirements.txt (line 23)) (24.11.0)
+Requirement already satisfied: constantly>=15.1 in /home/ec2-user/.local/lib/python3.9/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r bot/requirements.txt (line 23)) (23.10.4)
+Requirement already satisfied: hyperlink>=17.1.1 in /home/ec2-user/.local/lib/python3.9/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r bot/requirements.txt (line 23)) (21.0.0)
+Requirement already satisfied: automat>=24.8.0 in /home/ec2-user/.local/lib/python3.9/site-packages (from Twisted>=12.1.0->autobahn[twisted]==19.11.2->kiteconnect->-r bot/requirements.txt (line 23)) (25.4.16)
+Requirement already satisfied: ply==3.11 in /usr/lib/python3.9/site-packages (from pycparser->cffi>=1.12.0->curl_cffi>=0.7->-r bot/requirements.txt (line 5)) (3.11)
+Using legacy 'setup.py install' for mibian, since package 'wheel' is not installed.
+Installing collected packages: urllib3, pytz, requests, websocket-client, watchfiles, uvloop, python-dotenv, mibian, httptools, dhanhq, psutil, dulwich, Dhan-Tradehull, curl-cffi, bcrypt, aiofiles
+  Attempting uninstall: requests
+    Found existing installation: requests 2.31.0
+    Uninstalling requests-2.31.0:
+      Successfully uninstalled requests-2.31.0
+  Attempting uninstall: websocket-client
+    Found existing installation: websocket-client 1.6.1
+    Uninstalling websocket-client-1.6.1:
+      Successfully uninstalled websocket-client-1.6.1
+    Running setup.py install for mibian ... done
+  Attempting uninstall: dhanhq
+    Found existing installation: dhanhq 2.0.2
+    Uninstalling dhanhq-2.0.2:
+      Successfully uninstalled dhanhq-2.0.2
+  Attempting uninstall: bcrypt
+    Found existing installation: bcrypt 5.0.0
+    Uninstalling bcrypt-5.0.0:
+      Successfully uninstalled bcrypt-5.0.0
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+fyers-apiv3 3.1.12 requires requests==2.31.0, but you have requests 2.32.5 which is incompatible.
+fyers-apiv3 3.1.12 requires websocket-client==1.6.1, but you have websocket-client 1.9.0 which is incompatible.
+botocore 1.42.96 requires urllib3<1.27,>=1.25.4; python_version < "3.10", but you have urllib3 2.6.3 which is incompatible.
+awscli 2.32.22 requires python-dateutil<=2.9.0,>=2.1, but you have python-dateutil 2.9.0.post0 which is incompatible.
+awscli 2.32.22 requires urllib3<1.27,>=1.25.4, but you have urllib3 2.6.3 which is incompatible.
+Successfully installed Dhan-Tradehull-3.1.2 aiofiles-25.1.0 bcrypt-4.1.2 curl-cffi-0.13.0 dhanhq-2.2.0 dulwich-0.24.10 httptools-0.7.1 mibian-0.1.3 psutil-7.2.2 python-dotenv-1.2.1 pytz-2026.1.post1 requests-2.32.5 urllib3-2.6.3 uvloop-0.22.1 watchfiles-1.1.1 websocket-client-1.9.0
