@@ -583,9 +583,17 @@ async function saveManualTokenGeneric() {
   const provider = document.getElementById('provider-id').value;
   const rawValue = document.getElementById('manual-token-input-generic').value.trim();
   if (!rawValue) return;
-  const redirectUri = provider === 'upstox'
-    ? (document.getElementById('redirect-uri')?.value || null)
-    : null;
+  // Only pass redirect_uri when the pasted URL is NOT a google.com redirect.
+  // google.com paste-back is the legacy flow — the backend falls back to "https://google.com" automatically.
+  let redirectUri = null;
+  if (provider === 'upstox') {
+    try {
+      const pastedHost = new URL(rawValue).hostname;
+      if (pastedHost && !pastedHost.includes('google.com')) {
+        redirectUri = document.getElementById('redirect-uri')?.value || null;
+      }
+    } catch (_) {}
+  }
   await _exchangeToken(provider, rawValue, redirectUri);
 }
 

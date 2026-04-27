@@ -83,6 +83,8 @@ async def global_provider_auth(provider: str, request: Request, admin=Depends(re
         state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
         raw_host = request.headers.get('host') or str(request.base_url).split('/')[2]
         proto = request.headers.get('x-forwarded-proto', 'http')
+        if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http':
+            proto = 'https'
         redirect_uri = f"{proto}://{raw_host}/auth/upstox/callback"
         auth_dialog = "https://api.upstox.com/v2/login/authorization/dialog"
         url = f"{auth_dialog}?response_type=code&client_id={api_key}&redirect_uri={urllib.parse.quote(redirect_uri)}&state={urllib.parse.quote(state_encrypted)}"
