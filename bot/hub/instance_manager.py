@@ -15,6 +15,7 @@ class InstanceManager:
 
     def __init__(self):
         self._processes: dict[int, subprocess.Popen] = {}
+        self._log_fds: dict[int, object] = {}
 
     def start_instance(
         self,
@@ -75,16 +76,18 @@ class InstanceManager:
         env["CLIENT_LOG_FILE"] = log_file
 
         try:
-            # We allow the subprocess to inherit stdout/stderr so that logs appear in the EC2 terminal.
-            # The bot's internal logger (configured in main.py) will still write to the log_file
-            # using a FileHandler, ensuring the UI's log tail functionality continues to work.
+            # Redirect both stdout and stderr to the log file so that unhandled exceptions
+            # and tracebacks appear in the admin Logs tab rather than disappearing into
+            # the uvicorn terminal.  Open in append mode so existing log lines are kept.
+            log_fd = open(log_file, 'a')
             proc = subprocess.Popen(
                 [sys.executable, "main.py", "--client_mode"],
                 env=env,
-                stdout=None,
-                stderr=None,
+                stdout=log_fd,
+                stderr=log_fd,
             )
             self._processes[instance_id] = proc
+            self._log_fds[instance_id] = log_fd
             logger.info(f"[InstanceManager] Started instance {instance_id} (PID {proc.pid}) for client {username}")
             try:
                 from utils.notifier import notify_admin_instance_event
@@ -133,6 +136,15 @@ class InstanceManager:
                     stopped = True # Already dead
         except Exception as e:
             logger.error(f"[InstanceManager] Error killing PID for instance {instance_id}: {e}")
+
+        # Close the log file descriptor opened during start_instance
+        log_fd = self._log_fds.pop(instance_id, None)
+        if log_fd:
+            try:
+                log_fd.flush()
+                log_fd.close()
+            except Exception:
+                pass
 
         if stopped:
             logger.info(f"[InstanceManager] Stopped instance {instance_id}")

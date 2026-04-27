@@ -21,7 +21,7 @@ smartapi-python
 logzero
 pyotp
 kiteconnect
-dhanhq
+dhanhq>=2.0.2
 aiofiles
 fastapi
 jinja2
