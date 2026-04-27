@@ -136,12 +136,9 @@ class ProviderFactory:
                     if not rest_client:
                         rest_client = _upstox_broker.api_client
                     provider_names = [p for p in provider_names if p != 'upstox']
-                    logger.info(
-                        f"[Global Upstox] Reusing client broker token for data feed "
-                        f"(same-account mode). Skipping data_providers lookup."
-                    )
-            except Exception as _e:
-                logger.warning(f"[Global Upstox] Same-account short-circuit failed: {_e}. Falling back to DB.")
+                    logger.info("[Global Upstox] Using client broker token for data feed.")
+            except (ImportError, AttributeError, TypeError, ValueError) as _e:
+                logger.warning(f"[Global Upstox] Same-account short-circuit failed ({type(_e).__name__}: {_e}). Falling back to DB.")
 
         # 1. Initialize Upstox Feed (DB path — runs only when broker_manager has no Upstox client)
         if 'upstox' in provider_names:
