@@ -94,6 +94,8 @@ class DhanWebSocketManager(DataFeed):
             self._running = False
             return
 
+        logger.info(f"[Global Dhan] Using feed class: {_DhanFeedCls.__name__}")
+
         while self._running:
             try:
                 logger.info(f"[Global Dhan] Connecting to Dhan Market Feed (v2)...")

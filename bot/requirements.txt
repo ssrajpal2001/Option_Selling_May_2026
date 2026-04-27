@@ -21,8 +21,8 @@ smartapi-python
 logzero
 pyotp
 kiteconnect
-# dhanhq 2.0.2 is the tested version; 2.2.0 may rename the DhanFeed class
-dhanhq>=2.0.2,<2.3.0
+# dhanhq 2.0.x is the tested range; 2.1+ renames the DhanFeed class (runtime scan added as fallback)
+dhanhq>=2.0.2,<2.1.0
 aiofiles
 fastapi
 jinja2
