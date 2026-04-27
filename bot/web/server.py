@@ -1160,6 +1160,25 @@ async def _hub_reconnect_scanner():
         await asyncio.sleep(SCAN_INTERVAL_SECONDS)
 
 
+def _get_log_retention_settings() -> tuple[int, int]:
+    """Read log retention thresholds from platform_settings, falling back to hardcoded defaults."""
+    from utils.log_cleanup import MAX_BACKUP_AGE_DAYS, MAX_INACTIVE_AGE_DAYS
+    try:
+        row_backup = db_fetchone(
+            "SELECT value FROM platform_settings WHERE key='log_backup_retention_days'"
+        )
+        row_inactive = db_fetchone(
+            "SELECT value FROM platform_settings WHERE key='log_inactive_retention_days'"
+        )
+        backup_days = int(row_backup["value"]) if row_backup and row_backup["value"] else MAX_BACKUP_AGE_DAYS
+        inactive_days = int(row_inactive["value"]) if row_inactive and row_inactive["value"] else MAX_INACTIVE_AGE_DAYS
+        return max(1, backup_days), max(1, inactive_days)
+    except Exception as e:
+        logger.warning(f"[Scheduler] Could not read log retention settings: {e}")
+        from utils.log_cleanup import MAX_BACKUP_AGE_DAYS, MAX_INACTIVE_AGE_DAYS
+        return MAX_BACKUP_AGE_DAYS, MAX_INACTIVE_AGE_DAYS
+
+
 async def _log_cleanup_scheduler():
     """Run daily at 02:00 AM IST — delete stale rotated and inactive-client log files."""
     while True:
@@ -1173,11 +1192,16 @@ async def _log_cleanup_scheduler():
             logger.info("[Scheduler] Running scheduled log cleanup...")
             try:
                 from utils.log_cleanup import cleanup_old_logs
-                result = cleanup_old_logs()
+                backup_days, inactive_days = _get_log_retention_settings()
+                result = cleanup_old_logs(
+                    max_backup_age_days=backup_days,
+                    max_inactive_age_days=inactive_days,
+                )
                 logger.info(
                     f"[Scheduler] Log cleanup complete — "
                     f"deleted={len(result['deleted'])} kept={len(result['kept'])} "
-                    f"errors={len(result['errors'])}"
+                    f"errors={len(result['errors'])} "
+                    f"(backup_retention={backup_days}d, inactive_retention={inactive_days}d)"
                 )
             except Exception as e:
                 logger.error(f"[Scheduler] Log cleanup inner error: {e}")

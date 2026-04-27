@@ -138,6 +138,23 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-2 gap-4 mb-5">
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">Backup log retention (days)</label>
+          <input type="number" id="log_backup_retention_days" class="input-field" min="1" placeholder="7" value="7">
+          <div class="text-xs mt-1" style="color:var(--muted)">Rotated backup files (*.log.1…9) older than this are deleted</div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color:var(--text-soft)">Inactive client log retention (days)</label>
+          <input type="number" id="log_inactive_retention_days" class="input-field" min="1" placeholder="14" value="14">
+          <div class="text-xs mt-1" style="color:var(--muted)">Primary logs for stopped clients older than this are deleted</div>
+        </div>
+      </div>
+      <div class="mb-5">
+        <button onclick="saveLogRetention()" class="btn-primary px-5 py-2 text-sm">💾 Save Retention Settings</button>
+        <span id="log-retention-msg" class="ml-3 text-sm hidden"></span>
+      </div>
+
       <div id="log-preview-result" class="hidden mb-4 rounded-lg p-3 text-sm" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-soft);max-height:180px;overflow-y:auto"></div>
 
       <div class="flex flex-wrap gap-3 items-center">
@@ -187,8 +204,45 @@ async function loadSettings() {
     document.getElementById('telegram_alerts_enabled').checked = s.telegram_alerts_enabled !== 'false';
     const themeEl = document.getElementById('default_theme');
     if (themeEl && s.default_theme) themeEl.value = s.default_theme;
+    const backupEl = document.getElementById('log_backup_retention_days');
+    if (backupEl && s.log_backup_retention_days) backupEl.value = s.log_backup_retention_days;
+    const inactiveEl = document.getElementById('log_inactive_retention_days');
+    if (inactiveEl && s.log_inactive_retention_days) inactiveEl.value = s.log_inactive_retention_days;
   } catch (e) {
     console.error('load settings:', e);
+  }
+}
+
+async function saveLogRetention() {
+  const backupDays = parseInt(document.getElementById('log_backup_retention_days').value, 10);
+  const inactiveDays = parseInt(document.getElementById('log_inactive_retention_days').value, 10);
+  const msg = document.getElementById('log-retention-msg');
+  if (!backupDays || backupDays < 1 || !inactiveDays || inactiveDays < 1) {
+    msg.textContent = '❌ Both values must be at least 1 day.';
+    msg.style.color = 'var(--error)';
+    msg.classList.remove('hidden');
+    return;
+  }
+  msg.textContent = '⏳ Saving…';
+  msg.style.color = 'var(--text-soft)';
+  msg.classList.remove('hidden');
+  try {
+    const r = await fetch('/api/admin/platform-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: {
+        log_backup_retention_days: String(backupDays),
+        log_inactive_retention_days: String(inactiveDays),
+      }}),
+    });
+    const d = await r.json();
+    if (!r.ok || d.success === false) throw new Error(d.detail || d.message || 'Server error');
+    msg.textContent = '✅ Saved!';
+    msg.style.color = 'var(--success)';
+    showToast('Log retention settings saved', 'success');
+  } catch (e) {
+    msg.textContent = '❌ ' + e.message;
+    msg.style.color = 'var(--error)';
   }
 }
 
@@ -340,11 +394,13 @@ async function previewCleanup() {
   btn.disabled = true;
   btn.textContent = '⏳ Previewing…';
   box.classList.add('hidden');
+  const backupDays = parseInt(document.getElementById('log_backup_retention_days').value, 10) || 7;
+  const inactiveDays = parseInt(document.getElementById('log_inactive_retention_days').value, 10) || 14;
   try {
     const r = await fetch('/api/admin/logs/cleanup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dry_run: true }),
+      body: JSON.stringify({ dry_run: true, max_backup_age_days: backupDays, max_inactive_age_days: inactiveDays }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || 'Server error');
@@ -378,11 +434,13 @@ async function runCleanup() {
   btn.textContent = '⏳ Cleaning…';
   msg.className = 'mt-3 text-sm';
   msg.classList.add('hidden');
+  const backupDays = parseInt(document.getElementById('log_backup_retention_days').value, 10) || 7;
+  const inactiveDays = parseInt(document.getElementById('log_inactive_retention_days').value, 10) || 14;
   try {
     const r = await fetch('/api/admin/logs/cleanup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dry_run: false }),
+      body: JSON.stringify({ dry_run: false, max_backup_age_days: backupDays, max_inactive_age_days: inactiveDays }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || 'Server error');
