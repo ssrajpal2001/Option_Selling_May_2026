@@ -1,4 +1,5 @@
 import logging
+import os
 from web.auth import encrypt_secret, decrypt_secret
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,11 @@ def handle_upstox_login_automated(credentials):
 
     try:
         logger.info(f"Attempting background Upstox login for {user_id}...")
-        redirect_uri = credentials.get('redirect_uri') or "https://google.com"
+        redirect_uri = (
+            credentials.get('redirect_uri') or
+            os.environ.get('UPSTOX_REDIRECT_URI') or
+            "https://google.com"
+        )
 
         upx = UpstoxTOTP(
             username=user_id,

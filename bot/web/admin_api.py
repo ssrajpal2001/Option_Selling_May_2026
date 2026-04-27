@@ -132,7 +132,7 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
                 "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
                 "password": decrypt_secret(dp.get("password_encrypted", "")),
-                "totp": decrypt_secret(dp.get("totp_encrypted", ""))
+                "totp": decrypt_secret(dp.get("totp_encrypted", "")),
             }
             token = handle_upstox_login_automated(creds)
             if token:
@@ -223,7 +223,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
                     "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
                     "password": decrypt_secret(dp.get("password_encrypted", "")),
-                    "totp": decrypt_secret(dp.get("totp_encrypted", ""))
+                    "totp": decrypt_secret(dp.get("totp_encrypted", "")),
                 }
                 token = handle_upstox_login_automated(creds)
                 if token:
