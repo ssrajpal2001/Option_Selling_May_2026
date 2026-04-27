@@ -121,26 +121,28 @@ class DhanWebSocketManager(DataFeed):
                     logger.info(f"[Global Dhan] Re-subscribing to {len(subs_list)} instruments.")
                     self.feed.subscribe_symbols(subs_list)
 
-                # Only reset backoff once the connection is stable (≥1 message received).
-                # A connect that the server closes immediately must NOT reset the delay —
-                # otherwise a rapid close→reconnect loop resets _retry_delay to 2 every
-                # iteration and hammers the server into HTTP 429.
-                _received_any = False
+                # Only reset backoff once the connection is genuinely stable — i.e., after
+                # at least one valid market-data tick has been parsed by _process_raw_packet.
+                # A connect that the server closes before any tick arrives must NOT reset
+                # the delay; otherwise the rapid close→reconnect cycle resets to 2s each
+                # time and hammers the server into HTTP 429.
+                _tick_confirmed = False
 
                 while self._running and self.feed.ws and getattr(self.feed.ws, 'open', False):
                     try:
                         # Use direct recv to avoid SDK callback issues
                         raw_message = await asyncio.wait_for(self.feed.ws.recv(), timeout=5.0)
                         if raw_message:
-                            if not _received_any:
-                                # First successful message — connection is genuinely stable
-                                self._retry_delay = 2
-                                _received_any = True
+                            prev_epoch = self._last_tick_epoch
                             self._process_raw_packet(raw_message)
+                            if not _tick_confirmed and self._last_tick_epoch != prev_epoch:
+                                # _process_raw_packet updated the epoch → confirmed market-data tick
+                                self._retry_delay = 2
+                                _tick_confirmed = True
                     except asyncio.TimeoutError:
                         continue
                     except websockets.exceptions.ConnectionClosed:
-                        logger.warning("[Global Dhan] WebSocket closed by server.")
+                        logger.warning(f"[Global Dhan] WebSocket closed by server. Next retry in {self._retry_delay}s.")
                         break
                     except Exception as e:
                         if "no close frame" in str(e).lower(): break
@@ -151,7 +153,6 @@ class DhanWebSocketManager(DataFeed):
                 # Apply backoff before reconnecting — critical to prevent HTTP 429 bursts
                 # when the server repeatedly closes the connection (e.g. expired token).
                 if self._running:
-                    logger.info(f"[Global Dhan] Reconnecting in {self._retry_delay}s...")
                     await asyncio.sleep(self._retry_delay)
                     self._retry_delay = min(self._retry_delay * 2, 60)
 
