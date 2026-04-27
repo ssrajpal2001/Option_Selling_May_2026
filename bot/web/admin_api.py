@@ -127,9 +127,10 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
         _dhan_error = None
         _upstox_error = None
         if provider == 'upstox':
-            # Skip re-login if the existing token was issued within the last 30 minutes
+            # Skip re-login if a valid token exists and was issued within the last 30 minutes
             _issued_at = dp.get("token_issued_at")
-            if _issued_at:
+            _has_token = bool(dp.get("access_token_encrypted"))
+            if _issued_at and _has_token:
                 try:
                     _issued_dt = datetime.fromisoformat(_issued_at)
                     if _issued_dt.tzinfo is None:
@@ -138,8 +139,8 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                     if _age_minutes < 30:
                         logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
                         return {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
-                except Exception:
-                    pass
+                except Exception as _ts_err:
+                    logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
             from utils.auth_manager_upstox import handle_upstox_login_automated
             creds = {
@@ -235,9 +236,10 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
             _dhan_error = None
             _upstox_error = None
             if provider == "upstox":
-                # Skip re-login if the existing token is less than 30 minutes old
+                # Skip re-login if a valid token exists and was issued within the last 30 minutes
                 _issued_at = dp.get("token_issued_at")
-                if _issued_at:
+                _has_token = bool(dp.get("access_token_encrypted"))
+                if _issued_at and _has_token:
                     try:
                         _issued_dt = datetime.fromisoformat(_issued_at)
                         if _issued_dt.tzinfo is None:
@@ -247,8 +249,8 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                             logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
                             results[provider] = {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
                             continue
-                    except Exception:
-                        pass
+                    except Exception as _ts_err:
+                        logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
                 from utils.auth_manager_upstox import handle_upstox_login_automated
                 creds = {
