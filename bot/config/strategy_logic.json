@@ -1,270 +1,276 @@
 {
-    "NIFTY": {
-        "v3_mode": true,
-        "sell": {
-            "enabled": false,
-            "start_time": "09:15",
-            "v3": {
-                "entry_rules_beginning": [],
-                "entry_rules_reentry": [
-                    {
-                        "indicator": "advanced",
-                        "operator": "AND",
-                        "openBrackets": "",
-                        "closeBrackets": "",
-                        "operand1": "LTP",
-                        "operator_sym": "<",
-                        "operand2": "VWAP",
-                        "tf": "5"
-                    }
-                ],
-                "exit_rules": [
-                    {
-                        "indicator": "advanced",
-                        "operator": "AND",
-                        "openBrackets": "",
-                        "closeBrackets": "",
-                        "operand1": "LTP",
-                        "operator_sym": ">",
-                        "operand2": "VWAP",
-                        "tf": "1"
-                    },
-                    {
-                        "indicator": "advanced",
-                        "operator": "AND",
-                        "openBrackets": "",
-                        "closeBrackets": "",
-                        "operand1": "RSI",
-                        "operator_sym": ">",
-                        "operand2": "VALUE",
-                        "operand2_val": "55",
-                        "tf": "2"
-                    },
-                    {
-                        "indicator": "advanced",
-                        "operator": "AND",
-                        "openBrackets": "",
-                        "closeBrackets": "",
-                        "operand1": "ROC",
-                        "operator_sym": ">",
-                        "operand2": "VALUE",
-                        "operand2_val": "2",
-                        "tf": "2"
-                    },
-                    {
-                        "indicator": "advanced",
-                        "operator": "AND",
-                        "openBrackets": "",
-                        "closeBrackets": "",
-                        "operand1": "SLOPE",
-                        "operator_sym": ">",
-                        "operand2": "VALUE",
-                        "operand2_val": "0",
-                        "tf": "1"
-                    }
-                ],
-                "guardrail_roc": {
-                    "tf": 15,
-                    "length": 9,
-                    "target": -20,
-                    "stoploss": 10,
-                    "enabled": false
-                },
-                "guardrail_pnl": {
-                    "target_pts": 100,
-                    "stoploss_pts": 60,
-                    "enabled": true
-                },
-                "smart_rolling_enabled": true,
-                "ltp_decay_enabled": true,
-                "ratio_exit": {
-                    "enabled": true,
-                    "threshold": 4
-                },
-                "tsl_scalable": {
-                    "enabled": true,
-                    "base_profit": 1000,
-                    "base_lock": 250,
-                    "step_profit": 250,
-                    "step_lock": 250
-                },
-                "v_slope_reentry_enabled": true,
-                "multi_strike_scan": true,
-                "strict_ltp_balancing": false,
-                "profit_target_enabled": true,
-                "entry_end_time": "14:00",
-                "square_off_time": "15:15",
-                "close_time": "17:00",
-                "reentry_offset": 2,
-                "v_slope_pool_offset": 2,
-                "workflow_phase": "ai_beginning",
-                "reentry_style": "technical_scanner",
-                "profit_target_pct": 12.5,
-                "ltp_exit_min": 20,
-                "vwap_rise_sl": {
-                    "tf": "",
-                    "threshold": 2
-                },
-                "max_trades_per_day": 5,
-                "single_trade_target_pts": "",
-                "single_trade_stoploss_pts": "",
-                "monday": {
-                    "single_trade_target_pts": 30,
-                    "single_trade_stoploss_pts": 20
-                },
-                "tuesday": {
-                    "single_trade_target_pts": 30,
-                    "single_trade_stoploss_pts": 20
-                },
-                "wednesday": {
-                    "single_trade_target_pts": 30,
-                    "single_trade_stoploss_pts": 20
-                },
-                "thursday": {
-                    "single_trade_target_pts": 30,
-                    "single_trade_stoploss_pts": 20
-                },
-                "friday": {
-                    "single_trade_target_pts": 30,
-                    "single_trade_stoploss_pts": 20
-                },
-                "reentry_best_metric": "balanced_premium",
-                "ltp_target": 60,
-                "entry_workflow_mode": "reentry_only"
-            },
-            "exit_indicators": {
-                "tsl": {
-                    "enabled": false,
-                    "offset": ""
-                },
-                "atr_tsl": {
-                    "enabled": false,
-                    "length": "",
-                    "multiplier": "",
-                    "tf": "",
-                    "check_mode": "TICK"
-                },
-                "ltp_below_min": {
-                    "enabled": false,
-                    "threshold": ""
-                },
-                "combined_vwap_slope": {
-                    "enabled": true,
-                    "tf": "",
-                    "threshold": ""
-                }
-            },
-            "product_type": "MIS",
-            "buy_product_type": "MIS",
-            "signal_expiry": "WEEKLY",
-            "trade_expiry": "WEEKLY",
-            "entry_formula": "",
-            "exit_formula": "",
-            "ltp_min": 50,
-            "ltp_target": "",
-            "ltp_exit_min": "",
-            "itm_count": "",
-            "indicators": {
-                "vwap_slope": {
-                    "tf": "",
-                    "check_mode": "TICK",
-                    "operator": "<",
-                    "threshold": "",
-                    "occurrences": ""
-                }
-            }
+  "NIFTY": {
+    "v3_mode": true,
+    "sell": {
+      "enabled": false,
+      "start_time": "09:15",
+      "v3": {
+        "entry_rules_beginning": [],
+        "entry_rules_reentry": [
+          {
+            "indicator": "advanced",
+            "operator": "AND",
+            "openBrackets": "",
+            "closeBrackets": "",
+            "operand1": "LTP",
+            "operator_sym": "<",
+            "operand2": "VWAP",
+            "tf": "5"
+          }
+        ],
+        "exit_rules": [
+          {
+            "indicator": "advanced",
+            "operator": "AND",
+            "openBrackets": "",
+            "closeBrackets": "",
+            "operand1": "LTP",
+            "operator_sym": ">",
+            "operand2": "VWAP",
+            "tf": "1"
+          },
+          {
+            "indicator": "advanced",
+            "operator": "AND",
+            "openBrackets": "",
+            "closeBrackets": "",
+            "operand1": "RSI",
+            "operator_sym": ">",
+            "operand2": "VALUE",
+            "operand2_val": "55",
+            "tf": "2"
+          },
+          {
+            "indicator": "advanced",
+            "operator": "AND",
+            "openBrackets": "",
+            "closeBrackets": "",
+            "operand1": "ROC",
+            "operator_sym": ">",
+            "operand2": "VALUE",
+            "operand2_val": "2",
+            "tf": "2"
+          },
+          {
+            "indicator": "advanced",
+            "operator": "AND",
+            "openBrackets": "",
+            "closeBrackets": "",
+            "operand1": "SLOPE",
+            "operator_sym": ">",
+            "operand2": "VALUE",
+            "operand2_val": "0",
+            "tf": "1"
+          }
+        ],
+        "guardrail_roc": {
+          "tf": 15,
+          "length": 9,
+          "target": -20,
+          "stoploss": 10,
+          "enabled": false
         },
-        "buy": {
-            "enabled": false,
-            "exit_indicators": {
-                "tsl": {
-                    "enabled": false,
-                    "offset": "",
-                    "multiplier": ""
-                },
-                "atr_tsl": {
-                    "enabled": false,
-                    "length": "",
-                    "multiplier": "",
-                    "tf": "",
-                    "check_mode": "CLOSE"
-                },
-                "reversal": {
-                    "enabled": false
-                },
-                "target_exit": {
-                    "enabled": false
-                },
-                "s1_low": {
-                    "dynamic_tf": false,
-                    "tf": "",
-                    "fast_tf": ""
-                },
-                "vwap_slope": {
-                    "tf": "",
-                    "check_mode": "TICK",
-                    "operator": "<",
-                    "threshold": "",
-                    "occurrences": ""
-                },
-                "r1_target": {
-                    "tf": "",
-                    "threshold": ""
-                },
-                "r1_falling": {
-                    "tf": ""
-                },
-                "r1_low_breach": {
-                    "tf": ""
-                },
-                "r1_stagnation": {
-                    "minutes": ""
-                },
-                "s1_double_drop": {
-                    "tf": ""
-                },
-                "s1_confirm": {
-                    "fast_tf": "",
-                    "slow_tf": ""
-                }
-            },
-            "start_time": "",
-            "product_type": "MIS",
-            "signal_expiry": "WEEKLY",
-            "trade_expiry": "WEEKLY",
-            "entry_formula": "",
-            "exit_formula": "",
-            "indicators": {
-                "vwap_slope": {
-                    "tf": "",
-                    "check_mode": "TICK",
-                    "operator": ">",
-                    "threshold": "",
-                    "occurrences": ""
-                },
-                "vwap": {
-                    "tf": "",
-                    "check_mode": "TICK"
-                },
-                "pattern": {
-                    "tf": ""
-                },
-                "r1_high": {
-                    "tf": ""
-                }
-            }
+        "guardrail_pnl": {
+          "target_pts": 100,
+          "stoploss_pts": 60,
+          "enabled": true
         },
-        "oi_exit": {
-            "enabled": false,
-            "strikes_range": "",
-            "call_oi_increase_pct": "",
-            "put_oi_increase_pct": "",
-            "check_interval_seconds": ""
+        "smart_rolling_enabled": true,
+        "ltp_decay_enabled": true,
+        "ratio_exit": {
+          "enabled": true,
+          "threshold": 4
         },
-        "profit_target_exit": {
-            "enabled": false,
-            "points": ""
+        "tsl_scalable": {
+          "enabled": true,
+          "base_profit": 1000,
+          "base_lock": 250,
+          "step_profit": 250,
+          "step_lock": 250
         },
-        "range_915_gate_enabled": false
-    }
+        "v_slope_reentry_enabled": true,
+        "multi_strike_scan": true,
+        "strict_ltp_balancing": false,
+        "profit_target_enabled": true,
+        "entry_end_time": "14:00",
+        "square_off_time": "15:15",
+        "close_time": "17:00",
+        "reentry_offset": 2,
+        "v_slope_pool_offset": 2,
+        "workflow_phase": "ai_beginning",
+        "reentry_style": "technical_scanner",
+        "profit_target_pct": 12.5,
+        "ltp_exit_min": 20,
+        "vwap_rise_sl": {
+          "tf": "",
+          "threshold": 2
+        },
+        "max_trades_per_day": 5,
+        "single_trade_target_pts": "",
+        "single_trade_stoploss_pts": "",
+        "monday": {
+          "single_trade_target_pts": 30,
+          "single_trade_stoploss_pts": 20
+        },
+        "tuesday": {
+          "single_trade_target_pts": 30,
+          "single_trade_stoploss_pts": 20
+        },
+        "wednesday": {
+          "single_trade_target_pts": 30,
+          "single_trade_stoploss_pts": 20
+        },
+        "thursday": {
+          "single_trade_target_pts": 30,
+          "single_trade_stoploss_pts": 20
+        },
+        "friday": {
+          "single_trade_target_pts": 30,
+          "single_trade_stoploss_pts": 20
+        },
+        "reentry_best_metric": "balanced_premium",
+        "ltp_target": 60,
+        "entry_workflow_mode": "reentry_only",
+        "rsi": {
+          "period": 14
+        },
+        "roc": {
+          "length": 9
+        }
+      },
+      "exit_indicators": {
+        "tsl": {
+          "enabled": false,
+          "offset": ""
+        },
+        "atr_tsl": {
+          "enabled": false,
+          "length": "",
+          "multiplier": "",
+          "tf": "",
+          "check_mode": "TICK"
+        },
+        "ltp_below_min": {
+          "enabled": false,
+          "threshold": ""
+        },
+        "combined_vwap_slope": {
+          "enabled": true,
+          "tf": "",
+          "threshold": ""
+        }
+      },
+      "product_type": "MIS",
+      "buy_product_type": "MIS",
+      "signal_expiry": "WEEKLY",
+      "trade_expiry": "WEEKLY",
+      "entry_formula": "",
+      "exit_formula": "",
+      "ltp_min": 50,
+      "ltp_target": "",
+      "ltp_exit_min": "",
+      "itm_count": "",
+      "indicators": {
+        "vwap_slope": {
+          "tf": "",
+          "check_mode": "TICK",
+          "operator": "<",
+          "threshold": "",
+          "occurrences": ""
+        }
+      }
+    },
+    "buy": {
+      "enabled": false,
+      "exit_indicators": {
+        "tsl": {
+          "enabled": false,
+          "offset": "",
+          "multiplier": ""
+        },
+        "atr_tsl": {
+          "enabled": false,
+          "length": "",
+          "multiplier": "",
+          "tf": "",
+          "check_mode": "CLOSE"
+        },
+        "reversal": {
+          "enabled": false
+        },
+        "target_exit": {
+          "enabled": false
+        },
+        "s1_low": {
+          "dynamic_tf": false,
+          "tf": "",
+          "fast_tf": ""
+        },
+        "vwap_slope": {
+          "tf": "",
+          "check_mode": "TICK",
+          "operator": "<",
+          "threshold": "",
+          "occurrences": ""
+        },
+        "r1_target": {
+          "tf": "",
+          "threshold": ""
+        },
+        "r1_falling": {
+          "tf": ""
+        },
+        "r1_low_breach": {
+          "tf": ""
+        },
+        "r1_stagnation": {
+          "minutes": ""
+        },
+        "s1_double_drop": {
+          "tf": ""
+        },
+        "s1_confirm": {
+          "fast_tf": "",
+          "slow_tf": ""
+        }
+      },
+      "start_time": "",
+      "product_type": "MIS",
+      "signal_expiry": "WEEKLY",
+      "trade_expiry": "WEEKLY",
+      "entry_formula": "",
+      "exit_formula": "",
+      "indicators": {
+        "vwap_slope": {
+          "tf": "",
+          "check_mode": "TICK",
+          "operator": ">",
+          "threshold": "",
+          "occurrences": ""
+        },
+        "vwap": {
+          "tf": "",
+          "check_mode": "TICK"
+        },
+        "pattern": {
+          "tf": ""
+        },
+        "r1_high": {
+          "tf": ""
+        }
+      }
+    },
+    "oi_exit": {
+      "enabled": false,
+      "strikes_range": "",
+      "call_oi_increase_pct": "",
+      "put_oi_increase_pct": "",
+      "check_interval_seconds": ""
+    },
+    "profit_target_exit": {
+      "enabled": false,
+      "points": ""
+    },
+    "range_915_gate_enabled": false
+  }
 }

@@ -147,19 +147,45 @@ class SellV3Base:
                 needed.add(r.get('operand2', '').lower())
             else: needed.add(ind)
 
+        # Pass 2: build per-indicator config (tf, period, length) from rules.
+        # For direct rules the TF/params come from that rule's own fields.
+        # For 'advanced' rules the operand indicators inherit the advanced rule's tf.
+        # First occurrence wins so that a single calc_tasks entry covers all rules
+        # referencing the same indicator.
+        _KNOWN = ('vwap', 'rsi', 'roc', 'slope', 'vwap_slope', 'ltp', 'close')
+        ind_config = {}
+        for r in rules:
+            ind = r.get('indicator', '').lower()
+            r_tf = int(r.get('tf', 1))
+            if ind == 'advanced':
+                for op_key in ('operand1', 'operand2'):
+                    op = r.get(op_key, '').lower()
+                    if op in _KNOWN and op not in ind_config:
+                        ind_config[op] = {'tf': r_tf}
+            elif ind in _KNOWN and ind not in ind_config:
+                cfg = {'tf': r_tf}
+                if ind == 'rsi':
+                    cfg['period'] = int(r.get('period', self._v3_cfg('rsi.period', 14, int)))
+                elif ind == 'roc':
+                    cfg['length'] = int(r.get('length', self._v3_cfg('roc.length', 9, int)))
+                ind_config[ind] = cfg
+
         calc_tasks = {}
-        for ind in needed:
-            tf = int(rules[0].get('tf', 1))
-            anchor = anchor_ts or self.get_finalized_anchor(timestamp, tf)
-            if ind in ('vwap', 'rsi', 'roc', 'slope', 'vwap_slope'):
-                if ind == 'vwap': calc_tasks['vwap'] = self._get_combined_vwap(ce_key, pe_key, anchor)
-                elif ind == 'rsi': calc_tasks['rsi'] = self.orchestrator.indicator_manager.calculate_combined_rsi(ce_key, pe_key, anchor, tf=tf)
-                elif ind == 'roc': calc_tasks['roc'] = self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, anchor, tf=tf)
-                elif ind in ('slope', 'vwap_slope'): calc_tasks['slope'] = self._get_combined_slope(ce_key, pe_key, timestamp, tf)
+        for ind, cfg in ind_config.items():
+            ind_tf = cfg.get('tf', 1)
+            anchor = anchor_ts or self.get_finalized_anchor(timestamp, ind_tf)
+            if ind == 'vwap':
+                calc_tasks['vwap'] = self._get_combined_vwap(ce_key, pe_key, anchor)
+            elif ind == 'rsi':
+                calc_tasks['rsi'] = self.orchestrator.indicator_manager.calculate_combined_rsi(ce_key, pe_key, anchor, tf=ind_tf, period=cfg.get('period', 14))
+            elif ind == 'roc':
+                calc_tasks['roc'] = self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, anchor, tf=ind_tf, length=cfg.get('length', 9))
+            elif ind in ('slope', 'vwap_slope'):
+                calc_tasks['slope'] = self._get_combined_slope(ce_key, pe_key, timestamp, ind_tf)
             elif ind == 'ltp':
                 calc_tasks['ltp'] = self._get_combined_ltp(ce_key, pe_key)
             elif ind == 'close':
-                calc_tasks['close'] = self._get_combined_close(ce_key, pe_key, anchor, tf)
+                calc_tasks['close'] = self._get_combined_close(ce_key, pe_key, anchor, ind_tf)
 
         data_map = {}
         if calc_tasks:

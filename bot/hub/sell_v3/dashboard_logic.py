@@ -32,15 +32,17 @@ class DashboardLogic(SellV3Base):
         if not key_ce or not key_pe: return {}
 
         # Technical Metrics (Entry TF for Dashboard)
-        entry_tf = self.orchestrator.config_manager.get_int(self.instrument_name, 'v_slope_entry.tf', 1)
+        entry_tf = self._v3_cfg('v_slope_entry.tf', 1, int)
         res = await self.orchestrator.indicator_manager.get_vwap_slope_pair(key_ce, key_pe, timestamp, entry_tf)
         curr_slope, prev_slope, v_curr, v_prev, v_prev2 = res
 
         combined_vwap = (await self.orchestrator.indicator_manager.calculate_vwap(key_ce, timestamp) or 0) + \
                         (await self.orchestrator.indicator_manager.calculate_vwap(key_pe, timestamp) or 0)
 
-        combined_rsi = await self.orchestrator.indicator_manager.calculate_combined_rsi(key_ce, key_pe, timestamp, tf=entry_tf, period=14, skip_api=False)
-        combined_roc = await self.orchestrator.indicator_manager.calculate_combined_roc(key_ce, key_pe, timestamp, tf=entry_tf, length=9, include_current=True)
+        rsi_period = self._v3_cfg('rsi.period', 14, int)
+        roc_length = self._v3_cfg('roc.length', 9, int)
+        combined_rsi = await self.orchestrator.indicator_manager.calculate_combined_rsi(key_ce, key_pe, timestamp, tf=entry_tf, period=rsi_period, skip_api=False)
+        combined_roc = await self.orchestrator.indicator_manager.calculate_combined_roc(key_ce, key_pe, timestamp, tf=entry_tf, length=roc_length, include_current=True)
 
         anchor_ts = timestamp.replace(minute=(timestamp.minute // entry_tf) * entry_tf, second=0, microsecond=0) - datetime.timedelta(seconds=1)
         ohlc_ce = await self.orchestrator.indicator_manager.get_robust_ohlc(key_ce, entry_tf, anchor_ts)
@@ -207,27 +209,37 @@ class DashboardLogic(SellV3Base):
         if offset is None: offset = self._v3_cfg('reentry_offset', 2, int)
         strikes = [atm + i * interval for i in range(-offset, offset + 1)]
 
-        va = timestamp.replace(minute=(timestamp.minute // 1) * 1, second=0, microsecond=0) - datetime.timedelta(seconds=1)
+        pool_tf = self._v3_cfg('v_slope_entry.tf', 1, int)
+        va = timestamp.replace(minute=(timestamp.minute // pool_tf) * pool_tf, second=0, microsecond=0) - datetime.timedelta(seconds=1)
+
+        ltp_floor = self._v3_cfg('ltp_target', None, float)
+        if ltp_floor is None:
+            ltp_floor = self._cfg('ltp_min', 50.0, float)
 
         tasks = []
         for s in strikes:
             ck = self.orchestrator.atm_manager.find_instrument_key_by_strike(s, 'CE', expiry)
             pk = self.orchestrator.atm_manager.find_instrument_key_by_strike(s, 'PE', expiry)
             cl, pl = ticks.get(ck, {}).get('ltp', 0) if ck else 0, ticks.get(pk, {}).get('ltp', 0) if pk else 0
-            if cl >= 50 and pl >= 50:
-                tasks.append(self._get_single_strike_snapshot(s, ck, pk, cl, pl, va, timestamp))
+            if cl >= ltp_floor and pl >= ltp_floor:
+                tasks.append(self._get_single_strike_snapshot(s, ck, pk, cl, pl, va, timestamp, pool_tf))
         res = await asyncio.gather(*tasks)
         return sorted([r for r in res if r], key=lambda x: x['ce'])
 
-    async def _get_single_strike_snapshot(self, s, ck, pk, cl, pl, va, ts):
+    async def _get_single_strike_snapshot(self, s, ck, pk, cl, pl, va, ts, pool_tf=None):
         try:
+            if pool_tf is None:
+                pool_tf = self._v3_cfg('v_slope_entry.tf', 1, int)
+            rsi_period = self._v3_cfg('rsi.period', 14, int)
+            roc_length = self._v3_cfg('roc.length', 9, int)
+
             rules = self._v3_cfg('entry_rules_reentry', [])
             v_passed = await self.evaluate_rules(rules, ck, pk, ts, is_entry=True, anchor_ts=va, do_log=False)
 
             vw_c, vw_p = await self.orchestrator.indicator_manager.calculate_vwap(ck, va), await self.orchestrator.indicator_manager.calculate_vwap(pk, va)
             c_vw = (vw_c or 0) + (vw_p or 0)
-            c_rsi = await self.orchestrator.indicator_manager.calculate_combined_rsi(ck, pk, va, tf=1, period=14, skip_api=False)
-            c_roc = await self.orchestrator.indicator_manager.calculate_combined_roc(ck, pk, ts, tf=1, length=9, include_current=True)
+            c_rsi = await self.orchestrator.indicator_manager.calculate_combined_rsi(ck, pk, va, tf=pool_tf, period=rsi_period, skip_api=False)
+            c_roc = await self.orchestrator.indicator_manager.calculate_combined_roc(ck, pk, ts, tf=pool_tf, length=roc_length, include_current=True)
 
             # 2. Calculate VWAP % Metric for Pool (abs((Combined_VWAP - Combined_Close) / Combined_Close))
             vwap_dist = 999.0

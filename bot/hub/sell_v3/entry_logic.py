@@ -246,7 +246,7 @@ class EntryLogic(SellV3Base):
 
                 # 1. ROC Metric
                 roc_target = 0.0
-                roc_len = 9
+                roc_len = self._v3_cfg('roc.length', 9, int)
                 for r in rules:
                     if r.get('indicator') == 'roc':
                         roc_target = float(r.get('target', 0.0))
@@ -433,8 +433,10 @@ class EntryLogic(SellV3Base):
         # get_robust_ohlc (called by RSI/ROC) handles the API fetch and stitching if buffer is insufficient.
         # We trigger the fetch now to ensure readiness for evaluation.
         tf = self._v3_cfg('rsi_entry.tf', 1, int)
-        await self.orchestrator.indicator_manager.calculate_combined_rsi(ce_key, pe_key, timestamp, tf=tf, period=14)
-        await self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, timestamp, tf=tf, length=9)
+        rsi_period = self._v3_cfg('rsi.period', 14, int)
+        roc_length = self._v3_cfg('roc.length', 9, int)
+        await self.orchestrator.indicator_manager.calculate_combined_rsi(ce_key, pe_key, timestamp, tf=tf, period=rsi_period)
+        await self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, timestamp, tf=tf, length=roc_length)
 
     async def get_best_straddle_candidates(self, ticks, timestamp):
         interval = self.orchestrator.config_manager.get_int(self.instrument_name, 'strike_interval', 50)

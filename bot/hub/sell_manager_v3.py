@@ -147,7 +147,18 @@ class SellManagerV3:
             if val is not None: return val
             val = self._cfg(f"v3.{base}", type_func=int)
             if val is not None: return val
-            return 15 if "exit" in path else 1
+            # Derive TF from the configured rules instead of using a hardcoded number
+            if "exit" in path:
+                exit_rules = self._cfg('v3.exit_rules', []) or self._cfg(f'v3.{phase_prefix}.exit_rules', [])
+                rule_tfs = [int(r.get('tf', 2)) for r in exit_rules] if exit_rules else []
+                return max(rule_tfs) if rule_tfs else 2
+            else:
+                entry_rules = (self._cfg('v3.entry_rules_reentry', []) or
+                               self._cfg('v3.entry_rules_beginning', []) or
+                               self._cfg(f'v3.{phase_prefix}.entry_rules_reentry', []) or
+                               self._cfg(f'v3.{phase_prefix}.entry_rules_beginning', []))
+                rule_tfs = [int(r.get('tf', 1)) for r in entry_rules] if entry_rules else []
+                return max(rule_tfs) if rule_tfs else 1
         return default
 
     def log_active_strategy_settings(self):
