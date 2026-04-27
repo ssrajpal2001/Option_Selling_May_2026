@@ -478,7 +478,11 @@ function updateMasterStatus(connected) {
 function triggerGlobalAuth(provider) {
   if (!provider) return;
   window.open(`/api/admin/data-providers/${provider}/auth`, '_blank');
-  showToast(`${provider.toUpperCase()} login window opened. Sign in and the token will be captured automatically.`, 'success');
+  if (provider === 'upstox') {
+    showToast('Upstox login window opened. If your Developer Portal redirect URI is set to the server callback URL, the token is captured automatically. If it is still set to google.com, copy the full redirect URL and paste it in the box below.', 'info');
+  } else {
+    showToast(`${provider.toUpperCase()} login window opened. Sign in and the token will be captured automatically.`, 'success');
+  }
 }
 
 function triggerGlobalAuthFromModal() {
@@ -583,16 +587,21 @@ async function saveManualTokenGeneric() {
   const provider = document.getElementById('provider-id').value;
   const rawValue = document.getElementById('manual-token-input-generic').value.trim();
   if (!rawValue) return;
-  // Only pass redirect_uri when the pasted URL is NOT a google.com redirect.
-  // google.com paste-back is the legacy flow — the backend falls back to "https://google.com" automatically.
+  // Only pass redirect_uri when the pasted value is NOT a google.com URL.
+  // Legacy google.com paste-back omits redirect_uri so backend falls back to "https://google.com".
+  // If pasted value is not a URL at all (raw code), also send the server callback URI.
   let redirectUri = null;
   if (provider === 'upstox') {
     try {
       const pastedHost = new URL(rawValue).hostname;
-      if (pastedHost && !pastedHost.includes('google.com')) {
+      if (!pastedHost.includes('google.com')) {
         redirectUri = document.getElementById('redirect-uri')?.value || null;
       }
-    } catch (_) {}
+      // else: google.com URL — omit redirect_uri, backend will use "https://google.com"
+    } catch (_) {
+      // Not a valid URL (raw code string) — send server callback URI
+      redirectUri = document.getElementById('redirect-uri')?.value || null;
+    }
   }
   await _exchangeToken(provider, rawValue, redirectUri);
 }
