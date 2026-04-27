@@ -21,6 +21,7 @@ class DhanWebSocketManager(DataFeed):
         self.message_handlers = []
         self.subscriptions = set() # Set of (segment, security_id) tuples
         self._running = False
+        self._disabled = False  # Set True when DhanFeed class unavailable; prevents watchdog retries
         self._task = None
         self._retry_delay = 2
         self._last_tick_time = 0
@@ -71,6 +72,10 @@ class DhanWebSocketManager(DataFeed):
                 "[Global Dhan] Cannot find DhanFeed class in dhanhq.marketfeed. "
                 "Upgrade dhanhq: pip install 'dhanhq>=2.0.2'. Dhan feed disabled."
             )
+            self._disabled = True
+            # Set epoch to inf so the watchdog never treats this as a stale feed
+            self._last_tick_epoch = float('inf')
+            self._running = False
             return
 
         while self._running:
@@ -165,6 +170,8 @@ class DhanWebSocketManager(DataFeed):
             self.feed.unsubscribe_symbols(to_remove)
 
     def start(self):
+        if self._disabled:
+            return None
         if not self._task or self._task.done():
             self._task = asyncio.create_task(self.connect_and_listen())
         return self._task

@@ -232,6 +232,9 @@ class DualFeedManager(DataFeed):
 
     async def _reconnect_feed(self, name: str, feed):
         """Attempt a soft reconnect on the given feed, then re-subscribe symbols."""
+        if getattr(feed, '_disabled', False):
+            logger.debug(f"[DualFeedWatchdog] {name} is disabled — skipping reconnect.")
+            return
         try:
             # Force-close the existing connection so the feed's own reconnect loop
             # re-runs _get_auth_uri and reconnects with current credentials.
@@ -240,7 +243,7 @@ class DualFeedManager(DataFeed):
                 logger.info(f"[DualFeedWatchdog] {name} force-reconnect triggered.")
             elif hasattr(feed, 'close') and hasattr(feed, 'start'):
                 await feed.close()
-                asyncio.create_task(feed.start())
+                feed.start()  # start() already creates its own asyncio.Task internally
                 logger.info(f"[DualFeedWatchdog] {name} restarted.")
 
             # After a short delay, re-subscribe so ticks resume
