@@ -2,6 +2,7 @@ numpy
 scipy
 pandas
 upstox-python-sdk
+upstox-totp
 websockets
 requests
 pytest
