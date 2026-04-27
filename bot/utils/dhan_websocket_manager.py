@@ -121,13 +121,21 @@ class DhanWebSocketManager(DataFeed):
                     logger.info(f"[Global Dhan] Re-subscribing to {len(subs_list)} instruments.")
                     self.feed.subscribe_symbols(subs_list)
 
-                self._retry_delay = 2
+                # Only reset backoff once the connection is stable (≥1 message received).
+                # A connect that the server closes immediately must NOT reset the delay —
+                # otherwise a rapid close→reconnect loop resets _retry_delay to 2 every
+                # iteration and hammers the server into HTTP 429.
+                _received_any = False
 
                 while self._running and self.feed.ws and getattr(self.feed.ws, 'open', False):
                     try:
                         # Use direct recv to avoid SDK callback issues
                         raw_message = await asyncio.wait_for(self.feed.ws.recv(), timeout=5.0)
                         if raw_message:
+                            if not _received_any:
+                                # First successful message — connection is genuinely stable
+                                self._retry_delay = 2
+                                _received_any = True
                             self._process_raw_packet(raw_message)
                     except asyncio.TimeoutError:
                         continue
@@ -138,6 +146,14 @@ class DhanWebSocketManager(DataFeed):
                         if "no close frame" in str(e).lower(): break
                         logger.error(f"[Global Dhan] Loop error: {e}")
                         break
+
+                # Inner loop exited (server close, protocol error, etc.).
+                # Apply backoff before reconnecting — critical to prevent HTTP 429 bursts
+                # when the server repeatedly closes the connection (e.g. expired token).
+                if self._running:
+                    logger.info(f"[Global Dhan] Reconnecting in {self._retry_delay}s...")
+                    await asyncio.sleep(self._retry_delay)
+                    self._retry_delay = min(self._retry_delay * 2, 60)
 
             except Exception as e:
                 if self._running:
