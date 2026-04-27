@@ -2,7 +2,7 @@ numpy
 scipy
 pandas
 upstox-python-sdk
-upstox-totp
+curl_cffi>=0.7
 websockets
 requests
 pytest
