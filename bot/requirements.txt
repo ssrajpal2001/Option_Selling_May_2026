@@ -30,6 +30,5 @@ python-multipart
 uvicorn[standard]
 bcrypt==4.1.2
 python-jose[cryptography]
-Dhan-Tradehull
 psutil>=5.9.0
 dulwich>=0.19.0
