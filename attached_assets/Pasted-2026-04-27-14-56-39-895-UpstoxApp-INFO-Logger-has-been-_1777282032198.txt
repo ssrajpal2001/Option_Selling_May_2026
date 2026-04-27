@@ -1,0 +1,147 @@
+2026-04-27 14:56:39,895 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-27 14:56:39,895 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='upstox', instrument='NIFTY', qty=25, mode='paper', strategy='V3')
+2026-04-27 14:56:39,895 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-27 14:56:39,896 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-27 14:56:39,896 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-27 14:56:39,896 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-27 14:56:39,896 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-27 14:56:39,896 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-27 14:56:45,551 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-27 14:56:45,553 - UpstoxApp - INFO - [UpstoxClient] Fresh token saved to DB for user 2.
+2026-04-27 14:56:45,553 - UpstoxApp - INFO - Upstox client initialized for User ID: 2.
+2026-04-27 14:56:45,554 - UpstoxApp - INFO - [CLIENT MODE] Loaded upstox broker instance: client_2_upstox
+2026-04-27 14:56:45,555 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-27 14:56:45,555 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-27 14:56:45,556 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_upstox
+2026-04-27 14:56:45,556 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-27 14:56:45,556 - UpstoxApp - INFO - [Global Upstox] Using client broker token for data feed (same-account mode).
+2026-04-27 14:56:45,560 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-27 14:56:45,560 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-27 14:56:45,593 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-27 14:56:45,597 - UpstoxApp - INFO - [Global Dhan] Token valid. Timestamp refreshed.
+2026-04-27 14:56:45,597 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-27 14:56:45,598 - UpstoxApp - INFO - Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).
+2026-04-27 14:56:45,598 - UpstoxApp - INFO - WebSocket listener task created.
+2026-04-27 14:56:45,616 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-27 14:56:45,616 - UpstoxApp - INFO - Message handler handle_message registered.
+2026-04-27 14:56:45,616 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-27 14:56:45,618 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-27 14:56:45,619 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-27 14:56:45,620 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-27 14:56:45,620 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-27 14:56:45,620 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-27 14:56:45,620 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-27 14:56:45,620 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-27 14:56:45,621 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-27 14:56:45,621 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-27 14:56:45,621 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-27 14:56:45,621 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-27 14:56:45,621 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-27 14:56:45,621 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-27 14:56:45,621 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-27 14:56:45,632 - UpstoxApp - INFO - WebSocketManager starting connection loop.
+2026-04-27 14:56:45,632 - UpstoxApp - INFO - Attempting to authorize and connect... (Attempt 1)
+2026-04-27 14:56:45,632 - UpstoxApp - INFO - Authorizing WebSocket feed...
+2026-04-27 14:56:45,632 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 1)...
+2026-04-27 14:56:45,645 - UpstoxApp - INFO - [Global Dhan] Using feed class: DhanFeed
+2026-04-27 14:56:45,645 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-27 14:56:45,647 - UpstoxApp - INFO - [DualFeedWatchdog] Started. Monitoring Upstox + Dhan feeds.
+2026-04-27 14:56:45,647 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-27 14:56:45,668 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-27 14:56:45,675 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 2s.
+2026-04-27 14:56:46,050 - UpstoxApp - INFO - WebSocket authorization successful.
+2026-04-27 14:56:46,067 - UpstoxApp - INFO - Opening WebSocket connection to wss://wsfeeder-api.upstox.com/market-data-feeder/v...
+2026-04-27 14:56:46,082 - UpstoxApp - INFO - WebSocket connection established successfully.
+2026-04-27 14:56:46,082 - UpstoxApp - WARNING - V2 WebSocket: No existing instruments to re-subscribe to.
+2026-04-27 14:56:46,083 - UpstoxApp - INFO - WebSocket message processor started.
+2026-04-27 14:56:46,084 - UpstoxApp - INFO - First market data packet processed from queue. Data feed is active.
+2026-04-27 14:56:46,494 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-04-27) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-04-27 14:56:46,528 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-04-27
+2026-04-27 14:56:46,556 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-04-27 14:56:46,556 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-04-27 (key=NSE_INDEX|Nifty 50)
+2026-04-27 14:56:46,557 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-04-27 14:56:46,557 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-04-28 (day=Tuesday)
+2026-04-27 14:56:46,563 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-04-28 (CURRENT_WEEK), trade=2026-04-28 (WEEKLY)
+2026-04-27 14:56:46,564 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-27 14:56:46,566 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-27 14:56:46,566 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-27 14:56:46,566 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-27 14:56:46,567 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-27 14:56:46,568 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-27 14:56:46,568 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-27 14:56:46,568 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-27 14:56:46,568 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-27 14:56:46,568 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-27 14:56:46,568 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-27 14:56:46,569 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-27 14:56:46,570 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-27 14:56:46,570 - UpstoxApp - INFO - Trading bot is now live.
+2026-04-27 14:56:46,570 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active.
+2026-04-27 14:56:46,572 - UpstoxApp - INFO - V2: First INDEX price (Spot) received for NIFTY: 24121.85
+2026-04-27 14:56:46,575 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.0s | Worker: ALIVE | Exchange: 2026-04-27 14:56:46.571000+05:30 | Sessions: 2:Idle
+2026-04-27 14:56:46,576 - UpstoxApp - INFO - V2: [NIFTY] Futures price missing. Falling back to Index price 24121.85 for ATM calculation.
+2026-04-27 14:56:46,761 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 1/15 candles for NSE_FO|72267/NSE_FO|72270.
+2026-04-27 14:56:46,766 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72267/NSE_FO|72270.
+2026-04-27 14:56:46,772 - UpstoxApp - INFO - [SellManagerV3] Heartbeat: Phase=BEGINNING | Status=WAITING_FOR_BOUNDARY | Indicators=NO_DATA | Spot=24121.85
+2026-04-27 14:56:47,676 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-27 14:56:47,692 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-27 14:56:47,692 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 44 instruments.
+2026-04-27 14:56:47,700 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 4s.
+2026-04-27 14:56:48,602 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 1/15 candles for NSE_FO|72265/NSE_FO|72272.
+2026-04-27 14:56:48,606 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72265/NSE_FO|72272.
+2026-04-27 14:56:50,608 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 1/15 candles for NSE_FO|72271/NSE_FO|72266.
+2026-04-27 14:56:50,612 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72266.
+2026-04-27 14:56:51,701 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-27 14:56:51,720 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-27 14:56:51,720 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 44 instruments.
+2026-04-27 14:56:51,729 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 8s.
+2026-04-27 14:56:52,617 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 1/15 candles for NSE_FO|72267/NSE_FO|72270.
+2026-04-27 14:56:52,621 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72267/NSE_FO|72270.
+2026-04-27 14:56:54,627 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 1/15 candles for NSE_FO|72265/NSE_FO|72272.
+2026-04-27 14:56:54,631 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72265/NSE_FO|72272.
+2026-04-27 14:56:56,635 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 1/15 candles for NSE_FO|72269/NSE_FO|72268.
+2026-04-27 14:56:56,639 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72269/NSE_FO|72268.
+2026-04-27 14:56:58,643 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 1/15 candles for NSE_FO|72267/NSE_FO|72270.
+2026-04-27 14:56:58,647 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72267/NSE_FO|72270.
+2026-04-27 14:56:59,730 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-27 14:56:59,746 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-27 14:56:59,746 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 44 instruments.
+2026-04-27 14:56:59,753 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 16s.
+2026-04-27 14:57:00,642 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72267/NSE_FO|72272.
+2026-04-27 14:57:00,647 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72269/NSE_FO|72270.
+2026-04-27 14:57:00,652 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72269/NSE_FO|72272.
+2026-04-27 14:57:00,657 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72266.
+2026-04-27 14:57:00,663 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72268.
+2026-04-27 14:57:00,668 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72270.
+2026-04-27 14:57:00,673 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72272.
+2026-04-27 14:57:00,680 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 2/15 candles for NSE_FO|72271/NSE_FO|72266.
+2026-04-27 14:57:00,686 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 2/10 candles for NSE_FO|72271/NSE_FO|72266.
+2026-04-27 14:57:02,659 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72267/NSE_FO|72272.
+2026-04-27 14:57:02,667 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72269/NSE_FO|72270.
+2026-04-27 14:57:02,677 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72269/NSE_FO|72272.
+2026-04-27 14:57:02,683 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72268.
+2026-04-27 14:57:02,688 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72270.
+2026-04-27 14:57:02,696 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 1/10 candles for NSE_FO|72271/NSE_FO|72272.
+2026-04-27 14:57:02,723 - UpstoxApp - WARNING - [IndicatorManager] RSI insufficient premium data: Got 2/15 candles for NSE_FO|72267/NSE_FO|72272.
+2026-04-27 14:57:02,747 - UpstoxApp - WARNING - [IndicatorManager] ROC insufficient premium data: Got 2/10 candles for NSE_FO|72267/NSE_FO|72272.
