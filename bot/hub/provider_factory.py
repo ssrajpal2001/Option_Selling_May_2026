@@ -116,7 +116,34 @@ class ProviderFactory:
         active_feeds = []
         rest_client = None
 
-        # 1. Initialize Upstox Feed
+        # 0. Short-circuit for same-account setups: if the client's broker IS Upstox
+        #    and already has a fresh api_client (token obtained during __init__), reuse
+        #    that api_client directly for the global data WebSocket.
+        #    This prevents the dual-TOTP token invalidation race where the client login
+        #    (Task #114) fires AFTER the server's startup refresh, invalidating the
+        #    global data provider's token.
+        if 'upstox' in provider_names and broker_manager:
+            try:
+                from utils.websocket_manager import WebSocketManager as _WSM
+                _upstox_broker = next(
+                    (b for b in broker_manager.brokers.values()
+                     if getattr(b, 'broker_name', '') == 'upstox' and getattr(b, 'api_client', None)),
+                    None
+                )
+                if _upstox_broker:
+                    _upstox_ws = _WSM(api_client=_upstox_broker.api_client)
+                    active_feeds.append(('upstox', _upstox_ws))
+                    if not rest_client:
+                        rest_client = _upstox_broker.api_client
+                    provider_names = [p for p in provider_names if p != 'upstox']
+                    logger.info(
+                        f"[Global Upstox] Reusing client broker token for data feed "
+                        f"(same-account mode). Skipping data_providers lookup."
+                    )
+            except Exception as _e:
+                logger.warning(f"[Global Upstox] Same-account short-circuit failed: {_e}. Falling back to DB.")
+
+        # 1. Initialize Upstox Feed (DB path — runs only when broker_manager has no Upstox client)
         if 'upstox' in provider_names:
             try:
                 from web.db import db_fetchone, db_execute
@@ -128,14 +155,18 @@ class ProviderFactory:
                 if dp and dp['status'] == 'configured':
                     api_key = decrypt_secret(dp['api_key_encrypted'])
                     access_token = decrypt_secret(dp['access_token_encrypted'])
+
+                    # Use token_issued_at (set only on actual token issuance) rather than
+                    # updated_at (also updated by admin config saves) for the freshness check.
+                    token_issued_at = dp.get('token_issued_at')
                     updated_at = dp.get('updated_at')
+                    check_ts = token_issued_at or updated_at
 
                     # Daily Token Refresh check for Global Upstox
                     needs_refresh = True
-                    if updated_at:
+                    if check_ts:
                         try:
-                            # Simple check: same day?
-                            upd_dt = datetime.fromisoformat(updated_at).date()
+                            upd_dt = datetime.fromisoformat(check_ts).date()
                             if upd_dt == datetime.now(timezone.utc).date():
                                 needs_refresh = False
                         except: pass
@@ -155,7 +186,10 @@ class ProviderFactory:
                             access_token = new_token
                             enc_token = encrypt_secret(new_token)
                             now_str = datetime.now(timezone.utc).isoformat()
-                            db_execute("UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='upstox'", (enc_token, now_str))
+                            db_execute(
+                                "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
+                                (enc_token, now_str, now_str)
+                            )
                             logger.info("Global Upstox token auto-refreshed successfully.")
 
                     # Minimal auth handler for global Upstox — satisfies RestApiClient + WebSocketManager
