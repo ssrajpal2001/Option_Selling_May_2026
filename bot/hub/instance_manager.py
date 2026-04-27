@@ -75,6 +75,7 @@ class InstanceManager:
         log_file = os.path.join(log_dir, f"client_{client_id}_{broker}.log")
         env["CLIENT_LOG_FILE"] = log_file
 
+        log_fd = None
         try:
             # Redirect both stdout and stderr to the log file so that unhandled exceptions
             # and tracebacks appear in the admin Logs tab rather than disappearing into
@@ -96,6 +97,11 @@ class InstanceManager:
                 logger.debug(f"[InstanceManager] Admin Telegram start alert failed: {_tge}")
             return True, f"Bot started (PID {proc.pid})", proc.pid
         except Exception as e:
+            if log_fd:
+                try:
+                    log_fd.close()
+                except Exception:
+                    pass
             logger.error(f"[InstanceManager] Failed to start instance {instance_id}: {e}")
             return False, f"Failed to start bot: {e}", None
 
@@ -197,6 +203,14 @@ class InstanceManager:
                 result.append({"instance_id": iid, "pid": proc.pid})
             else:
                 del self._processes[iid]
+                # Close the log fd for naturally-exited processes to avoid FD leaks
+                log_fd = self._log_fds.pop(iid, None)
+                if log_fd:
+                    try:
+                        log_fd.flush()
+                        log_fd.close()
+                    except Exception:
+                        pass
         return result
 
 
