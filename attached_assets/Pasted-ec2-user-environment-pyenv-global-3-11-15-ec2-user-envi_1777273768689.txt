@@ -1,0 +1,19 @@
+ec2-user:~/environment $ pyenv global 3.11.15
+ec2-user:~/environment $ python -m pip install 'dhanhq>=2.0.2'
+Requirement already satisfied: dhanhq>=2.0.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (2.2.0)
+Requirement already satisfied: pandas>=1.4.3 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from dhanhq>=2.0.2) (3.0.2)
+Requirement already satisfied: requests>=2.28.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from dhanhq>=2.0.2) (2.33.1)
+Requirement already satisfied: websockets>=12.0.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from dhanhq>=2.0.2) (16.0)
+Requirement already satisfied: pyOpenSSL>=20.0.1 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from dhanhq>=2.0.2) (26.1.0)
+Requirement already satisfied: numpy>=1.26.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pandas>=1.4.3->dhanhq>=2.0.2) (2.4.4)
+Requirement already satisfied: python-dateutil>=2.8.2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pandas>=1.4.3->dhanhq>=2.0.2) (2.9.0.post0)
+Requirement already satisfied: cryptography<48,>=46.0.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pyOpenSSL>=20.0.1->dhanhq>=2.0.2) (47.0.0)
+Requirement already satisfied: typing-extensions>=4.9 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from pyOpenSSL>=20.0.1->dhanhq>=2.0.2) (4.15.0)
+Requirement already satisfied: cffi>=2.0.0 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from cryptography<48,>=46.0.0->pyOpenSSL>=20.0.1->dhanhq>=2.0.2) (2.0.0)
+Requirement already satisfied: pycparser in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from cffi>=2.0.0->cryptography<48,>=46.0.0->pyOpenSSL>=20.0.1->dhanhq>=2.0.2) (3.0)
+Requirement already satisfied: six>=1.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas>=1.4.3->dhanhq>=2.0.2) (1.17.0)
+Requirement already satisfied: charset_normalizer<4,>=2 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.28.1->dhanhq>=2.0.2) (3.4.7)
+Requirement already satisfied: idna<4,>=2.5 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.28.1->dhanhq>=2.0.2) (3.13)
+Requirement already satisfied: urllib3<3,>=1.26 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.28.1->dhanhq>=2.0.2) (2.6.3)
+Requirement already satisfied: certifi>=2023.5.7 in /home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages (from requests>=2.28.1->dhanhq>=2.0.2) (2026.4.22)
+ec2-user:~/environment $ 

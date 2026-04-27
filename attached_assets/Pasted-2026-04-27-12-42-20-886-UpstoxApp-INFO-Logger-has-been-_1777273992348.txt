@@ -1,0 +1,106 @@
+2026-04-27 12:42:20,886 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-27 12:42:20,886 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='upstox', instrument='NIFTY', qty=25, mode='paper', strategy='V3')
+2026-04-27 12:42:20,886 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-27 12:42:20,886 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-27 12:42:20,886 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-27 12:42:20,887 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-27 12:42:20,887 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-27 12:42:20,887 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-27 12:42:21,108 - UpstoxApp - INFO - Upstox client initialized for User ID: 2.
+2026-04-27 12:42:21,108 - UpstoxApp - INFO - [CLIENT MODE] Loaded upstox broker instance: client_2_upstox
+2026-04-27 12:42:21,109 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-27 12:42:21,110 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-27 12:42:21,110 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_upstox
+2026-04-27 12:42:21,110 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-27 12:42:21,123 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-27 12:42:21,124 - UpstoxApp - INFO - Global Upstox data provider initialized from DB.
+2026-04-27 12:42:21,132 - UpstoxApp - INFO - Global Dhan data provider initialized.
+2026-04-27 12:42:21,133 - UpstoxApp - INFO - Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).
+2026-04-27 12:42:21,133 - UpstoxApp - INFO - WebSocket listener task created.
+2026-04-27 12:42:21,150 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-27 12:42:21,150 - UpstoxApp - INFO - Message handler handle_message registered.
+2026-04-27 12:42:21,150 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-27 12:42:21,153 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-27 12:42:21,154 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-27 12:42:21,154 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-27 12:42:21,154 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-27 12:42:21,154 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-27 12:42:21,154 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-27 12:42:21,155 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-27 12:42:21,155 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-27 12:42:21,155 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-27 12:42:21,155 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-27 12:42:21,155 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-27 12:42:21,155 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-27 12:42:21,155 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-27 12:42:21,168 - UpstoxApp - INFO - WebSocketManager starting connection loop.
+2026-04-27 12:42:21,168 - UpstoxApp - INFO - Attempting to authorize and connect... (Attempt 1)
+2026-04-27 12:42:21,168 - UpstoxApp - INFO - Authorizing WebSocket feed...
+2026-04-27 12:42:21,168 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 1)...
+2026-04-27 12:42:21,181 - UpstoxApp - ERROR - [Global Dhan] Cannot find DhanFeed class in dhanhq.marketfeed. Upgrade dhanhq: pip install 'dhanhq>=2.0.2'. Dhan feed disabled.
+2026-04-27 12:42:21,181 - UpstoxApp - INFO - [DualFeedWatchdog] Started. Monitoring Upstox + Dhan feeds.
+2026-04-27 12:42:21,181 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-27 12:42:21,563 - UpstoxApp - INFO - WebSocket authorization successful.
+2026-04-27 12:42:21,575 - UpstoxApp - INFO - Opening WebSocket connection to wss://wsfeeder-api.upstox.com/market-data-feeder/v...
+2026-04-27 12:42:21,594 - UpstoxApp - INFO - WebSocket connection established successfully.
+2026-04-27 12:42:21,594 - UpstoxApp - WARNING - V2 WebSocket: No existing instruments to re-subscribe to.
+2026-04-27 12:42:21,594 - UpstoxApp - INFO - WebSocket message processor started.
+2026-04-27 12:42:21,594 - UpstoxApp - INFO - First market data packet processed from queue. Data feed is active.
+2026-04-27 12:42:21,981 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-04-27) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-04-27 12:42:22,015 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-04-27
+2026-04-27 12:42:22,042 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-04-27 12:42:22,042 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-04-27 (key=NSE_INDEX|Nifty 50)
+2026-04-27 12:42:22,042 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-04-27 12:42:22,043 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-04-28 (day=Tuesday)
+2026-04-27 12:42:22,050 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-04-28 (CURRENT_WEEK), trade=2026-04-28 (WEEKLY)
+2026-04-27 12:42:22,052 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-27 12:42:22,054 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-27 12:42:22,054 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-27 12:42:22,054 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-27 12:42:22,054 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-27 12:42:22,055 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 12:42:22,055 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-27 12:42:22,055 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-27 12:42:22,055 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-27 12:42:22,055 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-27 12:42:22,055 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-27 12:42:22,055 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-27 12:42:22,056 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-27 12:42:22,056 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-27 12:42:22,056 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-27 12:42:22,056 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-27 12:42:22,056 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-27 12:42:22,056 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-27 12:42:22,057 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-27 12:42:22,058 - UpstoxApp - INFO - Trading bot is now live.
+2026-04-27 12:42:22,058 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active.
+2026-04-27 12:42:22,061 - UpstoxApp - INFO - V2: First INDEX price (Spot) received for NIFTY: 24074.65
+2026-04-27 12:42:22,063 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.0s | Worker: ALIVE | Exchange: 2026-04-27 12:42:22.058000+05:30 | Sessions: 2:Idle
+2026-04-27 12:42:22,063 - UpstoxApp - INFO - V2: [NIFTY] Futures price missing. Falling back to Index price 24074.65 for ATM calculation.
+2026-04-27 12:42:51,182 - UpstoxApp - WARNING - [DualFeedWatchdog] dhan STALE — last tick 1777273971s ago. Other feeder continues. Attempting reconnect...
+2026-04-27 12:42:51,183 - UpstoxApp - ERROR - [DualFeedWatchdog] Reconnect failed for dhan: a coroutine was expected, got <Task pending name='Task-6521' coro=<DhanWebSocketManager.connect_and_listen() running at /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/dhan_websocket_manager.py:63>>
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/dual_feed_manager.py", line 243, in _reconnect_feed
+    asyncio.create_task(feed.start())
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/tasks.py", line 384, in create_task
+    task = loop.create_task(coro)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/base_events.py", line 437, in create_task
+    task = tasks.Task(coro, loop=self, name=name, context=context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: a coroutine was expected, got <Task pending name='Task-6521' coro=<DhanWebSocketManager.connect_and_listen() running at /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/dhan_websocket_manager.py:63>>
+2026-04-27 12:42:51,184 - UpstoxApp - ERROR - [Global Dhan] Cannot find DhanFeed class in dhanhq.marketfeed. Upgrade dhanhq: pip install 'dhanhq>=2.0.2'. Dhan feed disabled.
