@@ -117,6 +117,37 @@
       <div id="theme-msg" class="mt-3 text-sm hidden"></div>
     </div>
 
+    <!-- Log Storage Card -->
+    <div class="card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">🗂️</div>
+        <div>
+          <div class="font-bold text-white">Log Storage</div>
+          <div class="text-xs" style="color:var(--muted)">Current disk usage by log files; clean up old or unused logs</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-5">
+        <div class="rounded-lg p-4" style="background:var(--surface2);border:1px solid var(--border)">
+          <div class="text-xs font-semibold mb-1" style="color:var(--muted)">Total Size</div>
+          <div class="text-2xl font-bold text-white" id="log-total-size">—</div>
+        </div>
+        <div class="rounded-lg p-4" style="background:var(--surface2);border:1px solid var(--border)">
+          <div class="text-xs font-semibold mb-1" style="color:var(--muted)">Log Files</div>
+          <div class="text-2xl font-bold text-white" id="log-total-files">—</div>
+        </div>
+      </div>
+
+      <div id="log-preview-result" class="hidden mb-4 rounded-lg p-3 text-sm" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-soft);max-height:180px;overflow-y:auto"></div>
+
+      <div class="flex flex-wrap gap-3 items-center">
+        <button onclick="previewCleanup()" id="log-preview-btn" class="btn-ghost px-5 py-2 text-sm">🔍 Preview</button>
+        <button onclick="runCleanup()" id="log-cleanup-btn" class="btn-primary px-5 py-2 text-sm">🧹 Clean Up Now</button>
+        <button onclick="loadLogUsage()" class="btn-ghost px-4 py-2 text-sm" title="Refresh">↺ Refresh</button>
+      </div>
+      <div id="log-msg" class="mt-3 text-sm hidden"></div>
+    </div>
+
     <!-- Expiry check info card -->
     <div class="card p-6" style="background:var(--surface2);border-color:var(--border-soft)">
       <div class="font-bold mb-2" style="color:var(--text)">🕐 Scheduled Jobs</div>
@@ -279,5 +310,103 @@ async function testTelegram() {
 }
 
 loadSettings();
+
+// ---- Log Storage helpers ----
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1) + ' ' + units[i];
+}
+
+async function loadLogUsage() {
+  try {
+    const r = await fetch('/api/admin/logs/disk-usage');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    document.getElementById('log-total-size').textContent = formatBytes(d.total_bytes ?? 0);
+    document.getElementById('log-total-files').textContent = (d.total_files ?? 0) + ' files';
+  } catch (e) {
+    document.getElementById('log-total-size').textContent = 'Error';
+    document.getElementById('log-total-files').textContent = '';
+    console.error('log disk usage:', e);
+  }
+}
+
+async function previewCleanup() {
+  const btn = document.getElementById('log-preview-btn');
+  const box = document.getElementById('log-preview-result');
+  btn.disabled = true;
+  btn.textContent = '⏳ Previewing…';
+  box.classList.add('hidden');
+  try {
+    const r = await fetch('/api/admin/logs/cleanup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dry_run: true }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Server error');
+    const deleted = d.deleted || [];
+    box.textContent = '';
+    if (deleted.length === 0) {
+      box.textContent = 'Nothing to clean up — all log files are within retention limits.';
+    } else {
+      const header = document.createElement('strong');
+      header.style.color = 'var(--warning)';
+      header.textContent = deleted.length + ' file(s) would be removed:';
+      box.appendChild(header);
+      deleted.forEach(function(f) {
+        const line = document.createElement('div');
+        line.textContent = '• ' + f;
+        box.appendChild(line);
+      });
+    }
+    box.classList.remove('hidden');
+  } catch (e) {
+    showToast('Preview failed: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '🔍 Preview';
+}
+
+async function runCleanup() {
+  const btn = document.getElementById('log-cleanup-btn');
+  const msg = document.getElementById('log-msg');
+  btn.disabled = true;
+  btn.textContent = '⏳ Cleaning…';
+  msg.className = 'mt-3 text-sm';
+  msg.classList.add('hidden');
+  try {
+    const r = await fetch('/api/admin/logs/cleanup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dry_run: false }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Server error');
+    const count = (d.deleted || []).length;
+    const errCount = (d.errors || []).length;
+    const summary = count === 0
+      ? 'No files were removed — logs are already clean.'
+      : count + ' file(s) deleted' + (errCount > 0 ? ', ' + errCount + ' error(s)' : '') + '.';
+    msg.textContent = '✅ ' + summary;
+    msg.style.color = 'var(--success)';
+    msg.classList.remove('hidden');
+    showToast(summary, 'success');
+    await loadLogUsage();
+    document.getElementById('log-preview-result').classList.add('hidden');
+  } catch (e) {
+    msg.textContent = '❌ ' + e.message;
+    msg.style.color = 'var(--error)';
+    msg.classList.remove('hidden');
+    showToast('Cleanup failed: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '🧹 Clean Up Now';
+}
+
+loadLogUsage();
 </script>
 {% endblock %}
