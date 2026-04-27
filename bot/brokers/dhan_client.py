@@ -166,12 +166,24 @@ class DhanClient(BaseBroker):
         # Dhan WebSocket requires an initial list of instruments.
         # In v2.0.2, the constructor only takes client_id, access_token, and instruments.
         # We specify version='v2' to avoid HTTP 400 errors.
-        # Use getattr for resilience — older dhanhq builds may name the class differently.
-        _DhanFeedCls = getattr(market_feed, 'DhanFeed', None) or getattr(market_feed, 'Feed', None)
+        # Resolve feed class across dhanhq versions (2.0.x → DhanFeed; later may differ)
+        _DhanFeedCls = (
+            getattr(market_feed, 'DhanFeed', None) or
+            getattr(market_feed, 'Feed', None) or
+            getattr(market_feed, 'MarketFeed', None) or
+            getattr(market_feed, 'DhanMarketFeed', None) or
+            getattr(market_feed, 'DhanHQ', None) or
+            next(
+                (v for k, v in vars(market_feed).items()
+                 if isinstance(v, type) and ('feed' in k.lower() or 'Feed' in k)),
+                None
+            )
+        )
         if _DhanFeedCls is None:
+            available = [k for k in dir(market_feed) if not k.startswith('_')]
             logger.error(
-                f"[{self.instance_name}] Cannot find DhanFeed class in dhanhq.marketfeed. "
-                "Upgrade dhanhq: pip install 'dhanhq>=2.0.2'. Feed not initialized."
+                f"[{self.instance_name}] Cannot find a feed class in dhanhq.marketfeed. "
+                f"Available names: {available}. Feed not initialized."
             )
             return
         self.feed = _DhanFeedCls(

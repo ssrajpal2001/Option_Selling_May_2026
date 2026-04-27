@@ -65,12 +65,28 @@ class DhanWebSocketManager(DataFeed):
         self._running = True
         self._apply_websockets_patch()
 
-        # Resolve the correct class name — dhanhq >=2.0.2 uses DhanFeed; older builds may differ
-        _DhanFeedCls = getattr(marketfeed, 'DhanFeed', None) or getattr(marketfeed, 'Feed', None)
+        # Resolve the correct feed class across dhanhq versions:
+        #   2.0.x → marketfeed.DhanFeed
+        #   2.1+  → class name may differ; fall back to scanning for any Feed-like class
+        _DhanFeedCls = (
+            getattr(marketfeed, 'DhanFeed', None) or
+            getattr(marketfeed, 'Feed', None) or
+            getattr(marketfeed, 'MarketFeed', None) or
+            getattr(marketfeed, 'DhanMarketFeed', None) or
+            getattr(marketfeed, 'DhanHQ', None) or
+            next(
+                (v for k, v in vars(marketfeed).items()
+                 if isinstance(v, type) and ('feed' in k.lower() or 'Feed' in k)),
+                None
+            )
+        )
         if _DhanFeedCls is None:
+            available = [k for k in dir(marketfeed) if not k.startswith('_')]
             logger.error(
-                "[Global Dhan] Cannot find DhanFeed class in dhanhq.marketfeed. "
-                "Upgrade dhanhq: pip install 'dhanhq>=2.0.2'. Dhan feed disabled."
+                "[Global Dhan] Cannot find a feed class in dhanhq.marketfeed. "
+                f"Available names: {available}. "
+                "Pin dhanhq to a known-good version or check the class name above. "
+                "Dhan feed disabled."
             )
             self._disabled = True
             # Set epoch to inf so the watchdog never treats this as a stale feed

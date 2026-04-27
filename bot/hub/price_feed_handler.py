@@ -116,7 +116,11 @@ class PriceFeedHandler:
     async def handle_tick_dispatched_normalized(self, instrument_key, data, user_id=None):
         """
         Final handler for ticks routed via Dispatcher (both Global and User-Scoped).
+        Only processes normalized dict payloads — silently ignores Protobuf feed objects
+        that arrive via the legacy handle_message → dispatch path.
         """
+        if not isinstance(data, dict):
+            return
         ltp = data.get('ltp')
         timestamp = data.get('timestamp') or datetime.datetime.now(self._kolkata_tz)
 

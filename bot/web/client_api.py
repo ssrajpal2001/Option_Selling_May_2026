@@ -1003,10 +1003,12 @@ async def stop_bot(user=Depends(get_current_user)):
         raise HTTPException(400, "No broker configured.")
 
     ok, msg = instance_manager.stop_instance(instance["id"])
-    if ok:
-        db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
-        _audit_client(user["id"], "bot_deactivate", {"broker": instance.get("broker")})
-    return {"success": ok, "message": msg}
+    # Always clear DB state regardless of whether the process was found.
+    # The subprocess may have already died (crash, server restart) leaving a stale
+    # 'running' status that would prevent the client from restarting.
+    db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
+    _audit_client(user["id"], "bot_deactivate", {"broker": instance.get("broker")})
+    return {"success": True, "message": msg}
 
 
 @router.post("/bot/restart")
