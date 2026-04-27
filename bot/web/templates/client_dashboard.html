@@ -273,6 +273,23 @@
     .kill-bar { padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; }
     .kill-bar-ok  { background: rgba(52,211,153,.07); border: 1px solid #059669; color: var(--success); }
     .kill-bar-hit { background: rgba(239,68,68,.1); border: 1px solid #dc2626; color: var(--error); }
+
+    /* Broker Settings Panel */
+    .bsettings-group { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+    .bsettings-group-title { font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; display: flex; align-items: center; }
+    .bsettings-hint { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* Toggle switch */
+    .toggle-switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 20px; transition: .2s; }
+    .toggle-slider:before { position: absolute; content: ''; height: 14px; width: 14px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+    .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+    /* Day-wise table */
+    #bs-daywise-body td { padding: 4px; }
+    #bs-daywise-body td:first-child { color: var(--muted); font-weight: 700; font-size: 11px; padding-left: 0; }
   </style>
   <script>
     /* ── Theme system (full init) ──────────────────────────────────── */
@@ -948,80 +965,192 @@
         </div>
       </div>
 
-      <!-- Risk Parameters -->
+      <!-- Per-Broker Settings -->
       <div class="card" style="margin-bottom:16px">
-        <div class="acc-header" onclick="toggleAcc('risk-panel','arr-risk')" id="acc-risk">
+        <div class="acc-header" onclick="toggleAcc('broker-settings-panel','arr-bsettings');if(document.getElementById('broker-settings-panel').classList.contains('open')&&state.selectedBroker){loadBrokerSettings(state.selectedBroker);}" id="acc-risk">
           <div>
-            <div class="sec-title">🛡️ Risk Parameters</div>
-            <div class="sec-sub">Set daily limits and trade guardrails</div>
+            <div class="sec-title">⚙️ Broker Settings</div>
+            <div class="sec-sub">Per-broker timing, risk &amp; capital controls</div>
           </div>
-          <svg class="acc-arrow" id="arr-risk" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          <svg class="acc-arrow" id="arr-bsettings" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
         </div>
-        <div class="acc-body" id="risk-panel">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-            <div>
-              <div class="inp-label">Daily Loss Limit (₹)</div>
-              <input type="number" class="inp" id="rp-daily-loss" placeholder="e.g. 5000" min="0">
-            </div>
-            <div>
-              <div class="inp-label">Max Trades / Day</div>
-              <input type="number" class="inp" id="rp-max-trades" placeholder="e.g. 6" min="0">
-            </div>
-            <div>
-              <div class="inp-label">Profit Target (%)</div>
-              <input type="number" class="inp" id="rp-profit-pct" placeholder="e.g. 2.5" step="0.1">
-            </div>
-            <div>
-              <div class="inp-label">Guardrail PnL Target (pts)</div>
-              <input type="number" class="inp" id="rp-gr-target" placeholder="e.g. 30">
-            </div>
-            <div>
-              <div class="inp-label">Guardrail PnL SL (pts)</div>
-              <input type="number" class="inp" id="rp-gr-sl" placeholder="e.g. -15">
-            </div>
-            <div>
-              <div class="inp-label">Single Trade Target (pts)</div>
-              <input type="number" class="inp" id="rp-st-target" placeholder="e.g. 20">
-            </div>
-            <div>
-              <div class="inp-label">Single Trade SL (pts)</div>
-              <input type="number" class="inp" id="rp-st-sl" placeholder="e.g. -10">
-            </div>
-          </div>
-          <button class="btn btn-primary" style="width:100%" onclick="saveRiskParams()">💾 Save Risk Parameters</button>
-          <div style="margin-top:10px;font-size:12px;color:var(--muted)">
-            ⚠️ Kill-switch fires automatically when daily loss exceeds your limit. Bot restarts next trading day.
+        <div class="acc-body" id="broker-settings-panel">
+
+          <!-- Broker selector tabs -->
+          <div class="broker-tabs" id="bsettings-broker-tabs" style="margin-bottom:14px"></div>
+
+          <!-- No broker selected / not configured -->
+          <div id="bsettings-empty" style="text-align:center;color:var(--muted);padding:20px 0;font-size:13px;display:none">
+            Select a configured broker tab above to edit its settings.
           </div>
 
-          <!-- Admin-set risk limits (read-only) -->
-          <div id="admin-limits-section" style="margin-top:14px;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid var(--border);display:none">
-            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">📋 Admin-Set Limits (Read Only)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div style="font-size:11px">
-                <span style="color:var(--muted)">Capital Allocated</span>
-                <div style="font-weight:700;color:var(--text)" id="adm-capital">—</div>
-              </div>
-              <div style="font-size:11px">
-                <span style="color:var(--muted)">Per-Trade Loss Limit</span>
-                <div style="font-weight:700;color:var(--text)" id="adm-per-trade">—</div>
-              </div>
-              <div style="font-size:11px">
-                <span style="color:var(--muted)">Max Position Size</span>
-                <div style="font-weight:700;color:var(--text)" id="adm-pos-size">—</div>
-              </div>
-              <div style="font-size:11px">
-                <span style="color:var(--muted)">Max Drawdown %</span>
-                <div style="font-weight:700;color:var(--text)" id="adm-drawdown">—</div>
-              </div>
-              <div style="font-size:11px">
-                <span style="color:var(--muted)">Max Open Positions</span>
-                <div style="font-weight:700;color:var(--text)" id="adm-open-pos">—</div>
-              </div>
-              <div style="font-size:11px">
-                <span style="color:var(--muted)">Risk Per Trade %</span>
-                <div style="font-weight:700;color:var(--text)" id="adm-risk-pct">—</div>
+          <!-- Settings form (shown when a broker is selected) -->
+          <div id="bsettings-form" style="display:none">
+
+            <!-- ── Timing ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">⏰ Session Timing</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+                <div>
+                  <div class="inp-label">Start Time</div>
+                  <input type="time" class="inp" id="bs-start-time" step="60">
+                  <div class="bsettings-hint" id="bs-start-time-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Entry Cutoff</div>
+                  <input type="time" class="inp" id="bs-entry-end" step="60">
+                  <div class="bsettings-hint" id="bs-entry-end-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Square-off Time</div>
+                  <input type="time" class="inp" id="bs-sq-off" step="60">
+                  <div class="bsettings-hint" id="bs-sq-off-adm"></div>
+                </div>
               </div>
             </div>
+
+            <!-- ── Capital Deployment ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">💰 Capital Deployment</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
+                <div>
+                  <div class="inp-label">Deploy % of Broker Funds</div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input type="number" class="inp" id="bs-capital-pct" placeholder="e.g. 80" min="1" max="100" step="1" style="flex:1">
+                    <span style="font-size:13px;color:var(--muted)">%</span>
+                  </div>
+                  <div class="bsettings-hint">Admin allocated: <span id="bs-capital-adm">—</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Session PNL Exit (Guardrail) ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title" style="display:flex;align-items:center;gap:10px">
+                <span>📊 Session PNL Exit</span>
+                <label class="toggle-switch" style="margin-left:auto">
+                  <input type="checkbox" id="bs-pnl-enabled">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div id="bs-pnl-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+                <div>
+                  <div class="inp-label">Target (pts)</div>
+                  <input type="number" class="inp" id="bs-pnl-target" placeholder="e.g. 100" step="0.5">
+                  <div class="bsettings-hint" id="bs-pnl-target-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Stop Loss (pts)</div>
+                  <input type="number" class="inp" id="bs-pnl-sl" placeholder="e.g. 60" step="0.5">
+                  <div class="bsettings-hint" id="bs-pnl-sl-adm"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Single Trade Risk ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">🎯 Single Trade Risk (pts)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <div class="inp-label">Target (pts)</div>
+                  <input type="number" class="inp" id="bs-st-target" placeholder="e.g. 30" step="0.5">
+                  <div class="bsettings-hint" id="bs-st-target-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Stop Loss (pts)</div>
+                  <input type="number" class="inp" id="bs-st-sl" placeholder="e.g. 20" step="0.5">
+                  <div class="bsettings-hint" id="bs-st-sl-adm"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Day-wise Overrides ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">📅 Day-wise Trade Risk Overrides</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Leave blank to use the default target/SL above for that day.</div>
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
+                    <th style="text-align:left;padding:5px 0;width:60px">Day</th>
+                    <th style="padding:5px 4px">Target (pts)</th>
+                    <th style="padding:5px 4px">SL (pts)</th>
+                  </tr>
+                </thead>
+                <tbody id="bs-daywise-body">
+                  <!-- JS rendered -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- ── Scalable TSL ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title" style="display:flex;align-items:center;gap:10px">
+                <span>📈 Scalable TSL</span>
+                <label class="toggle-switch" style="margin-left:auto">
+                  <input type="checkbox" id="bs-tsl-enabled">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div id="bs-tsl-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+                <div>
+                  <div class="inp-label">Base Profit (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-base-profit" placeholder="e.g. 1000" step="50">
+                  <div class="bsettings-hint" id="bs-tsl-base-profit-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Base Lock (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-base-lock" placeholder="e.g. 250" step="25">
+                  <div class="bsettings-hint" id="bs-tsl-base-lock-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Step Profit (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-step-profit" placeholder="e.g. 250" step="25">
+                  <div class="bsettings-hint" id="bs-tsl-step-profit-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Step Lock (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-step-lock" placeholder="e.g. 125" step="25">
+                  <div class="bsettings-hint" id="bs-tsl-step-lock-adm"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Daily Limits ── -->
+            <div class="bsettings-group" style="margin-bottom:16px">
+              <div class="bsettings-group-title">🛡️ Daily Limits</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <div class="inp-label">Daily Loss Limit (₹)</div>
+                  <input type="number" class="inp" id="bs-daily-loss" placeholder="e.g. 5000" min="0">
+                </div>
+                <div>
+                  <div class="inp-label">Max Trades / Day</div>
+                  <input type="number" class="inp" id="bs-max-trades" placeholder="e.g. 6" min="0">
+                  <div class="bsettings-hint" id="bs-max-trades-adm"></div>
+                </div>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+                ⚠️ Kill-switch fires automatically when daily loss exceeds your limit.
+              </div>
+            </div>
+
+            <!-- Save button -->
+            <button class="btn btn-primary" style="width:100%" onclick="saveBrokerSettings()">💾 Save Broker Settings</button>
+
+            <!-- Admin-set limits (read-only) -->
+            <div id="admin-limits-section" style="margin-top:14px;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid var(--border);display:none">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">📋 Admin-Set Limits (Read Only)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="font-size:11px"><span style="color:var(--muted)">Capital Allocated</span><div style="font-weight:700;color:var(--text)" id="adm-capital">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Per-Trade Loss Limit</span><div style="font-weight:700;color:var(--text)" id="adm-per-trade">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Max Position Size</span><div style="font-weight:700;color:var(--text)" id="adm-pos-size">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Max Drawdown %</span><div style="font-weight:700;color:var(--text)" id="adm-drawdown">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Max Open Positions</span><div style="font-weight:700;color:var(--text)" id="adm-open-pos">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Risk Per Trade %</span><div style="font-weight:700;color:var(--text)" id="adm-risk-pct">—</div></div>
+              </div>
+            </div>
+
+            <!-- Kill-switch note (the global banner at the top of settings is shown when active) -->
           </div>
         </div>
       </div>
@@ -1375,12 +1504,13 @@ const BROKER_LABELS = {
 };
 
 function renderBrokerTabs() {
-  ['broker-tabs','settings-broker-tabs'].forEach(id => {
+  ['broker-tabs','settings-broker-tabs','bsettings-broker-tabs'].forEach(id => {
     const wrap = document.getElementById(id);
     if (!wrap) return;
     wrap.innerHTML = '';
     BROKERS.forEach(b => {
       const inst = state.instances.find(i => i.broker === b);
+      if (id === 'bsettings-broker-tabs' && !inst) return; // only show configured brokers in settings panel
       const btn = document.createElement('button');
       btn.className = 'broker-tab' + (state.selectedBroker === b ? ` sel-${b}` : '');
 
@@ -1391,11 +1521,11 @@ function renderBrokerTabs() {
       if (inst) {
         const reconnSt = inst.reconnect_status;
         if (reconnSt && reconnSt.active) {
-          dotColor = '#f59e0b';  // amber — authenticating/reconnecting
+          dotColor = '#f59e0b';
           dotTitle = `Auto-reconnecting (${reconnSt.attempts}/${reconnSt.max_attempts})`;
           dotExtra = `<span style="font-size:9px;color:var(--warn);margin-left:3px">↺${reconnSt.attempts}</span>`;
         } else if (!inst.has_credentials) {
-          dotColor = '#ef4444'; dotTitle = 'Credentials missing — click to add';  // red — error
+          dotColor = '#ef4444'; dotTitle = 'Credentials missing — click to add';
         } else if (inst.status === 'running' && inst.token_fresh) {
           dotColor = 'var(--success)'; dotTitle = 'Connected & running';
         } else if (inst.token_fresh) {
@@ -1525,6 +1655,11 @@ function selectBroker(broker) {
   state.selectedBroker = broker;
   renderBrokerTabs();
   renderCredForm(broker);
+  // Load broker settings panel if accordion is open
+  const bsPanel = document.getElementById('broker-settings-panel');
+  if (bsPanel && bsPanel.classList.contains('open')) {
+    loadBrokerSettings(broker);
+  }
   // Load instance data into ctrl panel
   const inst = state.instances.find(i => i.broker === broker);
   if (inst) {
@@ -2085,46 +2220,23 @@ async function refreshToken() {
 
 // ═══════════════════════════════════════════════════════════════ SETTINGS
 async function loadSettingsPane() {
-  // Load risk params
-  try {
-    const d = await api('GET', '/risk-params');
-    state.riskParams = d.params || {};
-    state.dailyLossLimit = d.daily_loss_limit || 0;
-    document.getElementById('rp-daily-loss').value = d.daily_loss_limit || '';
-    document.getElementById('rp-max-trades').value = d.params.max_trades_per_day || '';
-    document.getElementById('rp-profit-pct').value = d.params.profit_target_pct || '';
-    document.getElementById('rp-gr-target').value = d.params.guardrail_pnl_target || '';
-    document.getElementById('rp-gr-sl').value = d.params.guardrail_pnl_sl || '';
-    document.getElementById('rp-st-target').value = d.params.single_trade_target || '';
-    document.getElementById('rp-st-sl').value = d.params.single_trade_sl || '';
-
-    // Show admin-set limits if any are configured
-    const hasAdminLimits = d.capital_allocated > 0 || d.per_trade_loss_limit > 0
-      || d.max_drawdown_pct > 0 || d.max_position_size > 1 || d.max_open_positions > 1;
-    const adminSec = document.getElementById('admin-limits-section');
-    if (adminSec) {
-      adminSec.style.display = hasAdminLimits ? 'block' : 'none';
-      document.getElementById('adm-capital').textContent = d.capital_allocated > 0 ? `₹${d.capital_allocated.toLocaleString()}` : 'Not set';
-      document.getElementById('adm-per-trade').textContent = d.per_trade_loss_limit > 0 ? `₹${d.per_trade_loss_limit.toLocaleString()}` : 'Disabled';
-      document.getElementById('adm-pos-size').textContent = `${d.max_position_size || 1} lot${(d.max_position_size || 1) !== 1 ? 's' : ''}`;
-      document.getElementById('adm-drawdown').textContent = d.max_drawdown_pct > 0 ? `${d.max_drawdown_pct}%` : 'Disabled';
-      document.getElementById('adm-open-pos').textContent = d.max_open_positions || 1;
-      document.getElementById('adm-risk-pct').textContent = `${d.risk_per_trade_pct || 1}%`;
+  // Load broker settings for the currently selected broker
+  if (state.selectedBroker) {
+    loadBrokerSettings(state.selectedBroker);
+  } else {
+    // Show/hide settings form based on whether a broker is configured
+    const inst = state.instances[0];
+    if (inst) {
+      state.selectedBroker = inst.broker;
+      renderBrokerTabs();
+      loadBrokerSettings(inst.broker);
+    } else {
+      const form = document.getElementById('bsettings-form');
+      const empty = document.getElementById('bsettings-empty');
+      if (form) form.style.display = 'none';
+      if (empty) empty.style.display = 'block';
     }
-
-    // Kill-switch locked banner
-    const banner = document.getElementById('kill-switch-banner');
-    if (banner && d.trading_locked_until) {
-      const lockUntil = new Date(d.trading_locked_until);
-      if (lockUntil > new Date()) {
-        banner.style.display = 'flex';
-        const unlockEl = document.getElementById('ks-unlock-time');
-        if (unlockEl) unlockEl.textContent = `Unlocks: ${lockUntil.toLocaleString()}`;
-      } else {
-        banner.style.display = 'none';
-      }
-    }
-  } catch (e) { console.warn('risk params load:', e); }
+  }
 
   // Load profile
   try {
@@ -2203,23 +2315,210 @@ async function saveBrokerConfig() {
   }
 }
 
-async function saveRiskParams() {
-  const get = id => { const v = document.getElementById(id)?.value; return v === '' ? null : Number(v); };
-  const body = {
-    daily_loss_limit: get('rp-daily-loss'),
-    max_trades_per_day: get('rp-max-trades') !== null ? parseInt(get('rp-max-trades')) : null,
-    profit_target_pct: get('rp-profit-pct'),
-    guardrail_pnl_target: get('rp-gr-target'),
-    guardrail_pnl_sl: get('rp-gr-sl'),
-    single_trade_target: get('rp-st-target'),
-    single_trade_sl: get('rp-st-sl'),
-  };
-  Object.keys(body).forEach(k => { if (body[k] === null) delete body[k]; });
+// ─── Per-Broker Settings ─────────────────────────────────────────────────────
+const BS_DAYS = ['MON','TUE','WED','THU','FRI'];
+const BS_DAY_LABELS = { MON:'Mon', TUE:'Tue', WED:'Wed', THU:'Thu', FRI:'Fri' };
+
+function _setHint(id, adm) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = adm != null ? `Admin: ${adm}` : '';
+}
+
+function _setVal(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.type === 'checkbox') { el.checked = !!val; return; }
+  if (el.type === 'time' && val) {
+    // Normalize HH:MM:SS → HH:MM
+    el.value = String(val).slice(0, 5);
+  } else {
+    el.value = val != null ? val : '';
+  }
+}
+
+function _renderDaywiseTable(settings, adminDefaults) {
+  const tbody = document.getElementById('bs-daywise-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  const dayWise = settings.day_wise || {};
+  const admDayWise = (adminDefaults || {}).day_wise || {};
+  BS_DAYS.forEach(d => {
+    const cur = dayWise[d] || {};
+    const adm = admDayWise[d] || {};
+    const tr = document.createElement('tr');
+    const tPh = adm.target != null ? `adm: ${adm.target}` : 'e.g. 30';
+    const slPh = adm.sl != null ? `adm: ${adm.sl}` : 'e.g. 20';
+    tr.innerHTML = `
+      <td>${BS_DAY_LABELS[d]}</td>
+      <td><input type="number" class="inp" style="font-size:12px;padding:5px 8px"
+           id="bs-dw-${d}-target" placeholder="${tPh}" step="0.5"
+           value="${cur.target != null ? cur.target : ''}"></td>
+      <td><input type="number" class="inp" style="font-size:12px;padding:5px 8px"
+           id="bs-dw-${d}-sl" placeholder="${slPh}" step="0.5"
+           value="${cur.sl != null ? cur.sl : ''}"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadBrokerSettings(broker) {
+  const form = document.getElementById('bsettings-form');
+  const empty = document.getElementById('bsettings-empty');
+  if (!broker) {
+    if (form) form.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  const inst = state.instances.find(i => i.broker === broker);
+  if (!inst) {
+    if (form) form.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (form) form.style.display = 'none';
+  if (empty) empty.style.display = 'block';
   try {
-    const d = await api('POST', '/risk-params', body);
-    toast(d.message || 'Risk parameters saved!', 'ok');
-    state.dailyLossLimit = get('rp-daily-loss') || 0;
-    state.riskParams = { ...state.riskParams, ...body };
+    const d = await api('GET', `/broker/${broker}/settings`);
+    const s = d.settings || {};
+    const adm = d.admin_defaults || {};
+
+    // Timing
+    _setVal('bs-start-time', s.start_time);
+    _setHint('bs-start-time-adm', adm.start_time);
+    _setVal('bs-entry-end', s.entry_end_time);
+    _setHint('bs-entry-end-adm', adm.entry_end_time);
+    _setVal('bs-sq-off', s.square_off_time);
+    _setHint('bs-sq-off-adm', adm.square_off_time);
+
+    // Capital
+    _setVal('bs-capital-pct', s.capital_deploy_pct);
+    const admCap = document.getElementById('bs-capital-adm');
+    if (admCap) admCap.textContent = d.capital_allocated > 0 ? `₹${Number(d.capital_allocated).toLocaleString()}` : 'Not set';
+
+    // Session PNL
+    _setVal('bs-pnl-enabled', s.session_pnl_enabled != null ? s.session_pnl_enabled : adm.session_pnl_enabled);
+    _setVal('bs-pnl-target', s.session_pnl_target_pts);
+    _setHint('bs-pnl-target-adm', adm.session_pnl_target_pts);
+    _setVal('bs-pnl-sl', s.session_pnl_sl_pts);
+    _setHint('bs-pnl-sl-adm', adm.session_pnl_sl_pts);
+
+    // Single trade risk
+    _setVal('bs-st-target', s.single_trade_target_pts);
+    _setHint('bs-st-target-adm', adm.single_trade_target_pts);
+    _setVal('bs-st-sl', s.single_trade_sl_pts);
+    _setHint('bs-st-sl-adm', adm.single_trade_sl_pts);
+
+    // Day-wise overrides table
+    _renderDaywiseTable(s, adm);
+
+    // Scalable TSL
+    _setVal('bs-tsl-enabled', s.tsl_enabled != null ? s.tsl_enabled : adm.tsl_enabled);
+    _setVal('bs-tsl-base-profit', s.tsl_base_profit);
+    _setHint('bs-tsl-base-profit-adm', adm.tsl_base_profit);
+    _setVal('bs-tsl-base-lock', s.tsl_base_lock);
+    _setHint('bs-tsl-base-lock-adm', adm.tsl_base_lock);
+    _setVal('bs-tsl-step-profit', s.tsl_step_profit);
+    _setHint('bs-tsl-step-profit-adm', adm.tsl_step_profit);
+    _setVal('bs-tsl-step-lock', s.tsl_step_lock);
+    _setHint('bs-tsl-step-lock-adm', adm.tsl_step_lock);
+
+    // Daily limits
+    _setVal('bs-daily-loss', s.daily_loss_limit);
+    _setVal('bs-max-trades', s.max_trades_per_day);
+    _setHint('bs-max-trades-adm', adm.max_trades_per_day);
+
+    // Kill-switch banner
+    const ksBanner = document.getElementById('kill-switch-banner');
+    if (ksBanner) {
+      if (s.trading_locked_until) {
+        const lockUntil = new Date(s.trading_locked_until);
+        if (lockUntil > new Date()) {
+          ksBanner.style.display = 'flex';
+          const unlockEl = document.getElementById('ks-unlock-time');
+          if (unlockEl) unlockEl.textContent = `Unlocks: ${lockUntil.toLocaleString()}`;
+        } else {
+          ksBanner.style.display = 'none';
+        }
+      }
+    }
+
+    // Admin risk limits (from broker settings response)
+    const hasAdminLimits = d.capital_allocated > 0 || d.per_trade_loss_limit > 0
+      || d.max_drawdown_pct > 0 || d.max_position_size > 1 || d.max_open_positions > 1;
+    const adminSec = document.getElementById('admin-limits-section');
+    if (adminSec) {
+      adminSec.style.display = hasAdminLimits ? 'block' : 'none';
+      const _t = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+      _t('adm-capital', d.capital_allocated > 0 ? `₹${Number(d.capital_allocated).toLocaleString()}` : 'Not set');
+      _t('adm-per-trade', d.per_trade_loss_limit > 0 ? `₹${Number(d.per_trade_loss_limit).toLocaleString()}` : 'Disabled');
+      _t('adm-pos-size', `${d.max_position_size || 1} lot${(d.max_position_size || 1) !== 1 ? 's' : ''}`);
+      _t('adm-drawdown', d.max_drawdown_pct > 0 ? `${d.max_drawdown_pct}%` : 'Disabled');
+      _t('adm-open-pos', d.max_open_positions || 1);
+      _t('adm-risk-pct', `${d.risk_per_trade_pct || 1}%`);
+    }
+
+    if (form) form.style.display = 'block';
+    if (empty) empty.style.display = 'none';
+  } catch (e) {
+    console.warn('[loadBrokerSettings]', e);
+    toast('Could not load broker settings', 'err');
+  }
+}
+
+async function saveBrokerSettings() {
+  const broker = state.selectedBroker;
+  if (!broker) { toast('Select a broker first', 'warn'); return; }
+
+  const _numOrNull = id => {
+    const v = document.getElementById(id)?.value;
+    return (v === '' || v == null) ? null : Number(v);
+  };
+  const _timeOrNull = id => {
+    const v = document.getElementById(id)?.value?.trim();
+    return v || null;
+  };
+  const _boolEl = id => {
+    const el = document.getElementById(id);
+    return el ? el.checked : null;
+  };
+
+  // Day-wise overrides
+  const day_wise = {};
+  BS_DAYS.forEach(d => {
+    const t = _numOrNull(`bs-dw-${d}-target`);
+    const sl = _numOrNull(`bs-dw-${d}-sl`);
+    if (t != null || sl != null) {
+      day_wise[d] = { target: t, sl: sl };
+    }
+  });
+
+  const body = {
+    start_time:              _timeOrNull('bs-start-time'),
+    entry_end_time:          _timeOrNull('bs-entry-end'),
+    square_off_time:         _timeOrNull('bs-sq-off'),
+    capital_deploy_pct:      _numOrNull('bs-capital-pct'),
+    session_pnl_enabled:     _boolEl('bs-pnl-enabled'),
+    session_pnl_target_pts:  _numOrNull('bs-pnl-target'),
+    session_pnl_sl_pts:      _numOrNull('bs-pnl-sl'),
+    single_trade_target_pts: _numOrNull('bs-st-target'),
+    single_trade_sl_pts:     _numOrNull('bs-st-sl'),
+    day_wise:                Object.keys(day_wise).length ? day_wise : null,
+    tsl_enabled:             _boolEl('bs-tsl-enabled'),
+    tsl_base_profit:         _numOrNull('bs-tsl-base-profit'),
+    tsl_base_lock:           _numOrNull('bs-tsl-base-lock'),
+    tsl_step_profit:         _numOrNull('bs-tsl-step-profit'),
+    tsl_step_lock:           _numOrNull('bs-tsl-step-lock'),
+    daily_loss_limit:        _numOrNull('bs-daily-loss'),
+    max_trades_per_day:      (() => { const v = _numOrNull('bs-max-trades'); return v !== null ? parseInt(v) : null; })(),
+  };
+
+  // Remove null values
+  Object.keys(body).forEach(k => { if (body[k] === null) delete body[k]; });
+
+  try {
+    const d = await api('POST', `/broker/${broker}/settings`, body);
+    toast(d.message || 'Settings saved!', 'ok');
   } catch (e) {
     toast(e.message || 'Save failed', 'err');
   }

@@ -1579,6 +1579,265 @@ async def get_referral(user=Depends(get_current_user)):
     }
 
 
+# ── Per-Broker Settings ───────────────────────────────────────────────────────
+
+_VALID_BROKERS = {"zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww"}
+
+# Mapping: UI field name → (broker_cfg key in client_strategy_overrides, python type)
+_BCK = {
+    "start_time":              ("v3.start_time",                     str),
+    "entry_end_time":          ("v3.entry_end_time",                  str),
+    "square_off_time":         ("v3.square_off_time",                 str),
+    "session_pnl_enabled":     ("v3.guardrail_pnl.enabled",           bool),
+    "session_pnl_target_pts":  ("v3.guardrail_pnl.target_pts",        float),
+    "session_pnl_sl_pts":      ("v3.guardrail_pnl.stoploss_pts",      float),
+    "single_trade_target_pts": ("v3.single_trade_target_pts",         float),
+    "single_trade_sl_pts":     ("v3.single_trade_stoploss_pts",       float),
+    "tsl_enabled":             ("v3.tsl_scalable.enabled",            bool),
+    "tsl_base_profit":         ("v3.tsl_scalable.base_profit",        float),
+    "tsl_base_lock":           ("v3.tsl_scalable.base_lock",          float),
+    "tsl_step_profit":         ("v3.tsl_scalable.step_profit",        float),
+    "tsl_step_lock":           ("v3.tsl_scalable.step_lock",          float),
+    "max_trades_per_day":      ("v3.max_trades_per_day",              int),
+}
+_DAY_MAP = {"MON": "monday", "TUE": "tuesday", "WED": "wednesday", "THU": "thursday", "FRI": "friday"}
+
+
+def _read_admin_v3_defaults() -> dict:
+    """Read admin strategy defaults for the settings GET response."""
+    try:
+        import json as _json
+        with open("config/strategy_logic.json") as _f:
+            _strat = _json.load(_f)
+        _v3 = _strat.get("NIFTY", {}).get("sell", {}).get("v3", {}) or {}
+        _pnl = _v3.get("guardrail_pnl") or {}
+        _tsl = _v3.get("tsl_scalable") or {}
+        return {
+            "start_time":              _v3.get("start_time") or _strat.get("NIFTY", {}).get("sell", {}).get("start_time") or "09:20",
+            "entry_end_time":          _v3.get("entry_end_time") or "14:00",
+            "square_off_time":         _v3.get("square_off_time") or "15:15",
+            "session_pnl_enabled":     bool(_pnl.get("enabled", False)),
+            "session_pnl_target_pts":  _pnl.get("target_pts"),
+            "session_pnl_sl_pts":      _pnl.get("stoploss_pts"),
+            "single_trade_target_pts": _v3.get("single_trade_target_pts") or None,
+            "single_trade_sl_pts":     _v3.get("single_trade_stoploss_pts") or None,
+            "tsl_enabled":             bool(_tsl.get("enabled", False)),
+            "tsl_base_profit":         _tsl.get("base_profit"),
+            "tsl_base_lock":           _tsl.get("base_lock"),
+            "tsl_step_profit":         _tsl.get("step_profit"),
+            "tsl_step_lock":           _tsl.get("step_lock"),
+            "max_trades_per_day":      _v3.get("max_trades_per_day"),
+            "day_wise":                {
+                d: {
+                    "target": (_v3.get(long) or {}).get("single_trade_target_pts"),
+                    "sl":     (_v3.get(long) or {}).get("single_trade_stoploss_pts"),
+                }
+                for d, long in _DAY_MAP.items()
+            },
+        }
+    except Exception:
+        return {}
+
+
+def _get_broker_instance(client_id: int, broker: str):
+    return db_fetchone(
+        "SELECT id, client_strategy_overrides, daily_loss_limit, max_daily_trades, capital_allocated, "
+        "       trading_locked_until, per_trade_loss_limit, max_position_size, max_open_positions, "
+        "       max_drawdown_pct, risk_per_trade_pct "
+        "FROM client_broker_instances "
+        "WHERE client_id=? AND broker=? AND status!='removed' LIMIT 1",
+        (client_id, broker)
+    )
+
+
+def _parse_broker_cfg(inst) -> dict:
+    """Return broker_cfg sub-dict from client_strategy_overrides."""
+    try:
+        if inst and inst.get("client_strategy_overrides"):
+            raw = json.loads(inst["client_strategy_overrides"])
+            return raw.get("broker_cfg", {})
+    except Exception:
+        pass
+    return {}
+
+
+def _broker_cfg_to_ui(broker_cfg: dict) -> dict:
+    """Convert broker_cfg internal keys to UI field names."""
+    out = {}
+    for field, (key, _) in _BCK.items():
+        if key in broker_cfg:
+            out[field] = broker_cfg[key]
+    # Day-wise overrides
+    day_wise = {}
+    for d, long in _DAY_MAP.items():
+        t_key = f"v3.{long}.single_trade_target_pts"
+        sl_key = f"v3.{long}.single_trade_stoploss_pts"
+        if t_key in broker_cfg or sl_key in broker_cfg:
+            day_wise[d] = {
+                "target": broker_cfg.get(t_key),
+                "sl":     broker_cfg.get(sl_key),
+            }
+    if day_wise:
+        out["day_wise"] = day_wise
+    return out
+
+
+@router.get("/broker/{broker}/settings")
+async def get_broker_settings(broker: str, user=Depends(get_current_user)):
+    if broker not in _VALID_BROKERS:
+        raise HTTPException(400, "Invalid broker.")
+    inst = _get_broker_instance(user["id"], broker)
+    if not inst:
+        return {"configured": False, "broker": broker, "settings": {}, "admin_defaults": _read_admin_v3_defaults()}
+
+    broker_cfg = _parse_broker_cfg(inst)
+    client_settings = _broker_cfg_to_ui(broker_cfg)
+
+    # Merge DB columns
+    if inst.get("daily_loss_limit") is not None:
+        client_settings.setdefault("daily_loss_limit", inst["daily_loss_limit"])
+    if inst.get("max_daily_trades") is not None:
+        client_settings.setdefault("max_trades_per_day", inst["max_daily_trades"])
+
+    # Capital deploy pct from overrides JSON top-level
+    try:
+        raw_over = json.loads(inst["client_strategy_overrides"]) if inst.get("client_strategy_overrides") else {}
+    except Exception:
+        raw_over = {}
+    if "capital_deploy_pct" in raw_over:
+        client_settings["capital_deploy_pct"] = raw_over["capital_deploy_pct"]
+
+    if inst.get("trading_locked_until"):
+        client_settings["trading_locked_until"] = inst["trading_locked_until"]
+
+    return {
+        "configured": True,
+        "broker":         broker,
+        "instance_id":    inst["id"],
+        "settings":       client_settings,
+        "admin_defaults": _read_admin_v3_defaults(),
+        "capital_allocated": inst.get("capital_allocated") or 0,
+        "per_trade_loss_limit": inst.get("per_trade_loss_limit") or 0,
+        "max_position_size":    inst.get("max_position_size") or 1,
+        "max_open_positions":   inst.get("max_open_positions") or 1,
+        "max_drawdown_pct":     inst.get("max_drawdown_pct") or 0,
+        "risk_per_trade_pct":   inst.get("risk_per_trade_pct") or 1.0,
+    }
+
+
+class BrokerSettingsUpdate(BaseModel):
+    start_time:              Optional[str]   = None
+    entry_end_time:          Optional[str]   = None
+    square_off_time:         Optional[str]   = None
+    capital_deploy_pct:      Optional[float] = None
+    session_pnl_enabled:     Optional[bool]  = None
+    session_pnl_target_pts:  Optional[float] = None
+    session_pnl_sl_pts:      Optional[float] = None
+    single_trade_target_pts: Optional[float] = None
+    single_trade_sl_pts:     Optional[float] = None
+    day_wise:                Optional[dict]  = None
+    tsl_enabled:             Optional[bool]  = None
+    tsl_base_profit:         Optional[float] = None
+    tsl_base_lock:           Optional[float] = None
+    tsl_step_profit:         Optional[float] = None
+    tsl_step_lock:           Optional[float] = None
+    daily_loss_limit:        Optional[float] = None
+    max_trades_per_day:      Optional[int]   = None
+
+
+@router.post("/broker/{broker}/settings")
+async def save_broker_settings(broker: str, body: BrokerSettingsUpdate, user=Depends(get_current_user)):
+    if broker not in _VALID_BROKERS:
+        raise HTTPException(400, "Invalid broker.")
+    inst = _get_broker_instance(user["id"], broker)
+    if not inst:
+        raise HTTPException(400, f"No {broker} instance configured.")
+
+    # Load current overrides
+    try:
+        raw_over = json.loads(inst["client_strategy_overrides"]) if inst.get("client_strategy_overrides") else {}
+    except Exception:
+        raw_over = {}
+
+    broker_cfg = raw_over.get("broker_cfg", {})
+
+    # Apply each field → broker_cfg key
+    for field, (cfg_key, typ) in _BCK.items():
+        val = getattr(body, field, None)
+        if val is not None:
+            if typ == bool:
+                broker_cfg[cfg_key] = bool(val)
+            elif typ == float:
+                broker_cfg[cfg_key] = float(val)
+            elif typ == int:
+                broker_cfg[cfg_key] = int(val)
+            else:
+                broker_cfg[cfg_key] = val
+
+    # Day-wise overrides
+    if body.day_wise is not None:
+        for d_upper, vals in body.day_wise.items():
+            long = _DAY_MAP.get(d_upper.upper())
+            if not long:
+                continue
+            target = vals.get("target")
+            sl     = vals.get("sl")
+            t_key  = f"v3.{long}.single_trade_target_pts"
+            sl_key = f"v3.{long}.single_trade_stoploss_pts"
+            if target is not None:
+                broker_cfg[t_key] = float(target)
+            else:
+                broker_cfg.pop(t_key, None)
+            if sl is not None:
+                broker_cfg[sl_key] = float(sl)
+            else:
+                broker_cfg.pop(sl_key, None)
+
+    raw_over["broker_cfg"] = broker_cfg
+
+    # Capital deploy pct — stored at overrides top-level
+    if body.capital_deploy_pct is not None:
+        raw_over["capital_deploy_pct"] = float(body.capital_deploy_pct)
+
+    # Build SQL update
+    sql_sets  = ["client_strategy_overrides=?"]
+    sql_vals  = [json.dumps(raw_over)]
+
+    if body.daily_loss_limit is not None:
+        sql_sets.append("daily_loss_limit=?")
+        sql_vals.append(body.daily_loss_limit)
+    if body.max_trades_per_day is not None:
+        sql_sets.append("max_daily_trades=?")
+        sql_vals.append(body.max_trades_per_day)
+
+    sql_vals.append(inst["id"])
+    db_execute(f"UPDATE client_broker_instances SET {', '.join(sql_sets)} WHERE id=?", sql_vals)
+    _audit_client(user["id"], "broker_settings_save", {"broker": broker})
+    return {"success": True, "message": f"{broker.capitalize()} settings saved."}
+
+
+@router.post("/broker/{broker}/stop")
+async def stop_broker_bot(broker: str, user=Depends(get_current_user)):
+    """Stop the bot for a specific broker instance."""
+    if broker not in _VALID_BROKERS:
+        raise HTTPException(400, "Invalid broker.")
+    inst = db_fetchone(
+        "SELECT id, broker, status FROM client_broker_instances "
+        "WHERE client_id=? AND broker=? AND status!='removed' LIMIT 1",
+        (user["id"], broker)
+    )
+    if not inst:
+        raise HTTPException(400, f"No {broker} instance configured.")
+
+    ok, msg = instance_manager.stop_instance(inst["id"])
+    db_execute(
+        "UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?",
+        (inst["id"],)
+    )
+    _audit_client(user["id"], "bot_deactivate", {"broker": broker})
+    return {"success": True, "message": msg or f"{broker.capitalize()} bot stopped."}
+
+
 # ── Risk Parameters ───────────────────────────────────────────────────────────
 
 class RiskParamsUpdate(BaseModel):

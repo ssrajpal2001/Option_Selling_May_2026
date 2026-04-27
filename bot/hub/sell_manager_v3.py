@@ -58,6 +58,25 @@ class SellManagerV3:
         self.exit_logic = ExitLogic(self)
         self.dashboard_logic = DashboardLogic(self)
 
+        # Load per-client broker overrides (set via client dashboard)
+        self._broker_cfg = {}
+        if self.user_id and not getattr(self.orchestrator, 'is_backtest', False):
+            try:
+                from config.db import db_fetchone as _dfo
+                _row = _dfo(
+                    "SELECT client_strategy_overrides FROM client_broker_instances "
+                    "WHERE client_id=? AND status!='removed' "
+                    "ORDER BY CASE WHEN status='running' THEN 0 ELSE 1 END, id DESC LIMIT 1",
+                    (self.user_id,)
+                )
+                if _row and _row.get("client_strategy_overrides"):
+                    _raw = json.loads(_row["client_strategy_overrides"])
+                    self._broker_cfg = _raw.get("broker_cfg", {})
+                    if self._broker_cfg:
+                        logger.info(f"[SellManagerV3] Loaded {len(self._broker_cfg)} client broker overrides for user {self.user_id}.")
+            except Exception as _e:
+                logger.warning(f"[SellManagerV3] Could not load client broker overrides: {_e}")
+
         # Log strategy settings on startup for visibility (Live and Backtest)
         self.log_active_strategy_settings()
 
@@ -106,12 +125,20 @@ class SellManagerV3:
     def pe_strike(self): return self.sell_pe_strike
 
     def _cfg(self, path, default=None, type_func=None):
-        # Multi-tenant: If user session is present, prefer user-specific strategy config
-        if self.user_session and hasattr(self.user_session, 'strategy_config'):
-            # Path in JSON is 'sell.v3.etc'
-            # strategy_config is likely the resolved dictionary
-            pass # Strategy resolution logic in orchestrator handles this via get_strat_cfg
+        # 1. Per-client broker overrides (highest priority — set via client dashboard)
+        if self._broker_cfg:
+            val = self._broker_cfg.get(path)
+            if val is not None:
+                if type_func == bool:
+                    return str(val).lower() in ('true', '1', 'yes') if isinstance(val, str) else bool(val)
+                if type_func:
+                    try:
+                        return type_func(val)
+                    except Exception:
+                        pass
+                return val
 
+        # 2. Admin strategy config (admin json_config)
         return self.orchestrator.get_strat_cfg(f"sell.{path}", default, type_func)
 
     def _v3_cfg(self, path, default=None, type_func=None, timestamp=None):
