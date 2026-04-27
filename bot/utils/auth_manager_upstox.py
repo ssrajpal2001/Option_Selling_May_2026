@@ -144,9 +144,12 @@ def handle_upstox_login_automated(credentials, return_error=False):
 
     try:
         logger.info(f"Attempting background Upstox login for {user_id}...")
+        # impersonate="chrome131" sets the TLS fingerprint; the custom headers above declare
+        # Chrome 140 UA/hints — this deliberate combination exactly matches the upstream
+        # upstox-totp library (client.py) that was proven to bypass Upstox bot-detection.
         session = cffi_requests.Session(impersonate="chrome131", headers=headers)
 
-        # ── Step 1: Authorization dialog → extract user_id param from redirect ─
+        # ── Step 1: Authorization dialog → extract session user_id, client_id, user_type ─
         step1_url = f"{_API_BASE}/v2/login/authorization/dialog"
         step1_params = {
             "response_type": "code",
@@ -157,14 +160,16 @@ def handle_upstox_login_automated(credentials, return_error=False):
         parsed1 = urlparse(resp1.url)
         qs1 = parse_qs(parsed1.query)
 
-        upstox_user_id = (qs1.get("user_id") or [""])[0]
+        upstox_user_id  = (qs1.get("user_id")   or [""])[0]
         dialog_client_id = (qs1.get("client_id") or [api_key])[0]
+        user_type        = (qs1.get("user_type") or [""])[0]
 
         if not upstox_user_id:
             raise ValueError(
                 f"Step 1 failed — could not extract user_id from redirect URL. "
                 f"Final URL: {resp1.url!r}  status={resp1.status_code}"
             )
+        logger.debug(f"Step 1: session user_id={upstox_user_id!r} user_type={user_type!r}")
 
         time.sleep(1)
 
