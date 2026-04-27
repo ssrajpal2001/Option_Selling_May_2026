@@ -1599,6 +1599,13 @@ _BCK = {
     "tsl_step_profit":         ("v3.tsl_scalable.step_profit",        float),
     "tsl_step_lock":           ("v3.tsl_scalable.step_lock",          float),
     "max_trades_per_day":      ("v3.max_trades_per_day",              int),
+    "smart_rolling_enabled":   ("v3.smart_rolling_enabled",           bool),
+    "profit_target_enabled":   ("v3.profit_target_enabled",           bool),
+    "profit_target_pct":       ("v3.profit_target_pct",               float),
+    "ltp_decay_enabled":       ("v3.ltp_decay_enabled",               bool),
+    "ltp_exit_min":            ("v3.ltp_exit_min",                    float),
+    "ratio_exit_enabled":      ("v3.ratio_exit.enabled",              bool),
+    "ratio_exit_threshold":    ("v3.ratio_exit.threshold",            float),
 }
 _DAY_MAP = {"MON": "monday", "TUE": "tuesday", "WED": "wednesday", "THU": "thursday", "FRI": "friday"}
 
@@ -1627,6 +1634,13 @@ def _read_admin_v3_defaults() -> dict:
             "tsl_step_profit":         _tsl.get("step_profit"),
             "tsl_step_lock":           _tsl.get("step_lock"),
             "max_trades_per_day":      _v3.get("max_trades_per_day"),
+            "smart_rolling_enabled":   bool(_v3.get("smart_rolling_enabled", True)),
+            "profit_target_enabled":   bool(_v3.get("profit_target_enabled", False)),
+            "profit_target_pct":       _v3.get("profit_target_pct"),
+            "ltp_decay_enabled":       bool(_v3.get("ltp_decay_enabled", False)),
+            "ltp_exit_min":            _v3.get("ltp_exit_min"),
+            "ratio_exit_enabled":      bool((_v3.get("ratio_exit") or {}).get("enabled", False)),
+            "ratio_exit_threshold":    (_v3.get("ratio_exit") or {}).get("threshold"),
             "day_wise":                {
                 d: {
                     "target": (_v3.get(long) or {}).get("single_trade_target_pts"),
@@ -1743,6 +1757,13 @@ class BrokerSettingsUpdate(BaseModel):
     tsl_step_lock:           Optional[float] = None
     daily_loss_limit:        Optional[float] = None
     max_trades_per_day:      Optional[int]   = None
+    smart_rolling_enabled:   Optional[bool]  = None
+    profit_target_enabled:   Optional[bool]  = None
+    profit_target_pct:       Optional[float] = None
+    ltp_decay_enabled:       Optional[bool]  = None
+    ltp_exit_min:            Optional[float] = None
+    ratio_exit_enabled:      Optional[bool]  = None
+    ratio_exit_threshold:    Optional[float] = None
 
 
 @router.post("/broker/{broker}/settings")

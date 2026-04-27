@@ -1115,6 +1115,72 @@
               </div>
             </div>
 
+            <!-- ── Rollover / Smart Roll ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">🔄 Rollover / Smart Roll</div>
+
+              <!-- Smart Rolling master toggle -->
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px">
+                <div>
+                  <div class="inp-label" style="font-size:12px;font-weight:600;color:var(--text)">Smart Rolling</div>
+                  <div style="font-size:11px;color:var(--muted)">Continuous trading across expiry cycles</div>
+                  <div class="bsettings-hint" id="bs-roll-smart-adm"></div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-smart">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <!-- Profit Target -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div class="inp-label" style="margin:0">Profit Target</div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-profit-en">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <div>
+                  <div class="inp-label">Target (%)</div>
+                  <input type="number" class="inp" id="bs-roll-profit-pct" placeholder="e.g. 12" step="0.5" min="0">
+                  <div class="bsettings-hint" id="bs-roll-profit-pct-adm"></div>
+                </div>
+              </div>
+
+              <!-- LTP Decay -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div class="inp-label" style="margin:0">LTP Decay Exit</div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-ltp-en">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <div>
+                  <div class="inp-label">LTP Exit Min (≤ pts)</div>
+                  <input type="number" class="inp" id="bs-roll-ltp-min" placeholder="e.g. 20" step="1" min="0">
+                  <div class="bsettings-hint" id="bs-roll-ltp-min-adm"></div>
+                </div>
+              </div>
+
+              <!-- Ratio Exit -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div class="inp-label" style="margin:0">Ratio Exit (CE:PE)</div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-ratio-en">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <div class="inp-label">Ratio Threshold</div>
+                  <input type="number" class="inp" id="bs-roll-ratio-thr" placeholder="e.g. 3" step="0.1" min="0">
+                  <div class="bsettings-hint" id="bs-roll-ratio-thr-adm"></div>
+                </div>
+              </div>
+            </div>
+
             <!-- ── Daily Limits ── -->
             <div class="bsettings-group" style="margin-bottom:16px">
               <div class="bsettings-group-title">🛡️ Daily Limits</div>
@@ -2423,6 +2489,19 @@ async function loadBrokerSettings(broker) {
     _setVal('bs-tsl-step-lock', s.tsl_step_lock);
     _setHint('bs-tsl-step-lock-adm', adm.tsl_step_lock);
 
+    // Rollover / Smart Roll
+    _setVal('bs-roll-smart', s.smart_rolling_enabled != null ? s.smart_rolling_enabled : adm.smart_rolling_enabled);
+    _setHint('bs-roll-smart-adm', adm.smart_rolling_enabled != null ? `Admin: ${adm.smart_rolling_enabled ? 'On' : 'Off'}` : null);
+    _setVal('bs-roll-profit-en', s.profit_target_enabled != null ? s.profit_target_enabled : adm.profit_target_enabled);
+    _setVal('bs-roll-profit-pct', s.profit_target_pct);
+    _setHint('bs-roll-profit-pct-adm', adm.profit_target_pct);
+    _setVal('bs-roll-ltp-en', s.ltp_decay_enabled != null ? s.ltp_decay_enabled : adm.ltp_decay_enabled);
+    _setVal('bs-roll-ltp-min', s.ltp_exit_min);
+    _setHint('bs-roll-ltp-min-adm', adm.ltp_exit_min);
+    _setVal('bs-roll-ratio-en', s.ratio_exit_enabled != null ? s.ratio_exit_enabled : adm.ratio_exit_enabled);
+    _setVal('bs-roll-ratio-thr', s.ratio_exit_threshold);
+    _setHint('bs-roll-ratio-thr-adm', adm.ratio_exit_threshold);
+
     // Daily limits
     _setVal('bs-daily-loss', s.daily_loss_limit);
     _setVal('bs-max-trades', s.max_trades_per_day);
@@ -2511,6 +2590,13 @@ async function saveBrokerSettings() {
     tsl_step_lock:           _numOrNull('bs-tsl-step-lock'),
     daily_loss_limit:        _numOrNull('bs-daily-loss'),
     max_trades_per_day:      (() => { const v = _numOrNull('bs-max-trades'); return v !== null ? parseInt(v) : null; })(),
+    smart_rolling_enabled:   _boolEl('bs-roll-smart'),
+    profit_target_enabled:   _boolEl('bs-roll-profit-en'),
+    profit_target_pct:       _numOrNull('bs-roll-profit-pct'),
+    ltp_decay_enabled:       _boolEl('bs-roll-ltp-en'),
+    ltp_exit_min:            _numOrNull('bs-roll-ltp-min'),
+    ratio_exit_enabled:      _boolEl('bs-roll-ratio-en'),
+    ratio_exit_threshold:    _numOrNull('bs-roll-ratio-thr'),
   };
 
   // Remove null values
