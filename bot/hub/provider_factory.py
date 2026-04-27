@@ -156,11 +156,21 @@ class ProviderFactory:
                     api_key = decrypt_secret(dp['api_key_encrypted'])
                     access_token = decrypt_secret(dp['access_token_encrypted'])
 
-                    # Use token_issued_at (set only on actual token issuance) rather than
-                    # updated_at (also updated by admin config saves) for the freshness check.
+                    # Use token_issued_at (set only on actual token issuance) for the
+                    # freshness check when a token exists. updated_at is also touched by
+                    # admin config saves, so relying on it alone can produce false negatives
+                    # (admin saves today → needs_refresh=False → stale token used).
+                    # Only fall back to updated_at when token_issued_at is absent AND no
+                    # token is stored yet (brand-new config before first issuance).
                     token_issued_at = dp.get('token_issued_at')
                     updated_at = dp.get('updated_at')
-                    check_ts = token_issued_at or updated_at
+                    if access_token:
+                        # Token exists — require token_issued_at to be today; if it's
+                        # absent, force refresh so token_issued_at gets populated.
+                        check_ts = token_issued_at
+                    else:
+                        # No token yet — use updated_at as a coarse fallback
+                        check_ts = token_issued_at or updated_at
 
                     # Daily Token Refresh check for Global Upstox
                     needs_refresh = True
