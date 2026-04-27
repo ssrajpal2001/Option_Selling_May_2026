@@ -153,21 +153,32 @@ class SellV3Base:
         # First occurrence wins so that a single calc_tasks entry covers all rules
         # referencing the same indicator.
         _KNOWN = ('vwap', 'rsi', 'roc', 'slope', 'vwap_slope', 'ltp', 'close')
+        # Resolve named config defaults once so call sites never use raw literals
+        _rsi_period = self._v3_cfg('rsi.period', 14, int)
+        _roc_length = self._v3_cfg('roc.length', 9, int)
+
         ind_config = {}
         for r in rules:
             ind = r.get('indicator', '').lower()
             r_tf = int(r.get('tf', 1))
             if ind == 'advanced':
+                # Advanced operands inherit the enclosing rule's tf.
+                # Also resolve period/length for rsi/roc operands via named config.
                 for op_key in ('operand1', 'operand2'):
                     op = r.get(op_key, '').lower()
                     if op in _KNOWN and op not in ind_config:
-                        ind_config[op] = {'tf': r_tf}
+                        op_cfg = {'tf': r_tf}
+                        if op == 'rsi':
+                            op_cfg['period'] = int(r.get('period', _rsi_period))
+                        elif op == 'roc':
+                            op_cfg['length'] = int(r.get('length', _roc_length))
+                        ind_config[op] = op_cfg
             elif ind in _KNOWN and ind not in ind_config:
                 cfg = {'tf': r_tf}
                 if ind == 'rsi':
-                    cfg['period'] = int(r.get('period', self._v3_cfg('rsi.period', 14, int)))
+                    cfg['period'] = int(r.get('period', _rsi_period))
                 elif ind == 'roc':
-                    cfg['length'] = int(r.get('length', self._v3_cfg('roc.length', 9, int)))
+                    cfg['length'] = int(r.get('length', _roc_length))
                 ind_config[ind] = cfg
 
         calc_tasks = {}
@@ -177,9 +188,9 @@ class SellV3Base:
             if ind == 'vwap':
                 calc_tasks['vwap'] = self._get_combined_vwap(ce_key, pe_key, anchor)
             elif ind == 'rsi':
-                calc_tasks['rsi'] = self.orchestrator.indicator_manager.calculate_combined_rsi(ce_key, pe_key, anchor, tf=ind_tf, period=cfg.get('period', 14))
+                calc_tasks['rsi'] = self.orchestrator.indicator_manager.calculate_combined_rsi(ce_key, pe_key, anchor, tf=ind_tf, period=cfg.get('period', _rsi_period))
             elif ind == 'roc':
-                calc_tasks['roc'] = self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, anchor, tf=ind_tf, length=cfg.get('length', 9))
+                calc_tasks['roc'] = self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, anchor, tf=ind_tf, length=cfg.get('length', _roc_length))
             elif ind in ('slope', 'vwap_slope'):
                 calc_tasks['slope'] = self._get_combined_slope(ce_key, pe_key, timestamp, ind_tf)
             elif ind == 'ltp':
