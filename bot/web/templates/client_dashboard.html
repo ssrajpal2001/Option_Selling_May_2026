@@ -590,7 +590,7 @@
 
         <!-- BOT toggle button (big) -->
         <button id="bot-big-btn" class="bot-toggle-btn state-start" onclick="onBotToggle(!getBotRunning())" style="margin-bottom:10px">
-          ▶ START BOT
+          ▶ START ALL
         </button>
 
         <!-- Trading toggle row -->
@@ -2059,10 +2059,10 @@ function updateBotUI(running, tradingEnabled) {
   const bb = document.getElementById('bot-big-btn');
   if (running) {
     bb.className = 'bot-toggle-btn state-stop';
-    bb.textContent = '■ STOP BOT';
+    bb.textContent = '■ STOP ALL';
   } else {
     bb.className = 'bot-toggle-btn state-start';
-    bb.textContent = '▶ START BOT';
+    bb.textContent = '▶ START ALL';
   }
 
   // Status badge
@@ -2185,7 +2185,7 @@ function updateKillSwitchUI() {
 async function onBotToggle(wantRunning) {
   const btn = document.getElementById('bot-big-btn');
   btn.disabled = true;
-  btn.textContent = wantRunning ? '⏳ Starting...' : '⏳ Stopping...';
+  btn.textContent = wantRunning ? '⏳ Starting all...' : '⏳ Stopping all...';
   try {
     if (wantRunning) {
       const d = await api('POST', '/bot/start', {});
@@ -2209,7 +2209,8 @@ async function onBotToggle(wantRunning) {
             .join(', ');
           parts.push(`Failed — ${failDetail || d.failed.map(cap).join(', ')}`);
         }
-        toast(parts.join(' · ') || 'Bot started', 'ok');
+        const toastType = d.success === false ? 'warn' : 'ok';
+        toast(parts.join(' · ') || (d.success === false ? 'No brokers could be started' : 'Bot started'), toastType);
         if (d.plan_warning) toast(d.plan_warning, 'warn');
       } else {
         toast(d.message || 'Bot started successfully!', 'ok');

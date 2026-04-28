@@ -1071,9 +1071,26 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
     failed   = [r for r in results if r["status"] == "failed"]
 
     if not started and not already:
-        # Nothing actually launched — surface the first error/skip reason
-        first_msg = (skipped + failed)[0]["message"] if (skipped + failed) else "No brokers could be started."
-        raise HTTPException(400, first_msg)
+        # Nothing launched — return summary as 200 so the frontend toast
+        # shows the skip/fail reasons rather than a generic error.
+        first_reason = (skipped + failed)[0]["message"] if (skipped + failed) else "No brokers could be started."
+        parts = []
+        if skipped:
+            skip_detail = "; ".join(f"{r['broker'].capitalize()} ({r['message']})" for r in skipped)
+            parts.append(f"{len(skipped)} skipped — {skip_detail}")
+        if failed:
+            fail_detail = "; ".join(f"{r['broker'].capitalize()}: {r['message']}" for r in failed)
+            parts.append(f"{len(failed)} failed — {fail_detail}")
+        summary_msg = ". ".join(parts) or first_reason
+        return {
+            "success": False,
+            "message": summary_msg,
+            "started": [],
+            "already_running": [],
+            "skipped": [r["broker"] for r in skipped],
+            "failed": [r["broker"] for r in failed],
+            "details": results,
+        }
 
     parts = []
     if started:
