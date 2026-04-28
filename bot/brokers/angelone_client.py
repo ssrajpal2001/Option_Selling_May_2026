@@ -43,8 +43,15 @@ class AngelOneClient(BaseBroker):
                 else:
                     raise Exception("The authentication process failed and did not return a client.")
             except Exception as e:
-                logger.critical(f"AUTHENTICATION FAILED for AngelOne account [{self.instance_name}]. Reason: {e}", exc_info=True)
-                sys.exit(1)
+                logger.critical(
+                    f"AUTHENTICATION FAILED for AngelOne account [{self.instance_name}]. Reason: {e}. "
+                    f"Continuing in degraded mode (market data / paper trading only). "
+                    f"Live orders will be blocked until credentials are configured via Settings.",
+                    exc_info=True
+                )
+                # Do NOT sys.exit — allow the subprocess to continue for paper trading
+                # and market data. Live order placement is gated by paper_trade mode
+                # and per-broker trading_active checks.
 
         # Mount SourceIPHTTPAdapter on SmartAPI's requests session so that ALL
         # HTTP calls (login, orders, instruments, funds) route through assigned IP.

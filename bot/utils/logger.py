@@ -47,12 +47,12 @@ def configure_logger(config_manager: ConfigManager):
     if os.environ.get('UI_BACKTEST_MODE') != 'True':
         class TradeSummaryFilter(logging.Filter):
             def filter(self, record):
-                # Only allow records containing '[TRADE_SUMMARY]' in msg
-                msg = record.getMessage()
-                # Also allow very critical errors to show in console just in case
-                if record.levelno >= logging.CRITICAL:
-                    return True
-                return '[TRADE_SUMMARY]' in msg
+                # Only allow records containing '[TRADE_SUMMARY]' in msg.
+                # CRITICAL and above are intentionally NOT passed through here —
+                # they are already captured by the rotating file_handler.
+                # Passing them here caused double-logging on EC2 when stdout is
+                # redirected to the same file as the file_handler.
+                return '[TRADE_SUMMARY]' in record.getMessage()
 
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)

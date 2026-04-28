@@ -61,8 +61,15 @@ class DhanClient(BaseBroker):
                     self.dhan = handle_dhan_login(credentials_section, self.config_manager)
                     logger.info(f"Dhan authentication successful for {credentials_section} [{self.instance_name}].")
                 except Exception as e:
-                    logger.critical(f"AUTHENTICATION FAILED for Dhan account [{self.instance_name}]. Reason: {e}", exc_info=True)
-                    sys.exit(1)
+                    logger.critical(
+                        f"AUTHENTICATION FAILED for Dhan account [{self.instance_name}]. Reason: {e}. "
+                        f"Continuing in degraded mode (market data / paper trading only). "
+                        f"Live orders will be blocked until credentials are configured via Settings.",
+                        exc_info=True
+                    )
+                    # Do NOT sys.exit — allow the subprocess to continue for paper trading
+                    # and market data. Live order placement is gated by paper_trade mode
+                    # and per-broker trading_active checks.
 
             # Proactively trigger security list loading in the background AFTER dhan is initialized
             if not self.paper_trade and self.dhan:
