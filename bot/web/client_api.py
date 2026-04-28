@@ -482,7 +482,7 @@ async def save_broker_config(body: BrokerSetup, user=Depends(get_current_user)):
         raise HTTPException(400, "trading_mode must be 'paper' or 'live'")
 
     existing_row = db_fetchone(
-        "SELECT api_key_encrypted, api_secret_encrypted, access_token_encrypted, password_encrypted, totp_encrypted, broker_user_id_encrypted, token_updated_at FROM client_broker_instances WHERE client_id=? AND broker=? AND status != 'removed'",
+        "SELECT api_key_encrypted, api_secret_encrypted, access_token_encrypted, password_encrypted, totp_encrypted, broker_user_id_encrypted, token_updated_at FROM client_broker_instances WHERE client_id=? AND broker=?",
         (user["id"], body.broker)
     )
 
