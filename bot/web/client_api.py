@@ -847,10 +847,20 @@ async def toggle_broker_trading(body: TradingToggleRequest, user=Depends(get_cur
 @router.post("/broker/quick-update")
 async def broker_quick_update(body: BrokerQuickUpdateRequest, user=Depends(get_current_user)):
     """Inline update of trading_mode and quantity for a broker — no credentials required."""
+    _VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+    if body.broker not in _VALID_BROKERS:
+        raise HTTPException(400, f"Broker must be one of: {', '.join(_VALID_BROKERS)}.")
     if body.trading_mode not in ("paper", "live"):
         raise HTTPException(400, "trading_mode must be 'paper' or 'live'")
     if body.quantity < 1:
         raise HTTPException(400, "quantity must be >= 1")
+    # Verify broker ownership before any write
+    _inst = db_fetchone(
+        "SELECT id FROM client_broker_instances WHERE client_id=? AND broker=?",
+        (user["id"], body.broker)
+    )
+    if not _inst:
+        raise HTTPException(404, "Broker not configured for this account.")
 
     db_execute(
         "UPDATE client_broker_instances SET trading_mode=?, quantity=? WHERE client_id=? AND broker=?",
