@@ -1213,6 +1213,22 @@ async def _log_cleanup_scheduler():
             await asyncio.sleep(60)
 
 
+async def _feed_server_task() -> None:
+    """
+    Launches the shared FeedServer (Task #152).
+    Waits for _startup_auto_connect to obtain fresh Upstox/Dhan tokens
+    before initializing the WebSocket feeds.
+    """
+    # Give the auto-connect task (which waits 5s then refreshes tokens) time to finish
+    await asyncio.sleep(20)
+    try:
+        from hub.feed_server import get_feed_server
+        server = get_feed_server()
+        await server.start()          # blocks until server stops (runs indefinitely)
+    except Exception as _fse:
+        logger.error(f"[FeedServer] Fatal error: {_fse}", exc_info=True)
+
+
 @app.on_event("startup")
 async def startup_event():
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
@@ -1237,6 +1253,8 @@ async def startup_event():
     asyncio.create_task(_hub_reconnect_scanner())
     # Daily log file cleanup (02:00 AM IST)
     asyncio.create_task(_log_cleanup_scheduler())
+    # Shared Feed Server — single Upstox+Dhan WebSocket for all subprocesses (Task #152)
+    asyncio.create_task(_feed_server_task())
     # Telegram keyword-command poller (client chat queries: STATUS, SUMMARY, HELP)
     try:
         from utils.tg_poller import start_poller

@@ -316,13 +316,50 @@ class ProviderFactory:
             logger.error("No active data providers could be initialized.")
             raise RuntimeError("No data providers available.")
 
-        # If multiple feeds, wrap in DualFeedManager
+        # If multiple feeds, try FeedClient first in client-subprocess mode to avoid
+        # the global Dhan/Upstox WebSocket eviction loop caused by 4 subprocesses
+        # each opening their own connection with the same credentials (Task #152).
         if len(active_feeds) > 1:
-            from hub.dual_feed_manager import DualFeedManager
-            upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
-            dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
-            websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
-            logger.info("Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).")
+            import os as _os
+            _in_subprocess = bool(_os.environ.get('CLIENT_ID'))
+            _feed_server_init = bool(_os.environ.get('_FEED_SERVER_INIT'))
+            if _in_subprocess and not _feed_server_init:
+                # Probe the shared FeedServer — non-blocking, fast timeout
+                try:
+                    from hub.feed_client import FeedClient
+                    _probe = FeedClient()
+                    _server_up = await _probe.try_connect()
+                    await _probe.close()  # release probe connection
+                    if _server_up:
+                        websocket_manager = FeedClient()
+                        logger.info(
+                            "[ProviderFactory] FeedServer available — using FeedClient "
+                            "(shared tick distribution, no WS eviction)."
+                        )
+                    else:
+                        from hub.dual_feed_manager import DualFeedManager
+                        upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
+                        dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
+                        websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
+                        logger.warning(
+                            "[ProviderFactory] FeedServer not reachable — falling back to "
+                            "local DualFeedManager (WS eviction may occur)."
+                        )
+                except Exception as _fc_err:
+                    logger.warning(
+                        f"[ProviderFactory] FeedClient probe failed ({_fc_err}); "
+                        "falling back to local DualFeedManager."
+                    )
+                    from hub.dual_feed_manager import DualFeedManager
+                    upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
+                    dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
+                    websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
+            else:
+                from hub.dual_feed_manager import DualFeedManager
+                upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
+                dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
+                websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
+                logger.info("Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).")
         elif len(active_feeds) == 1:
             websocket_manager = active_feeds[0][1]
         else:
