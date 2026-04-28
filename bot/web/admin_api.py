@@ -1984,13 +1984,18 @@ _LOG_LINE_RE = re.compile(
 
 @router.get("/logs/all")
 async def global_logs_all(
-    lines: int = Query(default=200, ge=10, le=2000),
+    per_file_lines: int = Query(default=100, ge=10, le=500,
+                                description="Max lines to read from each log file"),
+    limit: int = Query(default=500, ge=10, le=5000,
+                       description="Max total entries returned after merge"),
     admin=Depends(require_admin),
 ):
     """
-    Return the last `lines` log entries merged from every client log file,
-    sorted by timestamp descending.
-    Each entry has: timestamp, level, client_id, broker, text.
+    Return up to `limit` log entries merged from the last `per_file_lines`
+    lines of every client_{id}_{broker}.log, sorted by timestamp descending.
+    Reading N lines per-file ensures every client is represented fairly even
+    when one log is much chattier than others.
+    Each entry exposes: ts, level, client_id, broker, message (and text alias).
     """
     from collections import deque
 
@@ -2012,7 +2017,7 @@ async def global_logs_all(
             broker = parts[1]
             fpath = os.path.join(log_dir, fname)
             try:
-                dq: deque = deque(maxlen=lines)
+                dq: deque = deque(maxlen=per_file_lines)
                 with open(fpath, "r", encoding="utf-8", errors="replace") as f:
                     for raw in f:
                         dq.append(raw.rstrip("\n"))
@@ -2027,14 +2032,16 @@ async def global_logs_all(
                         "level": lvl,
                         "client_id": cid,
                         "broker": broker,
+                        # `message` is the canonical field; `text` kept for compat
+                        "message": raw_line,
                         "text": raw_line,
                     })
             except Exception:
                 pass
 
-    # Sort by timestamp descending; entries without a ts fall to the bottom
+    # Sort by timestamp descending; entries without a ts sort to the bottom
     entries.sort(key=lambda e: e["ts"], reverse=True)
-    return {"entries": entries[:lines], "total": len(entries)}
+    return {"entries": entries[:limit], "total": len(entries)}
 
 
 # ── IP-conflict detection ──────────────────────────────────────────────────────
