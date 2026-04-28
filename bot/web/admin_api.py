@@ -1680,6 +1680,120 @@ async def update_client_static_ip(client_id: int, body: StaticIPBody,
     return {"success": True}
 
 
+# ── Broker Credential Management ─────────────────────────────────────────────
+
+@router.get("/clients/{client_id}/broker-credentials-status")
+async def get_broker_credentials_status(client_id: int, admin=Depends(require_admin)):
+    """
+    Return boolean flags indicating which credential fields are set for the
+    client's most-recently configured broker instance. No secret values
+    are returned — only True/False per field.
+    """
+    if not db_fetchone("SELECT id FROM users WHERE id=? AND role='client'", (client_id,)):
+        raise HTTPException(404, "Client not found")
+    row = db_fetchone(
+        """SELECT broker, api_key_encrypted, api_secret_encrypted,
+                  broker_user_id_encrypted, password_encrypted, totp_encrypted
+           FROM client_broker_instances
+           WHERE client_id=? AND status != 'removed'
+           ORDER BY id DESC LIMIT 1""",
+        (client_id,),
+    )
+    if not row:
+        return {"broker": None, "api_key": False, "api_secret": False,
+                "broker_user_id": False, "password": False, "totp": False}
+    return {
+        "broker":         row.get("broker"),
+        "api_key":        bool(row.get("api_key_encrypted")),
+        "api_secret":     bool(row.get("api_secret_encrypted")),
+        "broker_user_id": bool(row.get("broker_user_id_encrypted")),
+        "password":       bool(row.get("password_encrypted")),
+        "totp":           bool(row.get("totp_encrypted")),
+    }
+
+
+class BrokerCredentialsBody(BaseModel):
+    broker: str
+    api_key: str = ""
+    api_secret: str = ""
+    broker_user_id: str = ""
+    password: str = ""
+    totp: str = ""
+
+
+@router.put("/clients/{client_id}/broker-credentials")
+async def put_broker_credentials(client_id: int, body: BrokerCredentialsBody,
+                                  admin=Depends(require_admin)):
+    """
+    Admin-initiated upsert of broker credentials for a client.
+    Only fields that are non-empty strings are updated; existing encrypted
+    values are preserved for blank fields (same semantics as client_api.py).
+    """
+    if not db_fetchone("SELECT id FROM users WHERE id=? AND role='client'", (client_id,)):
+        raise HTTPException(404, "Client not found")
+    if not body.broker:
+        raise HTTPException(400, "broker is required")
+
+    existing = db_fetchone(
+        """SELECT api_key_encrypted, api_secret_encrypted, broker_user_id_encrypted,
+                  password_encrypted, totp_encrypted, trading_mode, instrument,
+                  quantity, strategy_version
+           FROM client_broker_instances
+           WHERE client_id=? AND broker=?""",
+        (client_id, body.broker),
+    )
+
+    def _enc(val: str, fallback):
+        return encrypt_secret(val) if val.strip() else fallback
+
+    enc_key    = _enc(body.api_key,        existing["api_key_encrypted"]        if existing else None)
+    enc_secret = _enc(body.api_secret,     existing["api_secret_encrypted"]     if existing else None)
+    enc_uid    = _enc(body.broker_user_id, existing["broker_user_id_encrypted"] if existing else None)
+    enc_pwd    = _enc(body.password,       existing["password_encrypted"]       if existing else None)
+    enc_totp   = _enc(body.totp,           existing["totp_encrypted"]           if existing else None)
+
+    # Preserve non-credential settings from any existing row
+    mode     = (existing or {}).get("trading_mode", "paper")
+    instr    = (existing or {}).get("instrument", "NIFTY")
+    qty      = (existing or {}).get("quantity", 1)
+    strat    = (existing or {}).get("strategy_version", "v1")
+
+    db_execute(
+        """INSERT INTO client_broker_instances
+             (client_id, broker, api_key_encrypted, api_secret_encrypted,
+              broker_user_id_encrypted, password_encrypted, totp_encrypted,
+              trading_mode, instrument, quantity, strategy_version)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(client_id, broker) DO UPDATE SET
+             api_key_encrypted        = excluded.api_key_encrypted,
+             api_secret_encrypted     = excluded.api_secret_encrypted,
+             broker_user_id_encrypted = excluded.broker_user_id_encrypted,
+             password_encrypted       = excluded.password_encrypted,
+             totp_encrypted           = excluded.totp_encrypted""",
+        (client_id, body.broker, enc_key, enc_secret, enc_uid,
+         enc_pwd, enc_totp, mode, instr, qty, strat),
+    )
+
+    fields_updated = [f for f, v in [
+        ("api_key", body.api_key), ("api_secret", body.api_secret),
+        ("broker_user_id", body.broker_user_id),
+        ("password", body.password), ("totp", body.totp),
+    ] if v.strip()]
+
+    _audit(admin["id"], admin["role"], "admin_broker_credentials_update", client_id, {
+        "broker": body.broker,
+        "fields_updated": fields_updated,
+    })
+
+    return {
+        "success": True,
+        "message": (
+            f"{body.broker.capitalize()} credentials saved by admin "
+            f"({', '.join(fields_updated) or 'no fields changed'})."
+        ),
+    }
+
+
 @router.get("/clients/{client_id}/risk-overrides")
 async def get_client_risk_overrides(client_id: int, admin=Depends(require_admin)):
     """Return client's full risk & money management parameters from active broker instance."""

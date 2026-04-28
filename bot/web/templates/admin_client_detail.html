@@ -150,6 +150,71 @@
     <div id="bcr-detail-list" style="color:var(--muted);font-size:13px">Loading...</div>
   </div>
 
+  <!-- ── Broker Credentials ──────────────────────────────────────────────── -->
+  <div class="card p-4 mb-4" id="broker-cred-card">
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Broker Credentials</div>
+      <div class="flex items-center gap-2">
+        <span id="cred-status-badge" class="text-xs px-2 py-0.5 rounded" style="display:none"></span>
+        <button onclick="checkCredStatus()" class="btn-ghost px-3 py-1.5 text-xs">Check DB</button>
+      </div>
+    </div>
+
+    <!-- Field status display -->
+    <div id="cred-status-row" class="mb-3 hidden">
+      <div class="flex flex-wrap gap-3 text-xs mb-2" id="cred-flags-row"></div>
+    </div>
+
+    <!-- Broker-specific hint -->
+    <div id="cred-broker-hint" class="mb-3 text-xs rounded p-2 hidden" style="background:var(--surface2);color:var(--muted)"></div>
+
+    <!-- Credentials form (inside a <details> to keep the card compact) -->
+    <details id="cred-form-details">
+      <summary class="cursor-pointer text-xs font-semibold select-none hover:opacity-80" style="color:var(--accent)">Edit / Set Credentials ▾</summary>
+      <div class="mt-3">
+        <p class="text-xs mb-3 rounded p-2" style="background:var(--surface2);color:var(--muted)">
+          Credentials are encrypted and stored securely. <strong style="color:var(--text-soft)">The bot must be restarted after saving.</strong><br>
+          Leave a field blank to keep its existing value unchanged.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold block mb-1" style="color:var(--muted)">Broker</label>
+            <select id="cred-broker" class="input-field w-full text-sm" onchange="updateCredHint()">
+              <option value="angelone">AngelOne</option>
+              <option value="dhan">Dhan</option>
+              <option value="zerodha">Zerodha</option>
+              <option value="aliceblue">AliceBlue</option>
+              <option value="groww">Groww</option>
+              <option value="fyers">Fyers</option>
+              <option value="upstox">Upstox</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1" style="color:var(--muted)">API Key</label>
+            <input type="text" id="cred-api-key" class="input-field w-full text-sm" placeholder="Leave blank to keep existing">
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1" style="color:var(--muted)">API Secret</label>
+            <input type="text" id="cred-api-secret" class="input-field w-full text-sm" placeholder="Leave blank to keep existing">
+          </div>
+          <div>
+            <label id="cred-uid-label" class="text-xs font-semibold block mb-1" style="color:var(--muted)">Broker User ID / Client Code</label>
+            <input type="text" id="cred-broker-user-id" class="input-field w-full text-sm" placeholder="Leave blank to keep existing">
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1" style="color:var(--muted)">PIN / Password</label>
+            <input type="password" id="cred-password" class="input-field w-full text-sm" placeholder="Leave blank to keep existing" autocomplete="new-password">
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1" style="color:var(--muted)">TOTP Secret (base32 seed)</label>
+            <input type="text" id="cred-totp" class="input-field w-full text-sm" placeholder="Leave blank to keep existing">
+          </div>
+        </div>
+        <button onclick="saveBrokerCredentials()" class="btn-primary px-5 py-2 text-sm font-bold">Save Credentials</button>
+      </div>
+    </details>
+  </div>
+
   <div class="card p-4">
     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
       <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Trade History</div>
@@ -934,6 +999,94 @@ async function _persistStaticIP(ip) {
     loadElasticIPs();
   }
   return true;
+}
+
+// ─── Broker Credentials ───────────────────────────────────────────────────
+const _BROKER_HINTS = {
+  angelone:  'Broker User ID = AngelOne Client Code (e.g. AB1234). API Key from the Smart API developer portal.',
+  dhan:      'Broker User ID = Dhan Client ID (e.g. 10005XXXXX). API Key from Dhan developer portal.',
+  zerodha:   'Broker User ID = not required for Zerodha. API Key + Secret from Kite Connect console.',
+  aliceblue: 'Broker User ID = AliceBlue Client ID. API Key from ANT web console.',
+  groww:     'Broker User ID = Groww Client ID. API Key from Groww developer portal.',
+  fyers:     'Broker User ID = Fyers Client ID. API Key + Access Token from Fyers app dashboard.',
+  upstox:    'Broker User ID = not required. API Key + Secret from Upstox developer portal.',
+};
+
+function updateCredHint() {
+  const broker = (document.getElementById('cred-broker') || {}).value || '';
+  const hintEl = document.getElementById('cred-broker-hint');
+  const uidLabel = document.getElementById('cred-uid-label');
+  if (!hintEl) return;
+  const hint = _BROKER_HINTS[broker] || '';
+  if (hint) {
+    hintEl.textContent = hint;
+    hintEl.classList.remove('hidden');
+  } else {
+    hintEl.classList.add('hidden');
+  }
+  if (uidLabel) {
+    const uidHints = { angelone: 'Client Code (e.g. AB1234)', dhan: 'Client ID', zerodha: 'not required', upstox: 'not required' };
+    uidLabel.textContent = 'Broker User ID' + (uidHints[broker] ? ` — ${uidHints[broker]}` : '');
+  }
+}
+
+async function checkCredStatus() {
+  const r = await fetch(`/api/admin/clients/${clientId}/broker-credentials-status`);
+  const d = await r.json();
+  const row = document.getElementById('cred-status-row');
+  const flags = document.getElementById('cred-flags-row');
+  const badge = document.getElementById('cred-status-badge');
+  if (!row) return;
+
+  const fieldNames = { api_key: 'API Key', api_secret: 'API Secret', broker_user_id: 'User ID / Client Code', password: 'PIN / Password', totp: 'TOTP Secret' };
+  flags.innerHTML = Object.entries(fieldNames).map(([k, label]) => {
+    const set = d[k];
+    const col = set ? 'var(--success)' : 'var(--error)';
+    return `<span style="color:${col};font-weight:600">${set ? '✓' : '✗'} ${label}</span>`;
+  }).join('');
+
+  if (d.broker) {
+    const brokerSel = document.getElementById('cred-broker');
+    if (brokerSel) brokerSel.value = d.broker;
+    updateCredHint();
+  }
+
+  row.classList.remove('hidden');
+
+  const allSet = ['api_key', 'broker_user_id', 'password', 'totp'].every(k => d[k]);
+  badge.textContent = allSet ? '✓ Complete' : '⚠ Missing fields';
+  badge.style.background = allSet ? 'var(--badge-ok-bg)' : 'var(--badge-warn-bg, #7c2d12)';
+  badge.style.color = allSet ? 'var(--badge-ok-txt)' : '#fbbf24';
+  badge.style.display = 'inline-block';
+}
+
+async function saveBrokerCredentials() {
+  const broker = (document.getElementById('cred-broker') || {}).value || '';
+  if (!broker) { showToast('Select a broker first.', 'error'); return; }
+  const body = {
+    broker,
+    api_key:        (document.getElementById('cred-api-key')?.value || '').trim(),
+    api_secret:     (document.getElementById('cred-api-secret')?.value || '').trim(),
+    broker_user_id: (document.getElementById('cred-broker-user-id')?.value || '').trim(),
+    password:       (document.getElementById('cred-password')?.value || '').trim(),
+    totp:           (document.getElementById('cred-totp')?.value || '').trim(),
+  };
+  const r = await fetch(`/api/admin/clients/${clientId}/broker-credentials`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (d.success) {
+    showToast(d.message, 'success');
+    // Clear the form fields so we don't accidentally re-save the same values
+    ['cred-api-key','cred-api-secret','cred-broker-user-id','cred-password','cred-totp']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    // Refresh the status flags
+    await checkCredStatus();
+  } else {
+    showToast(d.detail || 'Failed to save credentials.', 'error');
+  }
 }
 
 async function saveStaticIP() {
