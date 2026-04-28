@@ -1129,9 +1129,11 @@ async function loadElasticIPs() {
         const opt = document.createElement('option');
         opt.value = ip.public_ip;
         const assocTag = ip.ec2_associated ? '  ✓ EC2' : '';
-        if (ip.shared_count > 0) {
+        if (ip.shared_count > 1) {
           const names = (ip.in_use_by || []).map(c => c.username).join(', ');
-          opt.textContent = `${ip.public_ip}${assocTag}  — shared (${ip.shared_count} client${ip.shared_count > 1 ? 's' : ''}: ${names})`;
+          opt.textContent = `${ip.public_ip}${assocTag}  — shared (${ip.shared_count} clients: ${names})`;
+        } else if (ip.shared_count === 1) {
+          opt.textContent = `${ip.public_ip}${assocTag}  — in use by ${(ip.in_use_by || [])[0]?.username || '1 client'}`;
         } else {
           opt.textContent = `${ip.public_ip}${assocTag}`;
         }
