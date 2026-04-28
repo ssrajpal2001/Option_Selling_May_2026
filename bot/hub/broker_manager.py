@@ -86,8 +86,14 @@ class BrokerManager:
                     broker_instance.kite = kite
                     logger.info(f"[CLIENT MODE] Zerodha authenticated via token.")
                 except Exception as e:
-                    logger.critical(f"[CLIENT MODE] Zerodha token validation also failed: {e}")
-                    raise RuntimeError("Zerodha connection failed. Please reconnect via Settings.") from e
+                    logger.critical(
+                        f"[CLIENT MODE] Zerodha token validation failed: {e}. "
+                        f"Continuing in degraded mode (market data / paper trading only). "
+                        f"Live orders will be blocked until reconnected via Settings."
+                    )
+                    # Do NOT raise — allow the subprocess to continue for paper trading
+                    # and market data. Live order placement is independently gated by
+                    # paper_trade mode and per-broker trading_active checks.
         elif broker_name == 'dhan':
             from brokers.dhan_client import DhanClient
             broker_instance = DhanClient(

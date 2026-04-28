@@ -62,7 +62,7 @@ class SellManagerV3:
         self._broker_cfg = {}
         if self.user_id and not getattr(self.orchestrator, 'is_backtest', False):
             try:
-                from config.db import db_fetchone as _dfo
+                from web.db import db_fetchone as _dfo
                 _row = _dfo(
                     "SELECT client_strategy_overrides FROM client_broker_instances "
                     "WHERE client_id=? AND status!='removed' "
