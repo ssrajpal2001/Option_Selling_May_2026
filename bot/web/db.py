@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS client_broker_instances (
     quantity INTEGER DEFAULT 25,
     strategy_version TEXT DEFAULT 'V3',
     status TEXT DEFAULT 'idle',
+    trading_active INTEGER DEFAULT 0,
     bot_pid INTEGER,
     last_heartbeat TEXT,
     created_at TEXT DEFAULT (datetime('now')),
@@ -243,6 +244,8 @@ def _migrate(conn: sqlite3.Connection):
         ("daily_pnl",                 "REAL DEFAULT 0"),
         ("daily_trade_count",         "INTEGER DEFAULT 0"),
         ("pnl_reset_date",            "TEXT"),
+        # Task #144: per-broker trade toggle
+        ("trading_active",            "INTEGER DEFAULT 0"),
     ]:
         if col not in inst_cols:
             conn.execute(f"ALTER TABLE client_broker_instances ADD COLUMN {col} {defn}")

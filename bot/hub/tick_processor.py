@@ -185,6 +185,13 @@ class TickProcessor:
                     if _new_mode.lower() != os.environ.get('CLIENT_TRADING_MODE', '').lower():
                         os.environ['CLIENT_TRADING_MODE'] = _new_mode
                         logger.info(f"[Client {user_id}] Runtime mode updated to {_new_mode}")
+                    # Propagate to config_manager overrides so order-sizing code
+                    # (sell_manager_v3 config_manager.get_int('quantity')) picks up new value
+                    _cm = getattr(self.orchestrator, 'config_manager', None)
+                    if _cm:
+                        _inst = f"client_{user_id}_{broker_name}"
+                        _cm.set_override(_inst, 'quantity', _new_qty)
+                        _cm.set_override('settings', 'trading_mode', _new_mode)
                 except Exception:
                     pass
 
