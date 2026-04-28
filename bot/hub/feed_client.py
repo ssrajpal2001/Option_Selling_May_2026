@@ -32,7 +32,9 @@ _CONNECT_RETRIES = 3        # attempts per round inside try_connect()
 _RECONNECT_DELAY = 5.0      # seconds between reconnect rounds
 _IDLE_TIMEOUT = 90          # seconds of silence → send ping
 # After this many consecutive round-failures the fallback DualFeedManager is activated.
-_FALLBACK_TRIGGER_ROUNDS = 5
+# Each round takes ~(_CONNECT_RETRIES × 2s) + _RECONNECT_DELAY ≈ 11s, so 3 rounds ≈ 33s
+# before degrading — long enough for a transient web-process restart to recover.
+_FALLBACK_TRIGGER_ROUNDS = 3
 
 
 class FeedClient(DataFeed):
@@ -95,6 +97,13 @@ class FeedClient(DataFeed):
                 pass
         self._reader = None
         self._writer = None
+        # If the fallback DualFeedManager was activated, close it too
+        # to prevent lingering WebSocket tasks during shutdown / restart cycles.
+        if self._fallback_active and self._fallback_feed:
+            try:
+                await self._fallback_feed.close()
+            except Exception:
+                pass
 
     def subscribe(self, symbols, mode: str = 'full') -> None:
         new = [s for s in symbols if s not in self._subscribed_symbols]
