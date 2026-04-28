@@ -1,0 +1,126 @@
+{% extends "admin_base.html" %}
+{% set active_page = "logs" %}
+{% block title %}Global Logs{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-white">Global Logs</h1>
+    <p class="text-sm mt-1" style="color:var(--muted)">Merged log stream across all client broker instances</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <select id="lines-select" class="input-field" style="width:auto">
+      <option value="100">Last 100 lines</option>
+      <option value="200" selected>Last 200 lines</option>
+      <option value="500">Last 500 lines</option>
+      <option value="1000">Last 1000 lines</option>
+      <option value="2000">Last 2000 lines</option>
+    </select>
+    <select id="level-filter" class="input-field" style="width:auto">
+      <option value="">All levels</option>
+      <option value="DEBUG">DEBUG</option>
+      <option value="INFO">INFO</option>
+      <option value="WARN">WARN / WARNING</option>
+      <option value="ERROR">ERROR</option>
+      <option value="CRITICAL">CRITICAL</option>
+    </select>
+    <input id="search-input" class="input-field" placeholder="Search text…" style="width:200px">
+    <button onclick="loadLogs()" class="btn-primary px-4 py-2 text-sm">Refresh</button>
+  </div>
+</div>
+
+<div class="card p-4 mb-4">
+  <div class="flex items-center justify-between mb-1">
+    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Log Entries</span>
+    <span id="log-meta" class="text-xs" style="color:var(--muted)">--</span>
+  </div>
+  <div id="log-container"
+       style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+              padding:12px;font-family:'Courier New',monospace;font-size:12px;
+              max-height:72vh;overflow-y:auto;line-height:1.6">
+    <span style="color:var(--muted)">Loading…</span>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="flex items-center gap-4 text-xs" style="color:var(--muted)">
+  <span><span style="color:#64748b;font-weight:700">■</span> DEBUG</span>
+  <span><span style="color:var(--text-soft);font-weight:700">■</span> INFO</span>
+  <span><span style="color:var(--warn);font-weight:700">■</span> WARN</span>
+  <span><span style="color:var(--error);font-weight:700">■</span> ERROR</span>
+  <span><span style="color:#f472b6;font-weight:700">■</span> CRITICAL</span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const LEVEL_COLORS = {
+  DEBUG:    'var(--muted)',
+  INFO:     'var(--text-soft)',
+  WARN:     'var(--warn)',
+  WARNING:  'var(--warn)',
+  ERROR:    'var(--error)',
+  CRITICAL: 'var(--put-color)',
+};
+
+let _allEntries = [];
+
+function levelColor(lvl) {
+  return LEVEL_COLORS[lvl] || 'var(--text-soft)';
+}
+
+function renderLogs() {
+  const levelFilter = document.getElementById('level-filter').value.toUpperCase();
+  const searchText  = document.getElementById('search-input').value.toLowerCase();
+
+  const filtered = _allEntries.filter(e => {
+    const lvl = (e.level || 'INFO').toUpperCase();
+    if (levelFilter && lvl !== levelFilter && !(levelFilter === 'WARN' && lvl === 'WARNING')) return false;
+    if (searchText && !e.text.toLowerCase().includes(searchText)) return false;
+    return true;
+  });
+
+  const container = document.getElementById('log-container');
+  const meta      = document.getElementById('log-meta');
+
+  meta.textContent = `${filtered.length.toLocaleString()} of ${_allEntries.length.toLocaleString()} entries`;
+
+  if (!filtered.length) {
+    container.innerHTML = '<span style="color:var(--muted)">No entries match the current filter.</span>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(e => {
+    const lvl   = (e.level || 'INFO').toUpperCase();
+    const color = levelColor(lvl);
+    const label = lvl.padEnd(8);
+    const clientInfo = e.client_id
+      ? `<a href="/admin/clients/${e.client_id}" style="color:var(--link);text-decoration:none">[${escapeHtml(String(e.client_id))}·${escapeHtml(e.broker||'')}]</a>`
+      : '';
+    const ts = e.ts ? `<span style="color:var(--muted)">${escapeHtml(e.ts)}</span> ` : '';
+    const textBody = escapeHtml(e.text);
+    return `<div style="color:${color};padding:1px 0;white-space:pre-wrap;word-break:break-all">${ts}<span style="font-weight:700">${label}</span> ${clientInfo} ${textBody}</div>`;
+  }).join('');
+}
+
+async function loadLogs() {
+  const n = document.getElementById('lines-select').value;
+  document.getElementById('log-container').innerHTML = '<span style="color:var(--muted)">Loading…</span>';
+  try {
+    const r = await fetch(`/api/admin/logs/all?lines=${n}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    _allEntries = d.entries || [];
+    renderLogs();
+  } catch (e) {
+    document.getElementById('log-container').innerHTML = `<span style="color:var(--error)">Error loading logs: ${escapeHtml(String(e))}</span>`;
+  }
+}
+
+document.getElementById('level-filter').addEventListener('change', renderLogs);
+document.getElementById('search-input').addEventListener('input',  renderLogs);
+document.getElementById('lines-select').addEventListener('change', loadLogs);
+
+loadLogs();
+</script>
+{% endblock %}

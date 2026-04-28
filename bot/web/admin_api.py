@@ -5,6 +5,7 @@ import io
 import json
 import logging
 import os
+import re
 import time
 from pathlib import Path
 import subprocess
@@ -1971,3 +1972,95 @@ async def trigger_log_cleanup(body: LogCleanupRequest, admin=Depends(require_adm
         "max_inactive_age_days": body.max_inactive_age_days,
     })
     return {"success": True, **result}
+
+
+# ── Global merged log stream ───────────────────────────────────────────────────
+
+_LOG_LINE_RE = re.compile(
+    r'^(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}[,.]?\d*)\s+'
+    r'(DEBUG|INFO|WARNING|WARN|ERROR|CRITICAL)\b'
+)
+
+
+@router.get("/logs/all")
+async def global_logs_all(
+    lines: int = Query(default=200, ge=10, le=2000),
+    admin=Depends(require_admin),
+):
+    """
+    Return the last `lines` log entries merged from every client log file,
+    sorted by timestamp descending.
+    Each entry has: timestamp, level, client_id, broker, text.
+    """
+    from collections import deque
+
+    log_dir = os.path.join(os.getcwd(), "logs")
+    entries: list[dict] = []
+
+    if os.path.isdir(log_dir):
+        for fname in os.listdir(log_dir):
+            # Match pattern: client_<id>_<broker>.log
+            if not (fname.startswith("client_") and fname.endswith(".log")):
+                continue
+            parts = fname[len("client_"):-len(".log")].split("_", 1)
+            if len(parts) != 2:
+                continue
+            try:
+                cid = int(parts[0])
+            except ValueError:
+                continue
+            broker = parts[1]
+            fpath = os.path.join(log_dir, fname)
+            try:
+                dq: deque = deque(maxlen=lines)
+                with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+                    for raw in f:
+                        dq.append(raw.rstrip("\n"))
+                for raw_line in dq:
+                    m = _LOG_LINE_RE.match(raw_line)
+                    ts = m.group(1).replace(",", ".") if m else ""
+                    lvl = m.group(2) if m else "INFO"
+                    if lvl == "WARNING":
+                        lvl = "WARN"
+                    entries.append({
+                        "ts": ts,
+                        "level": lvl,
+                        "client_id": cid,
+                        "broker": broker,
+                        "text": raw_line,
+                    })
+            except Exception:
+                pass
+
+    # Sort by timestamp descending; entries without a ts fall to the bottom
+    entries.sort(key=lambda e: e["ts"], reverse=True)
+    return {"entries": entries[:lines], "total": len(entries)}
+
+
+# ── IP-conflict detection ──────────────────────────────────────────────────────
+
+
+@router.get("/ip-conflicts")
+async def get_ip_conflicts(
+    hours: int = Query(default=6, ge=1, le=72),
+    admin=Depends(require_admin),
+):
+    """
+    Return broker instances whose static-IP binding check failed within the
+    last `hours` hours, joined with the owning user's username.
+    """
+    rows = db_fetchall(
+        """
+        SELECT cbi.id, cbi.client_id, cbi.broker,
+               cbi.ip_last_failed_at,
+               u.username
+        FROM client_broker_instances cbi
+        JOIN users u ON u.id = cbi.client_id
+        WHERE cbi.ip_last_failed_at IS NOT NULL
+          AND cbi.ip_last_failed_at >= datetime('now', ? || ' hours')
+        ORDER BY cbi.ip_last_failed_at DESC
+        """,
+        (f"-{hours}",),
+    )
+    conflicts = [dict(r) for r in rows] if rows else []
+    return {"conflicts": conflicts, "hours": hours}

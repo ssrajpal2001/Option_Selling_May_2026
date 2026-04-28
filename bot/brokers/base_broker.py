@@ -326,6 +326,21 @@ class BaseBroker(ABC):
         fails.  Uses force=True so the alert fires even when Telegram alerts
         are globally disabled.
         """
+        # Record the failure timestamp in the DB so the admin dashboard can
+        # surface an IP-conflict warning banner (Task #151).
+        try:
+            from web.db import db_execute
+            from datetime import datetime, timezone as _tz
+            _now = datetime.now(_tz.utc).isoformat()
+            if self.user_id and self.broker_name:
+                db_execute(
+                    "UPDATE client_broker_instances SET ip_last_failed_at=? "
+                    "WHERE client_id=? AND broker=?",
+                    (_now, self.user_id, self.broker_name),
+                )
+        except Exception as db_exc:
+            logger.warning(f"[IP-conflict] DB write failed: {db_exc}")
+
         try:
             from utils.notifier import send_telegram, get_admin_chat_id
             chat_id = get_admin_chat_id()

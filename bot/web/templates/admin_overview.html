@@ -8,6 +8,19 @@
   <p class="text-sm mt-1" style="color:var(--muted)">Real-time platform status</p>
 </div>
 
+<!-- ── IP Conflict Warning Banner ──────────────────────────────────────────── -->
+<div id="ip-conflict-banner" style="display:none;margin-bottom:1.25rem">
+  <div style="background:#451a03;border:1px solid #c2410c;border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+    <span style="font-size:20px;line-height:1.3">⚠️</span>
+    <div style="flex:1;min-width:0">
+      <div class="font-bold text-sm" style="color:#fb923c;margin-bottom:4px">Static IP Binding Failed</div>
+      <div id="ip-conflict-body" class="text-xs" style="color:#fed7aa;line-height:1.6"></div>
+    </div>
+    <button onclick="dismissIpBanner()" title="Dismiss"
+            style="background:none;border:none;color:#9a3412;font-size:18px;cursor:pointer;line-height:1;padding:0 2px">✕</button>
+  </div>
+</div>
+
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
   <div class="stat-card p-4">
     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Total Clients</div>
@@ -330,6 +343,31 @@ function showRustInfo() {
   if (modal) modal.style.display = 'flex';
 }
 
+// ── IP Conflict Banner ────────────────────────────────────────────────────
+async function loadIpConflicts() {
+  if (sessionStorage.getItem('ip-banner-dismissed') === '1') return;
+  try {
+    const r = await fetch('/api/admin/ip-conflicts');
+    if (!r.ok) return;
+    const d = await r.json();
+    const conflicts = d.conflicts || [];
+    if (!conflicts.length) return;
+    const body = conflicts.map(c => {
+      const ts = c.ip_last_failed_at ? new Date(c.ip_last_failed_at).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'}) : '--';
+      return `<a href="/admin/clients/${c.client_id}" style="color:#fb923c;font-weight:700">${escapeHtml(c.username||String(c.client_id))}</a> · ${escapeHtml((c.broker||'').toUpperCase())} — failed at ${ts}`;
+    }).join('<br>');
+    document.getElementById('ip-conflict-body').innerHTML =
+      body + '<br><span style="color:#9a3412;margin-top:4px;display:inline-block">Check AWS Console → EC2 → Elastic IPs and re-associate the Elastic IP.</span>';
+    document.getElementById('ip-conflict-banner').style.display = 'block';
+  } catch(e) {}
+}
+
+function dismissIpBanner() {
+  document.getElementById('ip-conflict-banner').style.display = 'none';
+  sessionStorage.setItem('ip-banner-dismissed', '1');
+}
+
+loadIpConflicts();
 loadOverview();
 setInterval(loadOverview, 10000);
 

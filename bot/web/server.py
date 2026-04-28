@@ -171,6 +171,14 @@ async def admin_platform_settings_page(request: Request):
     return templates.TemplateResponse(request, "admin_platform_settings.html")
 
 
+@app.get("/admin/global-logs", response_class=HTMLResponse)
+async def admin_global_logs_page(request: Request):
+    user = _get_user_from_request(request)
+    if not user or user["role"] != "admin":
+        return RedirectResponse("/login")
+    return templates.TemplateResponse(request, "admin_global_logs.html")
+
+
 
 
 # ─── Client Pages ─────────────────────────────────────────────────────────────

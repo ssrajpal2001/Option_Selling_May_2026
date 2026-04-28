@@ -246,6 +246,8 @@ def _migrate(conn: sqlite3.Connection):
         ("pnl_reset_date",            "TEXT"),
         # Task #144: per-broker trade toggle
         ("trading_active",            "INTEGER DEFAULT 0"),
+        # Task #151: IP-conflict detection timestamp
+        ("ip_last_failed_at",         "TEXT"),
     ]:
         if col not in inst_cols:
             conn.execute(f"ALTER TABLE client_broker_instances ADD COLUMN {col} {defn}")

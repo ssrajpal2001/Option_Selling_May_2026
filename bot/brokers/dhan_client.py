@@ -199,12 +199,25 @@ class DhanClient(BaseBroker):
                 f"Available names: {available}. Feed not initialized."
             )
             return
-        self.feed = _DhanFeedCls(
-            client_id=client_id,
-            access_token=access_token,
-            instruments=self.subscribed_instruments,
-            version='v2'
-        )
+        # Try the newer keyword-arg signature first (dhanhq >=2.0.3).
+        # Older SDK versions (e.g. MarketFeed) do not accept client_id as a
+        # keyword arg and raise TypeError — fall back to positional args.
+        try:
+            self.feed = _DhanFeedCls(
+                client_id=client_id,
+                access_token=access_token,
+                instruments=self.subscribed_instruments,
+                version='v2',
+            )
+            logger.debug(
+                f"[{self.instance_name}] Dhan feed initialised with keyword-arg signature."
+            )
+        except TypeError:
+            logger.info(
+                f"[{self.instance_name}] Keyword-arg signature failed; "
+                f"retrying with positional args (older SDK)."
+            )
+            self.feed = _DhanFeedCls(client_id, access_token, self.subscribed_instruments)
 
         # Start the connection and data retrieval loop in a background task
         asyncio.run_coroutine_threadsafe(self._run_feed_loop(), self.loop)
