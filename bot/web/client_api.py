@@ -1122,7 +1122,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
 @router.post("/bot/stop")
 async def stop_bot(user=Depends(get_current_user)):
     instances = db_fetchall(
-        "SELECT id, broker FROM client_broker_instances WHERE client_id=? AND status != 'removed'",
+        "SELECT id, broker, status FROM client_broker_instances WHERE client_id=? AND status != 'removed'",
         (user["id"],)
     )
     if not instances:
