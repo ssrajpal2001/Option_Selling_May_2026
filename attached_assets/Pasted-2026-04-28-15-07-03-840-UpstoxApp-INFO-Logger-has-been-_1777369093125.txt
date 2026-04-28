@@ -1,0 +1,166 @@
+2026-04-28 15:07:03,840 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-28 15:07:03,843 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='dhan', instrument='NIFTY', qty=1, mode='paper', strategy='V3')
+2026-04-28 15:07:03,844 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-28 15:07:03,845 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-28 15:07:03,847 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-28 15:07:03,848 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-28 15:07:03,849 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-28 15:07:03,850 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-28 15:07:04,184 - UpstoxApp - ERROR - [client_2_dhan] Static IP 3.7.80.13 is NOT bound to this machine — order blocked (0.1 ms). Error: [Errno 99] Cannot assign requested address
+2026-04-28 15:07:04,206 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-28 15:07:04,208 - UpstoxApp - WARNING - [Telegram] Static IP failure alert: no admin chat_id configured — skipping.
+2026-04-28 15:07:04,208 - UpstoxApp - ERROR - Failed to initialize Dhan client for user 2: [client_2_dhan] Static IP 3.7.80.13 is NOT bound to this machine — order blocked (0.1 ms). Error: [Errno 99] Cannot assign requested address
+2026-04-28 15:07:04,209 - UpstoxApp - INFO - [CLIENT MODE] Loaded dhan broker instance: client_2_dhan
+2026-04-28 15:07:04,214 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-28 15:07:04,217 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-28 15:07:04,219 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-28 15:07:04,221 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-28 15:07:04,226 - UpstoxApp - INFO - Global Upstox data provider initialized from DB.
+2026-04-28 15:07:04,229 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-28 15:07:04,230 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-28 15:07:04,271 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-28 15:07:04,284 - UpstoxApp - INFO - [Global Dhan] Token valid. Timestamp refreshed.
+2026-04-28 15:07:04,285 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-28 15:07:04,285 - UpstoxApp - INFO - Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).
+2026-04-28 15:07:04,288 - UpstoxApp - INFO - WebSocket listener task created.
+2026-04-28 15:07:04,316 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-28 15:07:04,318 - UpstoxApp - INFO - Message handler handle_message registered.
+2026-04-28 15:07:04,319 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-28 15:07:04,324 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-28 15:07:04,325 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-28 15:07:04,326 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 15:07:04,327 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-28 15:07:04,328 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 15:07:04,330 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-28 15:07:04,331 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-28 15:07:04,332 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-28 15:07:04,333 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-28 15:07:04,335 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-28 15:07:04,335 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-28 15:07:04,339 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-28 15:07:04,339 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-28 15:07:04,340 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-28 15:07:04,343 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-28 15:07:04,343 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-28 15:07:04,343 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-28 15:07:04,344 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-28 15:07:04,344 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-28 15:07:04,344 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-28 15:07:04,364 - UpstoxApp - INFO - WebSocketManager starting connection loop.
+2026-04-28 15:07:04,366 - UpstoxApp - INFO - Attempting to authorize and connect... (Attempt 1)
+2026-04-28 15:07:04,367 - UpstoxApp - INFO - Authorizing WebSocket feed...
+2026-04-28 15:07:04,368 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 1)...
+2026-04-28 15:07:04,388 - UpstoxApp - INFO - [Global Dhan] Using feed class: DhanFeed
+2026-04-28 15:07:04,390 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 15:07:04,392 - UpstoxApp - INFO - [DualFeedWatchdog] Started. Monitoring Upstox + Dhan feeds.
+2026-04-28 15:07:04,394 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-28 15:07:04,424 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 15:07:04,431 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 2s.
+2026-04-28 15:07:04,451 - UpstoxApp - WARNING - WebSocket auth attempt 1 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:04,815 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-28 15:07:04,819 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-28 15:07:04,821 - UpstoxApp - INFO - ContractManager: No options found via API for 'NSE_INDEX|Nifty 50'. Attempting CSV fallback...
+2026-04-28 15:07:04,822 - UpstoxApp - INFO - ContractManager: Downloading NSE_FO instruments from https://assets.upstox.com/market-quote/instruments/exchange/NSE_FO.csv.gz...
+2026-04-28 15:07:05,402 - UpstoxApp - INFO - ContractManager: CSV search for 'NIFTY' in NSE_FO found 2041 options.
+2026-04-28 15:07:05,403 - UpstoxApp - INFO - ContractManager: Sample CSV row: {'instrument_key': 'NSE_FO|50973', 'exchange_token': 50973, 'tradingsymbol': 'NIFTY26JUN27000CE', 'name': 'NIFTY', 'last_price': 72.9, 'expiry': '2026-06-30', 'strike': 27000.0, 'tick_size': 0.05, 'lot_size': 65.0, 'instrument_type': 'OPTIDX', 'option_type': 'CE', 'exchange': 'NSE_FO', 'name_norm': 'NIFTY'}
+2026-04-28 15:07:05,578 - UpstoxApp - INFO - ContractManager: CSV fallback success. Loaded 2041 option contracts for NIFTY from NSE_FO.
+2026-04-28 15:07:05,579 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-04-28 (day=Tuesday)
+2026-04-28 15:07:05,591 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-04-28 (CURRENT_WEEK), trade=2026-04-28 (WEEKLY)
+2026-04-28 15:07:05,593 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-28 15:07:05,595 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-28 15:07:05,595 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-28 15:07:05,596 - UpstoxApp - INFO - [SellManagerV3] Loaded 10 client broker overrides for user 2.
+2026-04-28 15:07:05,596 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-28 15:07:05,596 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-28 15:07:05,596 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 15:07:05,596 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-28 15:07:05,596 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 15:07:05,596 - UpstoxApp - INFO - ║ TIMING: Start:09:15 | EntryEnd:18:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-28 15:07:05,597 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-28 15:07:05,597 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-28 15:07:05,597 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-28 15:07:05,597 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-28 15:07:05,597 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-28 15:07:05,598 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-28 15:07:05,598 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-28 15:07:05,598 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-28 15:07:05,598 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-28 15:07:05,599 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-28 15:07:05,599 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-28 15:07:05,599 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: Unlimited                           ║
+2026-04-28 15:07:05,599 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-28 15:07:05,599 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-28 15:07:05,599 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-28 15:07:05,599 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-28 15:07:05,600 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-28 15:07:05,600 - UpstoxApp - INFO - Trading bot is now live.
+2026-04-28 15:07:05,601 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active.
+2026-04-28 15:07:06,435 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 15:07:06,453 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 15:07:06,453 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 2 instruments.
+2026-04-28 15:07:06,461 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 4s.
+2026-04-28 15:07:09,457 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 2)...
+2026-04-28 15:07:09,496 - UpstoxApp - WARNING - WebSocket auth attempt 2 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:10,463 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 15:07:10,496 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 15:07:10,497 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 2 instruments.
+2026-04-28 15:07:10,503 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 8s.
+2026-04-28 15:07:14,498 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 3)...
+2026-04-28 15:07:14,543 - UpstoxApp - WARNING - WebSocket auth attempt 3 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:18,505 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 15:07:18,528 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 15:07:18,528 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 2 instruments.
+2026-04-28 15:07:18,536 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 16s.
+2026-04-28 15:07:19,546 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 4)...
+2026-04-28 15:07:19,588 - UpstoxApp - WARNING - WebSocket auth attempt 4 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:24,589 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 5)...
+2026-04-28 15:07:24,626 - UpstoxApp - WARNING - WebSocket auth attempt 5 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:29,627 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 6)...
+2026-04-28 15:07:29,664 - UpstoxApp - WARNING - WebSocket auth attempt 6 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:34,398 - UpstoxApp - WARNING - [DualFeedWatchdog] upstox STALE — last tick 1777369054s ago. Other feeder continues. Attempting reconnect...
+2026-04-28 15:07:34,398 - UpstoxApp - INFO - [DualFeedWatchdog] upstox force-reconnect triggered.
+2026-04-28 15:07:34,537 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 15:07:34,558 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 15:07:34,558 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 2 instruments.
+2026-04-28 15:07:34,566 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 32s.
+2026-04-28 15:07:34,665 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 7)...
+2026-04-28 15:07:34,692 - UpstoxApp - WARNING - WebSocket auth attempt 7 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:39,402 - UpstoxApp - INFO - [DualFeedWatchdog] upstox re-subscribed 2 symbols.
+2026-04-28 15:07:39,402 - UpstoxApp - WARNING - [DualFeedWatchdog] dhan STALE — last tick 1777369054s ago. Other feeder continues. Attempting reconnect...
+2026-04-28 15:07:39,402 - UpstoxApp - INFO - [DualFeedWatchdog] dhan restarted.
+2026-04-28 15:07:39,693 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 8)...
+2026-04-28 15:07:39,721 - UpstoxApp - WARNING - WebSocket auth attempt 8 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:44,403 - UpstoxApp - INFO - [DualFeedWatchdog] dhan re-subscription queued for 2 symbols.
+2026-04-28 15:07:44,722 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 9)...
+2026-04-28 15:07:44,755 - UpstoxApp - WARNING - WebSocket auth attempt 9 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:49,759 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 10)...
+2026-04-28 15:07:49,785 - UpstoxApp - WARNING - WebSocket auth attempt 10 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:54,787 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 11)...
+2026-04-28 15:07:54,819 - UpstoxApp - WARNING - WebSocket auth attempt 11 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:07:59,820 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 12)...
+2026-04-28 15:07:59,859 - UpstoxApp - WARNING - WebSocket auth attempt 12 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:08:04,861 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 13)...
+2026-04-28 15:08:04,900 - UpstoxApp - WARNING - WebSocket auth attempt 13 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:08:09,904 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 14)...
+2026-04-28 15:08:09,947 - UpstoxApp - WARNING - WebSocket auth attempt 14 failed: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize'). Retrying...
+2026-04-28 15:08:14,407 - UpstoxApp - WARNING - [DualFeedWatchdog] upstox STALE — last tick 1777369094s ago. Other feeder continues. Attempting reconnect...
+2026-04-28 15:08:14,408 - UpstoxApp - INFO - [DualFeedWatchdog] upstox force-reconnect triggered.
+2026-04-28 15:08:14,949 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 15)...
+2026-04-28 15:08:14,993 - UpstoxApp - ERROR - Failed to authorize WebSocket feed after 15 attempts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize')
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/websocket_manager.py", line 78, in _get_auth_uri
+    resp.raise_for_status()
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/aiohttp/client_reqrep.py", line 1060, in raise_for_status
+    raise ClientResponseError(
+aiohttp.client_exceptions.ClientResponseError: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize')
+2026-04-28 15:08:14,995 - UpstoxApp - ERROR - An unexpected error occurred in the connection loop: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize')
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/websocket_manager.py", line 108, in connect_and_listen
+    uri = await self._get_auth_uri()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/websocket_manager.py", line 78, in _get_auth_uri
+    resp.raise_for_status()
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/aiohttp/client_reqrep.py", line 1060, in raise_for_status
+    raise ClientResponseError(
+aiohttp.client_exceptions.ClientResponseError: 401, message='Unauthorized', url=URL('https://api.upstox.com/v3/feed/market-data-feed/authorize')
+2026-04-28 15:08:14,995 - UpstoxApp - INFO - Reconnect attempt 1/1000 in 5 seconds...
