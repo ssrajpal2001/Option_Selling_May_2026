@@ -49,11 +49,14 @@ _SOURCE_IP_PATCH_LOCK = threading.Lock()
 # `_nat_detected` is a module-level result cache so the IMDS call is made at
 # most once per process regardless of how many broker instances are created.
 #
-#   None  — not yet checked
+#   Key not present — not yet checked for that IP
 #   True  — confirmed behind AWS NAT (EIP matches IMDS public-ipv4)
 #   False — not behind NAT (or IMDS unreachable / IP doesn't match)
+#
+# Keyed by source_ip so processes that manage brokers with different static IPs
+# (uncommon but possible) each get an independent IMDS result.
 
-_nat_detected: 'bool | None' = None
+_nat_detected: 'dict[str, bool]' = {}
 
 
 def _check_aws_nat(source_ip: str) -> bool:
@@ -66,14 +69,13 @@ def _check_aws_nat(source_ip: str) -> bool:
     public-ipv4 equals source_ip we are behind NAT and socket.bind() will
     always fail for that IP — but orders will still route through it correctly.
 
-    Caches the result in _nat_detected so the IMDS call runs at most once per
-    process.  Thread-safe because reading/writing a single Python variable is
-    atomic for CPython.
+    Result is cached per source_ip so the IMDS call runs at most once per IP
+    per process.  Thread-safe for CPython (dict key assignment is atomic).
     """
-    global _nat_detected
-    if _nat_detected is not None:
-        return _nat_detected
+    if source_ip in _nat_detected:
+        return _nat_detected[source_ip]
 
+    result = False
     try:
         import urllib.request as _ureq
         req = _ureq.Request(
@@ -82,12 +84,13 @@ def _check_aws_nat(source_ip: str) -> bool:
         )
         with _ureq.urlopen(req, timeout=0.3) as resp:
             public_ip = resp.read().decode().strip()
-        _nat_detected = (public_ip == source_ip)
+        result = (public_ip == source_ip)
     except Exception:
         # IMDS not reachable (non-EC2) or timed out — assume not behind NAT
-        _nat_detected = False
+        result = False
 
-    return _nat_detected
+    _nat_detected[source_ip] = result
+    return result
 
 
 def _is_bindable(ip: str) -> bool:
@@ -234,12 +237,20 @@ class BaseBroker(ABC):
         """
         if not self.source_ip or not session or SourceIPHTTPAdapter is None:
             return
-        # Skip adapter if the IP is not locally bindable (e.g. AWS NAT / EIP)
+        # Skip adapter if the IP is not locally bindable (e.g. AWS NAT / EIP).
+        # Mounting SourceIPHTTPAdapter when the IP isn't a local interface causes
+        # urllib3 to fail at DNS resolution with [Errno -9] instead of connecting.
         if not _is_bindable(self.source_ip):
-            logger.info(
-                f"[{self.instance_name}] Behind NAT — SourceIPHTTPAdapter skipped; "
-                f"orders route via AWS NAT (EIP {self.source_ip})."
-            )
+            if _check_aws_nat(self.source_ip):
+                logger.info(
+                    f"[{self.instance_name}] Behind AWS NAT — SourceIPHTTPAdapter "
+                    f"skipped; orders route via EIP {self.source_ip}."
+                )
+            else:
+                logger.info(
+                    f"[{self.instance_name}] {self.source_ip} is not bindable locally "
+                    f"— SourceIPHTTPAdapter skipped."
+                )
             return
         try:
             adapter = SourceIPHTTPAdapter(self.source_ip)
