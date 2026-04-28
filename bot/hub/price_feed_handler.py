@@ -248,6 +248,8 @@ class PriceFeedHandler:
 
     async def handle_tick_dispatched(self, instrument_key, feed):
         """Legacy dispatched handler for individual ticks (Upstox Protobuf)."""
+        if isinstance(feed, dict):
+            return  # Normalized dict ticks are handled by handle_tick_dispatched_normalized
         packet_now = self.state_manager.last_exchange_time or self.trade_orchestrator._get_timestamp()
         now = self._extract_timestamp(feed, packet_now)
 
