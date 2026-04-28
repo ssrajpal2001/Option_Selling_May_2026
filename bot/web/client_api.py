@@ -1128,15 +1128,26 @@ async def stop_bot(user=Depends(get_current_user)):
     if not instances:
         raise HTTPException(400, "No broker configured.")
 
-    stopped_brokers = []
+    actually_stopped = []
+    already_idle = []
     for inst in instances:
+        live = instance_manager.get_instance_status(inst["id"])
+        was_running = live.get("running") or inst.get("status") == "running"
         instance_manager.stop_instance(inst["id"])
         db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (inst["id"],))
-        stopped_brokers.append(inst["broker"])
+        if was_running:
+            actually_stopped.append(inst["broker"])
+        else:
+            already_idle.append(inst["broker"])
 
-    _audit_client(user["id"], "bot_deactivate", {"brokers": stopped_brokers})
-    msg = f"Stopped: {', '.join(b.capitalize() for b in stopped_brokers)}" if stopped_brokers else "No running instances found."
-    return {"success": True, "message": msg}
+    _audit_client(user["id"], "bot_deactivate", {"brokers": actually_stopped})
+    parts = []
+    if actually_stopped:
+        parts.append(f"Stopped: {', '.join(b.capitalize() for b in actually_stopped)}")
+    if already_idle:
+        parts.append(f"Already idle: {', '.join(b.capitalize() for b in already_idle)}")
+    msg = ". ".join(parts) if parts else "No configured broker instances found."
+    return {"success": True, "message": msg, "stopped": actually_stopped, "already_idle": already_idle}
 
 
 @router.post("/bot/restart")
