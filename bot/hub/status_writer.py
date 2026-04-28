@@ -106,7 +106,7 @@ class StatusWriter:
                 if _row is not None:
                     trading_active = bool(_row[0])
             except Exception:
-                pass  # Default remains True on error
+                pass  # Default remains False on DB error (safe: no trading without confirmed state)
 
             # Fetch Funds & Positions from Broker
             if not orch.is_backtest:
