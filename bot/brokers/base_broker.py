@@ -40,6 +40,67 @@ except Exception:
 # different static IPs cannot interfere with each other's temporary patches.
 _SOURCE_IP_PATCH_LOCK = threading.Lock()
 
+# ── AWS NAT / Elastic IP detection ────────────────────────────────────────────
+#
+# On AWS EC2 the Elastic IP is NOT bound to a local interface — outbound traffic
+# is NAT'd to the EIP at the VPC level. socket.bind(EIP) therefore raises
+# [Errno 99] EADDRNOTAVAIL even though all outbound packets DO leave via the EIP.
+#
+# `_nat_detected` is a module-level result cache so the IMDS call is made at
+# most once per process regardless of how many broker instances are created.
+#
+#   None  — not yet checked
+#   True  — confirmed behind AWS NAT (EIP matches IMDS public-ipv4)
+#   False — not behind NAT (or IMDS unreachable / IP doesn't match)
+
+_nat_detected: 'bool | None' = None
+
+
+def _check_aws_nat(source_ip: str) -> bool:
+    """
+    Return True if we are running on an AWS EC2 instance whose public Elastic IP
+    matches *source_ip*.
+
+    Method: query the Instance Metadata Service (IMDS v1) at the link-local
+    address 169.254.169.254 with a tight 0.3-second timeout. If the returned
+    public-ipv4 equals source_ip we are behind NAT and socket.bind() will
+    always fail for that IP — but orders will still route through it correctly.
+
+    Caches the result in _nat_detected so the IMDS call runs at most once per
+    process.  Thread-safe because reading/writing a single Python variable is
+    atomic for CPython.
+    """
+    global _nat_detected
+    if _nat_detected is not None:
+        return _nat_detected
+
+    try:
+        import urllib.request as _ureq
+        req = _ureq.Request(
+            'http://169.254.169.254/latest/meta-data/public-ipv4',
+            headers={'X-aws-ec2-metadata-token-ttl-seconds': '21600'},
+        )
+        with _ureq.urlopen(req, timeout=0.3) as resp:
+            public_ip = resp.read().decode().strip()
+        _nat_detected = (public_ip == source_ip)
+    except Exception:
+        # IMDS not reachable (non-EC2) or timed out — assume not behind NAT
+        _nat_detected = False
+
+    return _nat_detected
+
+
+def _is_bindable(ip: str) -> bool:
+    """Quick non-raising test: can we bind a UDP socket to *ip* locally?"""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.bind((ip, 0))
+        return True
+    except OSError:
+        return False
+    finally:
+        s.close()
+
 
 @contextmanager
 def _scoped_socket_patch(source_ip: str):
@@ -164,8 +225,21 @@ class BaseBroker(ABC):
         Mount a SourceIPHTTPAdapter on a requests.Session so that every HTTP
         call routed through that session uses self.source_ip as the local
         outbound address.  Safe when source_ip is None or session is None.
+
+        On AWS EC2 with an Elastic IP the IP is NOT a local interface, so
+        urllib3 socket.bind() inside SourceIPHTTPAdapter would fail with
+        [Errno -9] when attempting DNS resolution (address family mismatch).
+        We skip the adapter in that case — orders still route via the EIP
+        through AWS NAT without any explicit source binding.
         """
         if not self.source_ip or not session or SourceIPHTTPAdapter is None:
+            return
+        # Skip adapter if the IP is not locally bindable (e.g. AWS NAT / EIP)
+        if not _is_bindable(self.source_ip):
+            logger.info(
+                f"[{self.instance_name}] Behind NAT — SourceIPHTTPAdapter skipped; "
+                f"orders route via AWS NAT (EIP {self.source_ip})."
+            )
             return
         try:
             adapter = SourceIPHTTPAdapter(self.source_ip)
@@ -182,13 +256,18 @@ class BaseBroker(ABC):
 
     def _validate_source_ip(self) -> None:
         """
-        Lightweight pre-flight check: confirm that self.source_ip is currently
-        bound to this machine before an order is placed.
+        Lightweight pre-flight check: confirm that self.source_ip is either
+        directly bindable on this machine, or routed via AWS NAT (Elastic IP).
 
-        Method: UDP socket bind to the IP (no connection needed, typically
-        < 1 ms).  If the bind fails the method:
+        On AWS EC2 the Elastic IP is NOT a local interface — the socket.bind()
+        attempt will raise [Errno 99] EADDRNOTAVAIL.  When this happens we
+        consult the AWS Instance Metadata Service (IMDS) to verify that the
+        instance's public-ipv4 matches self.source_ip.  If it does, the
+        pre-flight check passes (NAT will route orders through the EIP).
+
+        If the bind fails AND IMDS doesn't confirm a matching EIP:
           1. Logs the error at ERROR level.
-          2. Fires a Telegram alert to the admin (force=True, bypasses global toggle).
+          2. Fires a Telegram alert to the admin.
           3. Raises RuntimeError so the caller can block the order.
 
         No-op when source_ip is not configured.
@@ -198,18 +277,30 @@ class BaseBroker(ABC):
 
         import time
         t0 = time.monotonic()
-        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            probe.bind((self.source_ip, 0))
-            probe.close()
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                s.bind((self.source_ip, 0))
+            finally:
+                s.close()
             elapsed_ms = (time.monotonic() - t0) * 1000
             logger.debug(
                 f"[{self.instance_name}] Static IP {self.source_ip} validated "
                 f"({elapsed_ms:.1f} ms)."
             )
         except OSError as exc:
-            probe.close()
+            import errno as _errno
             elapsed_ms = (time.monotonic() - t0) * 1000
+            if exc.errno in (_errno.EADDRNOTAVAIL, _errno.EAFNOSUPPORT, 99, -9):
+                # bind() failed — check whether we're behind AWS NAT
+                if _check_aws_nat(self.source_ip):
+                    logger.info(
+                        f"[{self.instance_name}] Running behind AWS NAT. "
+                        f"EIP {self.source_ip} validated via instance metadata "
+                        f"— order routing OK ({elapsed_ms:.1f} ms)."
+                    )
+                    return  # NAT confirmed — do NOT raise
+            # Not behind NAT (or IMDS unreachable / IP mismatch) — block the order
             err_msg = (
                 f"[{self.instance_name}] Static IP {self.source_ip} is NOT bound "
                 f"to this machine — order blocked ({elapsed_ms:.1f} ms). Error: {exc}"
