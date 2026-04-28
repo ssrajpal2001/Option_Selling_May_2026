@@ -1589,8 +1589,10 @@ function renderBrokerTabs() {
       const btn = document.createElement('button');
       btn.className = 'broker-tab' + (state.selectedBroker === b ? ` sel-${b}` : '');
 
-      // Status dot: green=running+fresh, yellow=configured+stale, grey=not configured/missing creds
-      let dotColor = '#475569'; // grey - not configured
+      // Status dot: green=running, grey=stopped/not-configured, red=creds missing, amber=reconnecting
+      // Token freshness is reflected in tooltip text only (not dot color) to keep the dot
+      // strictly a running-state indicator as intended by the multi-broker feature.
+      let dotColor = '#475569'; // grey — not configured / stopped
       let dotTitle = 'Not configured';
       let dotExtra = '';
       if (inst) {
@@ -1600,13 +1602,17 @@ function renderBrokerTabs() {
           dotTitle = `Auto-reconnecting (${reconnSt.attempts}/${reconnSt.max_attempts})`;
           dotExtra = `<span style="font-size:9px;color:var(--warn);margin-left:3px">↺${reconnSt.attempts}</span>`;
         } else if (!inst.has_credentials) {
-          dotColor = '#ef4444'; dotTitle = 'Credentials missing — click to add';
-        } else if (inst.status === 'running' && inst.token_fresh) {
-          dotColor = 'var(--success)'; dotTitle = 'Connected & running';
-        } else if (inst.token_fresh) {
-          dotColor = '#fbbf24'; dotTitle = 'Token fresh, bot stopped';
+          dotColor = '#ef4444';
+          dotTitle = 'Credentials missing — click to add';
+        } else if (inst.status === 'running') {
+          dotColor = 'var(--success)';
+          dotTitle = inst.token_fresh ? 'Running' : 'Running (token may be stale)';
         } else {
-          dotColor = 'var(--error)'; dotTitle = 'Token stale — refresh needed';
+          // Stopped — encode token state in tooltip only
+          dotColor = '#475569';
+          dotTitle = inst.token_fresh
+            ? 'Bot stopped — token is fresh, ready to start'
+            : 'Bot stopped — token stale, reconnect before starting';
         }
       }
       const dot = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dotColor};margin-right:5px;flex-shrink:0" title="${dotTitle}"></span>`;
