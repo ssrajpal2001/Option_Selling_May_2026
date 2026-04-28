@@ -938,6 +938,14 @@
           </div>
           <div id="connect-auto-hint" style="font-size:11px;margin-top:6px;color:var(--text-soft)"></div>
 
+          <!-- Per-broker Start / Stop row -->
+          <div id="broker-bot-status-row" style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)">
+            <span id="broker-bot-running-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#475569;flex-shrink:0"></span>
+            <span id="broker-bot-running-label" style="font-size:12px;color:var(--muted);flex:1">Bot not configured</span>
+            <button id="broker-bot-start-btn" class="btn btn-sm" style="display:none;background:var(--primary);color:#0a0f1e;padding:4px 12px;font-size:11px;font-weight:700" onclick="startBrokerBot()">▶ Start</button>
+            <button id="broker-bot-stop-btn"  class="btn btn-sm" style="display:none;background:var(--error);color:#fff;padding:4px 12px;font-size:11px;font-weight:700" onclick="stopBrokerBot()">■ Stop</button>
+          </div>
+
           <!-- Trading mode & instrument -->
           <hr style="border-color:var(--border);margin:16px 0">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
@@ -1722,6 +1730,7 @@ function selectBroker(broker) {
   state.selectedBroker = broker;
   renderBrokerTabs();
   renderCredForm(broker);
+  updateBrokerBotStatusRow(broker);
   // Load broker settings panel if accordion is open
   const bsPanel = document.getElementById('broker-settings-panel');
   if (bsPanel && bsPanel.classList.contains('open')) {
@@ -1918,6 +1927,7 @@ async function pollBotStatus() {
 
     updateBotUI(anyRunning, state.tradingEnabled);
     renderBrokerTabs();
+    if (state.selectedBroker) updateBrokerBotStatusRow(state.selectedBroker);
     updateStatsUI(todayTrades);
     updateKillSwitchUI();
     renderPositions(d, todayTrades);
@@ -2197,6 +2207,66 @@ async function onBotToggle(wantRunning) {
     document.getElementById('trading-toggle-card').checked = state.tradingEnabled;
   }
   btn.disabled = false;
+}
+
+// ──────────────────────────── PER-BROKER BOT ROW ────────────────────────────
+function updateBrokerBotStatusRow(broker) {
+  const dot   = document.getElementById('broker-bot-running-dot');
+  const lbl   = document.getElementById('broker-bot-running-label');
+  const startBtn = document.getElementById('broker-bot-start-btn');
+  const stopBtn  = document.getElementById('broker-bot-stop-btn');
+  if (!dot || !lbl) return;
+
+  const inst = state.instances.find(i => i.broker === broker);
+  if (!inst) {
+    dot.style.background = '#475569';
+    lbl.textContent = 'Not configured';
+    lbl.style.color = 'var(--muted)';
+    if (startBtn) startBtn.style.display = 'none';
+    if (stopBtn)  stopBtn.style.display  = 'none';
+    return;
+  }
+
+  const running = inst.status === 'running';
+  dot.style.background = running ? 'var(--success)' : '#475569';
+  lbl.textContent = running
+    ? `${inst.broker.charAt(0).toUpperCase()+inst.broker.slice(1)} bot is running`
+    : `${inst.broker.charAt(0).toUpperCase()+inst.broker.slice(1)} bot is stopped`;
+  lbl.style.color = running ? 'var(--success)' : 'var(--muted)';
+  if (startBtn) startBtn.style.display = running ? 'none' : '';
+  if (stopBtn)  stopBtn.style.display  = running ? '' : 'none';
+}
+
+async function startBrokerBot() {
+  const broker = state.selectedBroker;
+  if (!broker) return;
+  const btn = document.getElementById('broker-bot-start-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const d = await api('POST', '/bot/start', { broker });
+    toast(d.message || `${broker.charAt(0).toUpperCase()+broker.slice(1)} started`, 'ok');
+    await pollBotStatus();
+    updateBrokerBotStatusRow(broker);
+  } catch (e) {
+    toast(e.message || 'Failed to start bot', 'err');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '▶ Start'; }
+}
+
+async function stopBrokerBot() {
+  const broker = state.selectedBroker;
+  if (!broker) return;
+  const btn = document.getElementById('broker-bot-stop-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const d = await api('POST', '/bot/stop-one', { broker });
+    toast(d.message || 'Bot stopped', 'ok');
+    await pollBotStatus();
+    updateBrokerBotStatusRow(broker);
+  } catch (e) {
+    toast(e.message || 'Failed to stop bot', 'err');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '■ Stop'; }
 }
 
 async function onTradingToggle(enabled) {

@@ -972,6 +972,10 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
 
 @router.post("/bot/start")
 async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
+    _valid_brokers = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+    if body.broker and body.broker not in _valid_brokers:
+        raise HTTPException(400, f"Unknown broker '{body.broker}'. Valid brokers: {', '.join(_valid_brokers)}")
+
     # ── Plan expiry enforcement ───────────────────────────────────────────
     _plan_expiry_warning = None
     _plan_expired = False
@@ -1002,8 +1006,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
         )
     # ─────────────────────────────────────────────────────────────────────
 
-    _valid_brokers = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
-    requested_broker = body.broker if body.broker and body.broker in _valid_brokers else None
+    requested_broker = body.broker if body.broker else None
 
     # ── Single-broker path (explicit broker name provided) ────────────────
     if requested_broker:
@@ -1123,6 +1126,30 @@ async def stop_bot(user=Depends(get_current_user)):
 async def restart_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
     await stop_bot(user=user)
     return await start_bot(body=body, user=user)
+
+
+class BotStopOneRequest(BaseModel):
+    broker: str
+
+
+@router.post("/bot/stop-one")
+async def stop_one_broker_bot(body: BotStopOneRequest, user=Depends(get_current_user)):
+    """Stop a single named broker instance without affecting others."""
+    valid_brokers = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+    if body.broker not in valid_brokers:
+        raise HTTPException(400, f"Unknown broker '{body.broker}'.")
+
+    instance = db_fetchone(
+        "SELECT id, broker FROM client_broker_instances WHERE client_id=? AND broker=? AND status != 'removed'",
+        (user["id"], body.broker)
+    )
+    if not instance:
+        raise HTTPException(400, f"{body.broker.capitalize()} is not configured.")
+
+    instance_manager.stop_instance(instance["id"])
+    db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
+    _audit_client(user["id"], "bot_deactivate", {"broker": body.broker})
+    return {"success": True, "message": f"{body.broker.capitalize()} bot stopped."}
 
 
 @router.get("/upstox/login-url")
