@@ -1,6 +1,7 @@
 import json
 import time
 import hashlib
+import asyncio
 import urllib.parse
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -314,32 +315,32 @@ async def reconnect_broker(broker: str, user=Depends(get_current_user)):
     try:
         if broker == "zerodha":
             from utils.auth_manager_zerodha import handle_zerodha_login_automated
-            token = handle_zerodha_login_automated(creds)
+            token = await asyncio.to_thread(handle_zerodha_login_automated, creds)
         elif broker == "dhan":
             from utils.auth_manager_dhan import handle_dhan_login_automated
-            token = handle_dhan_login_automated(creds)
+            token = await asyncio.to_thread(handle_dhan_login_automated, creds)
         elif broker == "angelone":
             from utils.auth_manager_angelone import handle_angelone_login
             creds["client_code"] = creds["broker_user_id"]
             creds["pin"] = creds["password"]
-            smart_api = handle_angelone_login(creds)
+            smart_api = await asyncio.to_thread(handle_angelone_login, creds)
             if smart_api:
                 token = smart_api.access_token
         elif broker == "upstox":
             from utils.auth_manager_upstox import handle_upstox_login_automated
-            token = handle_upstox_login_automated(creds)
+            token = await asyncio.to_thread(handle_upstox_login_automated, creds)
         elif broker == "aliceblue":
             from utils.auth_manager_alice import handle_alice_login_automated
-            token = handle_alice_login_automated(creds)
+            token = await asyncio.to_thread(handle_alice_login_automated, creds)
         elif broker == "groww":
             from utils.auth_manager_groww import handle_groww_login_automated
-            token = handle_groww_login_automated(creds)
+            token = await asyncio.to_thread(handle_groww_login_automated, creds)
         elif broker == "fyers":
             raise HTTPException(400, "no_auto_login")
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"[Reconnect] {broker} headless login error for user {user['id']}: {e}")
+        logger.warning(f"[Reconnect] {broker} headless login error for user {user['id']}: {e}", exc_info=True)
         raise HTTPException(503, "reconnect_failed")
 
     if not token:
@@ -549,13 +550,13 @@ async def zerodha_login_url(request: Request, user=Depends(get_current_user)):
         try:
             from utils.auth_manager_zerodha import handle_zerodha_login_automated
             creds = {
-                "api_key": decrypt_secret(instance["api_key_encrypted"]),
-                "api_secret": decrypt_secret(instance["api_secret_encrypted"]),
-                "broker_user_id": decrypt_secret(instance["broker_user_id_encrypted"]),
-                "password": decrypt_secret(instance["password_encrypted"]),
-                "totp": decrypt_secret(instance["totp_encrypted"])
+                "api_key":        decrypt_secret(instance.get("api_key_encrypted") or ""),
+                "api_secret":     decrypt_secret(instance.get("api_secret_encrypted") or ""),
+                "broker_user_id": decrypt_secret(instance.get("broker_user_id_encrypted") or ""),
+                "password":       decrypt_secret(instance.get("password_encrypted") or ""),
+                "totp":           decrypt_secret(instance.get("totp_encrypted") or ""),
             }
-            token = handle_zerodha_login_automated(creds)
+            token = await asyncio.to_thread(handle_zerodha_login_automated, creds)
             if token:
                 enc_token = encrypt_secret(token)
                 now_ist = datetime.now(IST).isoformat()
@@ -563,20 +564,26 @@ async def zerodha_login_url(request: Request, user=Depends(get_current_user)):
                 from hub.event_bus import event_bus
                 await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'zerodha', 'access_token': token})
                 return {"success": True, "automated": True, "message": "Zerodha background login successful."}
+            logger.warning(f"[Zerodha] Automated login returned no token for user {user['id']} — falling back to OAuth")
         except Exception as e:
-            logger.error(f"Zerodha automated login failed: {e}")
+            logger.error(f"[Zerodha] Automated login failed for user {user['id']}: {e}", exc_info=True)
 
     # 2. Fallback to Browser OAuth
-    api_key = decrypt_secret(instance["api_key_encrypted"])
-    state_payload = f'{user["id"]}:{int(time.time())}'
-    state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
-    login_url = KITE_LOGIN_URL.format(api_key=api_key)
-    raw_host = request.headers.get('host') or str(request.base_url).split('/')[2]
-    proto = request.headers.get('x-forwarded-proto', 'http')
-    if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http': proto = 'https'
-    redirect_uri = f"{proto}://{raw_host}/auth/zerodha/callback"
-    login_url += "&redirect_uri=" + urllib.parse.quote(redirect_uri) + "&state=" + urllib.parse.quote(state_encrypted)
-    return {"success": True, "login_url": login_url}
+    try:
+        api_key = decrypt_secret(instance.get("api_key_encrypted") or "")
+        state_payload = f'{user["id"]}:{int(time.time())}'
+        state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
+        login_url = KITE_LOGIN_URL.format(api_key=api_key)
+        raw_host = request.headers.get('host') or str(request.base_url).split('/')[2]
+        proto = request.headers.get('x-forwarded-proto', 'http')
+        if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http':
+            proto = 'https'
+        redirect_uri = f"{proto}://{raw_host}/auth/zerodha/callback"
+        login_url += "&redirect_uri=" + urllib.parse.quote(redirect_uri) + "&state=" + urllib.parse.quote(state_encrypted)
+        return {"success": True, "login_url": login_url}
+    except Exception as e:
+        logger.error(f"[Zerodha] OAuth URL generation failed for user {user['id']}: {e}", exc_info=True)
+        raise HTTPException(500, f"Could not generate Zerodha login URL: {str(e)[:200]}")
 
 
 @router.get("/dhan/login-url")
@@ -608,14 +615,15 @@ async def dhan_login_url(user=Depends(get_current_user)):
             )
         dhan_client_id = broker_uid or api_key
         try:
-            _dhan_result = generate_dhan_token(
+            _dhan_result = await asyncio.to_thread(
+                generate_dhan_token,
                 api_key=api_key,
                 client_id=dhan_client_id,
                 password=password,
                 totp_secret=totp_sec,
             )
         except Exception as e:
-            logger.error(f"[Dhan] generate_dhan_token raised: {e}")
+            logger.error(f"[Dhan] generate_dhan_token raised: {e}", exc_info=True)
             raise HTTPException(500, f"Dhan token generation error: {str(e)[:200]}")
         token = _dhan_result['token']
         if token:
@@ -639,7 +647,7 @@ async def dhan_login_url(user=Depends(get_current_user)):
     # ── Path 2: Direct token mode — validate existing token ───────────────
     if password and totp_sec:
         try:
-            token = handle_dhan_login_automated(creds)
+            token = await asyncio.to_thread(handle_dhan_login_automated, creds)
             if token:
                 enc_token = encrypt_secret(token)
                 now_ist = datetime.now(IST).isoformat()
@@ -668,29 +676,39 @@ async def angelone_login_url(user=Depends(get_current_user)):
     if not instance:
         raise HTTPException(400, "AngelOne configuration missing.")
 
-    # 1. Attempt Automated Login (AngelOne is naturally TOTP based)
-    if instance.get("password_encrypted") and instance.get("totp_encrypted"):
-        try:
-            from utils.auth_manager_angelone import handle_angelone_login
-            creds = {
-                "api_key": decrypt_secret(instance["api_key_encrypted"]),
-                "client_code": decrypt_secret(instance["broker_user_id_encrypted"]),
-                "pin": decrypt_secret(instance["password_encrypted"]),
-                "totp": decrypt_secret(instance["totp_encrypted"])
-            }
-            smart_api = handle_angelone_login(creds)
-            if smart_api and smart_api.access_token:
-                enc_token = encrypt_secret(smart_api.access_token)
-                now_ist = datetime.now(IST).isoformat()
-                db_execute("UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE client_id=? AND broker='angelone'", (enc_token, now_ist, user["id"]))
-                from hub.event_bus import event_bus
-                await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'angelone', 'access_token': smart_api.access_token})
-                return {"success": True, "automated": True, "message": "AngelOne session generated."}
-        except Exception as e:
-            logger.error(f"AngelOne automated login failed: {e}")
+    if not instance.get("api_key_encrypted"):
+        raise HTTPException(400, "Enter your AngelOne API Key and Client Code in Settings first.")
 
-    url = "https://smartapi.angelbroking.com/publisher-login"
-    return {"success": True, "login_url": url}
+    # AngelOne requires automated (TOTP) login — there is no OAuth browser flow.
+    if not instance.get("password_encrypted") or not instance.get("totp_encrypted"):
+        raise HTTPException(
+            400,
+            "One-click connect requires your PIN/MPIN and TOTP Secret. "
+            "Save them in the Credentials section above, then try again."
+        )
+
+    try:
+        from utils.auth_manager_angelone import handle_angelone_login
+        creds = {
+            "api_key":     decrypt_secret(instance.get("api_key_encrypted") or ""),
+            "client_code": decrypt_secret(instance.get("broker_user_id_encrypted") or ""),
+            "pin":         decrypt_secret(instance.get("password_encrypted") or ""),
+            "totp":        decrypt_secret(instance.get("totp_encrypted") or ""),
+        }
+        smart_api = await asyncio.to_thread(handle_angelone_login, creds)
+        if smart_api and smart_api.access_token:
+            enc_token = encrypt_secret(smart_api.access_token)
+            now_ist = datetime.now(IST).isoformat()
+            db_execute("UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE client_id=? AND broker='angelone'", (enc_token, now_ist, user["id"]))
+            from hub.event_bus import event_bus
+            await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'angelone', 'access_token': smart_api.access_token})
+            return {"success": True, "automated": True, "message": "AngelOne session generated."}
+        raise HTTPException(400, "AngelOne login failed — verify your Client Code, PIN/MPIN, and TOTP secret.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[AngelOne] Automated login failed for user {user['id']}: {e}", exc_info=True)
+        raise HTTPException(400, f"AngelOne login error: {str(e)[:200]}")
 
 
 # ── Zerodha Manual Token Exchange ─────────────────────────────────────────────
@@ -1028,13 +1046,13 @@ async def upstox_login_url(request: Request, user=Depends(get_current_user)):
         try:
             from utils.auth_manager_upstox import handle_upstox_login_automated
             creds = {
-                "api_key": decrypt_secret(instance["api_key_encrypted"]),
-                "api_secret": decrypt_secret(instance["api_secret_encrypted"]),
-                "broker_user_id": decrypt_secret(instance["broker_user_id_encrypted"]),
-                "password": decrypt_secret(instance["password_encrypted"]),
-                "totp": decrypt_secret(instance["totp_encrypted"])
+                "api_key":        decrypt_secret(instance.get("api_key_encrypted") or ""),
+                "api_secret":     decrypt_secret(instance.get("api_secret_encrypted") or ""),
+                "broker_user_id": decrypt_secret(instance.get("broker_user_id_encrypted") or ""),
+                "password":       decrypt_secret(instance.get("password_encrypted") or ""),
+                "totp":           decrypt_secret(instance.get("totp_encrypted") or ""),
             }
-            token = handle_upstox_login_automated(creds)
+            token = await asyncio.to_thread(handle_upstox_login_automated, creds)
             if token:
                 enc_token = encrypt_secret(token)
                 now_ist = datetime.now(IST).isoformat()
@@ -1043,10 +1061,10 @@ async def upstox_login_url(request: Request, user=Depends(get_current_user)):
                 await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'upstox', 'access_token': token})
                 return {"success": True, "automated": True, "message": "Upstox background login successful."}
         except Exception as e:
-            logger.error(f"Upstox automated login failed: {e}")
+            logger.error(f"[Upstox] Automated login failed for user {user['id']}: {e}", exc_info=True)
 
     # 2. Fallback to Browser OAuth
-    api_key = decrypt_secret(instance["api_key_encrypted"])
+    api_key = decrypt_secret(instance.get("api_key_encrypted") or "")
     state_payload = f'{user["id"]}:{int(time.time())}'
     state_encrypted = _fernet.encrypt(state_payload.encode()).decode()
     raw_host = request.headers.get('host') or str(request.base_url).split('/')[2]
@@ -1137,9 +1155,9 @@ async def aliceblue_login_url(user=Depends(get_current_user)):
         "totp": decrypt_secret(instance.get("totp_encrypted") or ""),
     }
     try:
-        token = handle_alice_login_automated(creds)
+        token = await asyncio.to_thread(handle_alice_login_automated, creds)
     except Exception as e:
-        logger.error(f"[AliceBlue] handle_alice_login_automated raised: {e}")
+        logger.error(f"[AliceBlue] handle_alice_login_automated raised: {e}", exc_info=True)
         raise HTTPException(500, f"Alice Blue login error: {str(e)[:200]}")
     if not token:
         raise HTTPException(400, "Alice Blue automated login failed. Please verify your Client ID, API Key, PIN, and TOTP seed.")
@@ -1175,9 +1193,9 @@ async def groww_login_url(user=Depends(get_current_user)):
         "access_token": decrypt_secret(instance["access_token_encrypted"]),
     }
     try:
-        token = handle_groww_login(creds)
+        token = await asyncio.to_thread(handle_groww_login, creds)
     except Exception as e:
-        logger.error(f"[Groww] handle_groww_login raised: {e}")
+        logger.error(f"[Groww] handle_groww_login raised: {e}", exc_info=True)
         raise HTTPException(500, f"Groww login error: {str(e)[:200]}")
     if not token:
         raise HTTPException(400, "Groww token is invalid or expired. Please update your access token in Settings.")
