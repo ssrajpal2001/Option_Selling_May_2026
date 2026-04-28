@@ -791,8 +791,19 @@ async def toggle_trading(body: TradingToggleRequest, user=Depends(get_current_us
     if not instance or instance["status"] != "running":
         raise HTTPException(400, "Broker connection must be active first.")
 
-    # Per-broker file (new) + legacy global file (backward compat)
+    # Resolve broker: use body.broker if provided, else active instance broker
     broker = body.broker or instance.get("broker", "")
+    # Validate that broker belongs to this client (prevents cross-client toggle)
+    if broker:
+        _VALID_BROKERS = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+        if broker not in _VALID_BROKERS:
+            raise HTTPException(400, "Invalid broker name.")
+        _owned = db_fetchone(
+            "SELECT id FROM client_broker_instances WHERE client_id=? AND broker=?",
+            (user["id"], broker)
+        )
+        if not _owned:
+            raise HTTPException(404, "Broker not configured for this account.")
     _write_broker_trading_file(user["id"], broker, body.enabled)
 
     msg = "Trading enabled." if body.enabled else "Trading disabled. Active trades will be closed."
