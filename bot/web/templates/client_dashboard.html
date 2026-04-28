@@ -1837,10 +1837,10 @@ function renderCredForm(broker) {
   if (hintEl) {
     const HEADLESS_OPTIONAL = ['zerodha', 'dhan', 'upstox', 'aliceblue'];
     if (broker === 'angelone') {
-      hintEl.innerHTML = '⚠️ Connect requires Password/PIN and TOTP Secret saved above.';
+      hintEl.innerHTML = '⚠️ Connect requires Client Code + PIN/MPIN + TOTP Secret saved above.';
       hintEl.style.color = 'var(--warn)';
     } else if (HEADLESS_OPTIONAL.includes(broker)) {
-      hintEl.innerHTML = 'ℹ️ Save Password + TOTP Secret above for instant one-click connect (no browser window).';
+      hintEl.innerHTML = 'ℹ️ Save User ID + Password + TOTP Secret above for instant one-click connect (no browser window).';
       hintEl.style.color = 'var(--text-soft)';
     } else {
       hintEl.innerHTML = '';
