@@ -9,17 +9,13 @@
     <p class="text-sm mt-1" style="color:var(--muted)">Merged log stream across all client broker instances</p>
   </div>
   <div class="flex items-center gap-3">
-    <select id="per-file-select" class="input-field" style="width:auto">
-      <option value="50">50 lines / file</option>
-      <option value="100" selected>100 lines / file</option>
-      <option value="200">200 lines / file</option>
-      <option value="500">500 lines / file</option>
-    </select>
-    <select id="limit-select" class="input-field" style="width:auto">
-      <option value="200">Show 200</option>
-      <option value="500" selected>Show 500</option>
-      <option value="1000">Show 1000</option>
-      <option value="2000">Show 2000</option>
+    <select id="lines-select" class="input-field" style="width:auto">
+      <option value="50">Last 50 lines / file</option>
+      <option value="100">Last 100 lines / file</option>
+      <option value="200" selected>Last 200 lines / file</option>
+      <option value="500">Last 500 lines / file</option>
+      <option value="1000">Last 1000 lines / file</option>
+      <option value="2000">Last 2000 lines / file</option>
     </select>
     <select id="level-filter" class="input-field" style="width:auto">
       <option value="">All levels</option>
@@ -109,11 +105,10 @@ function renderLogs() {
 }
 
 async function loadLogs() {
-  const perFile = document.getElementById('per-file-select').value;
-  const limit   = document.getElementById('limit-select').value;
+  const n = document.getElementById('lines-select').value;
   document.getElementById('log-container').innerHTML = '<span style="color:var(--muted)">Loading…</span>';
   try {
-    const r = await fetch(`/api/admin/logs/all?per_file_lines=${perFile}&limit=${limit}`);
+    const r = await fetch(`/api/admin/logs/all?lines=${n}`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
     _allEntries = d.entries || [];
@@ -123,10 +118,9 @@ async function loadLogs() {
   }
 }
 
-document.getElementById('level-filter').addEventListener('change',   renderLogs);
-document.getElementById('search-input').addEventListener('input',    renderLogs);
-document.getElementById('per-file-select').addEventListener('change', loadLogs);
-document.getElementById('limit-select').addEventListener('change',    loadLogs);
+document.getElementById('level-filter').addEventListener('change', renderLogs);
+document.getElementById('search-input').addEventListener('input',  renderLogs);
+document.getElementById('lines-select').addEventListener('change', loadLogs);
 
 loadLogs();
 </script>

@@ -1984,18 +1984,17 @@ _LOG_LINE_RE = re.compile(
 
 @router.get("/logs/all")
 async def global_logs_all(
-    per_file_lines: int = Query(default=100, ge=10, le=500,
-                                description="Max lines to read from each log file"),
-    limit: int = Query(default=500, ge=10, le=5000,
-                       description="Max total entries returned after merge"),
+    lines: int = Query(default=200, ge=10, le=2000,
+                       description="Last N lines to read from each client log file"),
     admin=Depends(require_admin),
 ):
     """
-    Return up to `limit` log entries merged from the last `per_file_lines`
-    lines of every client_{id}_{broker}.log, sorted by timestamp descending.
-    Reading N lines per-file ensures every client is represented fairly even
-    when one log is much chattier than others.
-    Each entry exposes: ts, level, client_id, broker, message (and text alias).
+    Read the last `lines` entries from every client_{id}_{broker}.log,
+    merge them all, sort by timestamp descending, and return the combined set.
+    Reading N lines per-file ensures every client is fairly represented even
+    when one log is much chattier than others — the result size is at most
+    N × (number of log files).
+    Each entry: ts, level, client_id, broker, message (+ text for compat).
     """
     from collections import deque
 
@@ -2017,7 +2016,7 @@ async def global_logs_all(
             broker = parts[1]
             fpath = os.path.join(log_dir, fname)
             try:
-                dq: deque = deque(maxlen=per_file_lines)
+                dq: deque = deque(maxlen=lines)
                 with open(fpath, "r", encoding="utf-8", errors="replace") as f:
                     for raw in f:
                         dq.append(raw.rstrip("\n"))
@@ -2032,16 +2031,15 @@ async def global_logs_all(
                         "level": lvl,
                         "client_id": cid,
                         "broker": broker,
-                        # `message` is the canonical field; `text` kept for compat
-                        "message": raw_line,
-                        "text": raw_line,
+                        "message": raw_line,   # canonical field name
+                        "text": raw_line,       # backward-compat alias
                     })
             except Exception:
                 pass
 
     # Sort by timestamp descending; entries without a ts sort to the bottom
     entries.sort(key=lambda e: e["ts"], reverse=True)
-    return {"entries": entries[:limit], "total": len(entries)}
+    return {"entries": entries, "total": len(entries)}
 
 
 # ── IP-conflict detection ──────────────────────────────────────────────────────
