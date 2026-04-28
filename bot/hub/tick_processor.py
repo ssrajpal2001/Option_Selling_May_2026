@@ -150,7 +150,8 @@ class TickProcessor:
             broker_name = os.environ.get('CLIENT_BROKER', '')
             import json, sqlite3, time as _time
 
-            # ── DB-driven trading gate (authoritative, cached every 5s) ──────
+            # ── DB-driven runtime config (trading_active, trading_mode, quantity) ─
+            # Single DB read cached every 5 s — DB is authoritative for all three.
             _now = _time.monotonic()
             if _now - getattr(self, '_trading_db_last_check', 0) >= 5:
                 self._trading_db_last_check = _now
@@ -158,42 +159,31 @@ class TickProcessor:
                     _db = os.path.join(os.getcwd(), 'config', 'algosoft.db')
                     with sqlite3.connect(_db, timeout=2) as _conn:
                         _row = _conn.execute(
-                            "SELECT trading_active FROM client_broker_instances WHERE client_id=? AND broker=?",
+                            "SELECT trading_active, trading_mode, quantity "
+                            "FROM client_broker_instances WHERE client_id=? AND broker=?",
                             (int(user_id), broker_name)
                         ).fetchone()
                     if _row is not None:
                         self._cached_trading_active = bool(_row[0])
+                        _new_mode = (_row[1] or 'paper').lower()
+                        _new_qty  = str(_row[2] or 25)
+                        # Propagate mode/qty to env + config_manager so running order logic picks up changes
+                        if _new_qty != os.environ.get('CLIENT_QUANTITY'):
+                            os.environ['CLIENT_QUANTITY'] = _new_qty
+                            logger.info(f"[Client {user_id}] Runtime qty updated to {_new_qty} (from DB)")
+                        if _new_mode != os.environ.get('CLIENT_TRADING_MODE', '').lower():
+                            os.environ['CLIENT_TRADING_MODE'] = _new_mode
+                            logger.info(f"[Client {user_id}] Runtime mode updated to {_new_mode} (from DB)")
+                        _cm = getattr(self.orchestrator, 'config_manager', None)
+                        if _cm:
+                            _inst = f"client_{user_id}_{broker_name}"
+                            _cm.set_override(_inst, 'quantity', _new_qty)
+                            _cm.set_override('settings', 'trading_mode', _new_mode)
                 except Exception:
-                    pass  # Keep last cached value on DB error
+                    pass  # Keep last cached values on transient DB error
 
             is_enabled = getattr(self, '_cached_trading_active', False)
             self.trading_enabled = is_enabled
-
-            # ── Runtime config refresh (qty / trading_mode, cached every 5s) ─
-            _cfg_file = f"config/broker_config_{user_id}_{broker_name}.json"
-            _cfg_now = _time.monotonic()
-            if _cfg_file and os.path.exists(_cfg_file) and _cfg_now - getattr(self, '_cfg_last_check', 0) >= 5:
-                self._cfg_last_check = _cfg_now
-                try:
-                    with open(_cfg_file, 'r') as _f:
-                        _cfg = json.load(_f)
-                    _new_qty = str(_cfg.get('quantity', os.environ.get('CLIENT_QUANTITY', '25')))
-                    _new_mode = _cfg.get('trading_mode', os.environ.get('CLIENT_TRADING_MODE', 'paper'))
-                    if _new_qty != os.environ.get('CLIENT_QUANTITY'):
-                        os.environ['CLIENT_QUANTITY'] = _new_qty
-                        logger.info(f"[Client {user_id}] Runtime qty updated to {_new_qty}")
-                    if _new_mode.lower() != os.environ.get('CLIENT_TRADING_MODE', '').lower():
-                        os.environ['CLIENT_TRADING_MODE'] = _new_mode
-                        logger.info(f"[Client {user_id}] Runtime mode updated to {_new_mode}")
-                    # Propagate to config_manager overrides so order-sizing code
-                    # (sell_manager_v3 config_manager.get_int('quantity')) picks up new value
-                    _cm = getattr(self.orchestrator, 'config_manager', None)
-                    if _cm:
-                        _inst = f"client_{user_id}_{broker_name}"
-                        _cm.set_override(_inst, 'quantity', _new_qty)
-                        _cm.set_override('settings', 'trading_mode', _new_mode)
-                except Exception:
-                    pass
 
             # ── Transition logic runs on DB-sourced is_enabled ───────────────
             try:
