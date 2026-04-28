@@ -31,10 +31,23 @@ class AngelOneClient(BaseBroker):
                 if self.smart_api:
                     logger.info(f"AngelOne client initialized from DB for User ID: {self.user_id}.")
             except Exception as e:
-                logger.error(f"Failed to initialize AngelOne client for user {self.user_id}: {e}")
+                logger.error(
+                    f"Failed to initialize AngelOne client for user {self.user_id} "
+                    f"(db_config path): {e}. "
+                    f"Check Static IP assignment or credential values — NOT a missing-credentials issue."
+                )
+                if login_required:
+                    logger.critical(
+                        f"AUTHENTICATION FAILED for AngelOne account [{self.instance_name}] (client mode). "
+                        f"Continuing in degraded mode (market data / paper trading only). "
+                        f"Live orders will be blocked until the issue above is resolved."
+                    )
 
-        if login_required and not self.smart_api:
-            # Fallback to credentials section if not initialized from DB
+        if login_required and not self.smart_api and not self.db_config:
+            # Fallback to credentials section only in non-client-mode (legacy / admin-mode bots).
+            # When db_config was provided (client mode), a DB-path failure must NOT silently retry
+            # via INI config — that would produce a misleading "Username: None" error because the
+            # INI file has no client-specific section.
             credentials_section = self.config_manager.get(broker_instance_name, 'credentials', fallback=broker_instance_name)
             try:
                 self.smart_api = handle_angelone_login(credentials_section, self.config_manager)

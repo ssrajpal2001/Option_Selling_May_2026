@@ -56,6 +56,7 @@ class BrokerManager:
             'password': client_cfg.password,
             'totp': client_cfg.totp,
             'broker_user_id': os.environ.get('CLIENT_BROKER_USER_ID', ''),
+            'client_code':    os.environ.get('CLIENT_BROKER_USER_ID', ''),  # AngelOne login username alias
             'static_ip': client_cfg.static_ip or None,   # Elastic IP for source-IP binding
             'broker_settings': {
                 'instruments_to_trade': client_cfg.instrument,
