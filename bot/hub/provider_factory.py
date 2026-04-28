@@ -324,40 +324,40 @@ class ProviderFactory:
             _in_subprocess = bool(_os.environ.get('CLIENT_ID'))
             _feed_server_init = bool(_os.environ.get('_FEED_SERVER_INIT'))
             if _in_subprocess and not _feed_server_init:
-                # Always build the DualFeedManager objects so we have a runtime fallback
-                # if the FeedServer goes away mid-session (not started yet — just constructed).
+                # Pre-build DualFeedManager objects as a runtime fallback (NOT started yet).
+                # FeedClient will activate them only after _FALLBACK_TRIGGER_ROUNDS of
+                # consecutive connection failures, giving FeedServer ample time to come up.
                 from hub.dual_feed_manager import DualFeedManager as _DFM
                 _upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
                 _dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
                 _fallback_dm = _DFM(_upstox_feed, _dhan_feed)
 
-                # Probe the shared FeedServer — non-blocking, fast timeout
+                # Always return FeedClient — let it own all retry and fallback logic.
+                # A one-time probe is logged for diagnostics but never gates routing;
+                # if FeedServer is not yet up, FeedClient will keep retrying in its
+                # _connection_loop() before eventually activating the fallback DM.
+                from hub.feed_client import FeedClient
                 try:
-                    from hub.feed_client import FeedClient
                     _probe = FeedClient()
                     _server_up = await _probe.try_connect()
-                    await _probe.close()  # release probe connection
+                    await _probe.close()
                     if _server_up:
-                        # Pass fallback DualFeedManager so FeedClient can activate it
-                        # if FeedServer becomes permanently unreachable mid-session.
-                        websocket_manager = FeedClient(fallback_feed=_fallback_dm)
                         logger.info(
-                            "[ProviderFactory] FeedServer available — using FeedClient "
-                            "(shared tick distribution, no WS eviction). "
-                            "Fallback DualFeedManager held in reserve."
+                            "[ProviderFactory] FeedServer reachable — "
+                            "FeedClient will use shared tick distribution."
                         )
                     else:
-                        websocket_manager = _fallback_dm
-                        logger.warning(
-                            "[ProviderFactory] FeedServer not reachable — falling back to "
-                            "local DualFeedManager (WS eviction may occur)."
+                        logger.info(
+                            "[ProviderFactory] FeedServer not yet reachable — "
+                            "FeedClient will retry until it comes up "
+                            f"(fallback DualFeedManager held in reserve)."
                         )
-                except Exception as _fc_err:
-                    logger.warning(
-                        f"[ProviderFactory] FeedClient probe failed ({_fc_err}); "
-                        "falling back to local DualFeedManager."
+                except Exception as _probe_err:
+                    logger.info(
+                        f"[ProviderFactory] FeedServer probe inconclusive ({_probe_err}); "
+                        "FeedClient will retry on its own schedule."
                     )
-                    websocket_manager = _fallback_dm
+                websocket_manager = FeedClient(fallback_feed=_fallback_dm)
             else:
                 from hub.dual_feed_manager import DualFeedManager
                 upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)

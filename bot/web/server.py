@@ -1216,11 +1216,13 @@ async def _log_cleanup_scheduler():
 async def _feed_server_task() -> None:
     """
     Launches the shared FeedServer (Task #152).
-    Waits for _startup_auto_connect to obtain fresh Upstox/Dhan tokens
-    before initializing the WebSocket feeds.
+    FeedServer uses a bind-first design: the TCP port is open within ~3s of
+    startup so subprocesses can connect immediately.  The DualFeedManager
+    (Upstox + Dhan WebSockets) is initialized asynchronously in the background,
+    after which ticks start flowing to all connected FeedClients.
     """
-    # Give the auto-connect task (which waits 5s then refreshes tokens) time to finish
-    await asyncio.sleep(20)
+    # Brief delay to let uvicorn fully initialize before binding the feed port
+    await asyncio.sleep(3)
     try:
         from hub.feed_server import get_feed_server
         server = get_feed_server()
