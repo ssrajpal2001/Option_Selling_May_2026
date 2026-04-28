@@ -65,7 +65,7 @@
       <div class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Assigned Static IP</div>
       <span id="static-ip-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:9999px;background:var(--badge-ok-bg);color:var(--badge-ok-txt);font-weight:600">✓ Saved</span>
     </div>
-    <p class="text-xs mb-3" style="color:var(--muted)">Pick an Elastic IP from your AWS account or enter one manually. The client uses this IP to whitelist their broker's developer portal.</p>
+    <p class="text-xs mb-3" style="color:var(--muted)">Pick an Elastic IP from your AWS account or enter one manually. The client whitelists this IP in their broker's developer portal. <strong>One IP can be shared across all clients</strong> — AngelOne, Zerodha, Dhan, Fyers, and AliceBlue all allow multiple accounts to whitelist the same source IP.</p>
 
     <!-- Current assignment display -->
     <div id="static-ip-current-wrap" class="mb-3 hidden">
@@ -986,16 +986,14 @@ async function _persistStaticIP(ip) {
   });
   const d = await res.json();
   const badge = document.getElementById('static-ip-badge');
-  if (res.status === 409) {
-    alert('Cannot assign IP: ' + (d.detail || 'This IP is already assigned to another client.'));
-    return false;
-  }
   if (!res.ok || !d.success) {
     alert('Failed to save static IP: ' + (d.detail || d.error || 'unknown error'));
     return false;
   }
   _updateStaticIPDisplay(ip);
-  if (badge) { badge.style.display = ''; setTimeout(() => { badge.style.display = 'none'; }, 3000); }
+  const sharedWith = d.shared_with || 0;
+  const badgeText = sharedWith > 0 ? `✓ Saved — shared with ${sharedWith} other client${sharedWith > 1 ? 's' : ''}` : '✓ Saved';
+  if (badge) { badge.textContent = badgeText; badge.style.display = ''; setTimeout(() => { badge.style.display = 'none'; badge.textContent = '✓ Saved'; }, 4000); }
   // Refresh the dropdown so it reflects the new assignment state
   const dropWrap = document.getElementById('elastic-ip-dropdown-wrap');
   if (dropWrap && !dropWrap.classList.contains('hidden')) {
@@ -1130,12 +1128,12 @@ async function loadElasticIPs() {
       ips.forEach(ip => {
         const opt = document.createElement('option');
         opt.value = ip.public_ip;
-        if (ip.in_use_by) {
-          opt.disabled = true;
-          opt.textContent = `${ip.public_ip}  — in use by ${ip.in_use_by.username}`;
-          opt.style.color = 'var(--muted)';
+        const assocTag = ip.ec2_associated ? '  ✓ EC2' : '';
+        if (ip.shared_count > 0) {
+          const names = (ip.in_use_by || []).map(c => c.username).join(', ');
+          opt.textContent = `${ip.public_ip}${assocTag}  — shared (${ip.shared_count} client${ip.shared_count > 1 ? 's' : ''}: ${names})`;
         } else {
-          opt.textContent = `${ip.public_ip}${ip.ec2_associated ? '  (EC2 associated)' : ''}`;
+          opt.textContent = `${ip.public_ip}${assocTag}`;
         }
         sel.appendChild(opt);
       });

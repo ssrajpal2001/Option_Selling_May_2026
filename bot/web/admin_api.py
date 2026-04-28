@@ -1602,15 +1602,18 @@ async def list_elastic_ips(admin=Depends(require_admin)):
             "ips": [],
         }
 
-    # Build a map of ip → client info from the DB so we can annotate each address
+    # Build a map of ip → list[client info] so shared IPs show all users
     assigned_rows = db_fetchall(
         "SELECT id, username, email, static_ip FROM users WHERE role='client' AND static_ip IS NOT NULL AND static_ip != ''"
     )
-    assigned_map: dict[str, dict] = {
-        row["static_ip"].strip(): {"id": row["id"], "username": row["username"], "email": row["email"]}
-        for row in assigned_rows
-        if row.get("static_ip")
-    }
+    assigned_map: dict[str, list] = {}
+    for row in assigned_rows:
+        ip_key = (row.get("static_ip") or "").strip()
+        if not ip_key:
+            continue
+        assigned_map.setdefault(ip_key, []).append(
+            {"id": row["id"], "username": row["username"], "email": row["email"]}
+        )
 
     try:
         import boto3
@@ -1633,16 +1636,17 @@ async def list_elastic_ips(admin=Depends(require_admin)):
         public_ip = addr.get("PublicIp", "")
         allocation_id = addr.get("AllocationId", "")
         instance_id = addr.get("InstanceId")
-        assigned_client = assigned_map.get(public_ip)
+        clients_using = assigned_map.get(public_ip)  # list or None
         result.append({
             "public_ip": public_ip,
             "allocation_id": allocation_id,
             "instance_id": instance_id,
             "ec2_associated": bool(instance_id),
-            "in_use_by": assigned_client,
+            "in_use_by": clients_using,        # list[{id,username,email}] or None
+            "shared_count": len(clients_using) if clients_using else 0,
         })
 
-    result.sort(key=lambda x: (x["in_use_by"] is not None, x["public_ip"]))
+    result.sort(key=lambda x: (x["shared_count"] == 0, x["public_ip"]))
     return {"success": True, "ips": result}
 
 
@@ -1665,20 +1669,19 @@ async def update_client_static_ip(client_id: int, body: StaticIPBody,
     if not row:
         raise HTTPException(404, "Client not found.")
     ip_to_save = body.static_ip.strip() or None
+    # Sharing the same EIP across clients is explicitly allowed — all major Indian
+    # brokers support multiple accounts whitelisting the same source IP.
+    # Count how many OTHER clients already use this IP so we can surface the info.
+    shared_with = 0
     if ip_to_save:
-        conflict = db_fetchone(
-            "SELECT id, username FROM users WHERE static_ip=? AND id != ? AND role='client'",
+        shared_rows = db_fetchall(
+            "SELECT id FROM users WHERE static_ip=? AND id != ? AND role='client'",
             (ip_to_save, client_id),
         )
-        if conflict:
-            raise HTTPException(
-                409,
-                f"IP {ip_to_save} is already assigned to client '{conflict['username']}' (id={conflict['id']}). "
-                "Remove it from that client before re-assigning."
-            )
+        shared_with = len(shared_rows)
     db_execute("UPDATE users SET static_ip=? WHERE id=?", (ip_to_save, client_id))
     _audit(admin["id"], admin["role"], "client_static_ip_update", client_id, {"static_ip": body.static_ip})
-    return {"success": True}
+    return {"success": True, "shared_with": shared_with}
 
 
 # ── Broker Credential Management ─────────────────────────────────────────────
