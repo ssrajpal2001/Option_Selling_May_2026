@@ -958,6 +958,9 @@ async function loadDetail() {
     const ipData = await ipResp.json();
     _updateStaticIPDisplay(ipData.static_ip || '');
   } catch (_) {}
+
+  // Auto-populate broker credentials status so missing fields are visible on page load
+  try { await checkCredStatus(); } catch (_) {}
 }
 
 function _updateStaticIPDisplay(ip) {

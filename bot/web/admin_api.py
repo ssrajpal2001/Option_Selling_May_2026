@@ -1729,10 +1729,15 @@ async def put_broker_credentials(client_id: int, body: BrokerCredentialsBody,
     Only fields that are non-empty strings are updated; existing encrypted
     values are preserved for blank fields (same semantics as client_api.py).
     """
+    _KNOWN_BROKERS = {
+        "angelone", "dhan", "zerodha", "aliceblue", "groww", "fyers", "upstox",
+    }
     if not db_fetchone("SELECT id FROM users WHERE id=? AND role='client'", (client_id,)):
         raise HTTPException(404, "Client not found")
     if not body.broker:
         raise HTTPException(400, "broker is required")
+    if body.broker not in _KNOWN_BROKERS:
+        raise HTTPException(400, f"Unknown broker '{body.broker}'. Must be one of: {sorted(_KNOWN_BROKERS)}")
 
     existing = db_fetchone(
         """SELECT api_key_encrypted, api_secret_encrypted, broker_user_id_encrypted,
