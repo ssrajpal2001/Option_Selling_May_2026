@@ -1762,10 +1762,11 @@ function selectBroker(broker) {
 // Manual-token brokers (fyers, groww): show a dedicated paste section with explanation.
 const CRED_FIELDS = {
   zerodha: [
-    { id:'f-api-key',    label:'API Key',          ph:'Kite API Key',                req:true  },
-    { id:'f-api-secret', label:'API Secret',       ph:'Kite API Secret',             req:false },
-    { id:'f-pin',        label:'Password / PIN',   ph:'Zerodha login password',      req:false, hint:'Required for One-Click Connect' },
-    { id:'f-totp',       label:'TOTP Secret',      ph:'e.g. JBSWY3DPEHPK3PXP',      req:false, hint:'Base32 seed from your authenticator app (letters A–Z and digits 2–7) — NOT a 6-digit OTP code' },
+    { id:'f-api-key',    label:'API Key',              ph:'Kite API Key',                req:true  },
+    { id:'f-api-secret', label:'API Secret',           ph:'Kite API Secret',             req:false },
+    { id:'f-uid',        label:'User ID / Client ID',  ph:'e.g. SA57770',                req:false, hint:'Required for One-Click Connect' },
+    { id:'f-pin',        label:'Password / PIN',       ph:'Zerodha login password',      req:false, hint:'Required for One-Click Connect' },
+    { id:'f-totp',       label:'TOTP Secret',          ph:'e.g. JBSWY3DPEHPK3PXP',      req:false, hint:'Base32 seed from your authenticator app (letters A–Z and digits 2–7) — NOT a 6-digit OTP code' },
   ],
   dhan: [
     { id:'f-uid',        label:'Dhan Client ID',          ph:'Your Dhan Client ID',         req:true  },
