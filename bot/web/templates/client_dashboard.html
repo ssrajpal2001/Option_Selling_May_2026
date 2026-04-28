@@ -2191,11 +2191,24 @@ async function onBotToggle(wantRunning) {
       const d = await api('POST', '/bot/start', {});
       // Multi-broker summary toast
       if (Array.isArray(d.started)) {
+        const cap = b => b.charAt(0).toUpperCase() + b.slice(1);
         const parts = [];
-        if (d.started.length)       parts.push(`${d.started.length} started: ${d.started.map(b => b.charAt(0).toUpperCase()+b.slice(1)).join(', ')}`);
-        if (d.already_running?.length) parts.push(`${d.already_running.length} already running`);
-        if (d.skipped?.length)      parts.push(`${d.skipped.length} skipped`);
-        if (d.failed?.length)       parts.push(`${d.failed.length} failed`);
+        if (d.started.length)          parts.push(`${d.started.length} started: ${d.started.map(cap).join(', ')}`);
+        if (d.already_running?.length) parts.push(`${d.already_running.map(cap).join(', ')} already running`);
+        if (d.skipped?.length) {
+          const skipDetail = (d.details || [])
+            .filter(r => r.status === 'skipped')
+            .map(r => `${cap(r.broker)} (${r.message})`)
+            .join(', ');
+          parts.push(`${d.skipped.length} skipped: ${skipDetail || d.skipped.map(cap).join(', ')}`);
+        }
+        if (d.failed?.length) {
+          const failDetail = (d.details || [])
+            .filter(r => r.status === 'failed')
+            .map(r => `${cap(r.broker)}: ${r.message}`)
+            .join(', ');
+          parts.push(`Failed — ${failDetail || d.failed.map(cap).join(', ')}`);
+        }
         toast(parts.join(' · ') || 'Bot started', 'ok');
         if (d.plan_warning) toast(d.plan_warning, 'warn');
       } else {

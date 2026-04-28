@@ -973,8 +973,8 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
 @router.post("/bot/start")
 async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
     _valid_brokers = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
-    if body.broker and body.broker not in _valid_brokers:
-        raise HTTPException(400, f"Unknown broker '{body.broker}'. Valid brokers: {', '.join(_valid_brokers)}")
+    if body.broker and body.broker not in _valid_brokers and body.broker != "all":
+        raise HTTPException(400, f"Unknown broker '{body.broker}'. Valid brokers: {', '.join(_valid_brokers)} or 'all'")
 
     # ── Plan expiry enforcement ───────────────────────────────────────────
     _plan_expiry_warning = None
@@ -1006,7 +1006,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
         )
     # ─────────────────────────────────────────────────────────────────────
 
-    requested_broker = body.broker if body.broker else None
+    requested_broker = body.broker if body.broker and body.broker != "all" else None
 
     # ── Single-broker path (explicit broker name provided) ────────────────
     if requested_broker:
