@@ -8,7 +8,8 @@ via a lightweight TCP newline-delimited JSON protocol.
 
 Protocol (newline-delimited JSON):
   Client → Server:
-    {"cmd": "subscribe",  "instruments": ["NSE_FO|50973", ...], "mode": "full"}
+    {"cmd": "subscribe",    "instruments": ["NSE_FO|50973", ...], "mode": "full"}
+    {"cmd": "unsubscribe",  "instruments": ["NSE_FO|50973", ...]}
     {"cmd": "ping"}
     {"cmd": "feed_status"}
 
@@ -17,6 +18,7 @@ Protocol (newline-delimited JSON):
      "timestamp": 1714486539.0, "source": "upstox_global"}
     {"type": "pong"}
     {"type": "feed_status", "dhan": true, "upstox": true}
+    {"type": "keepalive"}
 """
 
 import asyncio
@@ -53,6 +55,10 @@ class FeedServer:
         self._dual_feed = None
         self._server = None
         self._started = False
+        # Union of all instrument keys requested by any connected FeedClient.
+        # Used to re-subscribe the DualFeedManager after a reconnect/restart.
+        self._all_subscribed: set = set()
+        self._last_broadcast_epoch: float = 0.0
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -61,8 +67,9 @@ class FeedServer:
             return
         logger.info("[FeedServer] Starting up...")
 
-        # Subscribe to the process-local event bus — both Dhan and (after extraction)
-        # Upstox ticks arrive here as normalized dicts.
+        # Subscribe to the process-local event bus.
+        # Dhan ticks arrive here as BROKER_TICK_RECEIVED (via DualFeedManager._on_dhan_tick).
+        # Upstox ticks arrive here after extraction in _on_upstox_raw (published via same path).
         from hub.event_bus import event_bus
         event_bus.subscribe('BROKER_TICK_RECEIVED', self._on_normalized_tick)
 
@@ -107,10 +114,21 @@ class FeedServer:
 
             self._dual_feed = ws_mgr
 
-            # Register a raw protobuf handler on the Upstox WebSocketManager so that
-            # Upstox ticks are also normalized and published to event_bus (the Dhan path
-            # already publishes BROKER_TICK_RECEIVED via DualFeedManager._on_dhan_tick).
-            self._register_upstox_extractor(ws_mgr)
+            # Register a handler so that DualFeedManager wires up BOTH feeds:
+            #   • Upstox: ws_mgr.upstox.register_message_handler(_on_upstox_raw) → extracts LTP
+            #   • Dhan:   ws_mgr.dhan.register_message_handler(_on_dhan_tick)    → publishes
+            #             BROKER_TICK_RECEIVED, which _on_normalized_tick forwards to TCP clients.
+            # Without this call the DualFeedManager would start but Dhan ticks would never reach
+            # the event_bus because _on_dhan_tick is only registered via register_message_handler.
+            ws_mgr.register_message_handler(self._on_upstox_raw)
+
+            # Replay any subscriptions that connected clients already sent before the
+            # DualFeedManager was ready (clients may connect before init finishes).
+            if self._all_subscribed:
+                logger.info(
+                    f"[FeedServer] Replaying {len(self._all_subscribed)} queued subscriptions."
+                )
+                ws_mgr.subscribe(list(self._all_subscribed))
 
             # Connect the WebSockets
             ws_mgr.start()
@@ -118,26 +136,17 @@ class FeedServer:
         except Exception as exc:
             logger.error(f"[FeedServer] Feed initialization failed: {exc}", exc_info=True)
 
-    def _register_upstox_extractor(self, ws_mgr) -> None:
-        """Attach a lightweight LTP extractor to the Upstox WebSocketManager."""
-        upstox_ws = None
-        # DualFeedManager exposes .upstox; single-feed mode is a WebSocketManager directly
-        if hasattr(ws_mgr, 'upstox') and ws_mgr.upstox is not None:
-            upstox_ws = ws_mgr.upstox
-        elif hasattr(ws_mgr, 'register_message_handler'):
-            upstox_ws = ws_mgr
-
-        if upstox_ws and hasattr(upstox_ws, 'register_message_handler'):
-            upstox_ws.register_message_handler(self._on_upstox_raw)
-            logger.info("[FeedServer] Upstox protobuf extractor registered.")
-
     # ── Tick capture ─────────────────────────────────────────────────────────
 
     async def _on_upstox_raw(self, feed_response) -> None:
         """
-        Handler registered with Upstox WebSocketManager.
-        Extracts (instrument_key, ltp) from protobuf and publishes
-        BROKER_TICK_RECEIVED so _on_normalized_tick forwards it via TCP.
+        Handler registered with DualFeedManager (and thus Upstox WebSocketManager).
+        Extracts (instrument_key, ltp) from Upstox protobuf and publishes
+        BROKER_TICK_RECEIVED so _on_normalized_tick forwards it to TCP clients.
+
+        NOTE: DualFeedManager.register_message_handler() also registers _on_dhan_tick
+        onto the Dhan WebSocketManager; those normalized dicts are published directly
+        to BROKER_TICK_RECEIVED by DualFeedManager without going through this handler.
         """
         if not hasattr(feed_response, 'feeds'):
             return
@@ -175,11 +184,12 @@ class FeedServer:
         ltp = data.get('ltp')
         if not key or ltp is None:
             return
+        self._last_broadcast_epoch = time.time()
         await self._broadcast({
             'type': 'tick',
             'instrument_key': key,
             'ltp': float(ltp),
-            'timestamp': time.time(),
+            'timestamp': self._last_broadcast_epoch,
             'source': data.get('broker', 'unknown'),
         })
 
@@ -216,7 +226,6 @@ class FeedServer:
                 try:
                     line = await asyncio.wait_for(reader.readline(), timeout=90)
                 except asyncio.TimeoutError:
-                    # Send keepalive
                     writer.write(b'{"type":"keepalive"}\n')
                     await writer.drain()
                     continue
@@ -228,14 +237,26 @@ class FeedServer:
                     continue
 
                 cmd = msg.get('cmd')
-                if cmd == 'subscribe' and self._dual_feed:
+                if cmd == 'subscribe':
                     instruments = msg.get('instruments') or []
                     mode = msg.get('mode', 'full')
                     if instruments:
-                        self._dual_feed.subscribe(instruments, mode)
+                        # Track subscription state so we can replay on DualFeedManager reinit
+                        self._all_subscribed.update(instruments)
+                        if self._dual_feed:
+                            self._dual_feed.subscribe(instruments, mode)
                         logger.info(
-                            f"[FeedServer] Subscribed {len(instruments)} instruments from {peer}."
+                            f"[FeedServer] Subscribed {len(instruments)} instruments from {peer}. "
+                            f"Total: {len(self._all_subscribed)}."
                         )
+                elif cmd == 'unsubscribe':
+                    instruments = msg.get('instruments') or []
+                    # We do NOT unsubscribe from DualFeedManager because other clients may still
+                    # want those instruments. Over-subscription is harmless; missed ticks are not.
+                    # We do remove from our tracking set if truly no one needs them.
+                    # (Simple policy: only remove if FeedServer has a single client right now)
+                    if len(self._writers) <= 1 and instruments:
+                        self._all_subscribed.difference_update(instruments)
                 elif cmd == 'ping':
                     writer.write(b'{"type":"pong"}\n')
                     await writer.drain()

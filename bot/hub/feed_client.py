@@ -8,6 +8,13 @@ handlers (PriceFeedHandler.handle_normalized_tick, etc.) work unchanged.
 
 Implements the same DataFeed interface as DualFeedManager so it is a
 drop-in replacement with zero changes to callers.
+
+Runtime fallback:
+  If FeedServer becomes unreachable after a configured number of consecutive
+  reconnect failures (mid-session scenario, e.g. web process restart), the
+  FeedClient activates an optional local DualFeedManager that was pre-built
+  in ProviderFactory and held in reserve.  All registered handlers and
+  current subscriptions are transferred to it automatically.
 """
 
 import asyncio
@@ -20,35 +27,44 @@ from hub.data_feed_base import DataFeed
 
 _HOST = '127.0.0.1'
 _PORT = 15765
-_CONNECT_TIMEOUT = 3.0    # seconds per attempt
-_CONNECT_RETRIES = 3
-_RECONNECT_DELAY = 5.0    # seconds between reconnect attempts
-_IDLE_TIMEOUT = 90        # seconds before sending a ping to keep the connection alive
+_CONNECT_TIMEOUT = 3.0      # seconds per single connection attempt
+_CONNECT_RETRIES = 3        # attempts per round inside try_connect()
+_RECONNECT_DELAY = 5.0      # seconds between reconnect rounds
+_IDLE_TIMEOUT = 90          # seconds of silence → send ping
+# After this many consecutive round-failures the fallback DualFeedManager is activated.
+_FALLBACK_TRIGGER_ROUNDS = 5
 
 
 class FeedClient(DataFeed):
     """
     Lightweight TCP client for the shared FeedServer.
 
-    Usage (from ProviderFactory / orchestrator):
-        fc = FeedClient()
-        # optionally: if not await fc.try_connect(): fallback to DualFeedManager
+    Usage (from ProviderFactory / EngineManager):
+        fc = FeedClient(fallback_feed=dual_feed_manager)
+        # optionally probe: if not await fc.try_connect(): use fallback directly
         ws_mgr = fc
         ws_mgr.register_message_handler(price_feed_handler.handle_message)
-        ws_mgr.start()        # begins async connection+read loop
+        ws_mgr.start()        # begins async connection + read loop
         ws_mgr.subscribe(symbols)
         ...
         await ws_mgr.close()
     """
 
-    def __init__(self):
+    def __init__(self, fallback_feed=None):
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
         self._connected: bool = False
-        self._message_handlers: list = []   # stored but not called (ticks go via event_bus)
+        # Handlers registered by the orchestrator — kept so they can be forwarded
+        # to the fallback DualFeedManager if FeedServer goes away permanently.
+        self._message_handlers: list = []
         self._subscribed_symbols: list = []
         self._subscribed_mode: str = 'full'
         self._read_task: asyncio.Task | None = None
+
+        # Optional pre-built DualFeedManager to fall back to after FeedServer outage
+        self._fallback_feed = fallback_feed
+        self._fallback_active: bool = False
+        self._reconnect_fail_rounds: int = 0
 
         # DataFeed-compatible state used by watchdog / health checks
         self.is_connected: bool = False
@@ -58,9 +74,10 @@ class FeedClient(DataFeed):
 
     def register_message_handler(self, handler) -> None:
         """
-        Kept for interface compatibility.  Protobuf handlers registered here
-        are stored but never invoked — all ticks arrive via event_bus
-        (BROKER_TICK_RECEIVED) so existing handlers work without changes.
+        Store for interface compatibility and fallback transfer.
+        Ticks from FeedServer arrive via event_bus (BROKER_TICK_RECEIVED)
+        so the protobuf handler is never called directly — but it is
+        transferred to the fallback DualFeedManager if activated.
         """
         if handler not in self._message_handlers:
             self._message_handlers.append(handler)
@@ -84,13 +101,21 @@ class FeedClient(DataFeed):
         for s in new:
             self._subscribed_symbols.append(s)
         self._subscribed_mode = mode
+        if self._fallback_active and self._fallback_feed:
+            self._fallback_feed.subscribe(symbols, mode)
+            return
         if self._connected and self._writer:
-            self._send_subscribe(symbols, mode)
+            self._write_cmd({'cmd': 'subscribe', 'instruments': symbols, 'mode': mode})
 
     def unsubscribe(self, symbols) -> None:
         for s in symbols:
             if s in self._subscribed_symbols:
                 self._subscribed_symbols.remove(s)
+        if self._fallback_active and self._fallback_feed:
+            self._fallback_feed.unsubscribe(symbols)
+            return
+        if self._connected and self._writer and symbols:
+            self._write_cmd({'cmd': 'unsubscribe', 'instruments': symbols})
 
     def start(self) -> asyncio.Task:
         """Begin the connection/read loop. Returns the background Task."""
@@ -125,33 +150,57 @@ class FeedClient(DataFeed):
                     await asyncio.sleep(2)
         return False
 
-    def _send_subscribe(self, symbols, mode: str = 'full') -> None:
-        msg = json.dumps({'cmd': 'subscribe', 'instruments': symbols, 'mode': mode}) + '\n'
+    def _write_cmd(self, payload: dict) -> None:
+        """Fire-and-forget JSON command to FeedServer."""
+        if not self._writer:
+            return
         try:
-            self._writer.write(msg.encode())
+            line = json.dumps(payload) + '\n'
+            self._writer.write(line.encode())
             asyncio.create_task(self._writer.drain())
         except Exception as exc:
-            logger.warning(f"[FeedClient] Subscribe write failed: {exc}")
+            logger.warning(f"[FeedClient] Write failed: {exc}")
 
     # ── Async loops ───────────────────────────────────────────────────────────
 
     async def _connection_loop(self) -> None:
-        """Maintain connection to FeedServer, reconnecting on drop."""
+        """Maintain connection to FeedServer, reconnecting on drop.
+        After _FALLBACK_TRIGGER_ROUNDS consecutive round failures the optional
+        local DualFeedManager is activated as a permanent fallback."""
         while True:
             try:
-                # Re-use connection from try_connect() if already open
                 if not self._connected:
                     connected = await self.try_connect()
                     if not connected:
-                        logger.critical(
-                            "[FeedClient] FeedServer unreachable after retries. "
-                            "Tick distribution via FeedClient is unavailable."
+                        self._reconnect_fail_rounds += 1
+                        logger.warning(
+                            f"[FeedClient] FeedServer unreachable "
+                            f"(round {self._reconnect_fail_rounds}/{_FALLBACK_TRIGGER_ROUNDS})."
                         )
-                        return
+                        if (
+                            self._fallback_feed is not None
+                            and self._reconnect_fail_rounds >= _FALLBACK_TRIGGER_ROUNDS
+                        ):
+                            logger.warning(
+                                "[FeedClient] Activating local DualFeedManager fallback "
+                                "— FeedServer has been unreachable too long."
+                            )
+                            await self._activate_fallback()
+                            return  # fallback is now running; no need to loop
+                        # Keep retrying — FeedServer may come back (e.g. web restart)
+                        await asyncio.sleep(_RECONNECT_DELAY)
+                        continue
 
-                # Re-subscribe all previously tracked symbols after reconnect
+                # Successful connection: reset failure counter
+                self._reconnect_fail_rounds = 0
+
+                # Re-subscribe all tracked symbols after reconnect
                 if self._subscribed_symbols and self._writer:
-                    self._send_subscribe(self._subscribed_symbols, self._subscribed_mode)
+                    self._write_cmd({
+                        'cmd': 'subscribe',
+                        'instruments': self._subscribed_symbols,
+                        'mode': self._subscribed_mode,
+                    })
 
                 await self._read_loop()
 
@@ -163,7 +212,9 @@ class FeedClient(DataFeed):
 
             self._connected = False
             self.is_connected = False
-            logger.warning(f"[FeedClient] Reconnecting in {_RECONNECT_DELAY}s...")
+            self._reader = None
+            self._writer = None
+            logger.warning(f"[FeedClient] Disconnected. Reconnecting in {_RECONNECT_DELAY}s...")
             try:
                 await asyncio.sleep(_RECONNECT_DELAY)
             except asyncio.CancelledError:
@@ -175,7 +226,6 @@ class FeedClient(DataFeed):
             try:
                 line = await asyncio.wait_for(self._reader.readline(), timeout=_IDLE_TIMEOUT)
             except asyncio.TimeoutError:
-                # Connection idle — send ping to detect broken pipe
                 if self._writer:
                     try:
                         self._writer.write(b'{"cmd":"ping"}\n')
@@ -226,3 +276,29 @@ class FeedClient(DataFeed):
 
         from hub.event_bus import event_bus
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)
+
+    # ── Fallback activation ───────────────────────────────────────────────────
+
+    async def _activate_fallback(self) -> None:
+        """
+        Start the pre-built fallback DualFeedManager.
+        Transfers all registered handlers and current subscriptions.
+        """
+        dm = self._fallback_feed
+        self._fallback_active = True
+
+        # Transfer orchestrator message handlers (e.g. PriceFeedHandler.handle_message)
+        # so that the DualFeedManager wires up Upstox/Dhan correctly.
+        for h in self._message_handlers:
+            dm.register_message_handler(h)
+
+        # Forward all current subscriptions
+        if self._subscribed_symbols:
+            dm.subscribe(self._subscribed_symbols, self._subscribed_mode)
+
+        # Start the WebSocket connections
+        dm.start()
+        logger.info(
+            "[FeedClient] Fallback DualFeedManager active — "
+            f"{len(self._subscribed_symbols)} symbols subscribed."
+        )
