@@ -2057,7 +2057,7 @@ async def get_ip_conflicts(
         FROM client_broker_instances cbi
         JOIN users u ON u.id = cbi.client_id
         WHERE cbi.ip_last_failed_at IS NOT NULL
-          AND cbi.ip_last_failed_at >= datetime('now', ? || ' hours')
+          AND datetime(cbi.ip_last_failed_at) >= datetime('now', ? || ' hours')
         ORDER BY cbi.ip_last_failed_at DESC
         """,
         (f"-{hours}",),

@@ -299,6 +299,7 @@ class BaseBroker(ABC):
                 f"[{self.instance_name}] Static IP {self.source_ip} validated "
                 f"({elapsed_ms:.1f} ms)."
             )
+            self._clear_ip_failure()  # clear any previous failure record
         except OSError as exc:
             import errno as _errno
             elapsed_ms = (time.monotonic() - t0) * 1000
@@ -310,6 +311,7 @@ class BaseBroker(ABC):
                         f"EIP {self.source_ip} validated via instance metadata "
                         f"— order routing OK ({elapsed_ms:.1f} ms)."
                     )
+                    self._clear_ip_failure()  # clear any previous failure record
                     return  # NAT confirmed — do NOT raise
             # Not behind NAT (or IMDS unreachable / IP mismatch) — block the order
             err_msg = (
@@ -320,6 +322,20 @@ class BaseBroker(ABC):
             self._alert_admin_ip_failure(exc)
             raise RuntimeError(err_msg) from exc
 
+    def _clear_ip_failure(self) -> None:
+        """Clear ip_last_failed_at in DB after a successful IP validation."""
+        if not (self.user_id and self.broker_name):
+            return
+        try:
+            from web.db import db_execute
+            db_execute(
+                "UPDATE client_broker_instances SET ip_last_failed_at=NULL "
+                "WHERE client_id=? AND broker=?",
+                (self.user_id, self.broker_name),
+            )
+        except Exception as db_exc:
+            logger.debug(f"[IP-conflict] DB clear failed: {db_exc}")
+
     def _alert_admin_ip_failure(self, exc: Exception) -> None:
         """
         Send a Telegram alert to the admin when the static IP binding check
@@ -328,10 +344,11 @@ class BaseBroker(ABC):
         """
         # Record the failure timestamp in the DB so the admin dashboard can
         # surface an IP-conflict warning banner (Task #151).
+        # Use plain UTC format so SQLite datetime() comparisons work correctly.
         try:
             from web.db import db_execute
-            from datetime import datetime, timezone as _tz
-            _now = datetime.now(_tz.utc).isoformat()
+            from datetime import datetime
+            _now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
             if self.user_id and self.broker_name:
                 db_execute(
                     "UPDATE client_broker_instances SET ip_last_failed_at=? "
