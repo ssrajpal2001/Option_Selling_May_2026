@@ -86,8 +86,8 @@ class StatusWriter:
         g_roc_tf = 15
         updated_at = str(timestamp)
 
-        # Check Trading Toggle Status for UI
-        trading_active = True
+        # Check Trading Toggle Status for UI (matches tick_processor default: False = trading disabled)
+        trading_active = False
         client_id = os.environ.get('CLIENT_ID')
         broker_name = os.environ.get('CLIENT_BROKER', 'zerodha')
         funds = 0.0

@@ -787,6 +787,8 @@ class BrokerQuickUpdateRequest(BaseModel):
 
 @router.post("/bot/toggle-trading")
 async def toggle_trading(body: TradingToggleRequest, user=Depends(get_current_user)):
+    # DEPRECATED (single-broker fallback): resolves to the active instance's broker when body.broker
+    # is omitted. Use POST /bot/toggle-broker-trading for explicit per-broker control.
     instance = _get_active_instance(user["id"])
     if not instance or instance["status"] != "running":
         raise HTTPException(400, "Broker connection must be active first.")
