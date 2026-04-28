@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS client_broker_instances (
     instrument VARCHAR(20) DEFAULT 'NIFTY',
     quantity INTEGER DEFAULT 25,
     strategy_version VARCHAR(5) DEFAULT 'V3',
+    trading_active INTEGER DEFAULT 0,
     status VARCHAR(20) DEFAULT 'idle',
     bot_pid INTEGER,
     last_heartbeat TIMESTAMP WITH TIME ZONE,

@@ -778,6 +778,12 @@ class BotStartRequest(BaseModel):
 
 class TradingToggleRequest(BaseModel):
     enabled: bool
+    broker: Optional[str] = None
+
+class BrokerQuickUpdateRequest(BaseModel):
+    broker: str
+    trading_mode: str = "paper"
+    quantity: int = 25
 
 @router.post("/bot/toggle-trading")
 async def toggle_trading(body: TradingToggleRequest, user=Depends(get_current_user)):
@@ -785,16 +791,75 @@ async def toggle_trading(body: TradingToggleRequest, user=Depends(get_current_us
     if not instance or instance["status"] != "running":
         raise HTTPException(400, "Broker connection must be active first.")
 
-    # We use a signal file to communicate with the subprocess
-    toggle_file = Path(f'config/trading_enabled_{user["id"]}.json')
-    with open(toggle_file, 'w') as f:
-        json.dump({"enabled": body.enabled, "updated_at": time.time()}, f)
+    # Per-broker file (new) + legacy global file (backward compat)
+    broker = body.broker or instance.get("broker", "")
+    _write_broker_trading_file(user["id"], broker, body.enabled)
 
     msg = "Trading enabled." if body.enabled else "Trading disabled. Active trades will be closed."
     logger.info(f"[Client] User {user['id']} toggled trading to {body.enabled}")
     action = "trading_start" if body.enabled else "trading_stop"
-    _audit_client(user["id"], action, {"broker": instance.get("broker")})
+    _audit_client(user["id"], action, {"broker": broker})
     return {"success": True, "message": msg}
+
+
+def _write_broker_trading_file(client_id: int, broker: str, enabled: bool):
+    """Write per-broker and legacy global toggle files, and update DB."""
+    import json as _json
+    payload = {"enabled": enabled, "updated_at": time.time()}
+    # Per-broker file (read by subprocess)
+    if broker:
+        Path(f'config/trading_enabled_{client_id}_{broker}.json').write_text(
+            _json.dumps(payload)
+        )
+    # Legacy global file (backward compat for old subprocesses)
+    Path(f'config/trading_enabled_{client_id}.json').write_text(
+        _json.dumps(payload)
+    )
+    # Persist in DB
+    if broker:
+        db_execute(
+            "UPDATE client_broker_instances SET trading_active=? WHERE client_id=? AND broker=?",
+            (1 if enabled else 0, client_id, broker)
+        )
+
+
+@router.post("/bot/toggle-broker-trading")
+async def toggle_broker_trading(body: TradingToggleRequest, user=Depends(get_current_user)):
+    """Per-broker trading toggle — enables/disables order placement for one broker only."""
+    if not body.broker:
+        raise HTTPException(400, "broker field is required.")
+    instance = db_fetchone(
+        "SELECT id, status FROM client_broker_instances WHERE client_id=? AND broker=?",
+        (user["id"], body.broker)
+    )
+    if not instance:
+        raise HTTPException(404, "Broker not configured.")
+
+    _write_broker_trading_file(user["id"], body.broker, body.enabled)
+
+    msg = f"{body.broker.capitalize()} trading {'enabled' if body.enabled else 'disabled'}."
+    logger.info(f"[Client] User {user['id']} toggled {body.broker} trading to {body.enabled}")
+    action = "trading_start" if body.enabled else "trading_stop"
+    _audit_client(user["id"], action, {"broker": body.broker})
+    return {"success": True, "message": msg}
+
+
+@router.post("/broker/quick-update")
+async def broker_quick_update(body: BrokerQuickUpdateRequest, user=Depends(get_current_user)):
+    """Inline update of trading_mode and quantity for a broker — no credentials required."""
+    if body.trading_mode not in ("paper", "live"):
+        raise HTTPException(400, "trading_mode must be 'paper' or 'live'")
+    if body.quantity < 1:
+        raise HTTPException(400, "quantity must be >= 1")
+
+    rows_updated = db_execute(
+        "UPDATE client_broker_instances SET trading_mode=?, quantity=? WHERE client_id=? AND broker=?",
+        (body.trading_mode, body.quantity, user["id"], body.broker)
+    )
+    _audit_client(user["id"], "broker_quick_update", {
+        "broker": body.broker, "mode": body.trading_mode, "qty": body.quantity
+    })
+    return {"success": True, "message": f"{body.broker.capitalize()} updated: {body.trading_mode.upper()}, Qty {body.quantity}"}
 
 @router.post("/bot/square-off-all")
 async def square_off_all_positions(user=Depends(get_current_user)):
@@ -1413,7 +1478,7 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
 
     # Per-broker running status for all configured instances
     all_broker_instances = db_fetchall(
-        "SELECT id, broker, status FROM client_broker_instances WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
+        "SELECT id, broker, status, trading_active, trading_mode, quantity FROM client_broker_instances WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
         (user["id"],)
     )
     brokers_status = []
@@ -1425,6 +1490,9 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
             "instance_id": bi["id"],
             "running": running,
             "pid": b_live.get("pid"),
+            "trading_active": bool(bi["trading_active"]),
+            "trading_mode": bi["trading_mode"] or "paper",
+            "quantity": bi["quantity"] or 25,
         })
 
     return {

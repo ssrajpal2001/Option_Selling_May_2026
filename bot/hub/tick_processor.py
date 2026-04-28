@@ -147,7 +147,11 @@ class TickProcessor:
         self.trading_enabled = True # Default for Admin/Backtest
 
         if not self.orchestrator.is_backtest and user_id:
-            toggle_file = f"config/trading_enabled_{user_id}.json"
+            broker_name = os.environ.get('CLIENT_BROKER', '')
+            # Prefer per-broker file; fall back to legacy global file
+            toggle_file = f"config/trading_enabled_{user_id}_{broker_name}.json" if broker_name else f"config/trading_enabled_{user_id}.json"
+            if not os.path.exists(toggle_file):
+                toggle_file = f"config/trading_enabled_{user_id}.json"
             import json
             if os.path.exists(toggle_file):
                 try:

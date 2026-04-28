@@ -593,11 +593,11 @@
           ▶ START ALL
         </button>
 
-        <!-- Trading toggle row -->
+        <!-- Trading toggle row (acts on selected broker) -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:10px">
           <div>
             <div style="font-size:13px;font-weight:700">Allow New Trades</div>
-            <div style="font-size:11px;color:var(--muted)">Keeps bot running but halts new positions</div>
+            <div style="font-size:11px;color:var(--muted)" id="trading-toggle-card-hint">Select a broker to enable/disable</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="trading-toggle-card" onchange="onTradingToggle(this.checked)">
@@ -938,12 +938,39 @@
           </div>
           <div id="connect-auto-hint" style="font-size:11px;margin-top:6px;color:var(--text-soft)"></div>
 
-          <!-- Per-broker Start / Stop row -->
-          <div id="broker-bot-status-row" style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)">
-            <span id="broker-bot-running-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#475569;flex-shrink:0"></span>
-            <span id="broker-bot-running-label" style="font-size:12px;color:var(--muted);flex:1">Bot not configured</span>
-            <button id="broker-bot-start-btn" class="btn btn-sm" style="display:none;background:var(--primary);color:#0a0f1e;padding:4px 12px;font-size:11px;font-weight:700" onclick="startBrokerBot()">▶ Start</button>
-            <button id="broker-bot-stop-btn"  class="btn btn-sm" style="display:none;background:var(--error);color:#fff;padding:4px 12px;font-size:11px;font-weight:700" onclick="stopBrokerBot()">■ Stop</button>
+          <!-- Per-broker controls row -->
+          <div id="broker-bot-status-row" style="margin-top:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);overflow:hidden">
+            <!-- Status + Start/Stop -->
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border-soft)">
+              <span id="broker-bot-running-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#475569;flex-shrink:0"></span>
+              <span id="broker-bot-running-label" style="font-size:12px;color:var(--muted);flex:1">Bot not configured</span>
+              <button id="broker-bot-start-btn" class="btn btn-sm" style="display:none;background:var(--primary);color:#0a0f1e;padding:4px 12px;font-size:11px;font-weight:700" onclick="startBrokerBot()">▶ Start</button>
+              <button id="broker-bot-stop-btn"  class="btn btn-sm" style="display:none;background:var(--error);color:#fff;padding:4px 12px;font-size:11px;font-weight:700" onclick="stopBrokerBot()">■ Stop</button>
+            </div>
+            <!-- Inline controls: Mode | Qty | TRADE toggle -->
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;flex-wrap:wrap">
+              <!-- Paper / Live pill -->
+              <div style="display:flex;gap:0;background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0">
+                <button id="broker-mode-paper" onclick="setBrokerMode('paper')" style="padding:4px 12px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:var(--link);color:#fff;transition:all .15s">PAPER</button>
+                <button id="broker-mode-live"  onclick="setBrokerMode('live')"  style="padding:4px 12px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s">LIVE</button>
+              </div>
+              <!-- Qty -->
+              <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                <span style="font-size:11px;color:var(--muted);font-weight:600">QTY</span>
+                <input type="number" id="broker-inline-qty" min="1" value="25" style="width:64px;padding:4px 8px;font-size:12px;font-weight:700;background:var(--card);border:1px solid var(--border);border-radius:5px;color:var(--text);text-align:center">
+                <button onclick="saveQuickBrokerUpdate()" style="padding:4px 10px;font-size:11px;font-weight:700;background:transparent;border:1px solid var(--primary);color:var(--primary);border-radius:5px;cursor:pointer">💾 Save</button>
+              </div>
+              <!-- Spacer -->
+              <div style="flex:1"></div>
+              <!-- TRADE toggle -->
+              <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+                <span style="font-size:11px;font-weight:700;color:var(--muted)">TRADE</span>
+                <label class="toggle-switch" title="Enable/disable order placement for this broker">
+                  <input type="checkbox" id="broker-trade-toggle" onchange="onBrokerTradingToggle(this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
           </div>
 
           <!-- Trading mode & instrument -->
@@ -1365,6 +1392,7 @@ let state = {
   selectedBroker: null,  // currently selected broker name
   botRunning: false,
   tradingEnabled: false,
+  brokersStatus: [],     // full per-broker data from /bot/status brokers[] array
   todayTrades: [],
   openPositions: 0,      // count of live open positions from bot status payload
   riskParams: {},
@@ -1904,6 +1932,8 @@ async function pollBotStatus() {
     let anyRunning = d.live?.running || d.instance?.status === 'running';
     if (Array.isArray(d.brokers) && d.brokers.length > 0) {
       anyRunning = d.brokers.some(b => b.running);
+      // Store full broker data for inline controls
+      state.brokersStatus = d.brokers;
       // Merge live running flags back into state.instances for tab dot colours
       d.brokers.forEach(b => {
         const inst = state.instances.find(i => i.broker === b.broker);
@@ -1912,10 +1942,19 @@ async function pollBotStatus() {
     }
     state.botRunning = anyRunning;
 
-    // Trading toggle state
-    const toggleFile = d.bot_data?.trading_enabled;
-    if (toggleFile !== undefined) {
-      state.tradingEnabled = !!toggleFile;
+    // Trading toggle state — prefer per-broker trading_active from brokers[] array
+    if (Array.isArray(d.brokers) && state.selectedBroker) {
+      const selBroker = d.brokers.find(b => b.broker === state.selectedBroker);
+      if (selBroker) state.tradingEnabled = !!selBroker.trading_active;
+    } else {
+      const toggleFile = d.bot_data?.trading_enabled;
+      if (toggleFile !== undefined) state.tradingEnabled = !!toggleFile;
+    }
+    // Update trading toggle card hint with selected broker name
+    const hintEl = document.getElementById('trading-toggle-card-hint');
+    if (hintEl && state.selectedBroker) {
+      const bname = state.selectedBroker.charAt(0).toUpperCase() + state.selectedBroker.slice(1);
+      hintEl.textContent = `Controls ${bname} — keeps bot running but halts new positions`;
     }
 
     // Today's trades
@@ -2255,6 +2294,37 @@ function updateBrokerBotStatusRow(broker) {
   lbl.style.color = running ? 'var(--success)' : 'var(--muted)';
   if (startBtn) startBtn.style.display = running ? 'none' : '';
   if (stopBtn)  stopBtn.style.display  = running ? '' : 'none';
+
+  // Sync inline controls from brokers[] array in state
+  const brokerData = (state.brokersStatus || []).find(b => b.broker === broker);
+  if (brokerData) {
+    // TRADE toggle
+    const tradeToggle = document.getElementById('broker-trade-toggle');
+    if (tradeToggle) tradeToggle.checked = !!brokerData.trading_active;
+
+    // Mode pill
+    _applyModePill(brokerData.trading_mode || 'paper');
+
+    // Qty
+    const qtyInput = document.getElementById('broker-inline-qty');
+    if (qtyInput) qtyInput.value = brokerData.quantity || 25;
+  }
+}
+
+function _applyModePill(mode) {
+  const paperBtn = document.getElementById('broker-mode-paper');
+  const liveBtn  = document.getElementById('broker-mode-live');
+  if (!paperBtn || !liveBtn) return;
+  if (mode === 'live') {
+    paperBtn.style.background = 'transparent'; paperBtn.style.color = 'var(--muted)';
+    liveBtn.style.background  = '#059669';     liveBtn.style.color  = '#fff';
+  } else {
+    paperBtn.style.background = 'var(--link)'; paperBtn.style.color = '#fff';
+    liveBtn.style.background  = 'transparent'; liveBtn.style.color  = 'var(--muted)';
+  }
+  // Also keep the mode select in the settings form in sync
+  const modeSelect = document.getElementById('set-mode');
+  if (modeSelect && modeSelect.value !== mode) modeSelect.value = mode;
 }
 
 async function startBrokerBot() {
@@ -2293,12 +2363,86 @@ async function onTradingToggle(enabled) {
   document.getElementById('trading-main-toggle').checked = enabled;
   document.getElementById('trading-toggle-card').checked = enabled;
   document.getElementById('trading-toggle-lbl').style.color = enabled ? '#fbbf24' : 'var(--muted)';
+  const broker = state.selectedBroker;
   try {
-    await api('POST', '/bot/toggle-trading', { enabled, broker: state.selectedBroker });
+    if (broker) {
+      await api('POST', '/bot/toggle-broker-trading', { enabled, broker });
+      // Sync local state
+      const bd = (state.brokersStatus || []).find(b => b.broker === broker);
+      if (bd) bd.trading_active = enabled;
+      const tradeToggle = document.getElementById('broker-trade-toggle');
+      if (tradeToggle) tradeToggle.checked = enabled;
+    } else {
+      await api('POST', '/bot/toggle-trading', { enabled });
+    }
     state.tradingEnabled = enabled;
     toast(enabled ? 'Trading enabled — bot will take new positions.' : 'Trading disabled — bot stays running, no new trades.', 'ok');
   } catch (e) {
     toast(e.message || 'Error toggling trading', 'err');
+  }
+}
+
+async function onBrokerTradingToggle(enabled) {
+  const broker = state.selectedBroker;
+  if (!broker) { toast('Select a broker first.', 'warn'); return; }
+  const toggle = document.getElementById('broker-trade-toggle');
+  const navToggle = document.getElementById('trading-main-toggle');
+  const cardToggle = document.getElementById('trading-toggle-card');
+  try {
+    await api('POST', '/bot/toggle-broker-trading', { enabled, broker });
+    // Sync local state
+    const bd = (state.brokersStatus || []).find(b => b.broker === broker);
+    if (bd) bd.trading_active = enabled;
+    // Reflect in nav toggle for selected broker
+    if (navToggle) navToggle.checked = enabled;
+    if (cardToggle) cardToggle.checked = enabled;
+    document.getElementById('trading-toggle-lbl').style.color = enabled ? '#fbbf24' : 'var(--muted)';
+    state.tradingEnabled = enabled;
+    const name = broker.charAt(0).toUpperCase() + broker.slice(1);
+    toast(enabled ? `${name}: trading ON — new positions allowed.` : `${name}: trading OFF — no new positions.`, 'ok');
+  } catch (e) {
+    if (toggle) toggle.checked = !enabled;
+    toast(e.message || 'Error toggling trading', 'err');
+  }
+}
+
+function setBrokerMode(mode) {
+  // Update pill UI immediately
+  _applyModePill(mode);
+  // Update the settings form select too
+  const modeSelect = document.getElementById('set-mode');
+  if (modeSelect) modeSelect.value = mode;
+  // Update local state
+  const broker = state.selectedBroker;
+  const bd = (state.brokersStatus || []).find(b => b.broker === broker);
+  if (bd) bd.trading_mode = mode;
+}
+
+async function saveQuickBrokerUpdate() {
+  const broker = state.selectedBroker;
+  if (!broker) { toast('Select a broker first.', 'warn'); return; }
+  const mode = document.getElementById('set-mode')?.value || document.getElementById('broker-mode-live')?.style.background === '#059669' ? 'live' : 'paper';
+  const qty  = parseInt(document.getElementById('broker-inline-qty')?.value || '25', 10);
+  // Determine mode from pill buttons
+  const livePill = document.getElementById('broker-mode-live');
+  const activeMode = livePill && livePill.style.background === '#059669' ? 'live' : 'paper';
+  try {
+    const d = await api('POST', '/broker/quick-update', { broker, trading_mode: activeMode, quantity: qty });
+    // Sync local state
+    const bd = (state.brokersStatus || []).find(b => b.broker === broker);
+    if (bd) { bd.trading_mode = activeMode; bd.quantity = qty; }
+    // Sync mode badge in nav
+    const modeBadgeNav = document.getElementById('mode-badge-nav');
+    if (modeBadgeNav) {
+      modeBadgeNav.className = `badge badge-${activeMode}`;
+      modeBadgeNav.textContent = activeMode.toUpperCase();
+    }
+    // Sync settings form qty
+    const setQty = document.getElementById('set-qty');
+    if (setQty) setQty.value = qty;
+    toast(d.message || 'Saved!', 'ok');
+  } catch (e) {
+    toast(e.message || 'Save failed', 'err');
   }
 }
 

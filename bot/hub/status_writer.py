@@ -94,7 +94,12 @@ class StatusWriter:
         broker_positions = []
 
         if client_id:
-            toggle_file = Path(f'config/trading_enabled_{client_id}.json')
+            # Prefer per-broker file; fall back to legacy global file
+            broker_toggle_file = Path(f'config/trading_enabled_{client_id}_{broker_name}.json') if broker_name else None
+            if broker_toggle_file and broker_toggle_file.exists():
+                toggle_file = broker_toggle_file
+            else:
+                toggle_file = Path(f'config/trading_enabled_{client_id}.json')
             if toggle_file.exists():
                 try:
                     with open(toggle_file, 'r') as f:
