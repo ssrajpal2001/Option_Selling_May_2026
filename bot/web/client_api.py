@@ -828,58 +828,30 @@ async def square_off_one_leg(request: Request, user=Depends(get_current_user)):
     return {"success": True, "message": f"{side} square off signal sent to bot."}
 
 
-@router.post("/bot/start")
-async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
-    # ── Plan expiry enforcement (hard cap: only 1 permitted broker slot) ─
-    _plan_expiry_warning = None
-    _plan_expired = False
-    from datetime import datetime, timezone as _tz_start
-    _exp_str_s = user.get("plan_expiry_date")
-    if _exp_str_s:
-        try:
-            _exp_s = datetime.fromisoformat(_exp_str_s)
-            if _exp_s.tzinfo is None:
-                _exp_s = _exp_s.replace(tzinfo=_tz_start.utc)
-            if datetime.now(_tz_start.utc) > _exp_s:
-                _plan_expired = True
-        except Exception:
-            pass
+async def _start_one_broker_instance(instance: dict, user: dict, permitted_broker: str = None) -> dict:
+    """
+    Attempt to start a single configured broker instance.
 
-    if _plan_expired:
-        # When expired, only allow starting the single permitted broker instance
-        # (the lowest-id configured instance).  Any additional brokers are blocked.
-        all_instances = db_fetchall(
-            "SELECT id, broker FROM client_broker_instances "
-            "WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
-            (user["id"],)
-        )
-        _all_brokers = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
-        requested_broker = body.broker if body.broker and body.broker in _all_brokers else None
-        if len(all_instances) > 1 and requested_broker:
-            permitted_broker = all_instances[0]["broker"]
-            if requested_broker != permitted_broker:
-                raise HTTPException(
-                    403,
-                    f"Your subscription expired on {_exp_str_s[:10]}. "
-                    f"Only your primary broker ({permitted_broker}) can be started on an expired plan. "
-                    "Contact admin to renew or remove extra broker configurations."
-                )
-        _plan_expiry_warning = (
-            f"Your subscription expired on {_exp_str_s[:10]}. "
-            "You are limited to 1 broker slot. Contact admin to renew."
-        )
-    # ─────────────────────────────────────────────────────────────────────
+    Returns a dict:
+      {"broker": str, "status": "started"|"skipped"|"already_running"|"failed", "message": str}
 
-    requested_broker = body.broker if body.broker and body.broker in ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww") else None  # noqa
-    instance = _get_active_instance(user["id"], broker=requested_broker)
-    if not instance:
-        raise HTTPException(400, "No broker configured. Please set up your broker first.")
-    if not instance.get("api_key_encrypted"):
-        raise HTTPException(400, "Broker credentials missing. Please re-enter your credentials.")
-
+    'skipped'  — ineligible (stale token, kill-switch, plan restriction)
+    'started'  — subprocess launched successfully
+    'already_running' — was already running, no action taken
+    'failed'   — subprocess failed to launch
+    """
     broker_name = instance["broker"]
 
-    # ── Kill-switch check ─────────────────────────────────────────────────
+    # Plan expiry: only the primary (lowest-id) broker is permitted
+    if permitted_broker and broker_name != permitted_broker:
+        return {"broker": broker_name, "status": "skipped",
+                "message": f"Plan expired — only {permitted_broker} allowed"}
+
+    # Credentials check
+    if not instance.get("api_key_encrypted"):
+        return {"broker": broker_name, "status": "skipped", "message": "Credentials missing"}
+
+    # Kill-switch check
     locked_until = instance.get("trading_locked_until")
     if locked_until:
         try:
@@ -887,112 +859,98 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
             if locked_dt.tzinfo is None:
                 locked_dt = locked_dt.replace(tzinfo=IST)
             if datetime.now(IST) < locked_dt:
-                raise HTTPException(
-                    423,
-                    f"Daily loss kill-switch is active. Bot is locked until "
-                    f"{locked_until[:16].replace('T', ' ')} IST. "
-                    "It will auto-unlock at the next trading session (9:15 AM)."
-                )
-        except HTTPException:
-            raise
+                return {"broker": broker_name, "status": "skipped",
+                        "message": f"Kill-switch active until {locked_until[:16].replace('T', ' ')} IST"}
         except Exception:
             pass
-    # ─────────────────────────────────────────────────────────────────────
 
+    # Token freshness / headless login
     has_auto_login = instance.get("password_encrypted") and instance.get("totp_encrypted")
-
-    # Determine whether the stored token is stale and actually needs refreshing.
-    # Dhan uses a time-based window; all other brokers use the 6 AM IST gate.
     _token_ts = instance.get("token_updated_at", "")
     if broker_name == "dhan":
         token_needs_refresh = not _is_dhan_token_fresh(_token_ts)
     else:
         token_needs_refresh = not _is_token_fresh(_token_ts)
 
-    # ── Headless Login Integration ──
-    # Only attempt headless login when credentials are saved AND the token is stale.
-    # This prevents a live OTP being fired every time "Start Bot" is clicked for
-    # brokers like Upstox / Zerodha whose tokens are still valid from the same day.
     if has_auto_login and token_needs_refresh:
         try:
-            logger.info(f"[Bot Start] Attempting headless login for {broker_name} (User {user['id']})...")
+            logger.info(f"[Bot Start] Headless login for {broker_name} (User {user['id']})...")
             creds = {
                 "api_key": decrypt_secret(instance["api_key_encrypted"]),
                 "api_secret": decrypt_secret(instance.get("api_secret_encrypted", "")),
                 "broker_user_id": decrypt_secret(instance.get("broker_user_id_encrypted", "")),
                 "password": decrypt_secret(instance["password_encrypted"]),
-                "totp": decrypt_secret(instance["totp_encrypted"])
+                "totp": decrypt_secret(instance["totp_encrypted"]),
             }
-
             token = None
-            if broker_name == 'zerodha':
+            if broker_name == "zerodha":
                 from utils.auth_manager_zerodha import handle_zerodha_login_automated
                 token = handle_zerodha_login_automated(creds)
-            elif broker_name == 'dhan':
+            elif broker_name == "dhan":
                 from utils.auth_manager_dhan import handle_dhan_login_automated
                 token = handle_dhan_login_automated(creds)
-            elif broker_name == 'angelone':
+            elif broker_name == "angelone":
                 from utils.auth_manager_angelone import handle_angelone_login
                 creds["client_code"] = creds["broker_user_id"]
                 creds["pin"] = creds["password"]
                 smart_api = handle_angelone_login(creds)
-                if smart_api: token = smart_api.access_token
-            elif broker_name == 'upstox':
+                if smart_api:
+                    token = smart_api.access_token
+            elif broker_name == "upstox":
                 from utils.auth_manager_upstox import handle_upstox_login_automated
                 token = handle_upstox_login_automated(creds)
-            elif broker_name == 'aliceblue':
+            elif broker_name == "aliceblue":
                 from utils.auth_manager_alice import handle_alice_login_automated
                 token = handle_alice_login_automated(creds)
-            elif broker_name == 'groww':
+            elif broker_name == "groww":
                 from utils.auth_manager_groww import handle_groww_login_automated
                 token = handle_groww_login_automated(creds)
 
             if token:
                 enc_token = encrypt_secret(token)
                 now_ist = datetime.now(IST).isoformat()
-                db_execute(f"UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?", (enc_token, now_ist, instance["id"]))
-                # Refresh instance data for start_instance call
+                db_execute(
+                    "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+                    (enc_token, now_ist, instance["id"]),
+                )
                 instance["access_token_encrypted"] = enc_token
                 logger.info(f"[Bot Start] Headless login SUCCESS for {broker_name}")
             else:
-                logger.warning(f"[Bot Start] Headless login failed for {broker_name}, will attempt with existing token if any.")
-        except Exception as e:
-            logger.error(f"[Bot Start] Headless login error: {e}")
+                logger.warning(f"[Bot Start] Headless login failed for {broker_name}")
+        except Exception as exc:
+            logger.error(f"[Bot Start] Headless login error for {broker_name}: {exc}")
     elif has_auto_login:
-        # Token is still fresh — skip headless login to avoid triggering a live OTP
         logger.info(
             f"[Bot Start] Skipping headless login for {broker_name} (User {user['id']}) "
-            f"— token is fresh (updated_at={_token_ts[:19] if _token_ts else 'unknown'})"
+            f"— token fresh (updated_at={_token_ts[:19] if _token_ts else 'unknown'})"
         )
 
-    # Validation
+    # Token presence / freshness validation
     if not instance.get("access_token_encrypted"):
-        raise HTTPException(400, f"Connection failed. Please provide Password/TOTP for One-Click Connect or manual access token in Settings.")
+        return {"broker": broker_name, "status": "skipped",
+                "message": "No access token — save Password/TOTP or connect manually"}
 
     if broker_name in ("zerodha", "upstox", "angelone", "fyers", "aliceblue"):
         if not _is_token_fresh(instance.get("token_updated_at")):
-            raise HTTPException(400, f"{broker_name.capitalize()} session expired. Update Password/TOTP or reconnect in Settings.")
+            return {"broker": broker_name, "status": "skipped",
+                    "message": f"{broker_name.capitalize()} session expired — reconnect in Settings"}
     elif broker_name == "dhan":
         _dhan_api_secret = decrypt_secret(instance["api_secret_encrypted"]) if instance.get("api_secret_encrypted") else ""
-        from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm
-        _dhan_is_api_mode = _is_akm({"api_secret": _dhan_api_secret})
-        if not _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_is_api_mode):
-            if _dhan_is_api_mode:
-                raise HTTPException(400, "Dhan access token expired (24-hr limit). Click 'Connect Now' to auto-refresh it.")
-            raise HTTPException(400, "Dhan access token expired. Reconnect in Settings.")
+        from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm_h
+        _dhan_api_mode = _is_akm_h({"api_secret": _dhan_api_secret})
+        if not _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_api_mode):
+            return {"broker": broker_name, "status": "skipped",
+                    "message": "Dhan token expired — click Connect Now or reconnect in Settings"}
 
-    pending_change = db_fetchone(
-        "SELECT id FROM broker_change_requests WHERE client_id=? AND status='pending'",
-        (user["id"],)
-    )
-    if pending_change:
-        raise HTTPException(400, "You have a pending broker change request. Please wait for admin approval before starting the bot.")
-
-    # Removed hardcoded Upstox data provider check to allow unified client-broker data feeds.
-
+    # Already running?
     if instance["status"] == "running":
-        return {"success": False, "message": "Bot is already running."}
+        live = instance_manager.get_instance_status(instance["id"])
+        if live.get("running"):
+            return {"broker": broker_name, "status": "already_running", "message": "Already running"}
+        # DB says running but process is dead — allow restart
+        db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
 
+    # Launch subprocess
     ok, msg, pid = instance_manager.start_instance(
         instance_id=instance["id"],
         client_id=user["id"],
@@ -1008,7 +966,134 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
     if ok:
         db_execute("UPDATE client_broker_instances SET status='running', bot_pid=? WHERE id=?", (pid, instance["id"]))
         _audit_client(user["id"], "bot_activate", {"broker": broker_name, "mode": instance.get("trading_mode")})
-    response = {"success": ok, "message": msg}
+        return {"broker": broker_name, "status": "started", "message": msg}
+    return {"broker": broker_name, "status": "failed", "message": msg}
+
+
+@router.post("/bot/start")
+async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_current_user)):
+    # ── Plan expiry enforcement ───────────────────────────────────────────
+    _plan_expiry_warning = None
+    _plan_expired = False
+    _permitted_broker = None  # None = all brokers allowed
+    from datetime import datetime, timezone as _tz_start
+    _exp_str_s = user.get("plan_expiry_date")
+    if _exp_str_s:
+        try:
+            _exp_s = datetime.fromisoformat(_exp_str_s)
+            if _exp_s.tzinfo is None:
+                _exp_s = _exp_s.replace(tzinfo=_tz_start.utc)
+            if datetime.now(_tz_start.utc) > _exp_s:
+                _plan_expired = True
+        except Exception:
+            pass
+
+    if _plan_expired:
+        _all_inst_exp = db_fetchall(
+            "SELECT id, broker FROM client_broker_instances "
+            "WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
+            (user["id"],)
+        )
+        if _all_inst_exp:
+            _permitted_broker = _all_inst_exp[0]["broker"]
+        _plan_expiry_warning = (
+            f"Your subscription expired on {_exp_str_s[:10]}. "
+            "You are limited to 1 broker slot. Contact admin to renew."
+        )
+    # ─────────────────────────────────────────────────────────────────────
+
+    _valid_brokers = ("zerodha", "dhan", "angelone", "upstox", "fyers", "aliceblue", "groww")
+    requested_broker = body.broker if body.broker and body.broker in _valid_brokers else None
+
+    # ── Single-broker path (explicit broker name provided) ────────────────
+    if requested_broker:
+        # Expired plan: block non-primary broker requests explicitly
+        if _plan_expired and _permitted_broker and requested_broker != _permitted_broker:
+            raise HTTPException(
+                403,
+                f"Your subscription expired on {_exp_str_s[:10]}. "
+                f"Only your primary broker ({_permitted_broker}) can be started on an expired plan. "
+                "Contact admin to renew or remove extra broker configurations."
+            )
+
+        instance = _get_active_instance(user["id"], broker=requested_broker)
+        if not instance:
+            raise HTTPException(400, "No broker configured. Please set up your broker first.")
+
+        # Check for pending broker change request
+        pending_change = db_fetchone(
+            "SELECT id FROM broker_change_requests WHERE client_id=? AND status='pending'",
+            (user["id"],)
+        )
+        if pending_change:
+            raise HTTPException(400, "You have a pending broker change request. Please wait for admin approval before starting the bot.")
+
+        result = await _start_one_broker_instance(instance, user, permitted_broker=_permitted_broker)
+        if result["status"] == "skipped":
+            raise HTTPException(400, result["message"])
+        if result["status"] == "failed":
+            raise HTTPException(500, result["message"])
+        if result["status"] == "already_running":
+            response = {"success": False, "message": "Bot is already running."}
+        else:
+            response = {"success": True, "message": result["message"]}
+        if _plan_expiry_warning:
+            response["plan_warning"] = _plan_expiry_warning
+        return response
+
+    # ── Start-all path (no broker specified — start every configured broker) ─
+    all_instances = db_fetchall(
+        "SELECT * FROM client_broker_instances WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
+        (user["id"],)
+    )
+    if not all_instances:
+        raise HTTPException(400, "No broker configured. Please set up your broker first.")
+
+    # Check for pending broker change request (blocks all start attempts)
+    pending_change = db_fetchone(
+        "SELECT id FROM broker_change_requests WHERE client_id=? AND status='pending'",
+        (user["id"],)
+    )
+    if pending_change:
+        raise HTTPException(400, "You have a pending broker change request. Please wait for admin approval before starting the bot.")
+
+    results = []
+    for inst in all_instances:
+        r = await _start_one_broker_instance(dict(inst), user, permitted_broker=_permitted_broker)
+        results.append(r)
+
+    started = [r["broker"] for r in results if r["status"] == "started"]
+    already  = [r["broker"] for r in results if r["status"] == "already_running"]
+    skipped  = [r for r in results if r["status"] == "skipped"]
+    failed   = [r for r in results if r["status"] == "failed"]
+
+    if not started and not already:
+        # Nothing actually launched — surface the first error/skip reason
+        first_msg = (skipped + failed)[0]["message"] if (skipped + failed) else "No brokers could be started."
+        raise HTTPException(400, first_msg)
+
+    parts = []
+    if started:
+        parts.append(f"{len(started)} started: {', '.join(b.capitalize() for b in started)}")
+    if already:
+        parts.append(f"{len(already)} already running: {', '.join(b.capitalize() for b in already)}")
+    if skipped:
+        skip_detail = "; ".join(f"{r['broker'].capitalize()} ({r['message']})" for r in skipped)
+        parts.append(f"{len(skipped)} skipped — {skip_detail}")
+    if failed:
+        fail_detail = "; ".join(f"{r['broker'].capitalize()}: {r['message']}" for r in failed)
+        parts.append(f"{len(failed)} failed — {fail_detail}")
+
+    summary = ". ".join(parts)
+    response = {
+        "success": True,
+        "message": summary,
+        "started": started,
+        "already_running": already,
+        "skipped": [r["broker"] for r in skipped],
+        "failed": [r["broker"] for r in failed],
+        "details": results,
+    }
     if _plan_expiry_warning:
         response["plan_warning"] = _plan_expiry_warning
     return response
@@ -1016,16 +1101,21 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
 
 @router.post("/bot/stop")
 async def stop_bot(user=Depends(get_current_user)):
-    instance = _get_active_instance(user["id"])
-    if not instance:
+    instances = db_fetchall(
+        "SELECT id, broker FROM client_broker_instances WHERE client_id=? AND status != 'removed'",
+        (user["id"],)
+    )
+    if not instances:
         raise HTTPException(400, "No broker configured.")
 
-    ok, msg = instance_manager.stop_instance(instance["id"])
-    # Always clear DB state regardless of whether the process was found.
-    # The subprocess may have already died (crash, server restart) leaving a stale
-    # 'running' status that would prevent the client from restarting.
-    db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
-    _audit_client(user["id"], "bot_deactivate", {"broker": instance.get("broker")})
+    stopped_brokers = []
+    for inst in instances:
+        instance_manager.stop_instance(inst["id"])
+        db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (inst["id"],))
+        stopped_brokers.append(inst["broker"])
+
+    _audit_client(user["id"], "bot_deactivate", {"brokers": stopped_brokers})
+    msg = f"Stopped: {', '.join(b.capitalize() for b in stopped_brokers)}" if stopped_brokers else "No running instances found."
     return {"success": True, "message": msg}
 
 
@@ -1266,12 +1356,29 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
     safe_keys = ["id", "broker", "status", "trading_mode", "instrument", "quantity", "strategy_version", "last_heartbeat", "token_updated_at"]
     inst_safe = {k: inst_dict.get(k) for k in safe_keys}
 
+    # Per-broker running status for all configured instances
+    all_broker_instances = db_fetchall(
+        "SELECT id, broker, status FROM client_broker_instances WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
+        (user["id"],)
+    )
+    brokers_status = []
+    for bi in all_broker_instances:
+        b_live = instance_manager.get_instance_status(bi["id"])
+        running = b_live["running"] or bi["status"] == "running"
+        brokers_status.append({
+            "broker": bi["broker"],
+            "instance_id": bi["id"],
+            "running": running,
+            "pid": b_live.get("pid"),
+        })
+
     return {
         "configured": True,
         "instance": inst_safe,
         "live": live_status,
         "trade_history": trades,
         "bot_data": bot_data,
+        "brokers": brokers_status,
     }
 
 

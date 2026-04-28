@@ -1884,8 +1884,18 @@ async function pollBotStatus() {
   try {
     const d = await api('GET', '/bot/status');
     if (!d.configured) { updateBotUI(false, false); return; }
-    const running = d.live?.running || d.instance?.status === 'running';
-    state.botRunning = running;
+
+    // Global running = ANY broker subprocess is running
+    let anyRunning = d.live?.running || d.instance?.status === 'running';
+    if (Array.isArray(d.brokers) && d.brokers.length > 0) {
+      anyRunning = d.brokers.some(b => b.running);
+      // Merge live running flags back into state.instances for tab dot colours
+      d.brokers.forEach(b => {
+        const inst = state.instances.find(i => i.broker === b.broker);
+        if (inst) inst.status = b.running ? 'running' : (inst.status === 'running' ? 'idle' : inst.status);
+      });
+    }
+    state.botRunning = anyRunning;
 
     // Trading toggle state
     const toggleFile = d.bot_data?.trading_enabled;
@@ -1906,7 +1916,8 @@ async function pollBotStatus() {
     state.todayPnlPts = todayTrades.reduce((s, t) => s + (t.pnl_pts || 0), 0);
     state.todayPnlRs  = todayTrades.reduce((s, t) => s + (t.pnl_rs || 0), 0);
 
-    updateBotUI(running, state.tradingEnabled);
+    updateBotUI(anyRunning, state.tradingEnabled);
+    renderBrokerTabs();
     updateStatsUI(todayTrades);
     updateKillSwitchUI();
     renderPositions(d, todayTrades);
@@ -2161,11 +2172,23 @@ async function onBotToggle(wantRunning) {
   btn.textContent = wantRunning ? '⏳ Starting...' : '⏳ Stopping...';
   try {
     if (wantRunning) {
-      await api('POST', '/bot/start', {});
-      toast('Bot started successfully!', 'ok');
+      const d = await api('POST', '/bot/start', {});
+      // Multi-broker summary toast
+      if (Array.isArray(d.started)) {
+        const parts = [];
+        if (d.started.length)       parts.push(`${d.started.length} started: ${d.started.map(b => b.charAt(0).toUpperCase()+b.slice(1)).join(', ')}`);
+        if (d.already_running?.length) parts.push(`${d.already_running.length} already running`);
+        if (d.skipped?.length)      parts.push(`${d.skipped.length} skipped`);
+        if (d.failed?.length)       parts.push(`${d.failed.length} failed`);
+        toast(parts.join(' · ') || 'Bot started', 'ok');
+        if (d.plan_warning) toast(d.plan_warning, 'warn');
+      } else {
+        toast(d.message || 'Bot started successfully!', 'ok');
+        if (d.plan_warning) toast(d.plan_warning, 'warn');
+      }
     } else {
-      await api('POST', '/bot/stop');
-      toast('Bot stopped.', 'ok');
+      const d = await api('POST', '/bot/stop');
+      toast(d.message || 'Bot stopped.', 'ok');
     }
     await pollBotStatus();
   } catch (e) {
