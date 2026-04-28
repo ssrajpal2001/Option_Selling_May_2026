@@ -2421,9 +2421,7 @@ function setBrokerMode(mode) {
 async function saveQuickBrokerUpdate() {
   const broker = state.selectedBroker;
   if (!broker) { toast('Select a broker first.', 'warn'); return; }
-  const mode = document.getElementById('set-mode')?.value || document.getElementById('broker-mode-live')?.style.background === '#059669' ? 'live' : 'paper';
   const qty  = parseInt(document.getElementById('broker-inline-qty')?.value || '25', 10);
-  // Determine mode from pill buttons
   const livePill = document.getElementById('broker-mode-live');
   const activeMode = livePill && livePill.style.background === '#059669' ? 'live' : 'paper';
   try {

@@ -852,10 +852,18 @@ async def broker_quick_update(body: BrokerQuickUpdateRequest, user=Depends(get_c
     if body.quantity < 1:
         raise HTTPException(400, "quantity must be >= 1")
 
-    rows_updated = db_execute(
+    db_execute(
         "UPDATE client_broker_instances SET trading_mode=?, quantity=? WHERE client_id=? AND broker=?",
         (body.trading_mode, body.quantity, user["id"], body.broker)
     )
+    # Write runtime config file so running subprocess picks up changes within ~5 s
+    cfg_file = Path(f"config/broker_config_{user['id']}_{body.broker}.json")
+    with open(cfg_file, "w") as _f:
+        json.dump({
+            "trading_mode": body.trading_mode,
+            "quantity": body.quantity,
+            "updated_at": time.time()
+        }, _f)
     _audit_client(user["id"], "broker_quick_update", {
         "broker": body.broker, "mode": body.trading_mode, "qty": body.quantity
     })

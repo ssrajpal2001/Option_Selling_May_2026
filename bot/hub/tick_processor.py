@@ -148,72 +148,93 @@ class TickProcessor:
 
         if not self.orchestrator.is_backtest and user_id:
             broker_name = os.environ.get('CLIENT_BROKER', '')
-            # Prefer per-broker file; fall back to legacy global file
-            toggle_file = f"config/trading_enabled_{user_id}_{broker_name}.json" if broker_name else f"config/trading_enabled_{user_id}.json"
-            if not os.path.exists(toggle_file):
-                toggle_file = f"config/trading_enabled_{user_id}.json"
-            import json
-            if os.path.exists(toggle_file):
+            import json, sqlite3, time as _time
+
+            # ── DB-driven trading gate (authoritative, cached every 5s) ──────
+            _now = _time.monotonic()
+            if _now - getattr(self, '_trading_db_last_check', 0) >= 5:
+                self._trading_db_last_check = _now
                 try:
-                    with open(toggle_file, 'r') as f:
-                        toggle_data = json.load(f)
-                        is_enabled = toggle_data.get('enabled', False)
-                        self.trading_enabled = is_enabled
+                    _db = os.path.join(os.getcwd(), 'config', 'algosoft.db')
+                    with sqlite3.connect(_db, timeout=2) as _conn:
+                        _row = _conn.execute(
+                            "SELECT trading_active FROM client_broker_instances WHERE client_id=? AND broker=?",
+                            (int(user_id), broker_name)
+                        ).fetchone()
+                    if _row is not None:
+                        self._cached_trading_active = bool(_row[0])
+                except Exception:
+                    pass  # Keep last cached value on DB error
 
-                        # Detect transition from OFF to ON (Fresh Signal Logic)
-                        last_state = getattr(self, '_last_trading_toggle_state', None)
-                        if last_state is False and is_enabled is True:
-                             logger.info(f"[Client {user_id}] Trading TOGGLE ON detected. Waiting for FRESH signals.")
-                             # To ensure we wait for a FRESH signal (next boundary), we set the last pulse
-                             # to the current boundary. This prevents entering on the current (already active) candle.
-                             sm = getattr(self.orchestrator, 'sell_manager', None)
-                             if sm:
-                                 # max_entry_tf is needed here, but we can approximate or just use the current minute
-                                 # to ensure we skip at least the current 1m pulse.
-                                 current_boundary = timestamp.replace(second=0, microsecond=0)
-                                 sm._last_entry_pulse_ts = current_boundary
+            is_enabled = getattr(self, '_cached_trading_active', False)
+            self.trading_enabled = is_enabled
 
-                             # V2 Buy Side Fresh Signal Logic
-                             for session in self.orchestrator.user_sessions.values():
-                                 monitor_data = session.state_manager.dual_sr_monitoring_data
-                                 if monitor_data:
-                                     # Reset baseline to force a FRESH crossover detection
-                                     # We determine current higher side from LTPs
-                                     ce_ltp = self.state_manager.get_ltp(monitor_data['ce_data']['instrument_key']) or 0
-                                     pe_ltp = self.state_manager.get_ltp(monitor_data['pe_data']['instrument_key']) or 0
-                                     if ce_ltp > 0 and pe_ltp > 0:
-                                         curr_side = 'CE' if ce_ltp > pe_ltp else 'PE'
-                                         monitor_data['baseline_side'] = curr_side
-                                         monitor_data['initial_higher_side'] = curr_side
-                                         # Reset confirmed patterns
-                                         monitor_data['ce_data']['criteria_state']['pattern'] = False
-                                         monitor_data['pe_data']['criteria_state']['pattern'] = False
-                                         logger.info(f"[Client {user_id}] V2 baseline reset to {curr_side} to ensure next signal is FRESH.")
+            # ── Runtime config refresh (qty / trading_mode, cached every 5s) ─
+            _cfg_file = f"config/broker_config_{user_id}_{broker_name}.json"
+            _cfg_now = _time.monotonic()
+            if _cfg_file and os.path.exists(_cfg_file) and _cfg_now - getattr(self, '_cfg_last_check', 0) >= 5:
+                self._cfg_last_check = _cfg_now
+                try:
+                    with open(_cfg_file, 'r') as _f:
+                        _cfg = json.load(_f)
+                    _new_qty = str(_cfg.get('quantity', os.environ.get('CLIENT_QUANTITY', '25')))
+                    _new_mode = _cfg.get('trading_mode', os.environ.get('CLIENT_TRADING_MODE', 'paper'))
+                    if _new_qty != os.environ.get('CLIENT_QUANTITY'):
+                        os.environ['CLIENT_QUANTITY'] = _new_qty
+                        logger.info(f"[Client {user_id}] Runtime qty updated to {_new_qty}")
+                    if _new_mode.lower() != os.environ.get('CLIENT_TRADING_MODE', '').lower():
+                        os.environ['CLIENT_TRADING_MODE'] = _new_mode
+                        logger.info(f"[Client {user_id}] Runtime mode updated to {_new_mode}")
+                except Exception:
+                    pass
 
-                        self._last_trading_toggle_state = is_enabled
+            # ── Transition logic runs on DB-sourced is_enabled ───────────────
+            try:
+                # Detect transition from OFF to ON (Fresh Signal Logic)
+                last_state = getattr(self, '_last_trading_toggle_state', None)
+                if last_state is False and is_enabled is True:
+                    logger.info(f"[Client {user_id}] Trading TOGGLE ON detected. Waiting for FRESH signals.")
+                    sm = getattr(self.orchestrator, 'sell_manager', None)
+                    if sm:
+                        current_boundary = timestamp.replace(second=0, microsecond=0)
+                        sm._last_entry_pulse_ts = current_boundary
 
-                        if not is_enabled:
-                            # Trading is disabled. Stop monitoring and close positions.
-                            for session in self.orchestrator.user_sessions.values():
-                                if session.is_in_trade():
-                                    logger.info(f"[Client {user_id}] Trading TOGGLE OFF detected. Squaring off positions.")
-                                    await session.position_manager.close_all_positions(reason="TOGGLE_OFF")
-                                if session.signal_monitor.is_monitoring():
-                                    # Reset monitoring state
-                                    session.state_manager.dual_sr_monitoring_data = {}
+                    # V2 Buy Side Fresh Signal Logic
+                    for session in self.orchestrator.user_sessions.values():
+                        monitor_data = session.state_manager.dual_sr_monitoring_data
+                        if monitor_data:
+                            ce_ltp = self.state_manager.get_ltp(monitor_data['ce_data']['instrument_key']) or 0
+                            pe_ltp = self.state_manager.get_ltp(monitor_data['pe_data']['instrument_key']) or 0
+                            if ce_ltp > 0 and pe_ltp > 0:
+                                curr_side = 'CE' if ce_ltp > pe_ltp else 'PE'
+                                monitor_data['baseline_side'] = curr_side
+                                monitor_data['initial_higher_side'] = curr_side
+                                monitor_data['ce_data']['criteria_state']['pattern'] = False
+                                monitor_data['pe_data']['criteria_state']['pattern'] = False
+                                logger.info(f"[Client {user_id}] V2 baseline reset to {curr_side} to ensure next signal is FRESH.")
 
-                            # Also stop SellManager if active
-                            sm = getattr(self.orchestrator, 'sell_manager', None)
-                            if sm and not sm.strangle_closed:
-                                is_active = hasattr(sm, 'active_trades') and sm.active_trades
-                                if not is_active:
-                                    is_active = getattr(sm, 'ce_placed', False) or getattr(sm, 'pe_placed', False)
+                self._last_trading_toggle_state = is_enabled
 
-                                if is_active:
-                                    logger.info(f"[Client {user_id}] Trading TOGGLE OFF detected. Closing Sell Strangle.")
-                                    await sm.close_all(timestamp)
-                except Exception as e:
-                    logger.error(f"Error reading trading toggle: {e}")
+                if not is_enabled:
+                    # Trading is disabled. Stop monitoring and close positions.
+                    for session in self.orchestrator.user_sessions.values():
+                        if session.is_in_trade():
+                            logger.info(f"[Client {user_id}] Trading TOGGLE OFF detected. Squaring off positions.")
+                            await session.position_manager.close_all_positions(reason="TOGGLE_OFF")
+                        if session.signal_monitor.is_monitoring():
+                            session.state_manager.dual_sr_monitoring_data = {}
+
+                    # Also stop SellManager if active
+                    sm = getattr(self.orchestrator, 'sell_manager', None)
+                    if sm and not sm.strangle_closed:
+                        is_active = hasattr(sm, 'active_trades') and sm.active_trades
+                        if not is_active:
+                            is_active = getattr(sm, 'ce_placed', False) or getattr(sm, 'pe_placed', False)
+                        if is_active:
+                            logger.info(f"[Client {user_id}] Trading TOGGLE OFF detected. Closing Sell Strangle.")
+                            await sm.close_all(timestamp)
+            except Exception as e:
+                logger.error(f"Error in trading toggle transition logic: {e}")
 
             # SQUARE OFF SIGNAL CHECK
             sq_file = f"config/square_off_signal_{user_id}.json"

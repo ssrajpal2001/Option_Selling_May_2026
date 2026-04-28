@@ -94,18 +94,19 @@ class StatusWriter:
         broker_positions = []
 
         if client_id:
-            # Prefer per-broker file; fall back to legacy global file
-            broker_toggle_file = Path(f'config/trading_enabled_{client_id}_{broker_name}.json') if broker_name else None
-            if broker_toggle_file and broker_toggle_file.exists():
-                toggle_file = broker_toggle_file
-            else:
-                toggle_file = Path(f'config/trading_enabled_{client_id}.json')
-            if toggle_file.exists():
-                try:
-                    with open(toggle_file, 'r') as f:
-                        toggle_data = json.load(f)
-                        trading_active = toggle_data.get('enabled', True)
-                except: pass
+            # DB-driven trading_active (authoritative source)
+            try:
+                import sqlite3 as _sq
+                _db = os.path.join(os.getcwd(), 'config', 'algosoft.db')
+                with _sq.connect(_db, timeout=2) as _conn:
+                    _row = _conn.execute(
+                        "SELECT trading_active FROM client_broker_instances WHERE client_id=? AND broker=?",
+                        (int(client_id), broker_name)
+                    ).fetchone()
+                if _row is not None:
+                    trading_active = bool(_row[0])
+            except Exception:
+                pass  # Default remains True on error
 
             # Fetch Funds & Positions from Broker
             if not orch.is_backtest:
