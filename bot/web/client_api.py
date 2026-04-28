@@ -583,7 +583,7 @@ async def zerodha_login_url(request: Request, user=Depends(get_current_user)):
         return {"success": True, "login_url": login_url}
     except Exception as e:
         logger.error(f"[Zerodha] OAuth URL generation failed for user {user['id']}: {e}", exc_info=True)
-        raise HTTPException(500, f"Could not generate Zerodha login URL: {str(e)[:200]}")
+        raise HTTPException(400, f"Could not generate Zerodha login URL: {str(e)[:200]}")
 
 
 @router.get("/dhan/login-url")

@@ -934,8 +934,9 @@
           <!-- Connect button inside settings -->
           <div style="display:flex;gap:8px;margin-top:14px">
             <button class="btn btn-primary" style="flex:1" onclick="saveBrokerConfig()">💾 Save Credentials</button>
-            <button class="btn btn-outline" onclick="refreshToken()">🔌 Connect</button>
+            <button class="btn btn-outline" id="btn-refresh-token" onclick="refreshToken()">🔌 Connect</button>
           </div>
+          <div id="connect-auto-hint" style="font-size:11px;margin-top:6px;color:var(--text-soft)"></div>
 
           <!-- Trading mode & instrument -->
           <hr style="border-color:var(--border);margin:16px 0">
@@ -1820,6 +1821,29 @@ function renderCredForm(broker) {
     noticeDiv.style.cssText = 'padding:10px 13px;border-radius:8px;font-size:12px;color:var(--warn);background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.35);margin-bottom:12px';
     noticeDiv.innerHTML = `<strong>Manual token required</strong> — ${broker.charAt(0).toUpperCase()+broker.slice(1)} does not support automatic token generation. You must paste the access token obtained from the broker's website.`;
     wrap.appendChild(noticeDiv);
+  }
+
+  // AngelOne has no browser OAuth — automated login is the only option.
+  if (broker === 'angelone') {
+    const n = document.createElement('div');
+    n.style.cssText = 'padding:9px 12px;border-radius:8px;font-size:12px;color:var(--link);background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.28);margin-bottom:12px';
+    n.innerHTML = '<strong>Automated login only</strong> — AngelOne has no browser login page. PIN/MPIN and TOTP Secret (Base32 seed) are <em>required</em> to use the Connect button.';
+    wrap.appendChild(n);
+  }
+
+  // Set broker-specific Connect button hint
+  const hintEl = document.getElementById('connect-auto-hint');
+  if (hintEl) {
+    const HEADLESS_OPTIONAL = ['zerodha', 'dhan', 'upstox', 'aliceblue'];
+    if (broker === 'angelone') {
+      hintEl.innerHTML = '⚠️ Connect requires Password/PIN and TOTP Secret saved above.';
+      hintEl.style.color = 'var(--warn)';
+    } else if (HEADLESS_OPTIONAL.includes(broker)) {
+      hintEl.innerHTML = 'ℹ️ Save Password + TOTP Secret above for instant one-click connect (no browser window).';
+      hintEl.style.color = 'var(--text-soft)';
+    } else {
+      hintEl.innerHTML = '';
+    }
   }
 
   fields.forEach(f => {
