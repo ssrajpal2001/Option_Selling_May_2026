@@ -94,6 +94,7 @@ sed -i \
     -e "s|/opt/algosoft/.pythonlibs/bin/python|${PYTHON_BIN}|g" \
     -e "s|--port 5000|--port ${BOT_PORT}|g" \
     -e "s|EnvironmentFile=-/opt/algosoft/|EnvironmentFile=-${INSTALL_ROOT}/|g" \
+    -e "s|/opt/algosoft/bot/setup_env.sh|${WORK_DIR}/setup_env.sh|g" \
     "${SYSTEMD_DIR}/algosoft-bot.service"
 
 # ── Install timer file ────────────────────────────────────────────────────────
@@ -104,11 +105,15 @@ cp "$TIMER_SRC" "${SYSTEMD_DIR}/algosoft-bot.timer"
 echo "→ Reloading systemd daemon..."
 systemctl daemon-reload
 
-# Only the timer is enabled (not the service directly).
-# This is standard systemd practice: the timer owns the lifecycle and activates
-# the service on schedule. Enabling the service unit directly would cause it to
-# start immediately at boot rather than at 08:00 AM.
-echo "→ Enabling timer (auto-start on every boot)..."
+# Enable the SERVICE directly so it starts on every reboot automatically.
+# This ensures the bot comes back online after any planned or unplanned EC2
+# restart — even at weekends when the timer would not fire until Monday.
+echo "→ Enabling service (starts on every reboot)..."
+systemctl enable algosoft-bot.service
+
+# Also enable the timer so the bot is started/restarted each weekday at 08:00 AM
+# IST even if someone manually stopped it the night before.
+echo "→ Enabling timer (weekday 08:00 AM IST schedule)..."
 systemctl enable algosoft-bot.timer
 
 echo "→ Starting timer now..."
@@ -118,6 +123,10 @@ systemctl start algosoft-bot.timer
 echo ""
 echo "✅  Setup complete!"
 echo ""
+echo "Boot behaviour:"
+echo "  • Service is ENABLED — bot starts automatically on every EC2 reboot"
+echo "  • Timer   is ENABLED — bot is also kicked at 08:00 AM IST Mon–Fri"
+echo ""
 echo "Timer status:"
 systemctl status algosoft-bot.timer --no-pager -l || true
 echo ""
@@ -125,12 +134,16 @@ echo "Next scheduled run:"
 systemctl list-timers algosoft-bot.timer --no-pager 2>/dev/null || true
 echo ""
 echo "Installed service file (verify patched paths):"
-systemctl cat algosoft-bot --no-pager 2>/dev/null | head -20 || true
+systemctl cat algosoft-bot --no-pager 2>/dev/null | head -30 || true
 echo ""
 echo "Useful commands:"
-echo "  sudo systemctl start  algosoft-bot    # start right now"
-echo "  sudo systemctl stop   algosoft-bot    # stop gracefully"
-echo "  sudo systemctl status algosoft-bot    # check status"
-echo "  sudo journalctl -u algosoft-bot -f    # follow live logs"
-echo "  sudo journalctl -u algosoft-bot -n 100  # last 100 lines"
+echo "  sudo systemctl start   algosoft-bot         # start right now"
+echo "  sudo systemctl stop    algosoft-bot         # stop gracefully"
+echo "  sudo systemctl restart algosoft-bot         # restart (e.g. after config change)"
+echo "  sudo systemctl status  algosoft-bot         # check running status"
+echo "  sudo systemctl disable algosoft-bot         # prevent auto-start on reboot"
+echo "  sudo systemctl enable  algosoft-bot         # re-enable auto-start on reboot"
+echo "  sudo journalctl -u algosoft-bot -f          # follow live logs"
+echo "  sudo journalctl -u algosoft-bot -n 100      # last 100 lines"
+echo "  sudo bash bot/scripts/uninstall_systemd.sh  # remove everything"
 echo ""

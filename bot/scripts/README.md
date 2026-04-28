@@ -24,9 +24,11 @@ The bot is configured to start **automatically at 08:00 AM IST (02:30 UTC), Mond
 | `uninstall_systemd.sh` | Remove the auto-start units completely |
 
 **Key behaviour:**
-- If the EC2 server was off at 08:00 AM (e.g. overnight maintenance), the bot starts **immediately on next boot** (the `Persistent=true` flag handles this)
-- If the bot crashes, systemd **auto-restarts it** within 10 seconds (up to 3 times per 60 s)
-- **Clients still control their own trading** from the web dashboard — this only automates the server process layer
+- The service is **enabled at boot** — systemd starts it automatically on every EC2 restart, whether planned or unplanned, on any day of the week.
+- The timer fires every **weekday at 08:00 AM IST** as an additional kick — useful if someone stops the bot manually overnight and forgets to restart it.
+- `Persistent=true` on the timer means: if the server was **off at exactly 08:00 AM**, the timer will fire once when it next comes back online. This is a belt-and-suspenders safety net, not the primary boot mechanism.
+- If the bot process crashes mid-day, systemd **auto-restarts it** within 10 seconds (up to 3 times per 60 s).
+- **Clients still control their own trading** from the web dashboard — this only automates the server process layer.
 
 ---
 
@@ -56,7 +58,11 @@ sudo INSTALL_ROOT=/opt/algosoft BOT_USER=ubuntu BOT_PORT=5000 \
     bash bot/scripts/setup_systemd.sh
 ```
 
-After setup, the timer activates. **No further action needed** — the bot will start itself every weekday morning.
+After setup, the service is **enabled** (will auto-start on every future reboot) and the timer is **active** (will kick the bot each weekday morning). To start the bot right now without waiting for a reboot or the timer, run:
+
+```bash
+sudo systemctl start algosoft-bot
+```
 
 ---
 
@@ -117,6 +123,27 @@ sudo systemctl stop algosoft-bot
 # Restart the bot (e.g. after a config change)
 sudo systemctl restart algosoft-bot
 ```
+
+---
+
+## Enabling / Disabling Auto-Start on Reboot
+
+The service is enabled by `setup_systemd.sh` so it starts on every boot.  
+You can turn this on or off at any time without removing the unit files:
+
+```bash
+# Prevent the bot from starting automatically after the next reboot
+sudo systemctl disable algosoft-bot
+
+# Re-enable automatic start on reboot
+sudo systemctl enable algosoft-bot
+
+# Check whether auto-start is currently enabled
+sudo systemctl is-enabled algosoft-bot
+```
+
+> Disabling auto-start does **not** stop a currently running bot — use
+> `sudo systemctl stop algosoft-bot` for that.
 
 ---
 
