@@ -1,0 +1,49 @@
+6-04-29 01:00:34,516 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 01:00:34,520 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 01:00:34,839 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 01:00:34,841 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 01:00:34,843 - UpstoxApp - INFO - ContractManager: No options found via API for 'NSE_INDEX|Nifty 50'. Attempting CSV fallback...
+2026-04-29 01:00:34,844 - UpstoxApp - INFO - ContractManager: Downloading NSE_FO instruments from https://assets.upstox.com/market-quote/instruments/exchange/NSE_FO.csv.gz...
+2026-04-29 01:00:36,169 - UpstoxApp - INFO - ContractManager: CSV search for 'NIFTY' in NSE_FO found 2041 options.
+2026-04-29 01:00:36,170 - UpstoxApp - INFO - ContractManager: Sample CSV row: {'instrument_key': 'NSE_FO|50973', 'exchange_token': 50973, 'tradingsymbol': 'NIFTY26JUN27000CE', 'name': 'NIFTY', 'last_price': 72.9, 'expiry': '2026-06-30', 'strike': 27000.0, 'tick_size': 0.05, 'lot_size': 65.0, 'instrument_type': 'OPTIDX', 'option_type': 'CE', 'exchange': 'NSE_FO', 'name_norm': 'NIFTY'}
+2026-04-29 01:00:36,865 - UpstoxApp - INFO - ContractManager: CSV fallback success. Loaded 2041 option contracts for NIFTY from NSE_FO.
+2026-04-29 01:00:36,874 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-05-26 (day=Tuesday)
+2026-04-29 01:00:36,911 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-05-26 (CURRENT_WEEK), trade=2026-05-26 (WEEKLY)
+2026-04-29 01:00:36,913 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-05-26 (WEEKLY), trade=2026-05-26 (WEEKLY)
+2026-04-29 01:00:36,946 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-05-26 (WEEKLY), trade=2026-05-26 (WEEKLY)
+2026-04-29 01:00:36,946 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-29 01:00:36,946 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-29 01:00:36,947 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-29 01:00:36,947 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 01:00:36,947 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-29 01:00:36,947 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 01:00:36,947 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-29 01:00:36,947 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-29 01:00:36,947 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-29 01:00:36,948 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-29 01:00:36,948 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-29 01:00:36,948 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-29 01:00:36,948 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-29 01:00:36,949 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-29 01:00:36,949 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-29 01:00:36,949 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-29 01:00:36,949 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-29 01:00:36,949 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-29 01:00:36,949 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-29 01:00:36,950 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-29 01:00:36,950 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-29 01:00:36,950 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-29 01:00:36,950 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-29 01:00:36,953 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-29 01:00:36,961 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 23995.7)
+2026-04-29 01:00:36,962 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+Task exception was never retrieved
+future: <Task finished name='Task-36' coro=<PriceFeedHandler.handle_tick_dispatched() done, defined at /home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/price_feed_handler.py:249> exception=AttributeError("'dict' object has no attribute 'HasField'")>
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/price_feed_handler.py", line 252, in handle_tick_dispatched
+    now = self._extract_timestamp(feed, packet_now)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/price_feed_handler.py", line 53, in _extract_timestamp
+    if feed.HasField('ltpc'):
+       ^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'HasField'
