@@ -1,0 +1,23 @@
+2026-04-28 14:57:11,708 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-28 14:57:11,708 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='angelone', instrument='NIFTY', qty=1, mode='paper', strategy='V3')
+2026-04-28 14:57:11,708 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-28 14:57:11,709 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-28 14:57:11,709 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-28 14:57:11,709 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-28 14:57:11,709 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-28 14:57:11,717 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-28 14:57:12,770 - UpstoxApp - ERROR - [client_2_angelone] Static IP 3.7.80.13 is NOT bound to this machine — order blocked (0.1 ms). Error: [Errno 99] Cannot assign requested address
+2026-04-28 14:57:12,784 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-28 14:57:12,785 - UpstoxApp - WARNING - [Telegram] Static IP failure alert: no admin chat_id configured — skipping.
+2026-04-28 14:57:12,785 - UpstoxApp - ERROR - Failed to initialize AngelOne client for user 2: [client_2_angelone] Static IP 3.7.80.13 is NOT bound to this machine — order blocked (0.1 ms). Error: [Errno 99] Cannot assign requested address
+2026-04-28 14:57:12,785 - UpstoxApp - ERROR - AngelOne Login: Missing required credentials. Username: None, Has API Key: False, Has PIN: False, Has TOTP: False
+2026-04-28 14:57:12,785 - UpstoxApp - CRITICAL - AUTHENTICATION FAILED for AngelOne account [client_2_angelone]. Reason: The authentication process failed and did not return a client.
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/angelone_client.py", line 44, in __init__
+    raise Exception("The authentication process failed and did not return a client.")
+Exception: The authentication process failed and did not return a client.
+2026-04-28 14:57:12,785 - UpstoxApp - CRITICAL - AUTHENTICATION FAILED for AngelOne account [client_2_angelone]. Reason: The authentication process failed and did not return a client.
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/angelone_client.py", line 44, in __init__
+    raise Exception("The authentication process failed and did not return a client.")
+Exception: The authentication process failed and did not return a client.

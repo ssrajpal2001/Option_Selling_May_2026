@@ -1,0 +1,107 @@
+2026-04-28 14:57:11,239 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-28 14:57:11,239 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='zerodha', instrument='NIFTY', qty=1, mode='paper', strategy='V3')
+2026-04-28 14:57:11,239 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-28 14:57:11,239 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-28 14:57:11,240 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-28 14:57:11,240 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-28 14:57:11,240 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-28 14:57:11,240 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-28 14:57:11,931 - UpstoxApp - INFO - Zerodha client [client_2_zerodha] operating in PAPER mode. Skipping API login.
+2026-04-28 14:57:11,932 - UpstoxApp - INFO - [CLIENT MODE] Automated login failed or skipped. Trying with existing token...
+2026-04-28 14:57:11,943 - UpstoxApp - INFO - [client_2_zerodha] SourceIPHTTPAdapter mounted (source IP: 3.7.80.13)
+2026-04-28 14:57:11,963 - UpstoxApp - CRITICAL - [CLIENT MODE] Zerodha token validation also failed: HTTPSConnectionPool(host='api.kite.trade', port=443): Max retries exceeded with url: /user/profile (Caused by NameResolutionError("HTTPSConnection(host='api.kite.trade', port=443): Failed to resolve 'api.kite.trade' ([Errno -9] Address family for hostname not supported)"))
+2026-04-28 14:57:11,963 - UpstoxApp - CRITICAL - [CLIENT MODE] Zerodha token validation also failed: HTTPSConnectionPool(host='api.kite.trade', port=443): Max retries exceeded with url: /user/profile (Caused by NameResolutionError("HTTPSConnection(host='api.kite.trade', port=443): Failed to resolve 'api.kite.trade' ([Errno -9] Address family for hostname not supported)"))
+Traceback (most recent call last):
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    sock.bind(source_address)
+socket.gaierror: [Errno -9] Address family for hostname not supported
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 488, in _make_request
+    raise new_e
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 464, in _make_request
+    self._validate_conn(conn)
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 1093, in _validate_conn
+    conn.connect()
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connection.py", line 759, in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connection.py", line 211, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: HTTPSConnection(host='api.kite.trade', port=443): Failed to resolve 'api.kite.trade' ([Errno -9] Address family for hostname not supported)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/adapters.py", line 645, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.kite.trade', port=443): Max retries exceeded with url: /user/profile (Caused by NameResolutionError("HTTPSConnection(host='api.kite.trade', port=443): Failed to resolve 'api.kite.trade' ([Errno -9] Address family for hostname not supported)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/broker_manager.py", line 85, in load_client_mode_broker
+    await asyncio.to_thread(kite.profile)
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/kiteconnect/connect.py", line 336, in profile
+    return self._get("user.profile")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/kiteconnect/connect.py", line 912, in _get
+    return self._request(route, "GET", url_args=url_args, params=params, is_json=is_json)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/kiteconnect/connect.py", line 967, in _request
+    raise e
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/kiteconnect/connect.py", line 955, in _request
+    r = self.reqsession.request(method,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/sessions.py", line 592, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/sessions.py", line 706, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/adapters.py", line 678, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.kite.trade', port=443): Max retries exceeded with url: /user/profile (Caused by NameResolutionError("HTTPSConnection(host='api.kite.trade', port=443): Failed to resolve 'api.kite.trade' ([Errno -9] Address family for hostname not supported)"))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/main.py", line 299, in <module>
+    asyncio.run(main())
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/main.py", line 188, in main
+    await broker_manager.load_client_mode_broker(client_cfg)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/broker_manager.py", line 90, in load_client_mode_broker
+    raise RuntimeError("Zerodha connection failed. Please reconnect via Settings.") from e
+RuntimeError: Zerodha connection failed. Please reconnect via Settings.

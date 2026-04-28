@@ -1,0 +1,156 @@
+2026-04-28 14:57:11,560 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-28 14:57:11,562 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='upstox', instrument='NIFTY', qty=25, mode='paper', strategy='V3')
+2026-04-28 14:57:11,563 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-28 14:57:11,563 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-28 14:57:11,563 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-28 14:57:11,565 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-28 14:57:11,566 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-28 14:57:11,566 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-28 14:57:17,579 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-28 14:57:17,581 - UpstoxApp - INFO - [UpstoxClient] Fresh token saved to DB for user 2.
+2026-04-28 14:57:17,582 - UpstoxApp - INFO - Upstox client initialized for User ID: 2.
+2026-04-28 14:57:17,582 - UpstoxApp - INFO - [CLIENT MODE] Loaded upstox broker instance: client_2_upstox
+2026-04-28 14:57:17,583 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-28 14:57:17,584 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-28 14:57:17,584 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_upstox
+2026-04-28 14:57:17,584 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-28 14:57:17,584 - UpstoxApp - INFO - [Global Upstox] Using client broker token for data feed (same-account mode).
+2026-04-28 14:57:17,588 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-28 14:57:17,588 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-28 14:57:17,619 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-28 14:57:17,624 - UpstoxApp - INFO - [Global Dhan] Token valid. Timestamp refreshed.
+2026-04-28 14:57:17,624 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-28 14:57:17,625 - UpstoxApp - INFO - Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).
+2026-04-28 14:57:17,626 - UpstoxApp - INFO - WebSocket listener task created.
+2026-04-28 14:57:17,644 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-28 14:57:17,644 - UpstoxApp - INFO - Message handler handle_message registered.
+2026-04-28 14:57:17,644 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-28 14:57:17,649 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-28 14:57:17,650 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-28 14:57:17,650 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 14:57:17,650 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-28 14:57:17,650 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 14:57:17,650 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-28 14:57:17,650 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-28 14:57:17,653 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-28 14:57:17,653 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-28 14:57:17,654 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-28 14:57:17,654 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-28 14:57:17,654 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-28 14:57:17,655 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-28 14:57:17,655 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-28 14:57:17,655 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-28 14:57:17,655 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-28 14:57:17,656 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-28 14:57:17,656 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-28 14:57:17,656 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-28 14:57:17,656 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-28 14:57:17,667 - UpstoxApp - INFO - WebSocketManager starting connection loop.
+2026-04-28 14:57:17,668 - UpstoxApp - INFO - Attempting to authorize and connect... (Attempt 1)
+2026-04-28 14:57:17,668 - UpstoxApp - INFO - Authorizing WebSocket feed...
+2026-04-28 14:57:17,668 - UpstoxApp - INFO - Sending GET request to https://api.upstox.com/v3/feed/market-data-feed/authorize (Attempt 1)...
+2026-04-28 14:57:17,682 - UpstoxApp - INFO - [Global Dhan] Using feed class: DhanFeed
+2026-04-28 14:57:17,682 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 14:57:17,684 - UpstoxApp - INFO - [DualFeedWatchdog] Started. Monitoring Upstox + Dhan feeds.
+2026-04-28 14:57:17,685 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-28 14:57:17,702 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 14:57:17,709 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 2s.
+2026-04-28 14:57:17,737 - UpstoxApp - INFO - WebSocket authorization successful.
+2026-04-28 14:57:17,748 - UpstoxApp - INFO - Opening WebSocket connection to wss://wsfeeder-api.upstox.com/market-data-feeder/v...
+2026-04-28 14:57:17,762 - UpstoxApp - INFO - WebSocket connection established successfully.
+2026-04-28 14:57:17,763 - UpstoxApp - WARNING - V2 WebSocket: No existing instruments to re-subscribe to.
+2026-04-28 14:57:17,764 - UpstoxApp - INFO - WebSocket message processor started.
+2026-04-28 14:57:17,765 - UpstoxApp - INFO - First market data packet processed from queue. Data feed is active.
+2026-04-28 14:57:18,095 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-04-28 (day=Tuesday)
+2026-04-28 14:57:18,101 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-04-28 (CURRENT_WEEK), trade=2026-04-28 (WEEKLY)
+2026-04-28 14:57:18,103 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-28 14:57:18,106 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-04-28 (WEEKLY), trade=2026-04-28 (WEEKLY)
+2026-04-28 14:57:18,106 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-28 14:57:18,107 - UpstoxApp - WARNING - [SellManagerV3] Could not load client broker overrides: No module named 'config.db'
+2026-04-28 14:57:18,107 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-28 14:57:18,107 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-28 14:57:18,107 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 14:57:18,107 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-28 14:57:18,107 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-28 14:57:18,108 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:14:00 | SquareOff:17:00 | Lot:65   ║
+2026-04-28 14:57:18,108 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-28 14:57:18,108 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-28 14:57:18,108 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  LTP<VWAP(5m)                                        ║
+2026-04-28 14:57:18,109 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-28 14:57:18,109 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-28 14:57:18,109 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-28 14:57:18,109 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-28 14:57:18,110 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-28 14:57:18,110 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-28 14:57:18,110 - UpstoxApp - INFO - ║ DYNAMIC EXITS: LTP>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-28 14:57:18,110 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-28 14:57:18,110 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-28 14:57:18,111 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-28 14:57:18,111 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-28 14:57:18,111 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-28 14:57:18,111 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-28 14:57:18,111 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-28 14:57:18,112 - UpstoxApp - INFO - Trading bot is now live.
+2026-04-28 14:57:18,112 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active.
+2026-04-28 14:57:18,114 - UpstoxApp - INFO - V2: First INDEX price (Spot) received for NIFTY: 24034.85
+2026-04-28 14:57:18,118 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: 0.0s | Worker: ALIVE | Exchange: 2026-04-28 14:57:18.112000+05:30 | Sessions: 2:Idle
+2026-04-28 14:57:18,118 - UpstoxApp - INFO - V2: [NIFTY] Futures price missing. Falling back to Index price 24034.85 for ATM calculation.
+2026-04-28 14:57:18,177 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72326_2026-04-27.csv
+2026-04-28 14:57:18,267 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72248_2026-04-27.csv
+2026-04-28 14:57:18,359 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72270_2026-04-27.csv
+2026-04-28 14:57:18,456 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72258_2026-04-27.csv
+2026-04-28 14:57:18,556 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72253_2026-04-27.csv
+2026-04-28 14:57:18,641 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72279_2026-04-27.csv
+2026-04-28 14:57:18,731 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72278_2026-04-27.csv
+2026-04-28 14:57:18,821 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72327_2026-04-27.csv
+2026-04-28 14:57:18,902 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72268_2026-04-27.csv
+2026-04-28 14:57:18,992 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72264_2026-04-27.csv
+2026-04-28 14:57:19,096 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72271_2026-04-27.csv
+2026-04-28 14:57:19,187 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72267_2026-04-27.csv
+2026-04-28 14:57:19,274 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72317_2026-04-27.csv
+2026-04-28 14:57:19,350 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72255_2026-04-27.csv
+2026-04-28 14:57:19,441 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72262_2026-04-27.csv
+2026-04-28 14:57:19,519 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72256_2026-04-27.csv
+2026-04-28 14:57:19,595 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72244_2026-04-27.csv
+2026-04-28 14:57:19,681 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72249_2026-04-27.csv
+2026-04-28 14:57:19,715 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 14:57:19,768 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72325_2026-04-27.csv
+2026-04-28 14:57:19,815 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 14:57:19,816 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 44 instruments.
+2026-04-28 14:57:19,860 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72322_2026-04-27.csv
+2026-04-28 14:57:19,934 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72328_2026-04-27.csv
+2026-04-28 14:57:20,013 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72311_2026-04-27.csv
+2026-04-28 14:57:20,081 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72324_2026-04-27.csv
+2026-04-28 14:57:20,170 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72265_2026-04-27.csv
+2026-04-28 14:57:20,253 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72259_2026-04-27.csv
+2026-04-28 14:57:20,332 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72266_2026-04-27.csv
+2026-04-28 14:57:20,431 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72277_2026-04-27.csv
+2026-04-28 14:57:20,524 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72316_2026-04-27.csv
+2026-04-28 14:57:20,607 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72260_2026-04-27.csv
+2026-04-28 14:57:20,690 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72250_2026-04-27.csv
+2026-04-28 14:57:20,771 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72245_2026-04-27.csv
+2026-04-28 14:57:20,871 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72261_2026-04-27.csv
+2026-04-28 14:57:20,966 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72252_2026-04-27.csv
+2026-04-28 14:57:21,049 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72254_2026-04-27.csv
+2026-04-28 14:57:21,159 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72272_2026-04-27.csv
+2026-04-28 14:57:21,241 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72263_2026-04-27.csv
+2026-04-28 14:57:21,335 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72323_2026-04-27.csv
+2026-04-28 14:57:21,421 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72251_2026-04-27.csv
+2026-04-28 14:57:21,501 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72246_2026-04-27.csv
+2026-04-28 14:57:21,599 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72312_2026-04-27.csv
+2026-04-28 14:57:21,763 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72257_2026-04-27.csv
+2026-04-28 14:57:21,840 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72269_2026-04-27.csv
+2026-04-28 14:57:23,816 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 14:57:23,835 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 14:57:23,836 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 44 instruments.
+2026-04-28 14:57:23,844 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 8s.
+2026-04-28 14:57:31,845 - UpstoxApp - INFO - [Global Dhan] Connecting to Dhan Market Feed (v2)...
+2026-04-28 14:57:31,882 - UpstoxApp - INFO - [Global Dhan] Connection established successfully.
+2026-04-28 14:57:31,882 - UpstoxApp - INFO - [Global Dhan] Re-subscribing to 44 instruments.
+2026-04-28 14:57:31,892 - UpstoxApp - WARNING - [Global Dhan] WebSocket closed by server. Next retry in 16s.
+2026-04-28 14:57:47,685 - UpstoxApp - WARNING - [DualFeedWatchdog] dhan STALE — last tick 1777368468s ago. Other feeder continues. Attempting reconnect...
+2026-04-28 14:57:47,686 - UpstoxApp - INFO - [DualFeedWatchdog] dhan restarted.
+2026-04-28 14:57:48,571 - UpstoxApp - INFO - Received SIGTERM. Initiating industrial square-off and shutdown...
+2026-04-28 14:57:48,571 - UpstoxApp - INFO - BrokerManager: Squaring off all positions for 1 brokers...
+2026-04-28 14:57:48,572 - UpstoxApp - INFO - BrokerManager: All square-off commands dispatched.
+2026-04-28 14:57:52,687 - UpstoxApp - INFO - [DualFeedWatchdog] dhan re-subscription queued for 44 symbols.
