@@ -145,8 +145,14 @@ class BrokerRestAdapter:
                     ao_exchange = "NFO"
                 else:
                     ao_exchange = "NSE"
-                # broker_key is now a numeric exchange token (int) extracted by _translate_to_broker_key
-                res = await asyncio.to_thread(smart_api.ltpData, ao_exchange, "", str(broker_key))
+                # Look up the AngelOne tradingsymbol for this instrument key.
+                # When the token master is loaded, passing the real tradingsymbol
+                # alongside the symboltoken matches AngelOne's recommended API usage
+                # and avoids spurious AB4006 "Invalid symboltoken" rejections.
+                ao_tradingsymbol = ""
+                if hasattr(self.client, 'get_tradingsymbol_for_nsefoo_key'):
+                    ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key) or ""
+                res = await asyncio.to_thread(smart_api.ltpData, ao_exchange, ao_tradingsymbol, str(broker_key))
                 if res and res.get('status'):
                     return float(res.get('data', {}).get('lastTradedPrice', 0.0))
                 return 0.0

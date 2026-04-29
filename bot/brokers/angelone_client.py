@@ -275,29 +275,52 @@ class AngelOneClient(BaseBroker):
         try:
             logger.info(f"[{self.instance_name}] AngelOne: Downloading token masters...")
             all_data = []
+            raw_for_debug = ''
             async with aiohttp.ClientSession() as session:
                 for url in urls:
                     async with session.get(url, timeout=30) as response:
                         # AngelOne's CDN serves valid JSON with Content-Type: text/plain;
                         # aiohttp's response.json() rejects non-JSON content-types, so we
                         # use response.text() + manual JSON parsing.
-                        # The endpoint sometimes returns MULTIPLE JSON arrays in one body
-                        # (e.g. `[]\n[{instruments...}]`). json.loads() would raise
-                        # "Extra data" after parsing the first array. We use raw_decode()
-                        # to iterate and collect every JSON value in the response.
-                        raw = (await response.text()).strip()
+                        #
+                        # The response can contain MULTIPLE JSON arrays in one body,
+                        # sometimes separated by a UTF-8 BOM (\ufeff):
+                        #   e.g.  []\n\ufeff[{instruments...}]
+                        # json.loads() would raise "Extra data" after the first array.
+                        # We strip the BOM, then use raw_decode() to iterate and collect
+                        # every JSON value in the response, breaking gracefully on any
+                        # non-JSON content between arrays.
+                        raw_text = await response.text()
+                        raw = raw_text.replace('\ufeff', '').strip()
+                        raw_for_debug = raw  # keep reference for empty-master diagnostics
                         decoder = _json.JSONDecoder()
                         pos = 0
                         while pos < len(raw):
-                            obj, pos = decoder.raw_decode(raw, pos)
+                            try:
+                                obj, pos = decoder.raw_decode(raw, pos)
+                            except _json.JSONDecodeError as parse_err:
+                                logger.debug(
+                                    f"[{self.instance_name}] AngelOne master: stopped "
+                                    f"multi-array parse at pos {pos} — {parse_err}. "
+                                    f"Snippet: {raw[pos:pos+80]!r}"
+                                )
+                                break
                             if isinstance(obj, list):
                                 all_data.extend(obj)
                             # Skip whitespace between objects
                             while pos < len(raw) and raw[pos] in ' \t\r\n':
                                 pos += 1
 
+            if not all_data:
+                snippet = raw_for_debug[:500]
+                logger.debug(
+                    f"[{self.instance_name}] AngelOne master: all_data is empty after parsing. "
+                    f"First 500 chars of last URL response: {snippet!r}"
+                )
+
             mapping = {}
-            universal_mapping = {} # "NSE_INDEX|Nifty 50" -> token
+            universal_mapping = {}       # "NSE_INDEX|Nifty 50" -> token
+            nsefoo_tradingsymbol = {}    # "NSE_FO|{token}" -> tradingsymbol (for ltpData calls)
 
             for item in all_data:
                 name = item.get('name', '').upper()
@@ -319,6 +342,10 @@ class AngelOneClient(BaseBroker):
                             'tradingsymbol': symbol,
                             'lotsize': int(item.get('lotsize', 1))
                         }
+                        # Build a fast NSE_FO|<token> → tradingsymbol reverse map so
+                        # get_ltp can pass the correct tradingsymbol to ltpData.
+                        if token:
+                            nsefoo_tradingsymbol[f"NSE_FO|{token}"] = symbol
                     except: continue
 
                 # 2. Universal Key Mapping (for Indices and Stocks)
@@ -333,6 +360,7 @@ class AngelOneClient(BaseBroker):
 
             self._token_map = mapping
             self._universal_token_map = universal_mapping
+            self._nsefoo_tradingsymbol = nsefoo_tradingsymbol
             self._last_token_load = now
             logger.info(f"[{self.instance_name}] AngelOne: Token masters loaded. {len(mapping)} options, {len(universal_mapping)} universal keys.")
         except Exception as e:
@@ -342,6 +370,17 @@ class AngelOneClient(BaseBroker):
     def get_token_by_universal_key(self, key):
         if not hasattr(self, '_universal_token_map'): return None
         return self._universal_token_map.get(key)
+
+    def get_tradingsymbol_for_nsefoo_key(self, instrument_key):
+        """Return the AngelOne tradingsymbol for an NSE_FO|<token> instrument key.
+
+        This is used by get_ltp() so ltpData receives the correct tradingsymbol
+        alongside the symboltoken, matching AngelOne's recommended API usage.
+        Returns an empty string if the master is not loaded or the key is unknown.
+        """
+        if not hasattr(self, '_nsefoo_tradingsymbol'):
+            return ''
+        return self._nsefoo_tradingsymbol.get(instrument_key, '')
 
     async def get_instrument_info(self, contract):
         """Resolves the token and tradingsymbol for a given contract."""
