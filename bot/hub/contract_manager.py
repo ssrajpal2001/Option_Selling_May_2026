@@ -174,11 +174,40 @@ class ContractManager:
             return  # today's contracts already present — nothing to do
 
         logger.info(f"ContractManager: Expiry day detected ({today}) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...")
-        if not hasattr(self.rest_client, 'get_expiring_option_contracts'):
-            logger.warning("ContractManager: rest_client does not support get_expiring_option_contracts — cannot supplement.")
+
+        # Resolve which REST client to use for the expired-instruments call.
+        # Priority: primary rest_client (if it supports the endpoint) → Upstox client broker
+        # (fresh token, always supports the endpoint) → give up.
+        supplement_client = None
+        if hasattr(self.rest_client, 'get_expiring_option_contracts'):
+            supplement_client = self.rest_client
+        else:
+            # Primary REST client (e.g. Dhan, Zerodha) doesn't have this endpoint.
+            # Try to find a live Upstox client broker whose api_client is already set.
+            try:
+                orch = self.atm_manager.orchestrator if self.atm_manager else None
+                bm = getattr(orch, 'broker_manager', None) if orch else None
+                if bm and bm.brokers:
+                    for _b in bm.brokers.values():
+                        if getattr(_b, 'broker_name', '') == 'upstox':
+                            _api_client = getattr(_b, 'api_client', None)
+                            if _api_client:
+                                from utils.rest_api_client import RestApiClient as _RAC
+                                supplement_client = _RAC(_api_client.auth_handler)
+                                logger.info("ContractManager: Using Upstox client broker for expired-instruments supplement.")
+                                break
+            except Exception as _se:
+                logger.debug(f"ContractManager: Could not build Upstox supplement client: {_se}")
+
+        if not supplement_client:
+            logger.warning(
+                f"ContractManager: No REST client supports get_expiring_option_contracts "
+                f"(primary is {type(self.rest_client).__name__}, no live Upstox broker found). "
+                "Bot will use next available expiry — today's expiry contracts unavailable."
+            )
             return
 
-        expiring_raw = await self.rest_client.get_expiring_option_contracts(instrument_key, today)
+        expiring_raw = await supplement_client.get_expiring_option_contracts(instrument_key, today)
         if not expiring_raw:
             logger.warning("ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.")
             return

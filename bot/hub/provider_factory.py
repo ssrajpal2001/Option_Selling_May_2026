@@ -145,6 +145,18 @@ class ProviderFactory:
                         rest_client = _RAC(_upstox_broker.api_client.auth_handler)
                     provider_names = [p for p in provider_names if p != 'upstox']
                     logger.info("[Global Upstox] Using client broker token for data feed (same-account mode).")
+                else:
+                    # Same-account shortcut skipped — warn if Upstox broker exists but api_client not ready yet
+                    _upstox_broker_no_client = next(
+                        (b for b in broker_manager.brokers.values()
+                         if getattr(b, 'broker_name', '') == 'upstox'),
+                        None
+                    )
+                    if _upstox_broker_no_client:
+                        logger.warning(
+                            "[Global Upstox] Upstox client broker found but api_client not yet set "
+                            "(login may still be in progress). Falling back to DB-stored token for data feed."
+                        )
             except (ImportError, AttributeError, TypeError, ValueError) as _e:
                 logger.warning(f"[Global Upstox] Same-account short-circuit failed ({type(_e).__name__}: {_e}). Falling back to DB.")
 
@@ -369,40 +381,46 @@ class ProviderFactory:
         else:
             websocket_manager = None
 
-        # Use Upstox as the REST client if available, otherwise Dhan
+        # REST CLIENT SELECTION: Must support get_option_contracts for expiry resolution.
+        # Dhan is intentionally excluded from REST client selection — its BrokerRestAdapter
+        # returns [] from get_option_contracts, which silently corrupts expiry resolution
+        # by forcing a CSV fallback that never includes today's expiring contracts.
         if not rest_client:
             # For historical data and option contracts, we still need a rest_client.
             # We'll try to get it from the ApiClientManager or just use the first provider.
             if api_client_manager:
                 rest_client = api_client_manager.get_active_client()
 
-            if not rest_client and 'dhan' in [f[0] for f in active_feeds]:
-                # Try to create a Dhan rest adapter from the same credentials
-                try:
-                    from web.db import db_fetchone
-                    from web.auth import decrypt_secret
-                    dp = db_fetchone("SELECT * FROM data_providers WHERE provider='dhan'")
-                    if dp and dp['status'] == 'configured':
-                        from dhanhq import dhanhq
-                        cid = decrypt_secret(dp['api_key_encrypted'])
-                        token = decrypt_secret(dp['access_token_encrypted'])
-                        client = dhanhq(cid, token)
-                        rest_client = BrokerRestAdapter(client, 'dhan')
-                        logger.info("Using Dhan as Global REST data provider.")
-                except: pass
-
-        # FINAL FALLBACK: Ensure we have a REST client for indicators/history
-        # We prefer Global feeds (Upstox/Dhan) but can use primary broker REST for simple queries if needed.
+        # BROKER REST FALLBACK: If still no REST client, pick the first client broker that
+        # supports proper option-contract fetching (Upstox > Zerodha > AngelOne > others).
+        # Dhan is deliberately skipped here — it has no option-contract REST support.
         if not rest_client and broker_manager and broker_manager.brokers:
-            primary_broker = next(iter(broker_manager.brokers.values()), None)
-            if primary_broker:
-                b_name = getattr(primary_broker, 'broker_name', 'upstox')
-                rest_client = BrokerRestAdapter(primary_broker, b_name)
-                logger.info(f"Using {b_name} as fallback REST data provider.")
+            _contract_capable = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue']
+            # Prefer contract-capable brokers first, then fall back to any broker
+            _sorted_brokers = sorted(
+                broker_manager.brokers.values(),
+                key=lambda b: (_contract_capable.index(getattr(b, 'broker_name', ''))
+                               if getattr(b, 'broker_name', '') in _contract_capable else 999)
+            )
+            for _b in _sorted_brokers:
+                _b_name = getattr(_b, 'broker_name', '')
+                if _b_name == 'dhan':
+                    continue  # Dhan: WebSocket only — no option-contract REST support
+                rest_client = BrokerRestAdapter(_b, _b_name)
+                logger.info(f"[ProviderFactory] Using {_b_name} client broker as REST fallback for contract fetching.")
+                break
 
         # ENFORCEMENT: Websocket Data MUST come from Global Feeds (Upstox/Dhan)
         # We removed Zerodha as a data provider as per requirement.
         if not websocket_manager or (hasattr(websocket_manager, 'is_mock') and websocket_manager.is_mock):
             logger.warning("No global data feeder (Upstox/Dhan) is connected. Real-time data will be missing.")
+
+        # Emit clear diagnostic so startup logs always show which REST client is used for contracts.
+        if rest_client:
+            _rc_type = type(rest_client).__name__
+            _rc_broker = getattr(rest_client, 'broker_name', None) or getattr(rest_client, '_broker_name', None) or 'upstox'
+            logger.info(f"[ProviderFactory] Contract REST client: {_rc_broker} ({_rc_type})")
+        else:
+            logger.warning("[ProviderFactory] No REST client available — contract loading will fail.")
 
         return rest_client, websocket_manager
