@@ -276,7 +276,11 @@ class AngelOneClient(BaseBroker):
             logger.info(f"[{self.instance_name}] AngelOne: Downloading token masters...")
             all_data = []
             raw_for_debug = ''
-            async with aiohttp.ClientSession() as session:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Accept": "application/json, text/plain, */*"
+            }
+            async with aiohttp.ClientSession(headers=headers) as session:
                 for url in urls:
                     async with session.get(url, timeout=30) as response:
                         # AngelOne's CDN serves valid JSON with Content-Type: text/plain;
@@ -317,6 +321,11 @@ class AngelOneClient(BaseBroker):
                     f"[{self.instance_name}] AngelOne master: all_data is empty after parsing. "
                     f"First 500 chars of last URL response: {snippet!r}"
                 )
+                # If both URL calls produced no data, do not overwrite existing map
+                # (prevents transient network errors from clearing current tokens).
+                if self._token_map:
+                    logger.warning(f"[{self.instance_name}] AngelOne: Token master download yielded no data; retaining existing map.")
+                    return
 
             mapping = {}
             universal_mapping = {}       # "NSE_INDEX|Nifty 50" -> token

@@ -387,6 +387,51 @@ class BrokerRestAdapter:
                         })
                 return contracts
 
+            elif self.broker_name == 'dhan':
+                # Dhan security list fallback for option contracts
+                if hasattr(self.client, '_load_security_list'):
+                    await self.client._load_security_list()
+
+                # Get from Dhan's shared security list (Task #153 redundancy improvement)
+                # Note: self.client._shared_security_list_df is class-level in DhanClient
+                df = getattr(self.client, '_shared_security_list_df', None)
+                if df is None or df.empty:
+                    return []
+
+                # Extract index name from key: "NSE_INDEX|Nifty 50" -> "NIFTY"
+                raw_idx = instrument_key.split('|')[1].upper()
+                name_map = {
+                    "NIFTY 50": "NIFTY",
+                    "NIFTY BANK": "BANKNIFTY",
+                    "NIFTY FIN SERVICE": "FINNIFTY",
+                    "NIFTY MID SELECT": "MIDCPNIFTY"
+                }
+                d_name = name_map.get(raw_idx, raw_idx)
+
+                # Dhan Expiry column normalization
+                if 'SEM_EXPIRY_DATE' in df.columns and 'expiry_date' not in df.columns:
+                    df['expiry_date'] = pd.to_datetime(df['SEM_EXPIRY_DATE'], errors='coerce').dt.date
+
+                # Filter for Options belonging to this index
+                mask = (
+                    (df['SEM_TRADING_SYMBOL'].str.startswith(d_name + "-")) &
+                    (df['SEM_INSTRUMENT_NAME'] == 'OPTIDX')
+                )
+                matches = df[mask]
+
+                contracts = []
+                for _, row in matches.iterrows():
+                    # Format as NSE_FO|<sid> for system compatibility
+                    contracts.append({
+                        'instrument_key': f"NSE_FO|{row['SEM_SMST_SECURITY_ID']}",
+                        'tradingsymbol': row['SEM_TRADING_SYMBOL'],
+                        'expiry': row['expiry_date'],
+                        'strike_price': float(row['SEM_STRIKE_PRICE']),
+                        'instrument_type': row['SEM_OPTION_TYPE'].upper(),
+                        'lot_size': int(row['SEM_LOT_UNITS'])
+                    })
+                return contracts
+
             return []
         except Exception as e:
             logger.error(f"[{self.broker_name}] get_option_contracts failed: {e}")

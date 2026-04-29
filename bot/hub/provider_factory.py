@@ -48,8 +48,8 @@ class ProviderFactory:
                                 return None, websocket_manager
 
                         elif broker == 'dhan':
-                            from dhanhq import dhanhq
-                            client = dhanhq(api_key, access_token)
+                            from dhanhq import dhanhq, DhanContext
+                            client = dhanhq(DhanContext(api_key, access_token))
                             # Dhan doesn't have a simple 'profile' that doesn't cost an API hit?
                             # Usually get_fund_limits is safe.
                             try:

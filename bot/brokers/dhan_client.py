@@ -39,10 +39,11 @@ class DhanClient(BaseBroker):
                 if self.db_config.get('password') and self.db_config.get('totp'):
                     try:
                         from utils.auth_manager_dhan import handle_dhan_login_automated
+                        from dhanhq import DhanContext
                         with self._scoped_ip_patch():
                             token = handle_dhan_login_automated(self.db_config)
                         if token:
-                            self.dhan = dhanhq(client_id, token)
+                            self.dhan = dhanhq(DhanContext(client_id, token))
                             logger.info(f"Dhan automated client initialized for User ID: {self.user_id}.")
                     except Exception as e:
                         logger.warning(
@@ -53,9 +54,10 @@ class DhanClient(BaseBroker):
                 # 2. Fallback to existing access token (always runs if step 1 didn't set self.dhan)
                 if not self.dhan:
                     try:
+                        from dhanhq import DhanContext
                         access_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
                         if client_id and access_token:
-                            self.dhan = dhanhq(client_id, access_token)
+                            self.dhan = dhanhq(DhanContext(client_id, access_token))
                             logger.info(f"Dhan client initialized from token for User ID: {self.user_id}.")
                         else:
                             logger.error(f"Dhan: Missing credentials in DB config for user {self.user_id}.")
@@ -210,9 +212,10 @@ class DhanClient(BaseBroker):
         # Older SDK versions (e.g. MarketFeed) do not accept client_id as a
         # keyword arg and raise TypeError — fall back to positional args.
         try:
+            from dhanhq import DhanContext
+            ctx = DhanContext(client_id, access_token)
             self.feed = _DhanFeedCls(
-                client_id=client_id,
-                access_token=access_token,
+                dhan_context=ctx,
                 instruments=self.subscribed_instruments,
                 version='v2',
             )

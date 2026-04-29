@@ -184,7 +184,8 @@ def handle_dhan_login(credentials, config_manager=None):
         client_id = ''
 
     try:
-        dhan = dhanhq(client_id, access_token)
+        from dhanhq import DhanContext
+        dhan = dhanhq(DhanContext(client_id, access_token))
         logger.info(f'[Dhan] Client initialised for {client_id}.')
         return dhan
     except Exception as e:
