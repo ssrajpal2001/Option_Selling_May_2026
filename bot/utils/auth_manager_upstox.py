@@ -129,7 +129,9 @@ def handle_upstox_login_automated(credentials, return_error=False):
     redirect_uri = (
         credentials.get("redirect_uri") or
         os.environ.get("UPSTOX_REDIRECT_URI") or
-        _INTERNAL_REDIRECT   # Upstox's own internal redirect; avoids the google.com mismatch error
+        "https://google.com"  # Default for client Upstox accounts registered with google.com.
+                              # Admin accounts pass redirect_uri explicitly from the DB
+                              # (saved at credential-configure time by admin_api.py).
     )
 
     try:

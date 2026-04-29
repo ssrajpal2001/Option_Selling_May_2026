@@ -279,10 +279,22 @@ class AngelOneClient(BaseBroker):
                 for url in urls:
                     async with session.get(url, timeout=30) as response:
                         # AngelOne's CDN serves valid JSON with Content-Type: text/plain;
-                        # aiohttp's response.json() rejects non-JSON content-types.
-                        # Using response.text() + json.loads() bypasses the MIME check.
-                        raw = await response.text()
-                        all_data.extend(_json.loads(raw))
+                        # aiohttp's response.json() rejects non-JSON content-types, so we
+                        # use response.text() + manual JSON parsing.
+                        # The endpoint sometimes returns MULTIPLE JSON arrays in one body
+                        # (e.g. `[]\n[{instruments...}]`). json.loads() would raise
+                        # "Extra data" after parsing the first array. We use raw_decode()
+                        # to iterate and collect every JSON value in the response.
+                        raw = (await response.text()).strip()
+                        decoder = _json.JSONDecoder()
+                        pos = 0
+                        while pos < len(raw):
+                            obj, pos = decoder.raw_decode(raw, pos)
+                            if isinstance(obj, list):
+                                all_data.extend(obj)
+                            # Skip whitespace between objects
+                            while pos < len(raw) and raw[pos] in ' \t\r\n':
+                                pos += 1
 
             mapping = {}
             universal_mapping = {} # "NSE_INDEX|Nifty 50" -> token
