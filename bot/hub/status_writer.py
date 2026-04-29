@@ -415,7 +415,10 @@ class StatusWriter:
             # Ensure config directory exists
             os.makedirs(self.status_path.parent, exist_ok=True)
 
-            tmp = self.status_path.with_suffix('.tmp')
+            # Use a PID-unique tmp filename to prevent the race condition where multiple
+            # broker subprocesses all write to the same .tmp path concurrently — whichever
+            # renames first deletes the .tmp, causing ENOENT for the other subprocesses.
+            tmp = self.status_path.with_suffix(f'.{os.getpid()}.tmp')
             with open(tmp, 'w') as f:
                 json.dump(status, f, default=str, indent=2)
             os.replace(tmp, self.status_path)

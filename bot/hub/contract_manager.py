@@ -271,8 +271,28 @@ class ContractManager:
                                 logger.debug(f"ContractManager: Broker REST fallback ({_pref}) failed: {_be}")
 
             if not raw_contracts:
-                # Retrying via CSV search for all option contracts of this symbol
-                logger.info(f"ContractManager: No options found via API for '{instrument_key}'. Attempting CSV fallback...")
+                is_backtest = self.config_manager.get_boolean('settings', 'backtest_enabled', fallback=False)
+                if not is_backtest:
+                    # LIVE MODE: CSV fallback is DISABLED.
+                    # The CSV is a public snapshot file that does NOT include near-weekly
+                    # contracts (May 5, May 12, May 19, etc.). Using CSV causes:
+                    #   • Wrong expiry resolution (e.g. May 26 instead of May 5)
+                    #   • Position reconnect to wrong contracts after restart
+                    #   • LTP stuck at 0 for the reconnected position
+                    #   • Exit criteria unable to evaluate → trades frozen
+                    # The admin MUST ensure the global data feed token is valid BEFORE
+                    # starting the bot (Admin → Data Providers → refresh token).
+                    logger.error(
+                        f"[ContractManager] CRITICAL: No option contracts found for '{instrument_key}' "
+                        "via any authenticated API. "
+                        "CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. "
+                        "ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox "
+                        "token, then restart the bot."
+                    )
+                    return False
+
+                # BACKTEST MODE ONLY: Fall back to CSV snapshot
+                logger.info(f"ContractManager: No options found via API for '{instrument_key}'. Attempting CSV fallback (backtest mode only)...")
 
                 # Deduce exchange from symbol/instrument name
                 instr_name = self.config_manager.get_instrument_by_symbol(instrument_key) or (self.atm_manager.instrument_name if self.atm_manager else "")

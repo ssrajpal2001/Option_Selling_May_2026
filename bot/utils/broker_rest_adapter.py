@@ -288,7 +288,9 @@ class BrokerRestAdapter:
                 if hasattr(self.client, 'load_instrument_master'):
                     await self.client.load_instrument_master()
 
-                master = getattr(self.client, '_master_instruments', [])
+                # _master_instruments is initialized to None so getattr fallback [] is unused;
+                # use `or []` to safely handle both None (load failed) and missing attribute.
+                master = getattr(self.client, '_master_instruments', None) or []
                 if not master: return []
 
                 # Extract index name from key
@@ -322,7 +324,9 @@ class BrokerRestAdapter:
                 if hasattr(self.client, '_load_token_map'):
                     await self.client._load_token_map()
 
-                token_map = getattr(self.client, '_token_map', {})
+                # _token_map is initialized to None so getattr fallback {} is never used;
+                # use `or {}` to safely handle both None and missing attribute.
+                token_map = getattr(self.client, '_token_map', None) or {}
                 if not token_map: return []
 
                 index_name = instrument_key.split('|')[1].upper()
@@ -337,8 +341,12 @@ class BrokerRestAdapter:
                 for key, info in token_map.items():
                     # key is (name, expiry_date, strike, type)
                     if key[0] == a_name:
+                        # Format instrument_key as NSE_FO|<exchange_token> — AngelOne's token
+                        # field IS the NSE exchange token (same as Zerodha's instrument_token
+                        # and Upstox's exchange_token). This format is required for the
+                        # FeedServer tick subscription system to route LTP correctly.
                         contracts.append({
-                            'instrument_key': info['token'],
+                            'instrument_key': f"NSE_FO|{info['token']}",
                             'tradingsymbol': info['tradingsymbol'],
                             'expiry': key[1],
                             'strike_price': key[2],

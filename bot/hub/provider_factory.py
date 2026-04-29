@@ -161,63 +161,23 @@ class ProviderFactory:
                 logger.warning(f"[Global Upstox] Same-account short-circuit failed ({type(_e).__name__}: {_e}). Falling back to DB.")
 
         # 1. Initialize Upstox Feed (DB path — runs only when broker_manager has no Upstox client)
+        #
+        # DESIGN PRINCIPLE: Client subprocesses NEVER auto-refresh the global Upstox token.
+        # Token refresh is the FeedServer/admin's exclusive responsibility. Client processes
+        # simply read whatever token is stored in DB. If the token is stale the contract API
+        # call will fail cleanly in ContractManager, which logs a clear "contact admin" error
+        # instead of silently falling back to the CSV (which lacks near-weekly contracts and
+        # causes wrong expiry, broken reconnects and LTP stuck at 0).
         if 'upstox' in provider_names:
             try:
-                from web.db import db_fetchone, db_execute
-                from web.auth import decrypt_secret, encrypt_secret
+                from web.db import db_fetchone
+                from web.auth import decrypt_secret
                 from utils.websocket_manager import WebSocketManager
-                from datetime import datetime, timezone
 
                 dp = db_fetchone("SELECT * FROM data_providers WHERE provider='upstox'")
                 if dp and dp['status'] == 'configured':
                     api_key = decrypt_secret(dp['api_key_encrypted'])
                     access_token = decrypt_secret(dp['access_token_encrypted'])
-
-                    # Use token_issued_at (set only on actual token issuance) for the
-                    # freshness check when a token exists. updated_at is also touched by
-                    # admin config saves, so relying on it alone can produce false negatives
-                    # (admin saves today → needs_refresh=False → stale token used).
-                    # Only fall back to updated_at when token_issued_at is absent AND no
-                    # token is stored yet (brand-new config before first issuance).
-                    token_issued_at = dp.get('token_issued_at')
-                    updated_at = dp.get('updated_at')
-                    if access_token:
-                        # Token exists — require token_issued_at to be today; if it's
-                        # absent, force refresh so token_issued_at gets populated.
-                        check_ts = token_issued_at
-                    else:
-                        # No token yet — use updated_at as a coarse fallback
-                        check_ts = token_issued_at or updated_at
-
-                    # Daily Token Refresh check for Global Upstox
-                    needs_refresh = True
-                    if check_ts:
-                        try:
-                            upd_dt = datetime.fromisoformat(check_ts).date()
-                            if upd_dt == datetime.now(timezone.utc).date():
-                                needs_refresh = False
-                        except: pass
-
-                    if needs_refresh:
-                        logger.info("Global Upstox token expired or fresh day started. Attempting auto-refresh...")
-                        creds = {
-                            "api_key": api_key,
-                            "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                            "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                            "password": decrypt_secret(dp.get("password_encrypted", "")),
-                            "totp": decrypt_secret(dp.get("totp_encrypted", ""))
-                        }
-                        from utils.auth_manager_upstox import handle_upstox_login_automated
-                        new_token = handle_upstox_login_automated(creds)
-                        if new_token:
-                            access_token = new_token
-                            enc_token = encrypt_secret(new_token)
-                            now_str = datetime.now(timezone.utc).isoformat()
-                            db_execute(
-                                "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
-                                (enc_token, now_str, now_str)
-                            )
-                            logger.info("Global Upstox token auto-refreshed successfully.")
 
                     # Minimal auth handler for global Upstox — satisfies RestApiClient + WebSocketManager
                     class _ConfigStub:
@@ -234,163 +194,17 @@ class ProviderFactory:
                     global_auth = GlobalUpstoxAuth(api_key, access_token)
                     global_rest = RestApiClient(global_auth)
 
-                    # Live-ping the token — date-based check alone misses tokens that
-                    # were issued today but later invalidated (e.g. TOTP re-use race,
-                    # manual re-login from another machine, etc.).
-                    # Use a lightweight authenticated endpoint; treat 401/403 as stale.
-                    if not needs_refresh:
-                        try:
-                            import aiohttp as _aiohttp
-                            _headers = {
-                                "accept": "application/json",
-                                "Api-Version": "2.0",
-                                "Authorization": f"Bearer {access_token}",
-                            }
-                            async with _aiohttp.ClientSession() as _sess:
-                                async with _sess.get(
-                                    "https://api.upstox.com/v2/user/profile",
-                                    headers=_headers,
-                                    timeout=_aiohttp.ClientTimeout(total=5),
-                                ) as _resp:
-                                    if _resp.status in (401, 403):
-                                        logger.warning(
-                                            f"[Global Upstox] Token ping returned {_resp.status} "
-                                            "— token is stale despite matching issue date. Forcing refresh."
-                                        )
-                                        needs_refresh = True
-                                    else:
-                                        logger.info(
-                                            f"[Global Upstox] Token ping OK ({_resp.status}). "
-                                            "Token is alive — skipping auto-refresh."
-                                        )
-                        except Exception as _pe:
-                            logger.warning(f"[Global Upstox] Token ping failed ({_pe}); assuming token is valid.")
-
-                    if needs_refresh:
-                        # ── Cross-process file lock ──────────────────────────────────────
-                        # All broker subprocesses start at the same millisecond and ALL
-                        # detect a stale token simultaneously.  Without a lock they all
-                        # fire a TOTP login at once → Upstox rate-limits OTP generation
-                        # ("error 1017069: exceeded OTP limit, try after 10 mins") and
-                        # NONE get a fresh token → CSV fallback → wrong expiry.
-                        #
-                        # Solution: one OS-level exclusive lock (fcntl.flock).
-                        #   • First process to grab the lock performs the TOTP login.
-                        #   • Every other process waits, then re-reads the DB — the first
-                        #     process already wrote the fresh token there.
-                        import fcntl as _fcntl, os as _os
-                        _lock_path = _os.path.join('config', '.upstox_global_refresh.lock')
-                        _lock_fd = None
-                        try:
-                            _os.makedirs('config', exist_ok=True)
-                            _lock_fd = open(_lock_path, 'w')
-
-                            # Non-blocking first attempt
-                            _got_lock_immediately = False
-                            try:
-                                _fcntl.flock(_lock_fd, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
-                                _got_lock_immediately = True
-                            except BlockingIOError:
-                                pass
-
-                            if not _got_lock_immediately:
-                                logger.info(
-                                    "[Global Upstox] Another process is already refreshing the token. "
-                                    "Waiting up to 20s for it to finish…"
-                                )
-                                # Blocking wait (another process holds the lock)
-                                _fcntl.flock(_lock_fd, _fcntl.LOCK_EX)
-
-                            # ── We now hold the lock ─────────────────────────────────────
-                            # Re-read the token from DB — if another process already
-                            # refreshed it, its new value will be in the DB right now.
-                            _fresh_dp = db_fetchone("SELECT * FROM data_providers WHERE provider='upstox'")
-                            _fresh_token = (
-                                decrypt_secret(_fresh_dp.get('access_token_encrypted', ''))
-                                if _fresh_dp else None
-                            )
-                            if _fresh_token and _fresh_token != access_token:
-                                # Another process already wrote a fresh token — use it,
-                                # no TOTP needed.
-                                logger.info(
-                                    "[Global Upstox] Fresh token already written to DB by another process. "
-                                    "Skipping TOTP login."
-                                )
-                                access_token = _fresh_token
-                                global_auth = GlobalUpstoxAuth(api_key, access_token)
-                                global_rest = RestApiClient(global_auth)
-                            else:
-                                # We are the first process — actually perform the login.
-                                logger.info(
-                                    "Global Upstox token expired or fresh day started. "
-                                    "Attempting auto-refresh (this process holds the lock)…"
-                                )
-                                creds = {
-                                    "api_key": api_key,
-                                    "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                                    "password": decrypt_secret(dp.get("password_encrypted", "")),
-                                    "totp": decrypt_secret(dp.get("totp_encrypted", ""))
-                                }
-                                from utils.auth_manager_upstox import handle_upstox_login_automated
-                                new_token = handle_upstox_login_automated(creds)
-                                if new_token:
-                                    access_token = new_token
-                                    enc_token = encrypt_secret(new_token)
-                                    now_str = datetime.now(timezone.utc).isoformat()
-                                    db_execute(
-                                        "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
-                                        (enc_token, now_str, now_str)
-                                    )
-                                    logger.info("Global Upstox token auto-refreshed successfully.")
-                                    global_auth = GlobalUpstoxAuth(api_key, access_token)
-                                    global_rest = RestApiClient(global_auth)
-                                else:
-                                    logger.error(
-                                        "[Global Upstox] Auto-refresh failed (OTP rate limit or wrong creds). "
-                                        "Continuing with stale token — contract REST calls will fall back to CSV."
-                                    )
-                        except Exception as _lock_err:
-                            logger.warning(
-                                f"[Global Upstox] File-lock error ({_lock_err}); "
-                                "proceeding with direct refresh (no lock protection)."
-                            )
-                            # Fallback: just try without lock
-                            creds = {
-                                "api_key": api_key,
-                                "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                                "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                                "password": decrypt_secret(dp.get("password_encrypted", "")),
-                                "totp": decrypt_secret(dp.get("totp_encrypted", ""))
-                            }
-                            from utils.auth_manager_upstox import handle_upstox_login_automated
-                            new_token = handle_upstox_login_automated(creds)
-                            if new_token:
-                                access_token = new_token
-                                enc_token = encrypt_secret(new_token)
-                                now_str = datetime.now(timezone.utc).isoformat()
-                                db_execute(
-                                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
-                                    (enc_token, now_str, now_str)
-                                )
-                                logger.info("Global Upstox token auto-refreshed (no lock).")
-                                global_auth = GlobalUpstoxAuth(api_key, access_token)
-                                global_rest = RestApiClient(global_auth)
-                        finally:
-                            if _lock_fd:
-                                try:
-                                    _fcntl.flock(_lock_fd, _fcntl.LOCK_UN)
-                                    _lock_fd.close()
-                                except Exception:
-                                    pass
-
-                    # Pass via api_client= kwarg so WebSocketManager uses it as
-                    # a direct RestApiClient rather than an ApiClientManager wrapper.
+                    # WebSocket tick feed — FeedClient overrides this for client subprocesses.
                     upstox_ws = WebSocketManager(api_client=global_rest)
                     active_feeds.append(('upstox', upstox_ws))
 
-                    if not rest_client: rest_client = global_rest
-                    logger.info("Global Upstox data provider initialized from DB.")
+                    # Global Upstox REST is used as last-resort for contract fetching only when
+                    # no contract-capable execution broker is present (e.g. Dhan-only sessions).
+                    # Contract-capable execution brokers (Zerodha, AngelOne) are always preferred
+                    # — see the BROKER REST PREFERENCE section below.
+                    if not rest_client:
+                        rest_client = global_rest
+                    logger.info("[Global Upstox] Data provider initialized from DB token (admin manages refresh).")
                 else:
                     logger.warning("Global Upstox data provider requested but not configured in DB.")
             except Exception as e:
@@ -399,25 +213,21 @@ class ProviderFactory:
         # 2. Initialize Dhan Feed
         if 'dhan' in provider_names:
             try:
-                from web.db import db_fetchone, db_execute
-                from web.auth import decrypt_secret, encrypt_secret
+                from web.db import db_fetchone
+                from web.auth import decrypt_secret
                 from utils.dhan_websocket_manager import DhanWebSocketManager
-                from datetime import datetime, timezone
 
                 dp = db_fetchone("SELECT * FROM data_providers WHERE provider='dhan'")
                 if dp and dp['status'] == 'configured':
                     cid = decrypt_secret(dp['api_key_encrypted'])
                     access_token = decrypt_secret(dp['access_token_encrypted'])
 
-                    from utils.auth_manager_dhan import handle_dhan_login_automated, generate_dhan_token
+                    # DESIGN PRINCIPLE: Client subprocesses NEVER auto-refresh the global Dhan token.
+                    # Token refresh is the FeedServer/admin's exclusive responsibility.
+                    # Validate only — if invalid, log a clear error and continue with the stale token.
+                    # The Dhan WebSocket may disconnect immediately; tick data falls back to Upstox feed.
+                    from utils.auth_manager_dhan import handle_dhan_login_automated
 
-                    pin = decrypt_secret(dp.get("password_encrypted", ""))
-                    totp_secret = decrypt_secret(dp.get("totp_encrypted", ""))
-
-                    # Always validate the stored token at every startup with a cheap REST
-                    # ping (/v2/fundlimit).  This catches tokens that appear "fresh" by
-                    # date (e.g. admin re-saved credentials today) but have actually
-                    # expired (24h generateAccessToken tokens don't follow calendar days).
                     logger.info("[Global Dhan] Validating stored token...")
                     validated = handle_dhan_login_automated({
                         "api_key": cid,
@@ -426,45 +236,15 @@ class ProviderFactory:
                     })
 
                     if validated:
-                        # Token alive — stamp token_issued_at so future date checks
-                        # reflect a genuine issuance time, not an admin-save time.
                         access_token = validated
-                        enc_token = encrypt_secret(validated)
-                        now_str = datetime.now(timezone.utc).isoformat()
-                        db_execute(
-                            "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='dhan'",
-                            (enc_token, now_str, now_str)
-                        )
-                        logger.info("[Global Dhan] Token valid. Timestamp refreshed.")
+                        logger.info("[Global Dhan] Token valid.")
                     else:
-                        # Token confirmed dead (401/403) — always generate a fresh one.
-                        logger.info("[Global Dhan] Token expired. Generating fresh token via PIN+TOTP...")
-                        if pin and totp_secret:
-                            result = generate_dhan_token(
-                                api_key=cid,
-                                client_id=cid,
-                                password=pin,
-                                totp_secret=totp_secret
-                            )
-                            if result.get('token'):
-                                access_token = result['token']
-                                enc_token = encrypt_secret(access_token)
-                                now_str = datetime.now(timezone.utc).isoformat()
-                                db_execute(
-                                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='dhan'",
-                                    (enc_token, now_str, now_str)
-                                )
-                                logger.info("[Global Dhan] Fresh token generated and saved successfully.")
-                            else:
-                                logger.error(
-                                    f"[Global Dhan] Token generation failed: {result.get('error')}. "
-                                    "WebSocket will start with stale token — expect immediate server close."
-                                )
-                        else:
-                            logger.warning(
-                                "[Global Dhan] PIN or TOTP secret not saved in data_providers. "
-                                "Cannot auto-generate token. Update credentials in Admin → Data Providers."
-                            )
+                        logger.error(
+                            "[Global Dhan] Token is INVALID. Contact administrator to refresh "
+                            "the Dhan global feed token from Admin → Data Providers. "
+                            "Dhan WebSocket will start with stale token and will disconnect immediately. "
+                            "Tick data will fall back to Upstox feed via FeedServer."
+                        )
 
                     dhan_ws = DhanWebSocketManager(cid, access_token)
                     active_feeds.append(('dhan', dhan_ws))
@@ -555,11 +335,20 @@ class ProviderFactory:
                         "which has no option-contract support — skipping."
                     )
 
-        # BROKER REST FALLBACK: Strict whitelist only — select the highest-priority
-        # contract-capable broker. If none is present, leave rest_client=None and warn.
-        # Dhan is not in the whitelist and is never selected here.
-        if not rest_client and broker_manager and broker_manager.brokers:
-            for _preferred in _CONTRACT_CAPABLE:
+        # BROKER REST PREFERENCE: For non-Upstox execution brokers (Zerodha, AngelOne, etc.),
+        # ALWAYS prefer the execution broker over the global Upstox REST client for contract data.
+        # These brokers have fresh authenticated sessions and their instrument masters contain
+        # ALL current weekly expiries (May 5, May 12, May 19, etc.) — unlike the global Upstox
+        # data provider which may have a stale token, and unlike the CSV which lacks near-weekly
+        # contracts entirely and causes wrong expiry / LTP stuck at 0.
+        #
+        # Upstox is EXCLUDED here — Upstox sessions use the same-account RestApiClient set
+        # earlier (via the same-account short-circuit block), which already uses the fresh
+        # broker token and must not be overridden.
+        # Dhan is also excluded — it has no option-contract API support.
+        _PREFERRED_EXECUTION_BROKERS = ['zerodha', 'angelone', 'fyers', 'aliceblue']
+        if broker_manager and broker_manager.brokers:
+            for _preferred in _PREFERRED_EXECUTION_BROKERS:
                 _b = next(
                     (b for b in broker_manager.brokers.values()
                      if getattr(b, 'broker_name', '') == _preferred),
@@ -567,14 +356,8 @@ class ProviderFactory:
                 )
                 if _b:
                     rest_client = BrokerRestAdapter(_b, _preferred)
-                    logger.info(f"[ProviderFactory] Using {_preferred} client broker as REST fallback for contract fetching.")
+                    logger.info(f"[ProviderFactory] Using {_preferred} execution broker as primary REST client for contracts.")
                     break
-            if not rest_client:
-                _present = [getattr(b, 'broker_name', '?') for b in broker_manager.brokers.values()]
-                logger.warning(
-                    f"[ProviderFactory] No contract-capable broker found in {_CONTRACT_CAPABLE}. "
-                    f"Present brokers: {_present}. Contract/expiry loading will use CSV only."
-                )
 
         # ENFORCEMENT: Websocket Data MUST come from Global Feeds (Upstox/Dhan)
         # We removed Zerodha as a data provider as per requirement.
