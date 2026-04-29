@@ -150,6 +150,10 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
                 "password": decrypt_secret(dp.get("password_encrypted", "")),
                 "totp": decrypt_secret(dp.get("totp_encrypted", "")),
+                # Pass the saved redirect_uri so the token exchange step matches what is
+                # registered in the Upstox Developer Portal exactly. Falls back to the
+                # internal Upstox URI if not yet recorded (see auth_manager_upstox.py).
+                "redirect_uri": dp.get("redirect_uri") or "",
             }
             _result = handle_upstox_login_automated(creds, return_error=True)
             token = (_result or {}).get("token")
@@ -260,6 +264,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
                     "password": decrypt_secret(dp.get("password_encrypted", "")),
                     "totp": decrypt_secret(dp.get("totp_encrypted", "")),
+                    "redirect_uri": dp.get("redirect_uri") or "",
                 }
                 _result = handle_upstox_login_automated(creds, return_error=True)
                 token = (_result or {}).get("token")
@@ -338,7 +343,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
 
 
 @router.post("/data-providers")
-async def update_data_provider(body: ProviderConfigRequest, admin=Depends(require_admin)):
+async def update_data_provider(request: Request, body: ProviderConfigRequest, admin=Depends(require_admin)):
     try:
         now = datetime.now(timezone.utc).isoformat()
 
@@ -369,6 +374,19 @@ async def update_data_provider(body: ProviderConfigRequest, admin=Depends(requir
         if body.provider == 'dhan':
             set_parts.append("status='configured'")
 
+        # For Upstox, record the server's callback URL alongside credentials so Background
+        # Connect always uses the exact redirect_uri registered in the Upstox Developer Portal.
+        saved_redirect_uri = None
+        if body.provider == 'upstox':
+            raw_host = request.headers.get('host', '')
+            proto = request.headers.get('x-forwarded-proto', 'http')
+            if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http':
+                proto = 'https'
+            saved_redirect_uri = f"{proto}://{raw_host}/auth/upstox/callback"
+            set_parts.append("redirect_uri=?")
+            params.append(saved_redirect_uri)
+            logger.info(f"[Admin] Recorded Upstox redirect_uri: {saved_redirect_uri}")
+
         params.append(body.provider)
         db_execute(
             f"UPDATE data_providers SET {', '.join(set_parts)} WHERE provider=?",
@@ -376,7 +394,10 @@ async def update_data_provider(body: ProviderConfigRequest, admin=Depends(requir
         )
 
         logger.info(f"Admin updated global provider {body.provider} fields: {[f[0] for f in field_map if f[1]]}")
-        return {"success": True}
+        result = {"success": True}
+        if saved_redirect_uri:
+            result["redirect_uri"] = saved_redirect_uri
+        return result
     except Exception as e:
         return {"success": False, "message": str(e)}
 

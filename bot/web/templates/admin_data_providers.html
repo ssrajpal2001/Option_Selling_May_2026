@@ -707,7 +707,13 @@ document.getElementById('config-form').addEventListener('submit', async (e) => {
 
     const d = await r.json();
     if (d.success) {
-      showToast('Configuration updated', 'success');
+      // For Upstox, the server records the callback URL alongside credentials.
+      // Show the saved redirect_uri so the admin can confirm it matches the Upstox Developer Portal.
+      if (d.redirect_uri) {
+        showToast(`Credentials saved. Redirect URI recorded: ${d.redirect_uri}`, 'success');
+      } else {
+        showToast('Configuration updated', 'success');
+      }
       closeModal();
       await loadProviders();
     } else {

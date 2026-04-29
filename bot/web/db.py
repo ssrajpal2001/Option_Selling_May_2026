@@ -174,6 +174,10 @@ def _migrate(conn: sqlite3.Connection):
         # For Dhan (30-day tokens): used to compute remaining life; never reset by validation-only runs.
         # For Upstox (daily tokens): reset each time a new token is fetched.
         conn.execute("ALTER TABLE data_providers ADD COLUMN token_issued_at TEXT")
+    if "redirect_uri" not in dp_cols:
+        # Stores the server's Upstox callback URL saved at credential-configure time.
+        # Used by background connect so the redirect_uri matches the Upstox Developer Portal exactly.
+        conn.execute("ALTER TABLE data_providers ADD COLUMN redirect_uri TEXT")
 
     # One-time backfill: for existing records that have a token but no token_issued_at,
     # seed token_issued_at from updated_at so expiry calculations are stable immediately.
