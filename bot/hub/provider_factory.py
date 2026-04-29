@@ -49,9 +49,12 @@ class ProviderFactory:
 
                         elif broker == 'dhan':
                             from dhanhq import dhanhq
-try: from dhanhq import DhanContext
-except ImportError: DhanContext = None
-                            client = dhanhq(DhanContext(api_key, access_token)) if DhanContext else dhanhq(api_key, access_token)
+                            try:
+                                from dhanhq import DhanContext
+                            except ImportError:
+                                DhanContext = None
+                            client = (dhanhq(DhanContext(api_key, access_token))
+                                      if DhanContext else dhanhq(api_key, access_token))
                             # Dhan doesn't have a simple 'profile' that doesn't cost an API hit?
                             # Usually get_fund_limits is safe.
                             try:
