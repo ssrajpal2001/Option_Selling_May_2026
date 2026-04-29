@@ -46,12 +46,12 @@ _SOURCE_IP_PATCH_LOCK = threading.Lock()
 # is NAT'd to the EIP at the VPC level. socket.bind(EIP) therefore raises
 # [Errno 99] EADDRNOTAVAIL even though all outbound packets DO leave via the EIP.
 #
-# `_nat_detected` is a module-level result cache so the IMDS call is made at
-# most once per process regardless of how many broker instances are created.
+# `_nat_detected` is a module-level result cache so the IMDS call is not made
+# on every order placement when NAT is already confirmed.
 #
-#   Key not present — not yet checked for that IP
-#   True  — confirmed behind AWS NAT (EIP matches IMDS public-ipv4)
-#   False — not behind NAT (or IMDS unreachable / IP doesn't match)
+#   Key present (True)  — confirmed behind AWS NAT; result cached permanently.
+#   Key absent          — result unknown; False is never cached so transient
+#                         IMDS failures are retried on the next call.
 #
 # Keyed by source_ip so processes that manage brokers with different static IPs
 # (uncommon but possible) each get an independent IMDS result.
@@ -64,32 +64,56 @@ def _check_aws_nat(source_ip: str) -> bool:
     Return True if we are running on an AWS EC2 instance whose public Elastic IP
     matches *source_ip*.
 
-    Method: query the Instance Metadata Service (IMDS v1) at the link-local
-    address 169.254.169.254 with a tight 0.3-second timeout. If the returned
-    public-ipv4 equals source_ip we are behind NAT and socket.bind() will
-    always fail for that IP — but orders will still route through it correctly.
+    Method: query the Instance Metadata Service at the link-local address
+    169.254.169.254 with a tight 0.3-second timeout.  IMDSv2 is tried first
+    (required on instances with enforce-IMDSv2 enabled); falls back to a plain
+    IMDSv1 GET if the PUT token exchange fails.  If the returned public-ipv4
+    equals source_ip we are behind NAT and socket.bind() will always fail for
+    that IP — but orders still route through the EIP correctly via AWS NAT.
 
-    Result is cached per source_ip so the IMDS call runs at most once per IP
-    per process.  Thread-safe for CPython (dict key assignment is atomic).
+    Only True results are cached per source_ip.  False (IMDS failure / IP
+    mismatch) is NOT cached so transient failures are retried on the next call.
+    Thread-safe for CPython (dict key assignment is atomic).
     """
-    if source_ip in _nat_detected:
-        return _nat_detected[source_ip]
+    if _nat_detected.get(source_ip):
+        return True
 
     result = False
     try:
         import urllib.request as _ureq
-        req = _ureq.Request(
-            'http://169.254.169.254/latest/meta-data/public-ipv4',
-            headers={'X-aws-ec2-metadata-token-ttl-seconds': '21600'},
-        )
-        with _ureq.urlopen(req, timeout=0.3) as resp:
+
+        # Step 1 — try IMDSv2 (PUT for session token, then GET with token header)
+        meta_req = None
+        try:
+            token_req = _ureq.Request(
+                'http://169.254.169.254/latest/api/token',
+                data=b'',
+                method='PUT',
+                headers={'X-aws-ec2-metadata-token-ttl-seconds': '21600'},
+            )
+            with _ureq.urlopen(token_req, timeout=0.3) as tr:
+                imds_token = tr.read().decode().strip()
+            meta_req = _ureq.Request(
+                'http://169.254.169.254/latest/meta-data/public-ipv4',
+                headers={'X-aws-ec2-metadata-token': imds_token},
+            )
+        except Exception:
+            # IMDSv2 token fetch failed — fall back to IMDSv1 plain GET
+            meta_req = _ureq.Request(
+                'http://169.254.169.254/latest/meta-data/public-ipv4',
+            )
+
+        # Step 2 — fetch public-ipv4 and compare
+        with _ureq.urlopen(meta_req, timeout=0.3) as resp:
             public_ip = resp.read().decode().strip()
         result = (public_ip == source_ip)
     except Exception:
         # IMDS not reachable (non-EC2) or timed out — assume not behind NAT
         result = False
 
-    _nat_detected[source_ip] = result
+    # Only cache positive confirmations; False is retried on the next call.
+    if result:
+        _nat_detected[source_ip] = True
     return result
 
 

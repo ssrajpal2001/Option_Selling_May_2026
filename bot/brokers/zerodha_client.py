@@ -49,7 +49,12 @@ class ZerodhaClient(BaseBroker):
                     logger.error(f"Zerodha automated login failed for {self.instance_name}: {e}. Falling back to standard login.")
                     login_required = True # Fallback
 
-            if login_required and not self.kite:
+            if login_required and not self.kite and not self.db_config:
+                # Fallback to credentials section only in non-client-mode (legacy / admin-mode bots).
+                # When db_config was provided (client mode), a DB-path failure must NOT silently retry
+                # via INI config — that would produce a misleading "section: None" error because the
+                # INI file has no client-specific section.  broker_manager.py handles the token
+                # fallback for client-mode instances (lines 76-94).
                 credentials_section = self.config_manager.get(broker_instance_name, 'credentials')
                 try:
                     self.kite = handle_zerodha_login(credentials_section, self.config_manager)
@@ -61,8 +66,12 @@ class ZerodhaClient(BaseBroker):
                     else:
                         raise Exception("The authentication process failed and did not return a client.")
                 except Exception as e:
-                    logger.error(f"AUTHENTICATION FAILED for Zerodha account [{self.instance_name}]. Reason: {e}", exc_info=True)
-                    raise RuntimeError(f"Failed to authenticate Zerodha client: {e}")
+                    logger.critical(
+                        f"AUTHENTICATION FAILED for Zerodha account [{self.instance_name}]. Reason: {e}. "
+                        f"Continuing in degraded mode (market data / paper trading only). "
+                        f"Live orders will be blocked until credentials are configured via Settings.",
+                        exc_info=True
+                    )
 
         # Mount SourceIPHTTPAdapter on KiteConnect's requests session so that
         # ALL HTTP calls (auth, instrument download, orders, funds) route through

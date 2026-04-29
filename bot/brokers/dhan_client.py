@@ -31,29 +31,36 @@ class DhanClient(BaseBroker):
 
         if login_required:
             if self.db_config:
-                # Multi-tenant DB path
-                try:
-                    client_id = self.db_config.get('api_key', '')
+                # Multi-tenant DB path — two independent steps so that a failure
+                # in automated login never prevents the stored-token fallback from running.
+                client_id = self.db_config.get('api_key', '')
 
-                    # 1. Attempt Automated Token Generation if Password/TOTP exist
-                    if self.db_config.get('password') and self.db_config.get('totp'):
+                # 1. Attempt automated token generation if PIN/TOTP are provided
+                if self.db_config.get('password') and self.db_config.get('totp'):
+                    try:
                         from utils.auth_manager_dhan import handle_dhan_login_automated
                         with self._scoped_ip_patch():
                             token = handle_dhan_login_automated(self.db_config)
                         if token:
                             self.dhan = dhanhq(client_id, token)
                             logger.info(f"Dhan automated client initialized for User ID: {self.user_id}.")
+                    except Exception as e:
+                        logger.warning(
+                            f"Dhan automated login failed for user {self.user_id}: {e}. "
+                            f"Trying stored access token."
+                        )
 
-                    # 2. Fallback to existing access token
-                    if not self.dhan:
+                # 2. Fallback to existing access token (always runs if step 1 didn't set self.dhan)
+                if not self.dhan:
+                    try:
                         access_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
                         if client_id and access_token:
                             self.dhan = dhanhq(client_id, access_token)
                             logger.info(f"Dhan client initialized from token for User ID: {self.user_id}.")
                         else:
                             logger.error(f"Dhan: Missing credentials in DB config for user {self.user_id}.")
-                except Exception as e:
-                    logger.error(f"Failed to initialize Dhan client for user {self.user_id}: {e}")
+                    except Exception as e:
+                        logger.error(f"Failed to initialize Dhan client from token for user {self.user_id}: {e}")
             else:
                 # Legacy INI path
                 credentials_section = self.config_manager.get(broker_instance_name, 'credentials')
