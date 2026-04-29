@@ -1,0 +1,51 @@
+2026-04-29 08:44:27,552 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-29 08:44:27,552 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='zerodha', instrument='NIFTY', qty=1, mode='live', strategy='V3')
+2026-04-29 08:44:27,552 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-29 08:44:27,552 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-29 08:44:27,552 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-29 08:44:27,552 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-29 08:44:27,553 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-29 08:44:27,553 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-29 08:44:27,779 - UpstoxApp - ERROR - [client_2_zerodha] Static IP 3.7.80.13 is NOT bound to this machine — order blocked (0.1 ms). Error: [Errno 99] Cannot assign requested address
+2026-04-29 08:44:27,790 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-29 08:44:27,794 - UpstoxApp - WARNING - [Telegram] Static IP failure alert: no admin chat_id configured — skipping.
+2026-04-29 08:44:27,794 - UpstoxApp - ERROR - Zerodha automated login failed for client_2_zerodha: [client_2_zerodha] Static IP 3.7.80.13 is NOT bound to this machine — order blocked (0.1 ms). Error: [Errno 99] Cannot assign requested address. Falling back to standard login.
+2026-04-29 08:44:27,794 - UpstoxApp - INFO - Starting Zerodha authentication for section: None...
+2026-04-29 08:44:27,794 - UpstoxApp - ERROR - AUTHENTICATION FAILED for Zerodha account [client_2_zerodha]. Reason: API key or secret not found in section 'None'.
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/zerodha_client.py", line 55, in __init__
+    self.kite = handle_zerodha_login(credentials_section, self.config_manager)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/auth_manager_zerodha.py", line 19, in handle_zerodha_login
+    raise ValueError(f"API key or secret not found in section '{credentials_section}'.")
+ValueError: API key or secret not found in section 'None'.
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/zerodha_client.py", line 55, in __init__
+    self.kite = handle_zerodha_login(credentials_section, self.config_manager)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/auth_manager_zerodha.py", line 19, in handle_zerodha_login
+    raise ValueError(f"API key or secret not found in section '{credentials_section}'.")
+ValueError: API key or secret not found in section 'None'.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/main.py", line 299, in <module>
+    asyncio.run(main())
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/main.py", line 188, in main
+    await broker_manager.load_client_mode_broker(client_cfg)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/broker_manager.py", line 68, in load_client_mode_broker
+    broker_instance = ZerodhaClient(
+                      ^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/zerodha_client.py", line 65, in __init__
+    raise RuntimeError(f"Failed to authenticate Zerodha client: {e}")
+RuntimeError: Failed to authenticate Zerodha client: API key or secret not found in section 'None'.
