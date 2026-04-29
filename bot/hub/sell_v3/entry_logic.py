@@ -52,13 +52,16 @@ class EntryLogic(SellV3Base):
         # OPTIMIZATION: In Backtest, no buffer is required as data is already finalized.
         pulse_seconds = 0 if self.orchestrator.is_backtest else 5
 
+        # User Requirement: If Rules are OFF, take trade immediately when LTP targets are met.
+        # Evaluated BEFORE priming so that rules-less (immediate) mode is never blocked by the
+        # startup/market-open priming wait — the beginning concept uses only current ATM LTPs,
+        # it does not need any historical indicator data to be primed.
+        is_immediate = not rules
+
         # Calculate if we are at or just past the boundary
         boundary_minute = (timestamp.minute // max_entry_tf) * max_entry_tf
         boundary_ts = timestamp.replace(minute=boundary_minute, second=0, microsecond=0)
         pulse_ts = boundary_ts + datetime.timedelta(seconds=pulse_seconds)
-
-        # User Requirement: If Rules are OFF, take trade immediately when LTP targets are met.
-        is_immediate = not rules
 
         # Only allow evaluation if current timestamp >= pulse_ts
         if not is_immediate and timestamp < pulse_ts:
@@ -88,8 +91,10 @@ class EntryLogic(SellV3Base):
                 logger.info(f"[SellManagerV3] Trade limit reached: {self.manager.trades_completed_today} >= {max_trades}. No more entries today.")
             return
 
+        # Priming wait: guards indicator-dependent logic.
+        # Immediate mode (no rules) bypasses priming — beginning concept is ATM-based, no history needed.
         is_priming = self._is_in_priming_wait(timestamp)
-        if is_priming:
+        if is_priming and not is_immediate:
             if do_log:
                 now_val = int(timestamp.timestamp()) if self.orchestrator.is_backtest else asyncio.get_event_loop().time()
                 if (now_val - getattr(self.manager, '_last_wait_log_time', 0) >= 60):

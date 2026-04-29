@@ -340,14 +340,23 @@ class ContractManager:
         unique_expiries = sorted(list(set(c.expiry.date() for c in self.all_options if getattr(c, 'expiry', None) and c.instrument_type in ['CE', 'PE'])))
         if not unique_expiries: return
 
+        logger.info(f"ContractManager: All CE/PE expiry dates loaded ({len(unique_expiries)} unique): {unique_expiries[:10]}{'...' if len(unique_expiries) > 10 else ''}")
+
         trade_expiry_type = self.config_manager.get('settings', 'trade_expiry_type', fallback='WEEKLY').upper()
         if trade_expiry_type == 'WEEKLY':
             # Use the first available expiry >= today from the API-provided list.
             # This works regardless of which weekday NSE chooses as expiry day.
             for expiry_date in unique_expiries:
                 if expiry_date >= today:
+                    days_ahead = (expiry_date - today).days
                     self.near_expiry_date = datetime.datetime.combine(expiry_date, datetime.time.min)
-                    logger.info(f"ContractManager: Near weekly expiry resolved to {expiry_date} (day={expiry_date.strftime('%A')})")
+                    logger.info(f"ContractManager: Near weekly expiry resolved to {expiry_date} (day={expiry_date.strftime('%A')}, {days_ahead}d away)")
+                    if days_ahead > 7:
+                        logger.warning(
+                            f"ContractManager: Near weekly expiry is {days_ahead} days away — expected ≤7 days for a weekly instrument. "
+                            "This usually means near-term contracts were not loaded (API auth failure or Upstox exclusion window). "
+                            "Check REST client token validity and consider forcing a contract reload."
+                        )
                     return
         elif trade_expiry_type == 'MONTHLY':
             for expiry_date in self.monthly_expiries:

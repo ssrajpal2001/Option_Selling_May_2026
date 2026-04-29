@@ -47,6 +47,43 @@ class EngineManager:
         data_manager.atm_manager = orch.atm_manager
         if not await data_manager.load_contracts(): raise RuntimeError(f"Failed to load contracts for {instrument_name}.")
 
+        # Sanity check: if near_expiry is > 7 days away for a WEEKLY instrument, the primary
+        # REST client likely had a stale/expired token and fell back to CSV without near-term
+        # contracts.  By this point broker logins have already completed (TOTP done in
+        # load_brokers), so we can build a fresh RestApiClient from the Upstox broker and retry.
+        if not is_backtest:
+            _near = data_manager.near_expiry_date
+            _trade_expiry_type = self.config_manager.get('settings', 'trade_expiry_type', fallback='WEEKLY').upper()
+            if _near and _trade_expiry_type == 'WEEKLY':
+                import datetime as _dt
+                _days_ahead = (_near.date() - _dt.date.today()).days
+                if _days_ahead > 7:
+                    logger.warning(
+                        f"[EngineManager] Near expiry for {instrument_name} is {_days_ahead}d away ({_near.date()}). "
+                        "Retrying contract load with a fresh Upstox token from the logged-in broker..."
+                    )
+                    # Build a fresh REST client from the Upstox broker's live api_client
+                    _fresh_rc = None
+                    for _b in self.broker_manager.brokers.values():
+                        if getattr(_b, 'broker_name', '') == 'upstox':
+                            _b_api = getattr(_b, 'api_client', None)
+                            if _b_api:
+                                from utils.rest_api_client import RestApiClient as _RAC
+                                _fresh_rc = _RAC(_b_api.auth_handler)
+                                logger.info(f"[EngineManager] Using fresh Upstox token from broker {_b.instance_name} for contract retry.")
+                                break
+                    if _fresh_rc:
+                        _retry_dm = DataManager(_fresh_rc, symbol, self.config_manager)
+                        _retry_dm.atm_manager = orch.atm_manager
+                        if await _retry_dm.load_contracts() and _retry_dm.all_options:
+                            data_manager = _retry_dm
+                            orch.data_manager = data_manager
+                            logger.info(f"[EngineManager] Contract reload succeeded. Near expiry: {data_manager.near_expiry_date}")
+                        else:
+                            logger.warning("[EngineManager] Contract reload with fresh token also returned no near-term contracts.")
+                    else:
+                        logger.warning("[EngineManager] No live Upstox broker found for contract retry.")
+
         orch.atm_manager.all_contracts = data_manager.all_options
         orch.atm_manager.near_expiry_date = data_manager.near_expiry_date
         orch.atm_manager.monthly_expiries = data_manager.monthly_expiries
