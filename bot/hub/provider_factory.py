@@ -72,10 +72,10 @@ class ProviderFactory:
                                 if client:
                                     rest_client = BrokerRestAdapter(client, 'angelone')
                                     logger.info(f"Backtest: User {user_id}'s AngelOne session is VALID.")
-                                else: raise Exception("AngelOne login returned None")
+                                else:
+                                    logger.warning(f"Backtest: AngelOne login returned None for user {user_id}. Proceeding in OFFLINE mode.")
                             except Exception as ve:
-                                logger.error(f"Backtest: User {user_id}'s AngelOne login FAILED: {ve}")
-                                return None, websocket_manager
+                                logger.warning(f"Backtest: AngelOne login FAILED for user {user_id}: {ve}. Proceeding in OFFLINE mode.")
                     else:
                         logger.error(f"Backtest: No active broker instance found for user {user_id}")
                         return None, websocket_manager

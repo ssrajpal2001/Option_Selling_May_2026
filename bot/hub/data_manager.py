@@ -291,9 +291,10 @@ class DataManager:
                 if not isinstance(df.index, pd.DatetimeIndex):
                     df.index = pd.to_datetime(df.index)
                 ts = pd.Timestamp(current_timestamp)
-                if df.index.tz is not None and ts.tzinfo is None:
+                idx_tz = getattr(df.index, 'tzinfo', getattr(df.index, 'tz', None))
+                if idx_tz is not None and ts.tzinfo is None:
                     ts = ts.tz_localize('Asia/Kolkata')
-                elif df.index.tz is None and ts.tzinfo is not None:
+                elif idx_tz is None and ts.tzinfo is not None:
                     ts = ts.replace(tzinfo=None)
                 res_df = df[df.index <= ts].copy() if include_current else df[df.index < ts].copy()
 
