@@ -1,0 +1,86 @@
+2026-04-29 12:22:18,718 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-29 12:22:18,721 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='dhan', instrument='NIFTY', qty=1, mode='live', strategy='V3')
+2026-04-29 12:22:18,722 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-29 12:22:18,725 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-29 12:22:18,726 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-29 12:22:18,728 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-29 12:22:18,731 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-29 12:22:18,733 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-29 12:22:20,049 - UpstoxApp - INFO - [client_2_dhan] Running behind AWS NAT. EIP 3.7.80.13 validated via instance metadata — order routing OK (0.1 ms).
+2026-04-29 12:22:20,086 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-29 12:22:20,088 - UpstoxApp - INFO - [Dhan] Validating token for dba1ea52 …
+2026-04-29 12:22:20,166 - UpstoxApp - WARNING - [Dhan] Token check returned 400 for dba1ea52: {"errorType":"Order_Error","errorCode":"DH-906","errorMessage":"Invalid Token"}
+2026-04-29 12:22:20,173 - UpstoxApp - INFO - Dhan client initialized from token for User ID: 2.
+2026-04-29 12:22:20,180 - UpstoxApp - INFO - [client_2_dhan] Behind AWS NAT — SourceIPHTTPAdapter skipped; orders route via EIP 3.7.80.13.
+2026-04-29 12:22:20,180 - UpstoxApp - INFO - [CLIENT MODE] Loaded dhan broker instance: client_2_dhan
+2026-04-29 12:22:20,182 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-29 12:22:20,188 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-29 12:22:20,193 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 12:22:20,193 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 12:22:20,201 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 12:22:20,202 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 12:22:20,205 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 12:22:20,261 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 12:22:20,263 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 12:22:20,266 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 12:22:20,268 - UpstoxApp - INFO - Dhan: Loading security list from disk cache...
+2026-04-29 12:22:20,271 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 12:22:20,271 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 12:22:20,272 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 12:22:20,341 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 12:22:20,341 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 12:22:20,349 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-29 12:22:20,349 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-29 12:22:20,350 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 12:22:20,351 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-29 12:22:20,351 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 12:22:20,351 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:15:15 | SquareOff:15:28 | Lot:65   ║
+2026-04-29 12:22:20,352 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-29 12:22:20,353 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-29 12:22:20,353 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      ║
+2026-04-29 12:22:20,354 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-29 12:22:20,355 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-29 12:22:20,356 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-29 12:22:20,356 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-29 12:22:20,357 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-29 12:22:20,358 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-29 12:22:20,359 - UpstoxApp - INFO - ║ DYNAMIC EXITS: CLOSE>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-29 12:22:20,359 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-29 12:22:20,360 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-29 12:22:20,360 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-29 12:22:20,360 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 12:22:20,362 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 12:22:20,362 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 12:22:20,362 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 12:22:20,431 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 12:22:20,445 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 12:22:20,994 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-04-29) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-04-29 12:22:21,039 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-04-29
+2026-04-29 12:22:21,074 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-04-29 12:22:21,077 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-04-29 (key=NSE_INDEX|Nifty 50)
+2026-04-29 12:22:21,079 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-04-29 12:22:21,082 - UpstoxApp - INFO - ContractManager: All CE/PE expiry dates loaded (18 unique): [datetime.date(2026, 5, 5), datetime.date(2026, 5, 12), datetime.date(2026, 5, 19), datetime.date(2026, 5, 26), datetime.date(2026, 6, 2), datetime.date(2026, 6, 30), datetime.date(2026, 7, 28), datetime.date(2026, 9, 29), datetime.date(2026, 12, 29), datetime.date(2027, 3, 30)]...
+2026-04-29 12:22:21,084 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-05-05 (day=Tuesday)
+2026-04-29 12:22:21,097 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 12:22:21,102 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 12:22:21,108 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-05-05 (CURRENT_WEEK), trade=2026-05-05 (WEEKLY)
+2026-04-29 12:22:21,142 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-05-05 (WEEKLY), trade=2026-05-05 (WEEKLY)
+2026-04-29 12:22:21,147 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-05-05 (WEEKLY), trade=2026-05-05 (WEEKLY)
+2026-04-29 12:22:21,171 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-29 12:22:21,177 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 12:22:21,181 - UpstoxApp - INFO - [SellManagerV3] Reconnected CE 24350.0 position via expiry+strike lookup (expiry=2026-05-05).
+2026-04-29 12:22:21,183 - UpstoxApp - INFO - [SellManagerV3] Reconnected PE 24250.0 position via expiry+strike lookup (expiry=2026-05-05).
+2026-04-29 12:22:21,186 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-29 12:22:21,186 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-29 12:22:21,187 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-29 12:22:21,194 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-29 12:22:21,195 - UpstoxApp - INFO - Trading bot is now live.
+2026-04-29 12:22:21,199 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active.
+2026-04-29 12:22:21,258 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: N/A | Worker: ALIVE | Exchange: None | Sessions: 2:Idle
+2026-04-29 12:22:21,268 - UpstoxApp - INFO - V2: [NIFTY] Futures price missing. Falling back to Index price 24294.35 for ATM calculation.
+2026-04-29 12:22:22,697 - UpstoxApp - INFO - Dhan: Security list loaded from cache. Total records: 248133
+2026-04-29 12:22:25,781 - UpstoxApp - INFO - [SellManagerV3] PnL Guardrail Check: Cumulative=+12.70 Pts (Session:+0.00, Current:+12.70) | Target=100.0 | SL=-60.0
+2026-04-29 12:22:25,794 - UpstoxApp - INFO - [SellManagerV3] Heartbeat: Phase=CONTINUE | Status=CONTINUE | Indicators=OK | Spot=24295.95
+2026-04-29 12:23:01,413 - UpstoxApp - INFO - Received SIGTERM. Initiating industrial square-off and shutdown...
+2026-04-29 12:23:01,413 - UpstoxApp - INFO - BrokerManager: Squaring off all positions for 1 brokers...
+2026-04-29 12:23:01,423 - UpstoxApp - INFO - BrokerManager: All square-off commands dispatched.
