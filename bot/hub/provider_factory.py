@@ -77,11 +77,9 @@ class ProviderFactory:
                             except Exception as ve:
                                 logger.warning(f"Backtest: AngelOne login FAILED for user {user_id}: {ve}. Proceeding in OFFLINE mode.")
                     else:
-                        logger.error(f"Backtest: No active broker instance found for user {user_id}")
-                        return None, websocket_manager
+                        logger.warning(f"Backtest: No active broker instance found for user {user_id}. Proceeding in OFFLINE mode.")
                 except Exception as e:
-                    logger.warning(f"Failed to load user credentials for backtest REST feed: {e}")
-                    return None, websocket_manager
+                    logger.warning(f"Backtest: Failed to load user credentials for REST feed: {e}. Proceeding in OFFLINE mode.")
 
             # 2. Fallback to global active client (Legacy Path)
             if not rest_client and api_client_manager:
