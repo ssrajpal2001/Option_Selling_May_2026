@@ -1,0 +1,636 @@
+2026-04-29 11:43:31,322 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-29 11:43:31,322 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='dhan', instrument='NIFTY', qty=1, mode='live', strategy='V3')
+2026-04-29 11:43:31,325 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-29 11:43:31,325 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-29 11:43:31,325 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-29 11:43:31,325 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-29 11:43:31,326 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-29 11:43:31,327 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-29 11:43:32,003 - UpstoxApp - INFO - [client_2_dhan] Running behind AWS NAT. EIP 3.7.80.13 validated via instance metadata — order routing OK (0.1 ms).
+2026-04-29 11:43:32,025 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-29 11:43:32,025 - UpstoxApp - INFO - [Dhan] Validating token for dba1ea52 …
+2026-04-29 11:43:32,058 - UpstoxApp - WARNING - [Dhan] Token check returned 400 for dba1ea52: {"errorType":"Order_Error","errorCode":"DH-906","errorMessage":"Invalid Token"}
+2026-04-29 11:43:32,063 - UpstoxApp - INFO - Dhan client initialized from token for User ID: 2.
+2026-04-29 11:43:32,064 - UpstoxApp - INFO - [client_2_dhan] Behind AWS NAT — SourceIPHTTPAdapter skipped; orders route via EIP 3.7.80.13.
+2026-04-29 11:43:32,064 - UpstoxApp - INFO - [CLIENT MODE] Loaded dhan broker instance: client_2_dhan
+2026-04-29 11:43:32,066 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-29 11:43:32,067 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-29 11:43:32,067 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:43:32,067 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:43:32,071 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:43:32,074 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:43:32,075 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:43:32,104 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:43:32,108 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:43:32,110 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:43:32,112 - UpstoxApp - INFO - Dhan: Loading security list from disk cache...
+2026-04-29 11:43:32,116 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:43:32,118 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:43:32,119 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:43:32,178 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:43:32,180 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:43:32,185 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-29 11:43:32,186 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-29 11:43:32,187 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 11:43:32,189 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-29 11:43:32,190 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 11:43:32,192 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:15:15 | SquareOff:15:28 | Lot:65   ║
+2026-04-29 11:43:32,193 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-29 11:43:32,194 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-29 11:43:32,196 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      ║
+2026-04-29 11:43:32,197 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-29 11:43:32,198 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-29 11:43:32,202 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-29 11:43:32,203 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-29 11:43:32,205 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-29 11:43:32,206 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-29 11:43:32,207 - UpstoxApp - INFO - ║ DYNAMIC EXITS: CLOSE>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-29 11:43:32,207 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-29 11:43:32,209 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-29 11:43:32,209 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-29 11:43:32,210 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:43:32,212 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:43:32,212 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:43:32,212 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:43:32,251 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:43:32,259 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:43:33,055 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:43:33,055 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:43:33,055 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:43:33,056 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:43:33,846 - UpstoxApp - INFO - Dhan: Security list loaded from cache. Total records: 248133
+2026-04-29 11:43:43,058 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:43:43,058 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:43:43,059 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:43:43,059 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:43:43,060 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:43:43,091 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:43:43,092 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:43:43,093 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:43:43,094 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:43:43,095 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:43:43,095 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:43:43,099 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:43:43,099 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:43:43,100 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:43:43,100 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:43:43,100 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:43:43,100 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:43:43,101 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:43:43,102 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:43:43,490 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:43:43,490 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:43:43,491 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:43:43,491 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:43:53,492 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:43:53,493 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:43:53,493 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:43:53,494 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:43:53,494 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:43:53,529 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:43:53,533 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:43:53,535 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:43:53,538 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:43:53,540 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:43:53,542 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:43:53,543 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:43:53,544 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:43:53,545 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:43:53,545 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:43:53,545 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:43:53,545 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:43:53,547 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:43:53,549 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:43:53,851 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:43:53,851 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:43:53,851 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:43:53,852 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:44:03,853 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:44:03,853 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:44:03,854 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:44:03,854 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:44:03,854 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:44:03,885 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:44:03,887 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:44:03,887 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:44:03,888 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:03,889 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:44:03,889 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:44:03,890 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:44:03,890 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:44:03,891 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:44:03,891 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:44:03,891 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:44:03,891 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:44:03,893 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:44:03,894 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:04,262 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:04,262 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:04,262 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:44:04,262 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:44:14,264 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:44:14,264 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:44:14,265 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:44:14,265 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:44:14,266 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:44:14,308 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:44:14,311 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:44:14,313 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:44:14,314 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:14,315 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:44:14,315 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:44:14,316 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:44:14,316 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:44:14,317 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:44:14,317 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:44:14,317 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:44:14,317 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:44:14,318 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:44:14,320 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:14,654 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:14,654 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:14,654 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:44:14,654 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:44:24,655 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:44:24,658 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:44:24,661 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:44:24,661 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:44:24,661 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:44:24,699 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:44:24,700 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:44:24,701 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:44:24,701 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:24,702 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:44:24,702 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:44:24,705 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:44:24,705 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:44:24,705 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:44:24,705 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:44:24,706 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:44:24,706 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:44:24,709 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:44:24,712 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:25,056 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:25,056 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:25,058 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:44:25,059 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:44:35,061 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:44:35,061 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:44:35,062 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:44:35,062 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:44:35,063 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:44:35,092 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:44:35,094 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:44:35,096 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:44:35,097 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:35,098 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:44:35,098 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:44:35,099 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:44:35,099 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:44:35,100 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:44:35,100 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:44:35,100 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:44:35,101 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:44:35,102 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:44:35,103 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:35,412 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:35,412 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:35,412 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:44:35,412 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:44:45,414 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:44:45,414 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:44:45,416 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:44:45,417 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:44:45,417 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:44:45,454 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:44:45,456 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:44:45,456 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:44:45,457 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:45,458 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:44:45,458 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:44:45,459 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:44:45,460 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:44:45,460 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:44:45,460 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:44:45,460 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:44:45,461 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:44:45,462 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:44:45,463 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:45,852 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:45,852 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:45,852 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:44:45,852 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:44:55,853 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:44:55,854 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:44:55,855 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:44:55,856 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:44:55,856 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:44:55,886 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:44:55,888 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:44:55,888 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:44:55,893 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:55,894 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:44:55,894 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:44:55,900 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:44:55,900 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:44:55,901 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:44:55,901 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:44:55,901 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:44:55,901 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:44:55,903 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:44:55,905 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:44:56,207 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:56,208 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:44:56,208 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:44:56,208 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:45:06,209 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:45:06,209 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:45:06,210 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:45:06,211 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:45:06,211 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:45:06,242 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:45:06,244 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:45:06,244 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:45:06,245 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:06,246 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:45:06,246 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:45:06,247 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:45:06,247 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:45:06,247 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:45:06,248 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:45:06,248 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:45:06,248 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:45:06,249 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:45:06,250 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:06,610 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:06,614 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:06,616 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:45:06,618 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:45:16,619 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:45:16,619 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:45:16,620 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:45:16,621 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:45:16,621 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:45:16,652 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:45:16,655 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:45:16,657 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:45:16,659 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:16,659 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:45:16,659 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:45:16,660 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:45:16,661 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:45:16,661 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:45:16,661 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:45:16,661 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:45:16,661 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:45:16,664 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:45:16,665 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:16,983 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:16,983 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:16,983 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:45:16,986 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:45:26,987 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:45:26,988 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:45:26,988 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:45:26,989 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:45:26,989 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:45:27,024 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:45:27,028 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:45:27,030 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:45:27,031 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:27,032 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:45:27,032 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:45:27,033 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:45:27,033 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:45:27,034 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:45:27,034 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:45:27,034 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:45:27,034 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:45:27,038 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:45:27,040 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:27,382 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:27,382 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:27,382 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:45:27,382 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:45:37,384 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:45:37,384 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:45:37,385 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:45:37,385 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:45:37,385 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:45:37,415 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:45:37,417 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:45:37,417 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:45:37,418 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:37,418 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:45:37,418 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:45:37,419 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:45:37,419 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:45:37,420 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:45:37,420 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:45:37,420 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:45:37,420 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:45:37,422 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:45:37,423 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:37,807 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:37,807 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:37,807 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:45:37,807 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:45:47,809 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:45:47,809 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:45:47,810 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:45:47,811 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:45:47,811 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:45:47,846 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:45:47,848 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:45:47,848 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:45:47,849 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:47,849 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:45:47,850 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:45:47,852 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:45:47,852 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:45:47,853 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:45:47,853 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:45:47,853 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:45:47,853 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:45:47,855 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:45:47,857 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:48,165 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:48,166 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:48,166 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:45:48,166 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:45:58,167 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:45:58,168 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:45:58,168 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:45:58,169 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:45:58,169 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:45:58,200 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:45:58,201 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:45:58,202 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:45:58,204 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:58,204 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:45:58,204 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:45:58,206 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:45:58,206 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:45:58,206 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:45:58,206 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:45:58,206 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:45:58,206 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:45:58,208 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:45:58,209 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:45:58,563 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:58,563 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:45:58,564 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:45:58,564 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:46:08,565 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:46:08,565 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:46:08,566 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:46:08,567 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:46:08,567 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:46:08,602 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:46:08,604 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:46:08,604 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:46:08,605 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:08,606 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:46:08,606 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:46:08,607 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:46:08,607 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:46:08,607 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:46:08,607 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:46:08,607 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:46:08,608 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:46:08,614 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:46:08,617 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:09,020 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:09,021 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:09,021 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:46:09,021 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:46:19,022 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:46:19,022 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:46:19,024 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:46:19,024 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:46:19,024 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:46:19,073 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:46:19,075 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:46:19,076 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:46:19,077 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:19,077 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:46:19,077 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:46:19,078 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:46:19,078 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:46:19,079 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:46:19,079 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:46:19,079 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:46:19,079 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:46:19,083 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:46:19,085 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:19,516 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:19,517 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:19,517 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:46:19,517 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:46:29,518 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:46:29,518 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:46:29,519 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:46:29,520 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:46:29,520 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:46:29,557 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:46:29,559 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:46:29,560 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:46:29,561 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:29,562 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:46:29,562 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:46:29,563 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:46:29,563 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:46:29,564 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:46:29,564 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:46:29,564 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:46:29,564 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:46:29,566 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:46:29,571 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:29,908 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:29,909 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:29,909 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:46:29,909 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:46:39,910 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:46:39,911 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:46:39,911 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:46:39,912 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:46:39,912 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:46:39,954 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:46:39,956 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:46:39,957 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:46:39,958 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:39,958 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:46:39,959 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:46:39,959 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:46:39,960 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:46:39,960 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:46:39,960 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:46:39,961 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:46:39,961 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:46:39,970 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:46:39,971 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:40,312 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:40,315 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:40,315 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:46:40,315 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:46:50,316 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:46:50,316 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:46:50,317 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:46:50,318 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:46:50,319 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:46:50,350 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:46:50,352 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:46:50,353 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:46:50,353 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:50,354 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:46:50,354 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:46:50,355 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:46:50,355 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:46:50,355 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:46:50,355 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:46:50,355 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:46:50,356 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:46:50,357 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:46:50,358 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:46:50,740 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:50,740 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:46:50,740 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:46:50,740 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:47:00,741 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:47:00,742 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:47:00,742 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:47:00,743 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:47:00,743 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:47:00,772 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:47:00,775 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:47:00,775 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:47:00,776 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:00,776 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:47:00,777 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:47:00,777 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:47:00,778 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:47:00,778 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:47:00,778 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:47:00,779 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:47:00,779 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:47:00,780 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:47:00,782 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:01,143 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:01,147 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:01,149 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:47:01,150 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:47:11,151 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:47:11,151 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:47:11,154 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:47:11,155 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:47:11,155 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:47:11,188 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:47:11,191 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:47:11,193 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:47:11,195 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:11,196 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:47:11,196 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:47:11,197 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:47:11,198 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:47:11,198 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:47:11,198 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:47:11,199 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:47:11,199 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:47:11,201 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:47:11,205 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:11,562 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:11,564 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:11,566 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:47:11,566 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:47:21,567 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:47:21,567 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:47:21,568 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:47:21,568 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:47:21,568 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:47:21,606 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:47:21,607 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:47:21,608 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:47:21,609 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:21,609 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:47:21,609 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:47:21,610 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:47:21,610 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:47:21,611 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:47:21,611 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:47:21,611 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:47:21,611 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:47:21,613 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:47:21,613 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:21,963 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:21,965 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:21,965 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:47:21,966 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:47:31,967 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:47:31,967 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:47:31,968 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:47:31,968 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:47:31,968 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:47:32,000 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:47:32,002 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:47:32,002 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:47:32,004 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:32,005 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:47:32,005 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:47:32,006 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:47:32,006 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:47:32,007 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:47:32,007 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:47:32,007 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:47:32,007 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:47:32,008 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:47:32,010 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:32,307 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:32,307 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:32,307 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:47:32,307 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:47:42,308 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:47:42,308 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:47:42,309 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:47:42,310 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:47:42,310 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:47:42,343 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:47:42,346 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:47:42,347 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:47:42,348 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:42,348 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:47:42,348 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:47:42,349 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:47:42,349 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:47:42,350 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:47:42,350 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:47:42,350 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:47:42,350 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:47:42,354 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:47:42,355 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:42,759 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:42,760 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:42,760 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:47:42,760 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
+2026-04-29 11:47:52,762 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_dhan
+2026-04-29 11:47:52,763 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 11:47:52,764 - UpstoxApp - INFO - [Global Upstox] Data provider initialized from DB token (admin manages refresh).
+2026-04-29 11:47:52,765 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 11:47:52,765 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 11:47:52,799 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 11:47:52,801 - UpstoxApp - INFO - [Global Dhan] Token valid.
+2026-04-29 11:47:52,801 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 11:47:52,803 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:52,803 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 11:47:52,804 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 11:47:52,805 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 11:47:52,805 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 11:47:52,805 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0
+2026-04-29 11:47:52,806 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect CE 24350.0 — no expiry and saved key 'NSE_FO|74173' not found.
+2026-04-29 11:47:52,806 - UpstoxApp - ERROR - [SellManagerV3] Failed to reconnect PE 24250.0 — no expiry and saved key 'NSE_FO|74170' not found.
+2026-04-29 11:47:52,806 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 11:47:52,808 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 11:47:52,809 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 11:47:53,092 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:53,092 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 11:47:53,092 - UpstoxApp - ERROR - [ContractManager] CRITICAL: No option contracts found for 'NSE_INDEX|Nifty 50' via any authenticated API. CSV fallback is DISABLED in live mode to prevent wrong expiry resolution. ACTION REQUIRED: Go to Admin → Data Providers and refresh the global Upstox token, then restart the bot.
+2026-04-29 11:47:53,092 - UpstoxApp - ERROR - Init error: Failed to load contracts for NIFTY.
