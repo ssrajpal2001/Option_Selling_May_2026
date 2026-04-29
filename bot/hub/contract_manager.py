@@ -242,6 +242,34 @@ class ContractManager:
                             logger.info(f"ContractManager: Retrying with underlying_key '{u_key}' from future...")
                             raw_contracts = await self.rest_client.get_option_contracts(u_key)
 
+            # Broker REST fallback: when primary REST client (e.g. global Upstox with stale token)
+            # returns nothing, try logged-in client brokers before falling to the CSV snapshot.
+            # This gives us live contracts (including May weekly expiries) that the CSV may lack.
+            if not raw_contracts and self.atm_manager and self.atm_manager.orchestrator:
+                _bm = getattr(self.atm_manager.orchestrator, 'broker_manager', None)
+                if _bm and _bm.brokers:
+                    _CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue']
+                    for _pref in _CAPABLE:
+                        _b = next(
+                            (b for b in _bm.brokers.values()
+                             if getattr(b, 'broker_name', '') == _pref),
+                            None
+                        )
+                        if _b:
+                            try:
+                                from utils.broker_rest_adapter import BrokerRestAdapter as _BRA
+                                _adapter = _BRA(_b, _pref)
+                                _raw = await _adapter.get_option_contracts(instrument_key)
+                                if _raw:
+                                    raw_contracts = _raw
+                                    logger.info(
+                                        f"ContractManager: Got {len(raw_contracts)} contracts via {_pref} "
+                                        "broker REST fallback (primary REST client had no data)."
+                                    )
+                                    break
+                            except Exception as _be:
+                                logger.debug(f"ContractManager: Broker REST fallback ({_pref}) failed: {_be}")
+
             if not raw_contracts:
                 # Retrying via CSV search for all option contracts of this symbol
                 logger.info(f"ContractManager: No options found via API for '{instrument_key}'. Attempting CSV fallback...")

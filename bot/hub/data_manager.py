@@ -125,7 +125,18 @@ class DataManager:
                 df.index = df.index.tz_convert('Asia/Kolkata')
             return df
         except Exception as e:
-            logger.error(f"DATA_FETCH: Error for '{instrument_key}': {e}")
+            _e_str = str(e)
+            if "401" in _e_str or "403" in _e_str:
+                # Auth token expired — all future calls for any key will fail the same way.
+                # Cache the failure so on_tick stops trying on every tick.
+                if not hasattr(self, '_api_failure_cache'): self._api_failure_cache = set()
+                self._api_failure_cache.add(instrument_key)
+                logger.debug(
+                    f"[DataManager] REST auth error ({_e_str[:60]}) for {instrument_key}. "
+                    "Skipping future historical fetches for this key."
+                )
+            else:
+                logger.error(f"DATA_FETCH: Error for '{instrument_key}': {e}")
             return pd.DataFrame()
 
     async def get_historical_ohlc(self, instrument_key: str, timeframe_minutes, current_timestamp: datetime.datetime = None, num_minutes_back: int = None, from_date: datetime.datetime = None, for_full_day: bool = False, include_current: bool = False, min_candles: int = None) -> pd.DataFrame:
@@ -530,11 +541,22 @@ class DataManager:
                     # Stop as soon as we find any data for a day
                     break
                 except Exception as e:
-                    if "400" in str(e):
+                    _err = str(e)
+                    if "400" in _err:
+                        # Contract is unlisted or expired — no point retrying further dates
                         self._api_failure_cache.add(instrument_key)
                         return combined_df
+                    if "401" in _err or "403" in _err:
+                        # Auth token expired for this REST client — all dates will fail the same way.
+                        # Add to failure cache so subsequent on_tick calls skip the fetch entirely.
+                        self._api_failure_cache.add(instrument_key)
+                        logger.debug(
+                            f"[DataManager] Historical fetch for {instrument_key} blocked by auth error "
+                            f"({_err[:60]}). Adding to failure cache to prevent retry loop."
+                        )
+                        return combined_df
                     logger.debug(f"API fetch failed for {instrument_key} on {check_date}: {e}")
-                    # If it's not a 400, maybe it's just a holiday, continue to next day
+                    # Other errors (network, 5xx): might be a transient/holiday — continue to next day
 
             if not combined_df.empty:
                 self.api_ohlc_cache[cache_key] = combined_df
