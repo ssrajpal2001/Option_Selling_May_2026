@@ -126,8 +126,13 @@ class IndicatorManager:
 
         if ohlc is not None and not ohlc.empty:
             if not isinstance(ohlc.index, pd.DatetimeIndex):
-                ohlc.index = pd.to_datetime(ohlc.index)
-            if ohlc.index.tz is None:
+                # Index contains raw datetime objects — may be tz-aware or tz-naive.
+                # pd.to_datetime() raises ValueError on tz-aware objects unless utc=True.
+                try:
+                    ohlc.index = pd.to_datetime(ohlc.index)
+                except (ValueError, TypeError):
+                    ohlc.index = pd.to_datetime(ohlc.index, utc=True)
+            if getattr(ohlc.index, 'tz', None) is None:
                 ohlc.index = ohlc.index.tz_localize('Asia/Kolkata')
             else:
                 ohlc.index = ohlc.index.tz_convert('Asia/Kolkata')

@@ -1,0 +1,66 @@
+2026-04-29 10:23:43,398 - UpstoxApp - INFO - [SellManagerV3] Selection: Using RE-ENTRY CONCEPT (Pool Scan)...
+2026-04-29 10:23:43,400 - UpstoxApp - INFO - [SellManagerV3] Pool Scan (Matrix 7x7) - ATM Bias: PE Stronger
+2026-04-29 10:23:43,403 - UpstoxApp - INFO - [SellManagerV3] Heartbeat: Phase=BEGINNING | Status=WAITING_FOR_BOUNDARY | Indicators=OK | Spot=24259.25
+2026-04-29 10:24:00,029 - UpstoxApp - INFO - [SellManagerV3] Selection: Using RE-ENTRY CONCEPT (Pool Scan)...
+2026-04-29 10:24:00,039 - UpstoxApp - INFO - [SellManagerV3] Pool Scan (Matrix 7x7) - ATM Bias: CE Stronger
+2026-04-29 10:24:00,101 - UpstoxApp - INFO -   + Strike 24250/24400 [Key: NSE_FO|74169/NSE_FO|74178] | LTP: 236.80/241.95 | Score: 0.0108 | PASS
+2026-04-29 10:24:00,189 - UpstoxApp - INFO -   + Strike 24300/24350 [Key: NSE_FO|74171/NSE_FO|74174] | LTP: 209.25/216.10 | Score: 0.0161 | PASS
+2026-04-29 10:24:00,281 - UpstoxApp - INFO -   + Strike 24300/24400 [Key: NSE_FO|74171/NSE_FO|74178] | LTP: 209.25/241.95 | Score: 0.0725 | PASS
+2026-04-29 10:24:00,362 - UpstoxApp - INFO -   + Strike 24350/24300 [Key: NSE_FO|74173/NSE_FO|74172] | LTP: 182.75/192.45 | Score: 0.0259 | PASS
+2026-04-29 10:24:00,454 - UpstoxApp - INFO -   + Strike 24350/24350 [Key: NSE_FO|74173/NSE_FO|74174] | LTP: 182.75/216.10 | Score: 0.0836 | PASS
+2026-04-29 10:24:00,585 - UpstoxApp - INFO -   + Strike 24350/24400 [Key: NSE_FO|74173/NSE_FO|74178] | LTP: 182.75/241.95 | Score: 0.1394 | PASS
+2026-04-29 10:24:00,654 - UpstoxApp - INFO -   + Strike 24400/24250 [Key: NSE_FO|74175/NSE_FO|74170] | LTP: 158.65/170.50 | Score: 0.0360 | PASS
+2026-04-29 10:24:00,733 - UpstoxApp - INFO -   + Strike 24400/24300 [Key: NSE_FO|74175/NSE_FO|74172] | LTP: 158.65/192.45 | Score: 0.0963 | PASS
+2026-04-29 10:24:00,799 - UpstoxApp - INFO -   + Strike 24400/24350 [Key: NSE_FO|74175/NSE_FO|74174] | LTP: 158.65/216.10 | Score: 0.1533 | PASS
+2026-04-29 10:24:00,880 - UpstoxApp - INFO -   + Strike 24400/24400 [Key: NSE_FO|74175/NSE_FO|74178] | LTP: 158.65/241.95 | Score: 0.2079 | PASS
+2026-04-29 10:24:00,882 - UpstoxApp - INFO - [SellManagerV3] Matrix Selection: 24250/24400 with Min Balanced Score: 0.0108
+2026-04-29 10:24:00,883 - UpstoxApp - INFO - [SellManagerV3] Executing Re-entry Concept (balanced_premium): 24250 CE (NSE_FO|74169) @ 236.8, 24400 PE (NSE_FO|74178) @ 241.95
+2026-04-29 10:24:00,895 - UpstoxApp - INFO - [client_2_zerodha] Running behind AWS NAT. EIP 3.7.80.13 validated via instance metadata — order routing OK (0.1 ms).
+2026-04-29 10:24:00,896 - UpstoxApp - INFO - [Zerodha] Options: Using MARKET order with Market Protection (-1).
+2026-04-29 10:24:00,920 - UpstoxApp - INFO - [client_2_zerodha] Running behind AWS NAT. EIP 3.7.80.13 validated via instance metadata — order routing OK (15.1 ms).
+2026-04-29 10:24:00,920 - UpstoxApp - INFO - [Zerodha] Options: Using MARKET order with Market Protection (-1).
+2026-04-29 10:24:01,206 - UpstoxApp - ERROR - V2: Error during tick processing for NIFTY: Tz-aware datetime.datetime cannot be converted to datetime64 unless utc=True
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/price_feed_handler.py", line 611, in _tick_worker
+    await asyncio.wait_for(self.trade_orchestrator.process_tick(), timeout=60.0)
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/base_orchestrator.py", line 305, in process_tick
+    await self.tick_processor.process_tick(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/profiler.py", line 15, in async_wrapper
+    result = await func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/tick_processor.py", line 137, in process_tick
+    await self.process_tick_v2(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/tick_processor.py", line 451, in process_tick_v2
+    await sm.on_tick(sell_ticks, timestamp)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_manager_v3.py", line 481, in on_tick
+    self.v3_dashboard_data = await self.dashboard_logic.get_v3_dashboard_data(timestamp)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_v3/dashboard_logic.py", line 101, in get_v3_dashboard_data
+    passed, val_str = await self.evaluate_rules([r], ce['key'], pe['key'], timestamp, is_entry=False, anchor_ts=macro_anchor, do_log=False, return_reason=True)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_v3/base.py", line 203, in evaluate_rules
+    res_vals = await asyncio.gather(*calc_tasks.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_v3/base.py", line 269, in _get_combined_close
+    o1 = await self.orchestrator.indicator_manager.get_robust_ohlc(ce_key, tf, anchor)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/indicator_manager.py", line 129, in get_robust_ohlc
+    ohlc.index = pd.to_datetime(ohlc.index)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/pandas/core/tools/datetimes.py", line 1049, in to_datetime
+    result = convert_listlike(arg, format, name=arg.name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/pandas/core/tools/datetimes.py", line 437, in _convert_listlike_datetimes
+    result, tz_parsed = objects_to_datetime64(
+                        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/pandas/core/arrays/datetimes.py", line 2623, in objects_to_datetime64
+    result, tz_parsed = tslib.array_to_datetime(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pandas/_libs/tslib.pyx", line 259, in pandas._libs.tslib.array_to_datetime
+  File "pandas/_libs/tslib.pyx", line 473, in pandas._libs.tslib.array_to_datetime
+  File "pandas/_libs/tslib.pyx", line 355, in pandas._libs.tslib.array_to_datetime
+  File "pandas/_libs/tslibs/strptime.pyx", line 287, in pandas._libs.tslibs.strptime.DatetimeParseState.process_datetime
+ValueError: Tz-aware datetime.datetime cannot be converted to datetime64 unless utc=True
