@@ -382,33 +382,49 @@ class ProviderFactory:
             websocket_manager = None
 
         # REST CLIENT SELECTION: Must support get_option_contracts for expiry resolution.
-        # Dhan is intentionally excluded from REST client selection — its BrokerRestAdapter
-        # returns [] from get_option_contracts, which silently corrupts expiry resolution
-        # by forcing a CSV fallback that never includes today's expiring contracts.
+        # Dhan is intentionally excluded — its BrokerRestAdapter.get_option_contracts()
+        # returns [] (no implementation), which silently corrupts expiry resolution by
+        # forcing a CSV fallback that never includes today's expiring contracts.
+        _CONTRACT_CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue']
+
         if not rest_client:
             # For historical data and option contracts, we still need a rest_client.
-            # We'll try to get it from the ApiClientManager or just use the first provider.
+            # ApiClientManager typically holds a live Upstox RestApiClient.
             if api_client_manager:
-                rest_client = api_client_manager.get_active_client()
+                _candidate = api_client_manager.get_active_client()
+                # Guard: reject if it resolves to a Dhan adapter (no contract support)
+                _candidate_broker = (
+                    getattr(_candidate, 'broker_name', None) or
+                    getattr(_candidate, '_broker_name', None) or ''
+                )
+                if _candidate and _candidate_broker not in ('dhan',):
+                    rest_client = _candidate
+                elif _candidate:
+                    logger.warning(
+                        f"[ProviderFactory] ApiClientManager returned a {_candidate_broker!r} client "
+                        "which has no option-contract support — skipping."
+                    )
 
-        # BROKER REST FALLBACK: If still no REST client, pick the first client broker that
-        # supports proper option-contract fetching (Upstox > Zerodha > AngelOne > others).
-        # Dhan is deliberately skipped here — it has no option-contract REST support.
+        # BROKER REST FALLBACK: Strict whitelist only — select the highest-priority
+        # contract-capable broker. If none is present, leave rest_client=None and warn.
+        # Dhan is not in the whitelist and is never selected here.
         if not rest_client and broker_manager and broker_manager.brokers:
-            _contract_capable = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue']
-            # Prefer contract-capable brokers first, then fall back to any broker
-            _sorted_brokers = sorted(
-                broker_manager.brokers.values(),
-                key=lambda b: (_contract_capable.index(getattr(b, 'broker_name', ''))
-                               if getattr(b, 'broker_name', '') in _contract_capable else 999)
-            )
-            for _b in _sorted_brokers:
-                _b_name = getattr(_b, 'broker_name', '')
-                if _b_name == 'dhan':
-                    continue  # Dhan: WebSocket only — no option-contract REST support
-                rest_client = BrokerRestAdapter(_b, _b_name)
-                logger.info(f"[ProviderFactory] Using {_b_name} client broker as REST fallback for contract fetching.")
-                break
+            for _preferred in _CONTRACT_CAPABLE:
+                _b = next(
+                    (b for b in broker_manager.brokers.values()
+                     if getattr(b, 'broker_name', '') == _preferred),
+                    None
+                )
+                if _b:
+                    rest_client = BrokerRestAdapter(_b, _preferred)
+                    logger.info(f"[ProviderFactory] Using {_preferred} client broker as REST fallback for contract fetching.")
+                    break
+            if not rest_client:
+                _present = [getattr(b, 'broker_name', '?') for b in broker_manager.brokers.values()]
+                logger.warning(
+                    f"[ProviderFactory] No contract-capable broker found in {_CONTRACT_CAPABLE}. "
+                    f"Present brokers: {_present}. Contract/expiry loading will use CSV only."
+                )
 
         # ENFORCEMENT: Websocket Data MUST come from Global Feeds (Upstox/Dhan)
         # We removed Zerodha as a data provider as per requirement.
