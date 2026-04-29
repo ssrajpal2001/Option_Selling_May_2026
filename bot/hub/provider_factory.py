@@ -234,6 +234,62 @@ class ProviderFactory:
                     global_auth = GlobalUpstoxAuth(api_key, access_token)
                     global_rest = RestApiClient(global_auth)
 
+                    # Live-ping the token — date-based check alone misses tokens that
+                    # were issued today but later invalidated (e.g. TOTP re-use race,
+                    # manual re-login from another machine, etc.).
+                    # Use a lightweight authenticated endpoint; treat 401/403 as stale.
+                    if not needs_refresh:
+                        try:
+                            import aiohttp as _aiohttp
+                            _headers = {
+                                "accept": "application/json",
+                                "Api-Version": "2.0",
+                                "Authorization": f"Bearer {access_token}",
+                            }
+                            async with _aiohttp.ClientSession() as _sess:
+                                async with _sess.get(
+                                    "https://api.upstox.com/v2/user/profile",
+                                    headers=_headers,
+                                    timeout=_aiohttp.ClientTimeout(total=5),
+                                ) as _resp:
+                                    if _resp.status in (401, 403):
+                                        logger.warning(
+                                            f"[Global Upstox] Token ping returned {_resp.status} "
+                                            "— token is stale despite matching issue date. Forcing refresh."
+                                        )
+                                        needs_refresh = True
+                                    else:
+                                        logger.info(
+                                            f"[Global Upstox] Token ping OK ({_resp.status}). "
+                                            "Token is alive — skipping auto-refresh."
+                                        )
+                        except Exception as _pe:
+                            logger.warning(f"[Global Upstox] Token ping failed ({_pe}); assuming token is valid.")
+
+                    if needs_refresh:
+                        logger.info("Global Upstox token expired or fresh day started. Attempting auto-refresh...")
+                        creds = {
+                            "api_key": api_key,
+                            "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                            "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                            "password": decrypt_secret(dp.get("password_encrypted", "")),
+                            "totp": decrypt_secret(dp.get("totp_encrypted", ""))
+                        }
+                        from utils.auth_manager_upstox import handle_upstox_login_automated
+                        new_token = handle_upstox_login_automated(creds)
+                        if new_token:
+                            access_token = new_token
+                            enc_token = encrypt_secret(new_token)
+                            now_str = datetime.now(timezone.utc).isoformat()
+                            db_execute(
+                                "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
+                                (enc_token, now_str, now_str)
+                            )
+                            logger.info("Global Upstox token auto-refreshed successfully.")
+                            # Rebuild auth with the fresh token
+                            global_auth = GlobalUpstoxAuth(api_key, access_token)
+                            global_rest = RestApiClient(global_auth)
+
                     # Pass via api_client= kwarg so WebSocketManager uses it as
                     # a direct RestApiClient rather than an ApiClientManager wrapper.
                     upstox_ws = WebSocketManager(api_client=global_rest)

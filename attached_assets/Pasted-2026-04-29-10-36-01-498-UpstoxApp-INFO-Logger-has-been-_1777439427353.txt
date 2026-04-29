@@ -1,0 +1,69 @@
+2026-04-29 10:36:01,498 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-29 10:36:01,498 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='upstox', instrument='NIFTY', qty=1, mode='live', strategy='V3')
+2026-04-29 10:36:01,501 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-29 10:36:01,501 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-29 10:36:01,501 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-29 10:36:01,501 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-29 10:36:01,501 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-29 10:36:01,504 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-29 10:36:10,331 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-29 10:36:10,333 - UpstoxApp - INFO - [UpstoxClient] Fresh token saved to DB for user 2.
+2026-04-29 10:36:10,333 - UpstoxApp - INFO - Upstox client initialized for User ID: 2.
+2026-04-29 10:36:10,333 - UpstoxApp - INFO - [CLIENT MODE] Loaded upstox broker instance: client_2_upstox
+2026-04-29 10:36:10,335 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-29 10:36:10,337 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-29 10:36:10,337 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_upstox
+2026-04-29 10:36:10,337 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 10:36:10,337 - UpstoxApp - INFO - [Global Upstox] Using client broker token for data feed (same-account mode).
+2026-04-29 10:36:10,343 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 10:36:10,343 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 10:36:10,397 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 10:36:10,400 - UpstoxApp - INFO - [Global Dhan] Token valid. Timestamp refreshed.
+2026-04-29 10:36:10,401 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 10:36:10,403 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 10:36:10,404 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 10:36:10,405 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 10:36:10,426 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 10:36:10,427 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 10:36:10,430 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-29 10:36:10,430 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-29 10:36:10,430 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 10:36:10,431 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-29 10:36:10,431 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 10:36:10,431 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:15:15 | SquareOff:15:28 | Lot:65   ║
+2026-04-29 10:36:10,431 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-29 10:36:10,432 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-29 10:36:10,432 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      ║
+2026-04-29 10:36:10,432 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-29 10:36:10,432 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-29 10:36:10,433 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-29 10:36:10,433 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-29 10:36:10,433 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-29 10:36:10,433 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-29 10:36:10,434 - UpstoxApp - INFO - ║ DYNAMIC EXITS: CLOSE>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-29 10:36:10,434 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-29 10:36:10,434 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-29 10:36:10,434 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-29 10:36:10,434 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 10:36:10,447 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 10:36:10,449 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 10:36:10,828 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-04-29) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-04-29 10:36:10,851 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-04-29
+2026-04-29 10:36:10,871 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-04-29 10:36:10,871 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-04-29 (key=NSE_INDEX|Nifty 50)
+2026-04-29 10:36:10,871 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-04-29 10:36:10,872 - UpstoxApp - INFO - ContractManager: All CE/PE expiry dates loaded (18 unique): [datetime.date(2026, 5, 5), datetime.date(2026, 5, 12), datetime.date(2026, 5, 19), datetime.date(2026, 5, 26), datetime.date(2026, 6, 2), datetime.date(2026, 6, 30), datetime.date(2026, 7, 28), datetime.date(2026, 9, 29), datetime.date(2026, 12, 29), datetime.date(2027, 3, 30)]...
+2026-04-29 10:36:10,872 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-05-05 (day=Tuesday)
+2026-04-29 10:36:10,880 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-05-05 (CURRENT_WEEK), trade=2026-05-05 (WEEKLY)
+2026-04-29 10:36:10,882 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-05-05 (WEEKLY), trade=2026-05-05 (WEEKLY)
+2026-04-29 10:36:10,885 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-05-05 (WEEKLY), trade=2026-05-05 (WEEKLY)
+2026-04-29 10:36:10,885 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-29 10:36:10,886 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-29 10:36:10,886 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-29 10:36:10,886 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-29 10:36:10,887 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-29 10:36:10,888 - UpstoxApp - INFO - Trading bot is now live.
+2026-04-29 10:36:10,888 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active.
+2026-04-29 10:38:29,508 - UpstoxApp - INFO - Received SIGTERM. Initiating industrial square-off and shutdown...
+2026-04-29 10:38:29,508 - UpstoxApp - INFO - BrokerManager: Squaring off all positions for 1 brokers...
+2026-04-29 10:38:29,509 - UpstoxApp - INFO - BrokerManager: All square-off commands dispatched.

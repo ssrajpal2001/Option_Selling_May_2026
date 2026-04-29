@@ -304,8 +304,12 @@ class BrokerRestAdapter:
                 contracts = []
                 for inst in master:
                     if inst['name'] == z_name and inst['segment'] == 'NFO-OPT':
+                        # Zerodha instrument_token IS the NSE exchange token used by
+                        # Upstox too — format as "NSE_FO|{token}" so the rest of the
+                        # system (LTP lookup, WebSocket subscriptions) can use these
+                        # contracts without key mismatches.
                         contracts.append({
-                            'instrument_key': str(inst['instrument_token']),
+                            'instrument_key': f"NSE_FO|{inst['instrument_token']}",
                             'tradingsymbol': inst['tradingsymbol'],
                             'expiry': inst['expiry'],
                             'strike_price': float(inst['strike']),

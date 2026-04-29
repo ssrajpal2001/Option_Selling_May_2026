@@ -834,16 +834,49 @@ class SellManagerV3:
 
     def reconnect_positions(self):
         if not self.active_trades: return
-        expiry = self.orchestrator.atm_manager.signal_expiry_date
-        if not expiry: return
 
-        # Ensure expiry is a date object for lookup
-        expiry_date = expiry.date() if isinstance(expiry, datetime.datetime) else expiry
+        # Build a fast key→contract lookup from all loaded contracts.
+        # This avoids depending on the expiry date that was just resolved
+        # (which may be wrong when the global Upstox token is stale and the
+        # CSV fallback is used — CSV can be missing near-weekly contracts and
+        # resolve to the wrong month).  The trade dict carries the exact
+        # instrument_key that was used when the position was opened; matching
+        # on that guarantees the right contract even across bot restarts.
+        cm = getattr(self.orchestrator, 'contract_manager', None)
+        key_to_contract = {}
+        if cm and cm.all_options:
+            key_to_contract = {c.instrument_key: c for c in cm.all_options if c.instrument_key}
+
+        expiry = self.orchestrator.atm_manager.signal_expiry_date
+        expiry_date = expiry.date() if isinstance(expiry, datetime.datetime) else expiry if expiry else None
 
         for side, trade in self.active_trades.items():
             strike = float(trade['strike'])
-            contract = self.orchestrator.atm_manager.contract_lookup.get(expiry_date, {}).get(strike, {}).get(side)
-            if contract:
+            saved_key = trade.get('key')
+            contract = None
+
+            # Priority 1: match by the exact instrument key saved in the trade state.
+            if saved_key and saved_key in key_to_contract:
+                contract = key_to_contract[saved_key]
                 trade['contract'] = contract
-                logger.info(f"[SellManagerV3] Reconnected {side} {strike} position.")
-            else: logger.error(f"[SellManagerV3] Failed to reconnect {side} {strike} position!")
+                logger.info(
+                    f"[SellManagerV3] Reconnected {side} {strike} position using saved key {saved_key}."
+                )
+            # Priority 2: fall back to expiry+strike lookup (legacy path).
+            elif expiry_date:
+                contract = self.orchestrator.atm_manager.contract_lookup.get(expiry_date, {}).get(strike, {}).get(side)
+                if contract:
+                    trade['contract'] = contract
+                    logger.info(
+                        f"[SellManagerV3] Reconnected {side} {strike} position via expiry+strike lookup "
+                        f"(expiry={expiry_date})."
+                    )
+                else:
+                    logger.error(
+                        f"[SellManagerV3] Failed to reconnect {side} {strike} — "
+                        f"saved key '{saved_key}' not in loaded contracts and expiry+strike lookup empty."
+                    )
+            else:
+                logger.error(
+                    f"[SellManagerV3] Failed to reconnect {side} {strike} — no expiry and saved key '{saved_key}' not found."
+                )
