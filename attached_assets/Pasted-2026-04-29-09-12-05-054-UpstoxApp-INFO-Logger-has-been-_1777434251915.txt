@@ -1,0 +1,405 @@
+2026-04-29 09:12:05,054 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-29 09:12:05,055 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='angelone', instrument='NIFTY', qty=1, mode='paper', strategy='V3')
+2026-04-29 09:12:05,055 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-29 09:12:05,055 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-29 09:12:05,055 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-29 09:12:05,055 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-29 09:12:05,055 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-29 09:12:05,056 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-29 09:12:05,660 - UpstoxApp - INFO - [client_2_angelone] Running behind AWS NAT. EIP 3.7.80.13 validated via instance metadata — order routing OK (0.1 ms).
+2026-04-29 09:12:05,675 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+[I 260429 09:12:05 smartConnect:124] in pool
+2026-04-29 09:12:05,694 - UpstoxApp - INFO - AngelOne Auth: Attempting time sync with https://apiconnect.angelone.in...
+2026-04-29 09:12:05,700 - UpstoxApp - WARNING - AngelOne Auth: Could not sync time with https://apiconnect.angelone.in: HTTPSConnectionPool(host='apiconnect.angelone.in', port=443): Max retries exceeded with url: / (Caused by NewConnectionError("HTTPSConnection(host='apiconnect.angelone.in', port=443): Failed to establish a new connection: [Errno 99] Cannot assign requested address"))
+2026-04-29 09:12:05,700 - UpstoxApp - INFO - AngelOne Auth: Attempting time sync with https://www.google.com...
+2026-04-29 09:12:05,704 - UpstoxApp - WARNING - AngelOne Auth: Could not sync time with https://www.google.com: HTTPSConnectionPool(host='www.google.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='www.google.com', port=443): Failed to resolve 'www.google.com' ([Errno -9] Address family for hostname not supported)"))
+2026-04-29 09:12:05,706 - UpstoxApp - INFO - AngelOne Auth: Attempting time sync with http://www.google.com...
+2026-04-29 09:12:05,709 - UpstoxApp - WARNING - AngelOne Auth: Could not sync time with http://www.google.com: HTTPConnectionPool(host='www.google.com', port=80): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPConnection(host='www.google.com', port=80): Failed to resolve 'www.google.com' ([Errno -9] Address family for hostname not supported)"))
+2026-04-29 09:12:05,710 - UpstoxApp - INFO - AngelOne Auth: Attempting time sync with https://api.upstox.com...
+2026-04-29 09:12:05,715 - UpstoxApp - WARNING - AngelOne Auth: Could not sync time with https://api.upstox.com: HTTPSConnectionPool(host='api.upstox.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='api.upstox.com', port=443): Failed to resolve 'api.upstox.com' ([Errno -9] Address family for hostname not supported)"))
+2026-04-29 09:12:05,715 - UpstoxApp - INFO - AngelOne Auth: Attempting time sync with https://www.cloudflare.com...
+2026-04-29 09:12:05,719 - UpstoxApp - WARNING - AngelOne Auth: Could not sync time with https://www.cloudflare.com: HTTPSConnectionPool(host='www.cloudflare.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='www.cloudflare.com', port=443): Failed to resolve 'www.cloudflare.com' ([Errno -9] Address family for hostname not supported)"))
+2026-04-29 09:12:05,719 - UpstoxApp - INFO - AngelOne Auth: Attempting time sync with http://worldtimeapi.org/api/timezone/Etc/UTC...
+2026-04-29 09:12:05,909 - UpstoxApp - WARNING - AngelOne Auth: Could not sync time with http://worldtimeapi.org/api/timezone/Etc/UTC: HTTPConnectionPool(host='worldtimeapi.org', port=80): Max retries exceeded with url: /api/timezone/Etc/UTC (Caused by NameResolutionError("HTTPConnection(host='worldtimeapi.org', port=80): Failed to resolve 'worldtimeapi.org' ([Errno -9] Address family for hostname not supported)"))
+2026-04-29 09:12:05,910 - UpstoxApp - ERROR - AngelOne Auth: All time sync sources failed. Checking for common IST/UTC clock misalignment...
+2026-04-29 09:12:05,910 - UpstoxApp - INFO - AngelOne: Attempting login for client AAAA802318 (TOTP: 801550, System Time: 09:12:05)...
+[E 260429 09:12:05 smartConnect:221] Error occurred while making a POST request to https://apiconnect.angelone.in/rest/auth/angelbroking/user/v1/loginByPassword. Headers: {'Content-type': 'application/json', 'X-ClientLocalIP': '127.0.0.1', 'X-ClientPublicIP': '106.193.147.98', 'X-MACAddress': '0a:96:3c:c6:ec:17', 'Accept': 'application/json', 'X-PrivateKey': 'BHtLxKl7', 'X-UserType': 'USER', 'X-SourceID': 'WEB'}, Request: {'clientcode': 'AAAA802318', 'password': '1981', 'totp': '801550'}, Response: HTTPSConnectionPool(host='apiconnect.angelone.in', port=443): Max retries exceeded with url: /rest/auth/angelbroking/user/v1/loginByPassword (Caused by NewConnectionError("HTTPSConnection(host='apiconnect.angelone.in', port=443): Failed to establish a new connection: [Errno 99] Cannot assign requested address"))
+2026-04-29 09:12:05,914 - UpstoxApp - ERROR - Exception during AngelOne login: HTTPSConnectionPool(host='apiconnect.angelone.in', port=443): Max retries exceeded with url: /rest/auth/angelbroking/user/v1/loginByPassword (Caused by NewConnectionError("HTTPSConnection(host='apiconnect.angelone.in', port=443): Failed to establish a new connection: [Errno 99] Cannot assign requested address"))
+Traceback (most recent call last):
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/base_broker.py", line 146, in _patched_urllib3_cc
+    return _orig_urllib3_cc(address, timeout,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    sock.bind(source_address)
+OSError: [Errno 99] Cannot assign requested address
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 488, in _make_request
+    raise new_e
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 464, in _make_request
+    self._validate_conn(conn)
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 1093, in _validate_conn
+    conn.connect()
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connection.py", line 759, in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connection.py", line 219, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: HTTPSConnection(host='apiconnect.angelone.in', port=443): Failed to establish a new connection: [Errno 99] Cannot assign requested address
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/adapters.py", line 645, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='apiconnect.angelone.in', port=443): Max retries exceeded with url: /rest/auth/angelbroking/user/v1/loginByPassword (Caused by NewConnectionError("HTTPSConnection(host='apiconnect.angelone.in', port=443): Failed to establish a new connection: [Errno 99] Cannot assign requested address"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/auth_manager_angelone.py", line 143, in handle_angelone_login
+    data = smart_api.generateSession(login_id, login_pin, totp)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/SmartApi/smartConnect.py", line 271, in generateSession
+    loginResultObject=self._postRequest("api.login",params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/SmartApi/smartConnect.py", line 263, in _postRequest
+    return self._request(route, "POST", params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/SmartApi/smartConnect.py", line 222, in _request
+    raise e
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/SmartApi/smartConnect.py", line 210, in _request
+    r = requests.request(method,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/sessions.py", line 592, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/sessions.py", line 706, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/requests/adapters.py", line 678, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='apiconnect.angelone.in', port=443): Max retries exceeded with url: /rest/auth/angelbroking/user/v1/loginByPassword (Caused by NewConnectionError("HTTPSConnection(host='apiconnect.angelone.in', port=443): Failed to establish a new connection: [Errno 99] Cannot assign requested address"))
+2026-04-29 09:12:05,923 - UpstoxApp - INFO - [CLIENT MODE] Loaded angelone broker instance: client_2_angelone
+2026-04-29 09:12:05,924 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-29 09:12:05,925 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-29 09:12:05,925 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_angelone
+2026-04-29 09:12:05,925 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 09:12:05,929 - UpstoxApp - INFO - Global Upstox data provider initialized from DB.
+2026-04-29 09:12:05,935 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 09:12:05,937 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 09:12:05,962 - UpstoxApp - WARNING - [Dhan] Token check returned 400 for 1000557682: {"errorType":"Order_Error","errorCode":"DH-906","errorMessage":"Invalid Token"}
+2026-04-29 09:12:05,967 - UpstoxApp - INFO - [Global Dhan] Token valid. Timestamp refreshed.
+2026-04-29 09:12:05,967 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 09:12:05,971 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 09:12:05,971 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 09:12:05,995 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 09:12:05,997 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 09:12:06,002 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-29 09:12:06,002 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-29 09:12:06,002 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 09:12:06,002 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-29 09:12:06,002 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 09:12:06,003 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:15:15 | SquareOff:15:28 | Lot:65   ║
+2026-04-29 09:12:06,003 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-29 09:12:06,003 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-29 09:12:06,003 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      ║
+2026-04-29 09:12:06,004 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-29 09:12:06,004 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-29 09:12:06,004 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-29 09:12:06,004 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-29 09:12:06,005 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-29 09:12:06,005 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-29 09:12:06,005 - UpstoxApp - INFO - ║ DYNAMIC EXITS: CLOSE>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-29 09:12:06,005 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-29 09:12:06,005 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-29 09:12:06,006 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-29 09:12:06,006 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 09:12:06,021 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 09:12:06,023 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 09:12:06,345 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:06,345 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:06,389 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 401). Reason: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 09:12:06,391 - UpstoxApp - ERROR - Error fetching option contracts: 401, message='Unauthorized', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=NSE_INDEX%7CNifty+50')
+2026-04-29 09:12:06,392 - UpstoxApp - INFO - ContractManager: No options found via API for 'NSE_INDEX|Nifty 50'. Attempting CSV fallback...
+2026-04-29 09:12:06,394 - UpstoxApp - INFO - ContractManager: Downloading NSE_FO instruments from https://assets.upstox.com/market-quote/instruments/exchange/NSE_FO.csv.gz...
+2026-04-29 09:12:07,006 - UpstoxApp - INFO - ContractManager: CSV search for 'NIFTY' in NSE_FO found 2041 options.
+2026-04-29 09:12:07,009 - UpstoxApp - INFO - ContractManager: Sample CSV row: {'instrument_key': 'NSE_FO|50973', 'exchange_token': 50973, 'tradingsymbol': 'NIFTY26JUN27000CE', 'name': 'NIFTY', 'last_price': 72.9, 'expiry': '2026-06-30', 'strike': 27000.0, 'tick_size': 0.05, 'lot_size': 65.0, 'instrument_type': 'OPTIDX', 'option_type': 'CE', 'exchange': 'NSE_FO', 'name_norm': 'NIFTY'}
+2026-04-29 09:12:07,252 - UpstoxApp - INFO - ContractManager: CSV fallback success. Loaded 2041 option contracts for NIFTY from NSE_FO.
+2026-04-29 09:12:07,254 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-05-26 (day=Tuesday)
+2026-04-29 09:12:07,271 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-05-26 (CURRENT_WEEK), trade=2026-05-26 (WEEKLY)
+2026-04-29 09:12:07,273 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-05-26 (WEEKLY), trade=2026-05-26 (WEEKLY)
+2026-04-29 09:12:07,277 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-05-26 (WEEKLY), trade=2026-05-26 (WEEKLY)
+2026-04-29 09:12:07,279 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-29 09:12:07,281 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-29 09:12:07,282 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-29 09:12:07,283 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 09:12:07,285 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-29 09:12:07,286 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 09:12:07,286 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:15:15 | SquareOff:15:28 | Lot:65   ║
+2026-04-29 09:12:07,286 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-29 09:12:07,286 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-29 09:12:07,286 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      ║
+2026-04-29 09:12:07,287 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-29 09:12:07,287 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-29 09:12:07,287 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-29 09:12:07,287 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - ║ DYNAMIC EXITS: CLOSE>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-29 09:12:07,288 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-29 09:12:07,289 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-29 09:12:07,289 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-29 09:12:07,297 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:07,297 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:07,308 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: N/A | Worker: ALIVE | Exchange: None | Sessions: 2:Idle
+2026-04-29 09:12:07,308 - UpstoxApp - INFO - V2: [NIFTY] Futures price missing. Falling back to Index price 24096.9 for ATM calculation.
+2026-04-29 09:12:07,309 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:07,309 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:07,372 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72170 (User: GLOBAL, LTP: 323.35)
+2026-04-29 09:12:07,376 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72170 (User: GLOBAL)
+2026-04-29 09:12:07,426 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72147 (User: GLOBAL, LTP: 277.45)
+2026-04-29 09:12:07,428 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72147 (User: GLOBAL)
+2026-04-29 09:12:07,484 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72275 (User: GLOBAL, LTP: 263.0)
+2026-04-29 09:12:07,487 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72275 (User: GLOBAL)
+2026-04-29 09:12:07,532 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72282 (User: GLOBAL, LTP: 222.15)
+2026-04-29 09:12:07,535 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72282 (User: GLOBAL)
+2026-04-29 09:12:07,580 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72274 (User: GLOBAL, LTP: 639.05)
+2026-04-29 09:12:07,583 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72274 (User: GLOBAL)
+2026-04-29 09:12:07,629 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72243 (User: GLOBAL, LTP: 307.0)
+2026-04-29 09:12:07,632 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72243 (User: GLOBAL)
+2026-04-29 09:12:07,677 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72283 (User: GLOBAL, LTP: 731.05)
+2026-04-29 09:12:07,679 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72283 (User: GLOBAL)
+2026-04-29 09:12:07,723 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72176 (User: GLOBAL, LTP: 377.9)
+2026-04-29 09:12:07,725 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72176 (User: GLOBAL)
+2026-04-29 09:12:07,813 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72168 (User: GLOBAL, LTP: 312.15)
+2026-04-29 09:12:07,815 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72168 (User: GLOBAL)
+2026-04-29 09:12:07,908 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72172 (User: GLOBAL, LTP: 341.0)
+2026-04-29 09:12:07,910 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72172 (User: GLOBAL)
+2026-04-29 09:12:08,000 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72174 (User: GLOBAL, LTP: 358.5)
+2026-04-29 09:12:08,002 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72174 (User: GLOBAL)
+2026-04-29 09:12:08,091 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72280 (User: GLOBAL, LTP: 240.15)
+2026-04-29 09:12:08,093 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72280 (User: GLOBAL)
+2026-04-29 09:12:08,099 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72187 (User: GLOBAL, LTP: 398.35)
+2026-04-29 09:12:08,100 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72187 (User: GLOBAL)
+2026-04-29 09:12:08,102 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72177 (User: GLOBAL, LTP: 534.85)
+2026-04-29 09:12:08,103 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72177 (User: GLOBAL)
+2026-04-29 09:12:08,104 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72182 (User: GLOBAL, LTP: 441.75)
+2026-04-29 09:12:08,105 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72182 (User: GLOBAL)
+2026-04-29 09:12:08,107 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72179 (User: GLOBAL, LTP: 505.7)
+2026-04-29 09:12:08,108 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72179 (User: GLOBAL)
+2026-04-29 09:12:08,109 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72167 (User: GLOBAL, LTP: 691.7)
+2026-04-29 09:12:08,112 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72167 (User: GLOBAL)
+2026-04-29 09:12:08,112 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72178 (User: GLOBAL, LTP: 402.8)
+2026-04-29 09:12:08,113 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72178 (User: GLOBAL)
+2026-04-29 09:12:08,113 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72185 (User: GLOBAL, LTP: 424.45)
+2026-04-29 09:12:08,113 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72185 (User: GLOBAL)
+2026-04-29 09:12:08,116 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72173 (User: GLOBAL, LTP: 590.75)
+2026-04-29 09:12:08,116 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72173 (User: GLOBAL)
+2026-04-29 09:12:08,116 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72241 (User: GLOBAL, LTP: 326.0)
+2026-04-29 09:12:08,117 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72241 (User: GLOBAL)
+2026-04-29 09:12:08,117 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72166 (User: GLOBAL, LTP: 286.6)
+2026-04-29 09:12:08,119 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72166 (User: GLOBAL)
+2026-04-29 09:12:08,120 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72183 (User: GLOBAL, LTP: 456.2)
+2026-04-29 09:12:08,120 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72183 (User: GLOBAL)
+2026-04-29 09:12:08,120 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72281 (User: GLOBAL, LTP: 708.4)
+2026-04-29 09:12:08,122 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72281 (User: GLOBAL)
+2026-04-29 09:12:08,123 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72242 (User: GLOBAL, LTP: 583.8)
+2026-04-29 09:12:08,123 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72242 (User: GLOBAL)
+2026-04-29 09:12:08,124 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72169 (User: GLOBAL, LTP: 658.8)
+2026-04-29 09:12:08,124 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72169 (User: GLOBAL)
+2026-04-29 09:12:08,124 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72184 (User: GLOBAL, LTP: 472.1)
+2026-04-29 09:12:08,127 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72184 (User: GLOBAL)
+2026-04-29 09:12:08,127 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72273 (User: GLOBAL, LTP: 282.45)
+2026-04-29 09:12:08,127 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72273 (User: GLOBAL)
+2026-04-29 09:12:08,128 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72175 (User: GLOBAL, LTP: 566.0)
+2026-04-29 09:12:08,128 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72175 (User: GLOBAL)
+2026-04-29 09:12:08,178 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72283_2026-04-28.csv
+2026-04-29 09:12:08,264 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72188 (User: GLOBAL, LTP: 507.6)
+2026-04-29 09:12:08,264 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72188 (User: GLOBAL)
+2026-04-29 09:12:08,265 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72180 (User: GLOBAL, LTP: 418.2)
+2026-04-29 09:12:08,265 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72180 (User: GLOBAL)
+2026-04-29 09:12:08,265 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72239 (User: GLOBAL, LTP: 352.35)
+2026-04-29 09:12:08,266 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72239 (User: GLOBAL)
+2026-04-29 09:12:08,266 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72186 (User: GLOBAL, LTP: 489.45)
+2026-04-29 09:12:08,266 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72186 (User: GLOBAL)
+2026-04-29 09:12:08,267 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72237 (User: GLOBAL, LTP: 373.25)
+2026-04-29 09:12:08,267 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72237 (User: GLOBAL)
+2026-04-29 09:12:08,268 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72238 (User: GLOBAL, LTP: 539.7)
+2026-04-29 09:12:08,268 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72238 (User: GLOBAL)
+2026-04-29 09:12:08,269 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72143 (User: GLOBAL, LTP: 756.4)
+2026-04-29 09:12:08,271 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72143 (User: GLOBAL)
+2026-04-29 09:12:08,336 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72171 (User: GLOBAL, LTP: 623.55)
+2026-04-29 09:12:08,336 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72171 (User: GLOBAL)
+2026-04-29 09:12:08,337 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72247 (User: GLOBAL, LTP: 617.7)
+2026-04-29 09:12:08,337 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72247 (User: GLOBAL)
+2026-04-29 09:12:08,338 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72240 (User: GLOBAL, LTP: 557.8)
+2026-04-29 09:12:08,338 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72240 (User: GLOBAL)
+2026-04-29 09:12:08,339 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72165 (User: GLOBAL, LTP: 715.0)
+2026-04-29 09:12:08,339 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72165 (User: GLOBAL)
+2026-04-29 09:12:08,340 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72276 (User: GLOBAL, LTP: 671.0)
+2026-04-29 09:12:08,341 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72276 (User: GLOBAL)
+2026-04-29 09:12:08,401 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_FO|72181 (User: GLOBAL, LTP: 482.75)
+2026-04-29 09:12:08,403 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_FO|72181 (User: GLOBAL)
+2026-04-29 09:12:08,404 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:08,405 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:08,406 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:08,406 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:08,714 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72281_2026-04-28.csv
+2026-04-29 09:12:08,867 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:08,868 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:09,209 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72280_2026-04-28.csv
+2026-04-29 09:12:09,348 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:09,348 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:09,636 - UpstoxApp - INFO - [DataManager] Saved technical history: upstox_NSE_FO_72282_2026-04-28.csv
+2026-04-29 09:12:09,862 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:09,863 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:10,301 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:10,302 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:11,295 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:11,296 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:11,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:11,745 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:12,195 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:12,195 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:12,795 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:12,795 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:13,265 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:13,265 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:13,846 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:13,846 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:14,295 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:14,295 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:14,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:14,745 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:15,345 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:15,345 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:15,804 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:15,804 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:16,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:16,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:16,845 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:16,845 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:17,296 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:17,296 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:17,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:17,746 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:18,212 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:18,212 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:18,795 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:18,796 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:19,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:19,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:19,845 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:19,845 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:20,310 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:20,310 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:20,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:20,745 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:21,345 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:21,345 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:21,795 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:21,795 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:22,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:22,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:22,707 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:22,708 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:23,296 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:23,296 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:23,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:23,745 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:24,345 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:24,345 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:24,813 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:24,813 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:25,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:25,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:25,695 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:25,695 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:26,295 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:26,295 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:26,746 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:26,746 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:27,213 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:27,213 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:27,795 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:27,796 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:28,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:28,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:28,845 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:28,845 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:29,303 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:29,303 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:29,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:29,745 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:30,345 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:30,345 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:30,795 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:30,795 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:31,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:31,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:31,846 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:31,846 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:32,295 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:32,296 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:32,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:32,745 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:33,345 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:33,345 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:33,808 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:33,809 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:34,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:34,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:34,695 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:34,695 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:35,295 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:35,295 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:35,745 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:35,745 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:36,358 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:36,358 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:36,795 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:36,796 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:37,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:37,246 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:37,695 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:37,696 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:38,295 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:38,296 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:38,766 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:38,766 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:39,345 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:39,346 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:39,795 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:39,796 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:40,245 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:40,245 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:40,695 - UpstoxApp - INFO - DEBUG: PriceFeedHandler received normalized tick from upstox_global for NSE_INDEX|Nifty 50 (User: GLOBAL, LTP: 24096.9)
+2026-04-29 09:12:40,696 - UpstoxApp - INFO - DEBUG: Dispatcher found NO user-scoped handlers for NSE_INDEX|Nifty 50 (User: GLOBAL)
+2026-04-29 09:12:41,090 - UpstoxApp - INFO - Received SIGTERM. Initiating industrial square-off and shutdown...
+2026-04-29 09:12:41,090 - UpstoxApp - INFO - BrokerManager: Squaring off all positions for 1 brokers...
+2026-04-29 09:12:41,097 - UpstoxApp - INFO - BrokerManager: All square-off commands dispatched.
