@@ -92,11 +92,24 @@ class BrokerRestAdapter:
             return instrument_key
 
         elif self.broker_name == 'angelone':
+            # For NSE_INDEX keys (e.g. "NSE_INDEX|Nifty 50"), look up the numeric token
+            # from AngelOne's universal token map.
             if hasattr(self.client, 'get_token_by_universal_key'):
                 if hasattr(self.client, '_load_token_map'):
                     await self.client._load_token_map()
                 token = self.client.get_token_by_universal_key(instrument_key)
                 if token: return token
+
+            # For NSE_FO option keys (e.g. "NSE_FO|51714"), extract the numeric exchange
+            # token. AngelOne's ltpData and order APIs expect a plain integer symboltoken,
+            # not the Upstox-format "NSE_FO|<token>" string.
+            if isinstance(instrument_key, str) and '|' in instrument_key:
+                parts = instrument_key.split('|', 1)
+                try:
+                    return int(parts[1])
+                except (ValueError, IndexError):
+                    pass
+
             return instrument_key
 
         return instrument_key
@@ -127,7 +140,13 @@ class BrokerRestAdapter:
             elif self.broker_name == 'angelone':
                 # Handle both wrapper client and raw SmartApi object
                 smart_api = getattr(self.client, 'smart_api', self.client)
-                res = await asyncio.to_thread(smart_api.ltpData, "NSE", "", str(broker_key))
+                # Determine exchange segment: NSE_FO options → "NFO", indices → "NSE"
+                if isinstance(instrument_key, str) and instrument_key.startswith('NSE_FO|'):
+                    ao_exchange = "NFO"
+                else:
+                    ao_exchange = "NSE"
+                # broker_key is now a numeric exchange token (int) extracted by _translate_to_broker_key
+                res = await asyncio.to_thread(smart_api.ltpData, ao_exchange, "", str(broker_key))
                 if res and res.get('status'):
                     return float(res.get('data', {}).get('lastTradedPrice', 0.0))
                 return 0.0

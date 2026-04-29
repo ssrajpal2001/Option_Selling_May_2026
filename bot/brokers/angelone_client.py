@@ -21,7 +21,8 @@ class AngelOneClient(BaseBroker):
         self.subscribed_tokens = set()
         self._pending_subscriptions = [] # List of tokens
         self._token_map = None # symbol_key -> {token, tradingsymbol, lot_size}
-        self._last_token_load = None
+        self._last_token_load = None   # Set only on successful load
+        self._last_load_attempt = None # Set on every attempt (success or failure) for backoff
 
         # Commercial Path: Always attempt login if db_config provided
         if self.db_config:
@@ -247,9 +248,24 @@ class AngelOneClient(BaseBroker):
 
     async def _load_token_map(self):
         """Downloads and processes the Angel One token master file."""
+        import json as _json
+        import aiohttp
         now = datetime.datetime.now()
+
+        # Fast path: already loaded successfully today
         if self._token_map is not None and self._last_token_load and self._last_token_load.date() == now.date():
             return
+
+        # Backoff guard: if a previous attempt failed within the last 60 seconds, don't retry.
+        # Without this guard, every concurrent call to get_instrument_info() triggers a fresh
+        # download, flooding the logs with dozens of parallel attempts per second.
+        if self._last_load_attempt is not None:
+            seconds_since_last = (now - self._last_load_attempt).total_seconds()
+            if seconds_since_last < 60:
+                logger.debug(f"[{self.instance_name}] AngelOne: Skipping token master download (last attempt {seconds_since_last:.0f}s ago, backoff=60s).")
+                return
+
+        self._last_load_attempt = now  # Record attempt time BEFORE download (prevents storm even if download is slow)
 
         urls = [
             "https://margincalculator.angelbroking.com/OpenAPI_Standard_MSil.php?Exchange=NFO",
@@ -258,12 +274,15 @@ class AngelOneClient(BaseBroker):
 
         try:
             logger.info(f"[{self.instance_name}] AngelOne: Downloading token masters...")
-            import aiohttp
             all_data = []
             async with aiohttp.ClientSession() as session:
                 for url in urls:
                     async with session.get(url, timeout=30) as response:
-                        all_data.extend(await response.json())
+                        # AngelOne's CDN serves valid JSON with Content-Type: text/plain;
+                        # aiohttp's response.json() rejects non-JSON content-types.
+                        # Using response.text() + json.loads() bypasses the MIME check.
+                        raw = await response.text()
+                        all_data.extend(_json.loads(raw))
 
             mapping = {}
             universal_mapping = {} # "NSE_INDEX|Nifty 50" -> token
@@ -306,6 +325,7 @@ class AngelOneClient(BaseBroker):
             logger.info(f"[{self.instance_name}] AngelOne: Token masters loaded. {len(mapping)} options, {len(universal_mapping)} universal keys.")
         except Exception as e:
             logger.error(f"[{self.instance_name}] Failed to load AngelOne token master: {e}")
+            # _last_load_attempt was already set above — backoff will prevent immediate retry storm.
 
     def get_token_by_universal_key(self, key):
         if not hasattr(self, '_universal_token_map'): return None
