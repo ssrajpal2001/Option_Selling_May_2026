@@ -120,11 +120,13 @@ class IndicatorManager:
 
                 # Trim to timestamp
                 ts_limit = pd.Timestamp(timestamp)
-                if ohlc.index.tz is not None and ts_limit.tzinfo is None:
+                if getattr(ohlc.index, 'tz', None) is not None and ts_limit.tzinfo is None:
                     ts_limit = ts_limit.tz_localize('Asia/Kolkata')
                 ohlc = ohlc[ohlc.index <= ts_limit]
 
         if ohlc is not None and not ohlc.empty:
+            if not isinstance(ohlc.index, pd.DatetimeIndex):
+                ohlc.index = pd.to_datetime(ohlc.index)
             if ohlc.index.tz is None:
                 ohlc.index = ohlc.index.tz_localize('Asia/Kolkata')
             else:

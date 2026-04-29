@@ -1,0 +1,35 @@
+2026-04-29 09:45:00,054 - UpstoxApp - ERROR - V2: Error during tick processing for NIFTY: 'Index' object has no attribute 'tz'
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/price_feed_handler.py", line 611, in _tick_worker
+    await asyncio.wait_for(self.trade_orchestrator.process_tick(), timeout=60.0)
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/base_orchestrator.py", line 305, in process_tick
+    await self.tick_processor.process_tick(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/profiler.py", line 15, in async_wrapper
+    result = await func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/tick_processor.py", line 137, in process_tick
+    await self.process_tick_v2(backtest_previous_tick, backtest_current_tick)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/tick_processor.py", line 451, in process_tick_v2
+    await sm.on_tick(sell_ticks, timestamp)
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_manager_v3.py", line 481, in on_tick
+    self.v3_dashboard_data = await self.dashboard_logic.get_v3_dashboard_data(timestamp)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_v3/dashboard_logic.py", line 22, in get_v3_dashboard_data
+    res = await self.manager.entry_logic._resolve_current_candidate_pair(ticks, timestamp)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_v3/entry_logic.py", line 32, in _resolve_current_candidate_pair
+    cands = await self._scan_v_slope_pool(ticks, timestamp, anchor_ts, rules, do_log=False)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/sell_v3/entry_logic.py", line 255, in _scan_v_slope_pool
+    roc_val = await self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, ref_ts, tf=v_slope_tf, length=roc_len, include_current=False)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/indicator_manager.py", line 693, in calculate_combined_roc
+    res = await asyncio.gather(
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/hub/indicator_manager.py", line 123, in get_robust_ohlc
+    if ohlc.index.tz is not None and ts_limit.tzinfo is None:
+       ^^^^^^^^^^^^^
+AttributeError: 'Index' object has no attribute 'tz'
