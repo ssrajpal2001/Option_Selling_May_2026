@@ -71,7 +71,8 @@ class IndicatorManager:
                 if current:
                     curr_df = pd.DataFrame([current]).set_index('timestamp')
                     curr_df.index = pd.to_datetime(curr_df.index)
-                    if curr_df.index.tz is None:
+                    curr_tz = getattr(curr_df.index, 'tzinfo', getattr(curr_df.index, 'tz', None))
+                    if curr_tz is None:
                         curr_df.index = curr_df.index.tz_localize('Asia/Kolkata')
                     else:
                         curr_df.index = curr_df.index.tz_convert('Asia/Kolkata')
@@ -120,8 +121,11 @@ class IndicatorManager:
 
                 # Trim to timestamp
                 ts_limit = pd.Timestamp(timestamp)
-                if getattr(ohlc.index, 'tz', None) is not None and ts_limit.tzinfo is None:
+                idx_tz = getattr(ohlc.index, 'tzinfo', getattr(ohlc.index, 'tz', None))
+                if idx_tz is not None and ts_limit.tzinfo is None:
                     ts_limit = ts_limit.tz_localize('Asia/Kolkata')
+                elif idx_tz is None and ts_limit.tzinfo is not None:
+                    ts_limit = ts_limit.replace(tzinfo=None)
                 ohlc = ohlc[ohlc.index <= ts_limit]
 
         if ohlc is not None and not ohlc.empty:
@@ -132,7 +136,8 @@ class IndicatorManager:
                     ohlc.index = pd.to_datetime(ohlc.index)
                 except (ValueError, TypeError):
                     ohlc.index = pd.to_datetime(ohlc.index, utc=True)
-            if getattr(ohlc.index, 'tz', None) is None:
+            idx_tz = getattr(ohlc.index, 'tzinfo', getattr(ohlc.index, 'tz', None))
+            if idx_tz is None:
                 ohlc.index = ohlc.index.tz_localize('Asia/Kolkata')
             else:
                 ohlc.index = ohlc.index.tz_convert('Asia/Kolkata')

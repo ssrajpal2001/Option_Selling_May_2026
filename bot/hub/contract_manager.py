@@ -248,7 +248,7 @@ class ContractManager:
             if not raw_contracts and self.atm_manager and self.atm_manager.orchestrator:
                 _bm = getattr(self.atm_manager.orchestrator, 'broker_manager', None)
                 if _bm and _bm.brokers:
-                    _CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue']
+                    _CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue', 'dhan']
                     for _pref in _CAPABLE:
                         _b = next(
                             (b for b in _bm.brokers.values()
