@@ -260,15 +260,15 @@ def handle_dhan_login_automated(credentials):
         if resp.status_code == 200:
             logger.info(f'[Dhan] Token VALID for {client_id}.')
             return access_token
-        elif resp.status_code in (401, 403):
-            logger.error(f'[Dhan] Token EXPIRED for {client_id}: HTTP {resp.status_code}')
-            return None
         else:
+            # ANY non-200 response (401, 403, 400 DH-906, etc.) means the token
+            # is rejected.  Previously 400s were silently returned as "valid"
+            # which let an invalid token slip through and broke contract loading.
             logger.warning(
                 f'[Dhan] Token check returned {resp.status_code} for {client_id}: '
                 f'{resp.text[:200]}'
             )
-            return access_token
+            return None
 
     except Exception as e:
         logger.error(f'[Dhan] Automated login error: {e}')

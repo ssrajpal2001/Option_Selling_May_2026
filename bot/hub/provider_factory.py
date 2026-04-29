@@ -267,28 +267,122 @@ class ProviderFactory:
                             logger.warning(f"[Global Upstox] Token ping failed ({_pe}); assuming token is valid.")
 
                     if needs_refresh:
-                        logger.info("Global Upstox token expired or fresh day started. Attempting auto-refresh...")
-                        creds = {
-                            "api_key": api_key,
-                            "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                            "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                            "password": decrypt_secret(dp.get("password_encrypted", "")),
-                            "totp": decrypt_secret(dp.get("totp_encrypted", ""))
-                        }
-                        from utils.auth_manager_upstox import handle_upstox_login_automated
-                        new_token = handle_upstox_login_automated(creds)
-                        if new_token:
-                            access_token = new_token
-                            enc_token = encrypt_secret(new_token)
-                            now_str = datetime.now(timezone.utc).isoformat()
-                            db_execute(
-                                "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
-                                (enc_token, now_str, now_str)
+                        # ── Cross-process file lock ──────────────────────────────────────
+                        # All broker subprocesses start at the same millisecond and ALL
+                        # detect a stale token simultaneously.  Without a lock they all
+                        # fire a TOTP login at once → Upstox rate-limits OTP generation
+                        # ("error 1017069: exceeded OTP limit, try after 10 mins") and
+                        # NONE get a fresh token → CSV fallback → wrong expiry.
+                        #
+                        # Solution: one OS-level exclusive lock (fcntl.flock).
+                        #   • First process to grab the lock performs the TOTP login.
+                        #   • Every other process waits, then re-reads the DB — the first
+                        #     process already wrote the fresh token there.
+                        import fcntl as _fcntl, os as _os
+                        _lock_path = _os.path.join('config', '.upstox_global_refresh.lock')
+                        _lock_fd = None
+                        try:
+                            _os.makedirs('config', exist_ok=True)
+                            _lock_fd = open(_lock_path, 'w')
+
+                            # Non-blocking first attempt
+                            _got_lock_immediately = False
+                            try:
+                                _fcntl.flock(_lock_fd, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+                                _got_lock_immediately = True
+                            except BlockingIOError:
+                                pass
+
+                            if not _got_lock_immediately:
+                                logger.info(
+                                    "[Global Upstox] Another process is already refreshing the token. "
+                                    "Waiting up to 20s for it to finish…"
+                                )
+                                # Blocking wait (another process holds the lock)
+                                _fcntl.flock(_lock_fd, _fcntl.LOCK_EX)
+
+                            # ── We now hold the lock ─────────────────────────────────────
+                            # Re-read the token from DB — if another process already
+                            # refreshed it, its new value will be in the DB right now.
+                            _fresh_dp = db_fetchone("SELECT * FROM data_providers WHERE provider='upstox'")
+                            _fresh_token = (
+                                decrypt_secret(_fresh_dp.get('access_token_encrypted', ''))
+                                if _fresh_dp else None
                             )
-                            logger.info("Global Upstox token auto-refreshed successfully.")
-                            # Rebuild auth with the fresh token
-                            global_auth = GlobalUpstoxAuth(api_key, access_token)
-                            global_rest = RestApiClient(global_auth)
+                            if _fresh_token and _fresh_token != access_token:
+                                # Another process already wrote a fresh token — use it,
+                                # no TOTP needed.
+                                logger.info(
+                                    "[Global Upstox] Fresh token already written to DB by another process. "
+                                    "Skipping TOTP login."
+                                )
+                                access_token = _fresh_token
+                                global_auth = GlobalUpstoxAuth(api_key, access_token)
+                                global_rest = RestApiClient(global_auth)
+                            else:
+                                # We are the first process — actually perform the login.
+                                logger.info(
+                                    "Global Upstox token expired or fresh day started. "
+                                    "Attempting auto-refresh (this process holds the lock)…"
+                                )
+                                creds = {
+                                    "api_key": api_key,
+                                    "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                                    "password": decrypt_secret(dp.get("password_encrypted", "")),
+                                    "totp": decrypt_secret(dp.get("totp_encrypted", ""))
+                                }
+                                from utils.auth_manager_upstox import handle_upstox_login_automated
+                                new_token = handle_upstox_login_automated(creds)
+                                if new_token:
+                                    access_token = new_token
+                                    enc_token = encrypt_secret(new_token)
+                                    now_str = datetime.now(timezone.utc).isoformat()
+                                    db_execute(
+                                        "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
+                                        (enc_token, now_str, now_str)
+                                    )
+                                    logger.info("Global Upstox token auto-refreshed successfully.")
+                                    global_auth = GlobalUpstoxAuth(api_key, access_token)
+                                    global_rest = RestApiClient(global_auth)
+                                else:
+                                    logger.error(
+                                        "[Global Upstox] Auto-refresh failed (OTP rate limit or wrong creds). "
+                                        "Continuing with stale token — contract REST calls will fall back to CSV."
+                                    )
+                        except Exception as _lock_err:
+                            logger.warning(
+                                f"[Global Upstox] File-lock error ({_lock_err}); "
+                                "proceeding with direct refresh (no lock protection)."
+                            )
+                            # Fallback: just try without lock
+                            creds = {
+                                "api_key": api_key,
+                                "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                                "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                                "password": decrypt_secret(dp.get("password_encrypted", "")),
+                                "totp": decrypt_secret(dp.get("totp_encrypted", ""))
+                            }
+                            from utils.auth_manager_upstox import handle_upstox_login_automated
+                            new_token = handle_upstox_login_automated(creds)
+                            if new_token:
+                                access_token = new_token
+                                enc_token = encrypt_secret(new_token)
+                                now_str = datetime.now(timezone.utc).isoformat()
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider='upstox'",
+                                    (enc_token, now_str, now_str)
+                                )
+                                logger.info("Global Upstox token auto-refreshed (no lock).")
+                                global_auth = GlobalUpstoxAuth(api_key, access_token)
+                                global_rest = RestApiClient(global_auth)
+                        finally:
+                            if _lock_fd:
+                                try:
+                                    _fcntl.flock(_lock_fd, _fcntl.LOCK_UN)
+                                    _lock_fd.close()
+                                except Exception:
+                                    pass
 
                     # Pass via api_client= kwarg so WebSocketManager uses it as
                     # a direct RestApiClient rather than an ApiClientManager wrapper.

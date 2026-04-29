@@ -1,0 +1,158 @@
+2026-04-29 10:45:39,965 - UpstoxApp - INFO - Logger has been successfully configured.
+2026-04-29 10:45:39,967 - UpstoxApp - INFO - [CLIENT MODE] Starting bot for ClientConfig(client_id=2, username='ssrajpal2001', broker='upstox', instrument='NIFTY', qty=1, mode='live', strategy='V3')
+2026-04-29 10:45:39,969 - UpstoxApp - INFO - ACTIVE STRATEGY: Entry TF: 1m | Exit TF: 1m
+2026-04-29 10:45:39,970 - UpstoxApp - INFO - Starting the multi-broker trading application...
+2026-04-29 10:45:39,972 - UpstoxApp - INFO - Using configuration file: config/config_trader.ini
+2026-04-29 10:45:39,973 - UpstoxApp - INFO - Starting configuration validation for context: 'trader'...
+2026-04-29 10:45:39,974 - UpstoxApp - INFO - Configuration validation for 'trader' successful.
+2026-04-29 10:45:39,975 - UpstoxApp - WARNING - TRADING_BOT_MASTER_KEY not found in environment. Sensitive data will be inaccessible.
+2026-04-29 10:45:46,345 - UpstoxApp - INFO - [DB] SQLite connected: /home/ec2-user/environment/Option_Selling_May_2026-main/bot/config/algosoft.db
+2026-04-29 10:45:46,352 - UpstoxApp - INFO - [UpstoxClient] Fresh token saved to DB for user 2.
+2026-04-29 10:45:46,355 - UpstoxApp - INFO - Upstox client initialized for User ID: 2.
+2026-04-29 10:45:46,355 - UpstoxApp - INFO - [CLIENT MODE] Loaded upstox broker instance: client_2_upstox
+2026-04-29 10:45:46,361 - UpstoxApp - INFO - Strategy logic loaded from /home/ec2-user/environment/Option_Selling_May_2026-main/bot/utils/../config/strategy_logic.json
+2026-04-29 10:45:46,363 - UpstoxApp - INFO - [EngineManager] Global session window calculated: 09:15:00 to 15:25:00
+2026-04-29 10:45:46,368 - UpstoxApp - INFO - Client Mode: Initializing Global Redundant Data Feeds for execution account client_2_upstox
+2026-04-29 10:45:46,368 - UpstoxApp - INFO - Live mode enabled. Initializing global data providers: ['dhan', 'upstox']
+2026-04-29 10:45:46,371 - UpstoxApp - INFO - [Global Upstox] Using client broker token for data feed (same-account mode).
+2026-04-29 10:45:46,402 - UpstoxApp - INFO - [Global Dhan] Validating stored token...
+2026-04-29 10:45:46,407 - UpstoxApp - INFO - [Dhan] Validating token for 1000557682 …
+2026-04-29 10:45:46,508 - UpstoxApp - INFO - [Dhan] Token VALID for 1000557682.
+2026-04-29 10:45:46,517 - UpstoxApp - INFO - [Global Dhan] Token valid. Timestamp refreshed.
+2026-04-29 10:45:46,518 - UpstoxApp - INFO - [Global Dhan] Data provider initialized.
+2026-04-29 10:45:46,522 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 10:45:46,526 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable — FeedClient will use shared tick distribution.
+2026-04-29 10:45:46,528 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)
+2026-04-29 10:45:46,619 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY
+2026-04-29 10:45:46,620 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.
+2026-04-29 10:45:46,632 - UpstoxApp - INFO - ╔══════════════════════════════════════════════════════════════════════╗
+2026-04-29 10:45:46,634 - UpstoxApp - INFO - ║ ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          ║
+2026-04-29 10:45:46,634 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 10:45:46,634 - UpstoxApp - INFO - ║ MASTER STATUS: [ENABLED]                                      ║
+2026-04-29 10:45:46,634 - UpstoxApp - INFO - ╠══════════════════════════════════════════════════════════════════════╣
+2026-04-29 10:45:46,635 - UpstoxApp - INFO - ║ TIMING: Start:09:20:00 | EntryEnd:15:15 | SquareOff:15:28 | Lot:65   ║
+2026-04-29 10:45:46,635 - UpstoxApp - INFO - ║ PREMIUMS: Target LTP: 60                                                  ║
+2026-04-29 10:45:46,643 - UpstoxApp - INFO - ║ BEGINNING ENTRY: OFF                                                 ║
+2026-04-29 10:45:46,643 - UpstoxApp - INFO - ║ RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      ║
+2026-04-29 10:45:46,646 - UpstoxApp - INFO - ║ ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) ║
+2026-04-29 10:45:46,648 - UpstoxApp - INFO - ║ SMART ROLLING: [ENABLED]                                     ║
+2026-04-29 10:45:46,649 - UpstoxApp - INFO - ║ SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              ║
+2026-04-29 10:45:46,652 - UpstoxApp - INFO - ║ GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            ║
+2026-04-29 10:45:46,654 - UpstoxApp - INFO - ║ PNL GUARDRAIL: [ENABLED] Target:100.0 Pts | SL:60.0 Pts                 ║
+2026-04-29 10:45:46,654 - UpstoxApp - INFO - ║ SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                ║
+2026-04-29 10:45:46,655 - UpstoxApp - INFO - ║ DYNAMIC EXITS: CLOSE>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) ║
+2026-04-29 10:45:46,656 - UpstoxApp - INFO - ║ ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       ║
+2026-04-29 10:45:46,665 - UpstoxApp - INFO - ║ LIMITS: Max Daily Trades: 5                                   ║
+2026-04-29 10:45:46,665 - UpstoxApp - INFO - ╚══════════════════════════════════════════════════════════════════════╝
+2026-04-29 10:45:46,666 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.
+2026-04-29 10:45:46,751 - UpstoxApp - INFO - Tick worker started for NIFTY.
+2026-04-29 10:45:46,760 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).
+2026-04-29 10:45:47,291 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-04-29) — today's contracts absent from standard endpoint. Fetching from expired-instruments API...
+2026-04-29 10:45:47,318 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-04-29
+2026-04-29 10:45:47,339 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404
+2026-04-29 10:45:47,341 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty — no expiry-day contracts found for 2026-04-29 (key=NSE_INDEX|Nifty 50)
+2026-04-29 10:45:47,343 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.
+2026-04-29 10:45:47,345 - UpstoxApp - INFO - ContractManager: All CE/PE expiry dates loaded (18 unique): [datetime.date(2026, 5, 5), datetime.date(2026, 5, 12), datetime.date(2026, 5, 19), datetime.date(2026, 5, 26), datetime.date(2026, 6, 2), datetime.date(2026, 6, 30), datetime.date(2026, 7, 28), datetime.date(2026, 9, 29), datetime.date(2026, 12, 29), datetime.date(2027, 3, 30)]...
+2026-04-29 10:45:47,348 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-05-05 (day=Tuesday)
+2026-04-29 10:45:47,370 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-05-05 (CURRENT_WEEK), trade=2026-05-05 (WEEKLY)
+2026-04-29 10:45:47,378 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-05-05 (WEEKLY), trade=2026-05-05 (WEEKLY)
+2026-04-29 10:45:47,386 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-05-05 (WEEKLY), trade=2026-05-05 (WEEKLY)
+2026-04-29 10:45:47,389 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY
+2026-04-29 10:45:47,392 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001
+2026-04-29 10:45:47,393 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY
+2026-04-29 10:45:47,395 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.
+2026-04-29 10:45:47,398 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).
+2026-04-29 10:45:47,400 - UpstoxApp - INFO - Trading bot is now live.
+2026-04-29 10:45:47,403 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active.
+2026-04-29 10:45:47,429 - UpstoxApp - INFO - V2 HEARTBEAT: [NIFTY] Loop active. Feed Lag: N/A | Worker: ALIVE | Exchange: None | Sessions: 2:Idle
+2026-04-29 10:45:47,430 - UpstoxApp - INFO - V2: [NIFTY] Futures price missing. Falling back to Index price 24264.2 for ATM calculation.
+2026-04-29 10:47:09,117 - UpstoxApp - INFO - [Client 2] Trading TOGGLE ON detected. Waiting for FRESH signals.
+2026-04-29 10:47:11,365 - UpstoxApp - INFO - [SellManagerV3] Heartbeat: Phase=BEGINNING | Status=WAITING_FOR_BOUNDARY | Indicators=OK | Spot=24256.9
+2026-04-29 10:47:12,657 - UpstoxApp - WARNING - [StatusWriter] Failed to write status file config/bot_status_client_2_NIFTY.json: [Errno 2] No such file or directory: 'config/bot_status_client_2_NIFTY.tmp' -> 'config/bot_status_client_2_NIFTY.json'
+2026-04-29 10:48:00,036 - UpstoxApp - INFO - [SellManagerV3] Selection: Using RE-ENTRY CONCEPT (Pool Scan)...
+2026-04-29 10:48:00,044 - UpstoxApp - INFO - [SellManagerV3] Pool Scan (Matrix 7x7) - ATM Bias: CE Stronger
+2026-04-29 10:48:00,185 - UpstoxApp - INFO -   + Strike 24250/24400 [Key: NSE_FO|74169/NSE_FO|74178] | LTP: 222.15/247.00 | Score: 0.0530 | PASS
+2026-04-29 10:48:00,331 - UpstoxApp - INFO -   + Strike 24300/24300 [Key: NSE_FO|74171/NSE_FO|74172] | LTP: 193.30/195.85 | Score: 0.0066 | PASS
+2026-04-29 10:48:00,421 - UpstoxApp - INFO -   + Strike 24300/24350 [Key: NSE_FO|74171/NSE_FO|74174] | LTP: 193.30/220.25 | Score: 0.0652 | PASS
+2026-04-29 10:48:00,504 - UpstoxApp - INFO -   + Strike 24300/24400 [Key: NSE_FO|74171/NSE_FO|74178] | LTP: 193.30/247.00 | Score: 0.1220 | PASS
+2026-04-29 10:48:00,579 - UpstoxApp - INFO -   + Strike 24350/24250 [Key: NSE_FO|74173/NSE_FO|74170] | LTP: 168.80/173.55 | Score: 0.0139 | PASS
+2026-04-29 10:48:00,725 - UpstoxApp - INFO -   + Strike 24350/24300 [Key: NSE_FO|74173/NSE_FO|74172] | LTP: 168.80/195.85 | Score: 0.0742 | PASS
+2026-04-29 10:48:00,811 - UpstoxApp - INFO -   + Strike 24350/24350 [Key: NSE_FO|74173/NSE_FO|74174] | LTP: 168.80/220.25 | Score: 0.1322 | PASS
+2026-04-29 10:48:00,890 - UpstoxApp - INFO -   + Strike 24350/24400 [Key: NSE_FO|74173/NSE_FO|74178] | LTP: 168.80/247.00 | Score: 0.1881 | PASS
+2026-04-29 10:48:00,926 - UpstoxApp - INFO -   + Strike 24400/24200 [Key: NSE_FO|74175/NSE_FO|74168] | LTP: 145.00/153.25 | Score: 0.0277 | PASS
+2026-04-29 10:48:00,961 - UpstoxApp - INFO -   + Strike 24400/24250 [Key: NSE_FO|74175/NSE_FO|74170] | LTP: 145.00/173.55 | Score: 0.0896 | PASS
+2026-04-29 10:48:01,019 - UpstoxApp - INFO -   + Strike 24400/24300 [Key: NSE_FO|74175/NSE_FO|74172] | LTP: 145.00/195.85 | Score: 0.1492 | PASS
+2026-04-29 10:48:01,060 - UpstoxApp - INFO -   + Strike 24400/24350 [Key: NSE_FO|74175/NSE_FO|74174] | LTP: 145.00/220.25 | Score: 0.2060 | PASS
+2026-04-29 10:48:01,095 - UpstoxApp - INFO -   + Strike 24400/24400 [Key: NSE_FO|74175/NSE_FO|74178] | LTP: 145.00/247.00 | Score: 0.2602 | PASS
+2026-04-29 10:48:01,096 - UpstoxApp - INFO - [SellManagerV3] Matrix Selection: 24300/24300 with Min Balanced Score: 0.0066
+2026-04-29 10:48:01,096 - UpstoxApp - INFO - [SellManagerV3] Executing Re-entry Concept (balanced_premium): 24300 CE (NSE_FO|74171) @ 193.3, 24300 PE (NSE_FO|74172) @ 195.85
+2026-04-29 10:48:01,154 - UpstoxApp - INFO - [client_2_upstox] Running behind AWS NAT. EIP 3.7.80.13 validated via instance metadata — order routing OK (0.1 ms).
+2026-04-29 10:48:01,156 - UpstoxApp - INFO - [client_2_upstox] Running behind AWS NAT. EIP 3.7.80.13 validated via instance metadata — order routing OK (0.1 ms).
+2026-04-29 10:48:01,241 - UpstoxApp - ERROR - [UpstoxClient] place_order error for user 2: (401)
+Reason: Unauthorized
+HTTP response headers: HTTPHeaderDict({'Date': 'Wed, 29 Apr 2026 05:18:01 GMT', 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'reqId': '0f8750ab-22d3-45c2-bee8-5d98d439d324', 'X-Content-Type-Options': 'nosniff', 'X-XSS-Protection': '0', 'Pragma': 'no-cache', 'Strict-Transport-Security': 'max-age=31536000 ; includeSubDomains', 'X-Frame-Options': 'DENY', 'Cache-Control': 'must-revalidate,no-cache,no-store', 'message': 'request failed'})
+HTTP response body: b'{"status":"error","errors":[{"errorCode":"UDAPI100050","message":"Invalid token used to access API","propertyPath":null,"invalidValue":null,"error_code":"UDAPI100050","property_path":null,"invalid_value":null}]}'
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/upstox_client.py", line 302, in place_order
+    resp = order_api.place_order(body=req, api_version="2.0")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api/order_api.py", line 1056, in place_order
+    (data) = self.place_order_with_http_info(body, api_version, **kwargs)  # noqa: E501
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api/order_api.py", line 1130, in place_order_with_http_info
+    return self.api_client.call_api(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api_client.py", line 327, in call_api
+    return self.__call_api(resource_path, method,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api_client.py", line 155, in __call_api
+    response_data = self.request(
+                    ^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api_client.py", line 369, in request
+    return self.rest_client.POST(url,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/rest.py", line 263, in POST
+    return self.request("POST", url,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/rest.py", line 222, in request
+    raise ApiException(http_resp=r)
+upstox_client.rest.ApiException: (401)
+Reason: Unauthorized
+HTTP response headers: HTTPHeaderDict({'Date': 'Wed, 29 Apr 2026 05:18:01 GMT', 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'reqId': '0f8750ab-22d3-45c2-bee8-5d98d439d324', 'X-Content-Type-Options': 'nosniff', 'X-XSS-Protection': '0', 'Pragma': 'no-cache', 'Strict-Transport-Security': 'max-age=31536000 ; includeSubDomains', 'X-Frame-Options': 'DENY', 'Cache-Control': 'must-revalidate,no-cache,no-store', 'message': 'request failed'})
+HTTP response body: b'{"status":"error","errors":[{"errorCode":"UDAPI100050","message":"Invalid token used to access API","propertyPath":null,"invalidValue":null,"error_code":"UDAPI100050","property_path":null,"invalid_value":null}]}'
+
+2026-04-29 10:48:01,260 - UpstoxApp - ERROR - [UpstoxClient] place_order error for user 2: (401)
+Reason: Unauthorized
+HTTP response headers: HTTPHeaderDict({'Date': 'Wed, 29 Apr 2026 05:18:01 GMT', 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'reqId': '571628a2-85c6-4e22-9ab6-1d0284c1e695', 'X-Content-Type-Options': 'nosniff', 'X-XSS-Protection': '0', 'Pragma': 'no-cache', 'Strict-Transport-Security': 'max-age=31536000 ; includeSubDomains', 'X-Frame-Options': 'DENY', 'Cache-Control': 'must-revalidate,no-cache,no-store', 'message': 'request failed'})
+HTTP response body: b'{"status":"error","errors":[{"errorCode":"UDAPI100050","message":"Invalid token used to access API","propertyPath":null,"invalidValue":null,"error_code":"UDAPI100050","property_path":null,"invalid_value":null}]}'
+Traceback (most recent call last):
+  File "/home/ec2-user/environment/Option_Selling_May_2026-main/bot/brokers/upstox_client.py", line 302, in place_order
+    resp = order_api.place_order(body=req, api_version="2.0")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api/order_api.py", line 1056, in place_order
+    (data) = self.place_order_with_http_info(body, api_version, **kwargs)  # noqa: E501
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api/order_api.py", line 1130, in place_order_with_http_info
+    return self.api_client.call_api(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api_client.py", line 327, in call_api
+    return self.__call_api(resource_path, method,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api_client.py", line 155, in __call_api
+    response_data = self.request(
+                    ^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/api_client.py", line 369, in request
+    return self.rest_client.POST(url,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/rest.py", line 263, in POST
+    return self.request("POST", url,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ec2-user/.pyenv/versions/3.11.15/lib/python3.11/site-packages/upstox_client/rest.py", line 222, in request
+    raise ApiException(http_resp=r)
+upstox_client.rest.ApiException: (401)
+Reason: Unauthorized
+HTTP response headers: HTTPHeaderDict({'Date': 'Wed, 29 Apr 2026 05:18:01 GMT', 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'reqId': '571628a2-85c6-4e22-9ab6-1d0284c1e695', 'X-Content-Type-Options': 'nosniff', 'X-XSS-Protection': '0', 'Pragma': 'no-cache', 'Strict-Transport-Security': 'max-age=31536000 ; includeSubDomains', 'X-Frame-Options': 'DENY', 'Cache-Control': 'must-revalidate,no-cache,no-store', 'message': 'request failed'})
+HTTP response body: b'{"status":"error","errors":[{"errorCode":"UDAPI100050","message":"Invalid token used to access API","propertyPath":null,"invalidValue":null,"error_code":"UDAPI100050","property_path":null,"invalid_value":null}]}'
+
+2026-04-29 10:48:01,265 - UpstoxApp - ERROR - [SellManagerV3] ABORTING ENTRY: All broker orders failed. Check API configuration/logs.
+2026-04-29 10:48:09,559 - UpstoxApp - INFO - [SellManagerV3] Heartbeat: Phase=BEGINNING | Status=WAITING_FOR_BOUNDARY | Indicators=OK | Spot=24261.0
