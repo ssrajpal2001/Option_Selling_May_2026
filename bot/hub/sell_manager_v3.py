@@ -15,6 +15,11 @@ class SellManagerV3:
     Delegates specialized tasks to EntryLogic, ExitLogic, and DashboardLogic components.
     """
 
+    # Class-level set so the startup banner is printed exactly once per instrument
+    # per process, regardless of how many SellManagerV3 instances are created
+    # (global orchestrator instance + per-user session instances).
+    _banner_logged: 'set[str]' = set()
+
     def __init__(self, parent):
         # Support isolated UserSession as parent
         if hasattr(parent, 'user_id'):
@@ -189,7 +194,16 @@ class SellManagerV3:
         return default
 
     def log_active_strategy_settings(self):
-        """Logs a clear summary of all enabled strategy parameters for the session log."""
+        """Logs a clear summary of all enabled strategy parameters for the session log.
+
+        Prints exactly once per instrument per process — subsequent calls for the
+        same instrument (e.g. per-user-session instances) are silently skipped
+        because the global orchestrator instance already emitted the banner.
+        """
+        if self.instrument_name in SellManagerV3._banner_logged:
+            return
+        SellManagerV3._banner_logged.add(self.instrument_name)
+
         v3_mode = self.orchestrator.get_strat_cfg("v3_mode", False, bool)
 
         logger.info(f"╔══════════════════════════════════════════════════════════════════════╗")

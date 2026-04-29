@@ -93,7 +93,7 @@ class PriceFeedHandler:
         broker_source = data.get('broker', 'unknown')
         user_id = data.get('user_id')
 
-        logger.info(f"DEBUG: PriceFeedHandler received normalized tick from {broker_source} for {instrument_key} (User: {user_id}, LTP: {ltp})")
+        logger.debug(f"PriceFeedHandler received normalized tick from {broker_source} for {instrument_key} (User: {user_id}, LTP: {ltp})")
 
         # DUAL-FEED REDUNDANCY LOGIC (FAILOVER)
         # We only process this tick if it's "new" for this instrument.

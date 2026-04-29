@@ -423,8 +423,15 @@ class BaseBroker(ABC):
         """
         if self.source_ip:
             self._validate_source_ip()
-            with _scoped_socket_patch(self.source_ip):
+            # On AWS NAT the Elastic IP is not locally bindable, so
+            # attempting socket.bind() to it fails with [Errno -9] and
+            # breaks DNS resolution inside the SDK call.  Skip the patch
+            # in that case — the EIP is applied at the NAT gateway level.
+            if _nat_detected.get(self.source_ip):
                 yield
+            else:
+                with _scoped_socket_patch(self.source_ip):
+                    yield
         else:
             yield
 
