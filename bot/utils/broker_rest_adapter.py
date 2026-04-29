@@ -149,9 +149,16 @@ class BrokerRestAdapter:
                 # When the token master is loaded, passing the real tradingsymbol
                 # alongside the symboltoken matches AngelOne's recommended API usage
                 # and avoids spurious AB4006 "Invalid symboltoken" rejections.
+                #
+                # NSE_FO keys: look up from the reverse map built during master load.
+                # NSE_INDEX / NSE_EQ keys: the symbol is the segment after '|'
+                # (e.g. "NSE_INDEX|Nifty 50" → tradingsymbol "Nifty 50").
                 ao_tradingsymbol = ""
-                if hasattr(self.client, 'get_tradingsymbol_for_nsefoo_key'):
-                    ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key) or ""
+                if isinstance(instrument_key, str) and instrument_key.startswith('NSE_FO|'):
+                    if hasattr(self.client, 'get_tradingsymbol_for_nsefoo_key'):
+                        ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key) or ""
+                elif isinstance(instrument_key, str) and '|' in instrument_key:
+                    ao_tradingsymbol = instrument_key.split('|', 1)[1]
                 res = await asyncio.to_thread(smart_api.ltpData, ao_exchange, ao_tradingsymbol, str(broker_key))
                 if res and res.get('status'):
                     return float(res.get('data', {}).get('lastTradedPrice', 0.0))
