@@ -1,4 +1,5 @@
 import ast
+import builtins
 import importlib
 import sys
 import unittest
@@ -22,6 +23,26 @@ class InstanceManagerImportTests(unittest.TestCase):
 
     def test_instance_manager_singleton_is_exported(self):
         module = importlib.import_module("hub.instance_manager")
+
+        self.assertTrue(hasattr(module, "instance_manager"))
+        self.assertIsInstance(module.instance_manager, module.InstanceManager)
+
+    def test_instance_manager_import_does_not_depend_on_utils_logger(self):
+        sys.modules.pop("hub.instance_manager", None)
+        original_import = builtins.__import__
+
+        def guarded_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name in ("utils.logger", ".logger") or (
+                name == "utils" and "logger" in fromlist
+            ):
+                raise AssertionError("hub.instance_manager must not import utils.logger")
+            return original_import(name, globals, locals, fromlist, level)
+
+        try:
+            builtins.__import__ = guarded_import
+            module = importlib.import_module("hub.instance_manager")
+        finally:
+            builtins.__import__ = original_import
 
         self.assertTrue(hasattr(module, "instance_manager"))
         self.assertIsInstance(module.instance_manager, module.InstanceManager)
