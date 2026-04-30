@@ -279,6 +279,18 @@ class RestApiClient:
 
         return all_results
 
+    async def get_positions(self):
+        """Fetch Upstox short-term/net positions for square-off and UI status."""
+        return await self._request('get', '/portfolio/short-term-positions')
+
+    async def get_user_fund_margin(self, segment='SEC'):
+        """Fetch Upstox funds and margin details."""
+        return await self._request(
+            'get',
+            '/user/get-funds-and-margin',
+            params={'segment': segment},
+        )
+
     async def verify_authentication(self):
         try:
             await self._request('get', '/user/profile')

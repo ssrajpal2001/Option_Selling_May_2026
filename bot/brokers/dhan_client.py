@@ -55,7 +55,10 @@ class DhanClient(BaseBroker):
                             f"Trying stored access token."
                         )
 
-                # 2. Fallback to existing access token (always runs if step 1 didn't set self.dhan)
+                # 2. Fallback to existing access token, but only after the same
+                # lightweight validation used above.  Constructing dhanhq with an
+                # expired token looks "connected" until the first live order/feed
+                # call fails with DH-901.
                 if not self.dhan:
                     try:
                         try:
@@ -64,9 +67,20 @@ class DhanClient(BaseBroker):
                             DhanContext = None
                         access_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
                         if client_id and access_token:
-                            self.dhan = (dhanhq(DhanContext(client_id, access_token))
-                                         if DhanContext else dhanhq(client_id, access_token))
-                            logger.info(f"Dhan client initialized from token for User ID: {self.user_id}.")
+                            from utils.auth_manager_dhan import handle_dhan_login_automated
+                            validated_token = handle_dhan_login_automated({
+                                'api_key': client_id,
+                                'access_token': access_token,
+                            })
+                            if validated_token:
+                                self.dhan = (dhanhq(DhanContext(client_id, validated_token))
+                                             if DhanContext else dhanhq(client_id, validated_token))
+                                logger.info(f"Dhan client initialized from token for User ID: {self.user_id}.")
+                            else:
+                                logger.error(
+                                    f"Dhan token invalid/expired for user {self.user_id}. "
+                                    f"Reconnect Dhan from Settings before live trading."
+                                )
                         else:
                             logger.error(f"Dhan: Missing credentials in DB config for user {self.user_id}.")
                     except Exception as e:
