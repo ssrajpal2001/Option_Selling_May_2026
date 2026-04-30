@@ -18,7 +18,6 @@ from datetime import datetime, timezone, timedelta
 from web.deps import require_admin, get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
 from web.auth import encrypt_secret, decrypt_secret
-from hub.instance_manager import instance_manager
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
@@ -192,9 +191,9 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             )
 
             try:
-                from hub.feed_registry import refresh_feed_credentials
+                import hub.feed_registry
                 api_key_clear = decrypt_secret(dp.get("api_key_encrypted", ""))
-                refreshed = refresh_feed_credentials(provider, token, api_key=api_key_clear)
+                refreshed = hub.feed_registry.refresh_feed_credentials(provider, token, api_key=api_key_clear)
                 if refreshed:
                     logger.info(f"[Admin] Live {provider} feed signaled to refresh credentials.")
             except Exception as _rf_err:
@@ -304,9 +303,9 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                 )
                 # Signal any live feed to adopt new token immediately
                 try:
-                    from hub.feed_registry import refresh_feed_credentials
+                    import hub.feed_registry
                     api_key_clear = decrypt_secret(dp.get("api_key_encrypted", ""))
-                    refresh_feed_credentials(provider, token, api_key=api_key_clear)
+                    hub.feed_registry.refresh_feed_credentials(provider, token, api_key=api_key_clear)
                 except Exception as _rf_err:
                     logger.warning(f"[Admin] Could not signal live feed refresh for {provider}: {_rf_err}")
 
@@ -523,7 +522,8 @@ async def deactivate_client(client_id: int, admin=Depends(require_admin)):
     user = db_fetchone("SELECT * FROM users WHERE id=? AND role='client'", (client_id,))
     if not user:
         raise HTTPException(404, "Client not found")
-    instance_manager.stop_all_for_client(client_id)
+    import hub.instance_manager
+    hub.instance_manager.instance_manager.stop_all_for_client(client_id)
     db_execute("UPDATE users SET is_active=0 WHERE id=?", (client_id,))
     _audit(admin["id"], admin["role"], "deactivate_client", client_id, {"user": user["username"]})
     return {"success": True, "message": f"Client '{user['username']}' deactivated."}
@@ -638,7 +638,8 @@ async def client_detail(client_id: int, admin=Depends(require_admin)):
 
 @router.post("/clients/{client_id}/force-close")
 async def force_close_positions(client_id: int, admin=Depends(require_admin)):
-    instance_manager.stop_all_for_client(client_id)
+    import hub.instance_manager
+    hub.instance_manager.instance_manager.stop_all_for_client(client_id)
     # Also update DB status to ensure UI reflects it immediately
     db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE client_id=?", (client_id,))
     _audit(admin["id"], admin["role"], "force_close", client_id, {"client_id": client_id})
@@ -650,7 +651,8 @@ async def clear_trade_history(client_id: int, admin=Depends(require_admin)):
     logger.info(f"[Admin] Clearing trade history for client {client_id} requested by admin {admin['username']}")
     try:
         # 0. Stop any running instances first to prevent old status overwriting the reset
-        instance_manager.stop_all_for_client(client_id)
+        import hub.instance_manager
+        hub.instance_manager.instance_manager.stop_all_for_client(client_id)
 
         # 1. Clear database history
         logger.info(f"[Admin] Deleting records from trade_history and order_failures for client {client_id}")
@@ -853,7 +855,8 @@ async def client_bot_status(client_id: int, admin=Depends(require_admin)):
     if not instance:
         return {"configured": False, "bot_data": {}}
 
-    live_status = instance_manager.get_instance_status(instance["id"])
+    import hub.instance_manager
+    live_status = hub.instance_manager.instance_manager.get_instance_status(instance["id"])
     bot_data = {}
     status_file = Path(f'config/bot_status_client_{client_id}.json')
     if status_file.exists():
@@ -906,7 +909,8 @@ async def approve_broker_request(request_id: int, admin=Depends(require_admin)):
         (req["client_id"], req["current_broker"])
     )
     if running:
-        instance_manager.stop_all_for_client(req["client_id"])
+        import hub.instance_manager
+        hub.instance_manager.instance_manager.stop_all_for_client(req["client_id"])
         db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE client_id=? AND status='running'", (req["client_id"],))
 
     now = datetime.now(timezone.utc).isoformat()
@@ -1181,12 +1185,12 @@ async def delete_subscription_plan(plan_id: int, admin=Depends(require_admin)):
 @router.get("/data-providers/health")
 async def feeder_health_status(admin=Depends(require_admin)):
     """Returns token health AND live WebSocket connectivity state for global data providers."""
-    from hub.feed_registry import get_ws_state
+    import hub.feed_registry
     providers = db_fetchall("SELECT * FROM data_providers WHERE provider IN ('upstox', 'dhan')")
     now = datetime.now(timezone.utc)
     result = {}
     for p in providers:
-        ws = get_ws_state(p["provider"])
+        ws = hub.feed_registry.get_ws_state(p["provider"])
         info = {
             "provider": p["provider"],
             "status": p["status"],
@@ -1371,9 +1375,9 @@ async def system_health(admin=Depends(require_admin)):
 
     # Feed tick times (from feed_registry)
     try:
-        from hub.feed_registry import get_ws_state
+        import hub.feed_registry
         for feed_name in ("upstox", "dhan"):
-            ws = get_ws_state(feed_name)
+            ws = hub.feed_registry.get_ws_state(feed_name)
             last = ws.get("last_tick_time")
             if last:
                 age = time.time() - last
@@ -1403,8 +1407,8 @@ async def system_health(admin=Depends(require_admin)):
 
     # Rust engine status
     try:
-        from hub.sell_v3.rust_bridge import RUST_AVAILABLE
-        info["rust_available"] = RUST_AVAILABLE
+        import hub.sell_v3.rust_bridge
+        info["rust_available"] = hub.sell_v3.rust_bridge.RUST_AVAILABLE
     except Exception:
         info["rust_available"] = False
 
