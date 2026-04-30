@@ -12,7 +12,6 @@ from typing import Optional
 from web.deps import get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
 from web.auth import encrypt_secret, decrypt_secret, _fernet
-from hub.instance_manager import instance_manager
 from hub.reconnect_manager import reconnect_manager
 from utils.logger import logger
 
@@ -925,6 +924,7 @@ async def square_off_one_leg(request: Request, user=Depends(get_current_user)):
 
 
 async def _start_one_broker_instance(instance: dict, user: dict, permitted_broker: str = None) -> dict:
+    from hub.instance_manager import instance_manager
     """
     Attempt to start a single configured broker instance.
 
@@ -1226,6 +1226,7 @@ async def stop_bot(user=Depends(get_current_user)):
 
     actually_stopped = []
     already_idle = []
+    from hub.instance_manager import instance_manager
     for inst in instances:
         live = instance_manager.get_instance_status(inst["id"])
         was_running = live.get("running") or inst.get("status") == "running"
@@ -1270,6 +1271,7 @@ async def stop_one_broker_bot(body: BotStopOneRequest, user=Depends(get_current_
     if not instance:
         raise HTTPException(400, f"{body.broker.capitalize()} is not configured.")
 
+    from hub.instance_manager import instance_manager
     instance_manager.stop_instance(instance["id"])
     db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
     _audit_client(user["id"], "bot_deactivate", {"broker": body.broker})
@@ -1456,6 +1458,7 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
     if not instance:
         return {"configured": False}
 
+    from hub.instance_manager import instance_manager
     live_status = instance_manager.get_instance_status(instance["id"])
 
     # If instrument is provided, filter trade history
@@ -2129,6 +2132,7 @@ async def stop_broker_bot(broker: str, user=Depends(get_current_user)):
     if not inst:
         raise HTTPException(400, f"No {broker} instance configured.")
 
+    from hub.instance_manager import instance_manager
     ok, msg = instance_manager.stop_instance(inst["id"])
     db_execute(
         "UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?",
