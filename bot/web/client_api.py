@@ -12,8 +12,6 @@ from typing import Optional
 from web.deps import get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
 from web.auth import encrypt_secret, decrypt_secret, _fernet
-from hub.instance_manager import instance_manager
-from hub.reconnect_manager import reconnect_manager
 from utils.logger import logger
 
 router = APIRouter(prefix="/client", tags=["client"])
@@ -195,6 +193,8 @@ class BrokerSetup(BaseModel):
 
 @router.get("/broker")
 async def get_broker_config(user=Depends(get_current_user)):
+    import hub.reconnect_manager
+    reconnect_manager = hub.reconnect_manager.reconnect_manager
     rows = db_fetchall("""
         SELECT id, broker, broker_user_id_encrypted, password_encrypted, totp_encrypted,
                api_key_encrypted, api_secret_encrypted, access_token_encrypted,
@@ -368,6 +368,8 @@ async def start_broker_reconnect(broker: str, force: bool = False,
     Poll GET /broker/{broker}/reconnect-status for live progress.
     Only brokers with a headless login path are supported (fyers is excluded).
     """
+    import hub.reconnect_manager
+    reconnect_manager = hub.reconnect_manager.reconnect_manager
     if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
     if reconnect_manager.is_active(user["id"], broker):
@@ -395,6 +397,8 @@ async def start_broker_reconnect(broker: str, force: bool = False,
 @router.post("/broker/{broker}/reconnect/cancel")
 async def cancel_broker_reconnect(broker: str, user=Depends(get_current_user)):
     """Cancel an active background reconnect loop for the given broker."""
+    import hub.reconnect_manager
+    reconnect_manager = hub.reconnect_manager.reconnect_manager
     if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
     cancelled = reconnect_manager.cancel(user["id"], broker)
@@ -404,6 +408,8 @@ async def cancel_broker_reconnect(broker: str, user=Depends(get_current_user)):
 @router.get("/broker/{broker}/reconnect-status")
 async def get_broker_reconnect_status(broker: str, user=Depends(get_current_user)):
     """Return the current background reconnect state for the given broker."""
+    import hub.reconnect_manager
+    reconnect_manager = hub.reconnect_manager.reconnect_manager
     if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
     return reconnect_manager.get_status(user["id"], broker)
@@ -925,6 +931,8 @@ async def square_off_one_leg(request: Request, user=Depends(get_current_user)):
 
 
 async def _start_one_broker_instance(instance: dict, user: dict, permitted_broker: str = None) -> dict:
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     """
     Attempt to start a single configured broker instance.
 
@@ -1226,6 +1234,8 @@ async def stop_bot(user=Depends(get_current_user)):
 
     actually_stopped = []
     already_idle = []
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     for inst in instances:
         live = instance_manager.get_instance_status(inst["id"])
         was_running = live.get("running") or inst.get("status") == "running"
@@ -1270,6 +1280,8 @@ async def stop_one_broker_bot(body: BotStopOneRequest, user=Depends(get_current_
     if not instance:
         raise HTTPException(400, f"{body.broker.capitalize()} is not configured.")
 
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     instance_manager.stop_instance(instance["id"])
     db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
     _audit_client(user["id"], "bot_deactivate", {"broker": body.broker})
@@ -1456,6 +1468,8 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
     if not instance:
         return {"configured": False}
 
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     live_status = instance_manager.get_instance_status(instance["id"])
 
     # If instrument is provided, filter trade history
@@ -2129,6 +2143,8 @@ async def stop_broker_bot(broker: str, user=Depends(get_current_user)):
     if not inst:
         raise HTTPException(400, f"No {broker} instance configured.")
 
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     ok, msg = instance_manager.stop_instance(inst["id"])
     db_execute(
         "UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?",

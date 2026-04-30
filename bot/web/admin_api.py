@@ -18,7 +18,6 @@ from datetime import datetime, timezone, timedelta
 from web.deps import require_admin, get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
 from web.auth import encrypt_secret, decrypt_secret
-from hub.instance_manager import instance_manager
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
@@ -523,6 +522,8 @@ async def deactivate_client(client_id: int, admin=Depends(require_admin)):
     user = db_fetchone("SELECT * FROM users WHERE id=? AND role='client'", (client_id,))
     if not user:
         raise HTTPException(404, "Client not found")
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     instance_manager.stop_all_for_client(client_id)
     db_execute("UPDATE users SET is_active=0 WHERE id=?", (client_id,))
     _audit(admin["id"], admin["role"], "deactivate_client", client_id, {"user": user["username"]})
@@ -638,6 +639,8 @@ async def client_detail(client_id: int, admin=Depends(require_admin)):
 
 @router.post("/clients/{client_id}/force-close")
 async def force_close_positions(client_id: int, admin=Depends(require_admin)):
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     instance_manager.stop_all_for_client(client_id)
     # Also update DB status to ensure UI reflects it immediately
     db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE client_id=?", (client_id,))
@@ -650,6 +653,8 @@ async def clear_trade_history(client_id: int, admin=Depends(require_admin)):
     logger.info(f"[Admin] Clearing trade history for client {client_id} requested by admin {admin['username']}")
     try:
         # 0. Stop any running instances first to prevent old status overwriting the reset
+        import hub.instance_manager
+        instance_manager = hub.instance_manager.instance_manager
         instance_manager.stop_all_for_client(client_id)
 
         # 1. Clear database history
@@ -853,6 +858,8 @@ async def client_bot_status(client_id: int, admin=Depends(require_admin)):
     if not instance:
         return {"configured": False, "bot_data": {}}
 
+    import hub.instance_manager
+    instance_manager = hub.instance_manager.instance_manager
     live_status = instance_manager.get_instance_status(instance["id"])
     bot_data = {}
     status_file = Path(f'config/bot_status_client_{client_id}.json')
@@ -906,6 +913,8 @@ async def approve_broker_request(request_id: int, admin=Depends(require_admin)):
         (req["client_id"], req["current_broker"])
     )
     if running:
+        import hub.instance_manager
+        instance_manager = hub.instance_manager.instance_manager
         instance_manager.stop_all_for_client(req["client_id"])
         db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE client_id=? AND status='running'", (req["client_id"],))
 
