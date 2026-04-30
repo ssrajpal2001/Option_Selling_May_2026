@@ -89,6 +89,11 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
                 return _fail(dhan_msg)
             else:
                 dhan_msg = data.get('message') or data.get('errorMessage') or resp.text[:200]
+                if 'once every 2 minutes' in dhan_msg.lower():
+                    dhan_msg = (
+                        "Token can be generated once every 2 minutes. "
+                        "Please wait 2 minutes and click Connect Now again."
+                    )
                 logger.error(
                     f"[Dhan] Token generation failed for {login_id}: "
                     f"HTTP {resp.status_code} — {dhan_msg}"
@@ -102,8 +107,14 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
     logger.info(f"[Dhan] Generating access token for client {login_id} …")
     result = _attempt(totp_code)
 
-    # Retry once if Dhan rejected the TOTP (race at 30s window boundary)
-    if result['error'] and 'totp' in result['error'].lower():
+    # Retry once if Dhan rejected the TOTP (race at 30s window boundary).
+    # Do not retry rate-limit/cooldown errors; that would just burn another
+    # request inside Dhan's "once every 2 minutes" window.
+    if (
+        result['error']
+        and 'totp' in result['error'].lower()
+        and 'once every 2 minutes' not in result['error'].lower()
+    ):
         logger.warning(
             f"[Dhan] TOTP rejected for {login_id} — waiting 1 s for next window, retrying …"
         )

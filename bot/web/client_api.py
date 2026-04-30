@@ -648,6 +648,12 @@ async def dhan_login_url(user=Depends(get_current_user)):
                 "message": "Dhan access token generated automatically via API Key! Valid for 24 hours."
             }
         _dhan_err = _dhan_result['error'] or "Check your API Key, Dhan Client ID, and password."
+        if "once every 2 minutes" in _dhan_err.lower():
+            raise HTTPException(
+                429,
+                "Dhan allows token generation only once every 2 minutes. "
+                "Please wait 2 minutes, then click Connect Now again."
+            )
         raise HTTPException(400, f"Dhan token generation failed. {_dhan_err}")
 
     # ── Path 2: Direct token mode — validate existing token ───────────────
@@ -1000,20 +1006,11 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
                 from utils.auth_manager_zerodha import handle_zerodha_login_automated
                 token = handle_zerodha_login_automated(creds)
             elif broker_name == "dhan":
-                from utils.auth_manager_dhan import generate_dhan_token, is_dhan_api_key_mode
-                if is_dhan_api_key_mode(creds):
-                    result = generate_dhan_token(
-                        creds["api_key"],
-                        creds.get("broker_user_id") or creds["api_key"],
-                        creds["password"],
-                        creds["totp"],
-                    )
-                    token = result.get("token")
-                    if not token:
-                        logger.warning(f"[Bot Start] Dhan token generation failed: {result.get('error')}")
-                else:
-                    from utils.auth_manager_dhan import handle_dhan_login_automated
-                    token = handle_dhan_login_automated(creds)
+                # Do not generate a fresh Dhan token during bot start. Dhan rate
+                # limits token generation to once every 2 minutes, so generation
+                # is reserved for the explicit Connect Now action.
+                from utils.auth_manager_dhan import handle_dhan_login_automated
+                token = handle_dhan_login_automated(creds)
             elif broker_name == "angelone":
                 from utils.auth_manager_angelone import handle_angelone_login
                 creds["client_code"] = creds["broker_user_id"]
