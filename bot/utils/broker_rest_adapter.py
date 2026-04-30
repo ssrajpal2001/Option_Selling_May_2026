@@ -176,20 +176,40 @@ class BrokerRestAdapter:
                     ao_exchange = "NFO"
                 else:
                     ao_exchange = "NSE"
+
                 # Look up the AngelOne tradingsymbol for this instrument key.
                 # When the token master is loaded, passing the real tradingsymbol
                 # alongside the symboltoken matches AngelOne's recommended API usage
                 # and avoids spurious AB4006 "Invalid symboltoken" rejections.
-                #
-                # NSE_FO keys: look up from the reverse map built during master load.
-                # NSE_INDEX / NSE_EQ keys: the symbol is the segment after '|'
-                # (e.g. "NSE_INDEX|Nifty 50" → tradingsymbol "Nifty 50").
                 ao_tradingsymbol = ""
-                if isinstance(instrument_key, str) and instrument_key.startswith('NSE_FO|'):
-                    if hasattr(self.client, 'get_tradingsymbol_for_nsefoo_key'):
-                        ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key) or ""
-                elif isinstance(instrument_key, str) and '|' in instrument_key:
-                    ao_tradingsymbol = instrument_key.split('|', 1)[1]
+
+                # If we have the wrapper client, use its high-level lookups
+                from brokers.angelone_client import AngelOneClient
+                if isinstance(self.client, AngelOneClient):
+                    if instrument_key.startswith('NSE_FO|'):
+                        ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key)
+                    else:
+                        # For indices/stocks, we can try to resolve it from the master map
+                        # but often it's just the part after '|'
+                        if '|' in instrument_key:
+                            ao_tradingsymbol = instrument_key.split('|', 1)[1]
+
+                # CRITICAL: If tradingsymbol is still empty, Angel One API often rejects the request
+                # with AB4006 even if the token is correct.
+                if not ao_tradingsymbol:
+                    # Fallback pattern for options if master reverse-map didn't have it
+                    if ao_exchange == "NFO" and hasattr(self.client, '_token_map') and self.client._token_map:
+                         # We can't easily reverse search (name, expiry, strike, type) from just a token
+                         # but we can try to find it in the values.
+                         for k, v in self.client._token_map.items():
+                             if str(v.get('token')) == str(broker_key):
+                                 ao_tradingsymbol = v.get('tradingsymbol', '')
+                                 break
+
+                # If it's an index like NIFTY 50, ensure it's correct
+                if 'Nifty 50' in instrument_key: ao_tradingsymbol = 'Nifty 50'
+                elif 'Nifty Bank' in instrument_key: ao_tradingsymbol = 'Nifty Bank'
+
                 res = await asyncio.to_thread(smart_api.ltpData, ao_exchange, ao_tradingsymbol, str(broker_key))
                 if res and res.get('status'):
                     return float(res.get('data', {}).get('lastTradedPrice', 0.0))

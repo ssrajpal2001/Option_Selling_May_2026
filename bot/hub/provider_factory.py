@@ -337,24 +337,22 @@ class ProviderFactory:
                         "which has no option-contract support — skipping."
                     )
 
-        # BROKER REST PREFERENCE: For ALL execution brokers,
-        # ALWAYS prefer the execution broker over the global Upstox REST client for contract data.
-        # These brokers have fresh authenticated sessions and their instrument masters contain
-        # ALL current weekly expiries (May 5, May 12, May 19, etc.) — unlike the global Upstox
-        # data provider which may have a stale token, and unlike the CSV which lacks near-weekly
-        # contracts entirely and causes wrong expiry / LTP stuck at 0.
-        #
-        # Dhan is now included as it supports contract fetching via security list.
-        # Upstox is included as a fallback if the same-account short-circuit was skipped.
-        _PREFERRED_EXECUTION_BROKERS = ['zerodha', 'angelone', 'fyers', 'aliceblue', 'dhan', 'upstox']
-        if broker_manager and broker_manager.brokers:
+        # DATA FEEDER PRIORITY: Client-side brokers (Zerodha, AngelOne, etc.) should
+        # ONLY be used for order placement. All technical data (OHLC, Contracts, LTP)
+        # must come from the Global Data Feeder (Upstox/Dhan) to ensure consistency
+        # and avoid "Missing History Addon" or "Invalid Token" errors on client accounts.
+
+        # We already set rest_client above from global providers.
+        # We will ONLY override it with a client broker if no global provider was configured.
+
+        if not rest_client and broker_manager and broker_manager.brokers:
+            _PREFERRED_EXECUTION_BROKERS = ['upstox', 'dhan', 'zerodha', 'angelone', 'fyers', 'aliceblue']
             for _preferred in _PREFERRED_EXECUTION_BROKERS:
                 _b = next(
                     (b for b in broker_manager.brokers.values()
                      if getattr(b, 'broker_name', '') == _preferred),
                     None
                 )
-                # Ensure the broker is authenticated before choosing it as REST primary
                 if _b:
                     is_auth = False
                     if _preferred == 'zerodha' and getattr(_b, 'kite', None): is_auth = True
@@ -364,10 +362,8 @@ class ProviderFactory:
 
                     if is_auth:
                         rest_client = BrokerRestAdapter(_b, _preferred)
-                        logger.info(f"[ProviderFactory] Using {_preferred} execution broker as primary REST client for contracts.")
+                        logger.info(f"[ProviderFactory] No global rest_client. Falling back to {_preferred} execution broker for contracts.")
                         break
-                    else:
-                        logger.debug(f"[ProviderFactory] Skipping {_preferred} as REST primary (not authenticated).")
 
         # ENFORCEMENT: Websocket Data MUST come from Global Feeds (Upstox/Dhan)
         # We removed Zerodha as a data provider as per requirement.
