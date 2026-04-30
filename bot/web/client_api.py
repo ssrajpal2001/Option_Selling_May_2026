@@ -972,7 +972,15 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
     has_auto_login = instance.get("password_encrypted") and instance.get("totp_encrypted")
     _token_ts = instance.get("token_updated_at", "")
     if broker_name == "dhan":
-        token_needs_refresh = not _is_dhan_token_fresh(_token_ts)
+        _dhan_api_key_mode = bool(
+            instance.get("api_key_encrypted")
+            and instance.get("password_encrypted")
+            and instance.get("totp_encrypted")
+        )
+        token_needs_refresh = not _is_dhan_token_fresh(
+            _token_ts,
+            api_key_mode=_dhan_api_key_mode,
+        )
     else:
         token_needs_refresh = not _is_token_fresh(_token_ts)
 
@@ -980,8 +988,9 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
         try:
             logger.info(f"[Bot Start] Headless login for {broker_name} (User {user['id']})...")
             creds = {
-                "api_key": decrypt_secret(instance["api_key_encrypted"]),
+                "api_key": decrypt_secret(instance["api_key_encrypted"]) if instance.get("api_key_encrypted") else "",
                 "api_secret": decrypt_secret(instance.get("api_secret_encrypted", "")),
+                "access_token": decrypt_secret(instance.get("access_token_encrypted", "")),
                 "broker_user_id": decrypt_secret(instance.get("broker_user_id_encrypted", "")),
                 "password": decrypt_secret(instance["password_encrypted"]),
                 "totp": decrypt_secret(instance["totp_encrypted"]),
@@ -991,8 +1000,20 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
                 from utils.auth_manager_zerodha import handle_zerodha_login_automated
                 token = handle_zerodha_login_automated(creds)
             elif broker_name == "dhan":
-                from utils.auth_manager_dhan import handle_dhan_login_automated
-                token = handle_dhan_login_automated(creds)
+                from utils.auth_manager_dhan import generate_dhan_token, is_dhan_api_key_mode
+                if is_dhan_api_key_mode(creds):
+                    result = generate_dhan_token(
+                        creds["api_key"],
+                        creds.get("broker_user_id") or creds["api_key"],
+                        creds["password"],
+                        creds["totp"],
+                    )
+                    token = result.get("token")
+                    if not token:
+                        logger.warning(f"[Bot Start] Dhan token generation failed: {result.get('error')}")
+                else:
+                    from utils.auth_manager_dhan import handle_dhan_login_automated
+                    token = handle_dhan_login_automated(creds)
             elif broker_name == "angelone":
                 from utils.auth_manager_angelone import handle_angelone_login
                 creds["client_code"] = creds["broker_user_id"]
@@ -1039,12 +1060,29 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
             return {"broker": broker_name, "status": "skipped",
                     "message": f"{broker_name.capitalize()} session expired — reconnect in Settings"}
     elif broker_name == "dhan":
-        _dhan_api_secret = decrypt_secret(instance["api_secret_encrypted"]) if instance.get("api_secret_encrypted") else ""
-        from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm_h
-        _dhan_api_mode = _is_akm_h({"api_secret": _dhan_api_secret})
+        _dhan_api_mode = bool(
+            instance.get("api_key_encrypted")
+            and instance.get("password_encrypted")
+            and instance.get("totp_encrypted")
+        )
         if not _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_api_mode):
             return {"broker": broker_name, "status": "skipped",
                     "message": "Dhan token expired — click Connect Now or reconnect in Settings"}
+
+        from utils.auth_manager_dhan import handle_dhan_login_automated
+        _dhan_api_key = decrypt_secret(instance["api_key_encrypted"]) if instance.get("api_key_encrypted") else ""
+        _dhan_access_token = (
+            decrypt_secret(instance["access_token_encrypted"])
+            if instance.get("access_token_encrypted")
+            else decrypt_secret(instance.get("api_secret_encrypted", ""))
+        )
+        _dhan_valid_token = await asyncio.to_thread(
+            handle_dhan_login_automated,
+            {"api_key": _dhan_api_key, "access_token": _dhan_access_token},
+        )
+        if not _dhan_valid_token:
+            return {"broker": broker_name, "status": "skipped",
+                    "message": "Dhan token invalid or expired — reconnect Dhan in Settings"}
 
     # Already running?
     if instance["status"] == "running":
