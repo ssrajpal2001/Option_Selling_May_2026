@@ -729,7 +729,8 @@ async def _kill_switch_enforcer():
                         unlock = unlock.replace(hour=9, minute=15, second=0, microsecond=0)
 
                         # Stop the instance and lock
-                        from hub.instance_manager import instance_manager as _im
+                        import hub.instance_manager
+                        _im = hub.instance_manager.instance_manager
                         _im.stop_instance(inst["id"], reason=trigger_reason)
                         db_execute(
                             "UPDATE client_broker_instances SET status='idle', bot_pid=NULL, "
@@ -1106,7 +1107,8 @@ def _hub_schedule_reconnect_for_instance(row: dict):
       - a loop is not already active or in cooldown.
     Called at server startup and periodically to detect mid-day token expiry.
     """
-    from hub.reconnect_manager import reconnect_manager
+    import hub.reconnect_manager
+    reconnect_manager = hub.reconnect_manager.reconnect_manager
     from web.client_api import _is_token_fresh, _is_dhan_token_fresh, _make_headless_login_fn
     from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm
     from web.auth import decrypt_secret
