@@ -21,7 +21,6 @@ from web.admin_api import router as admin_router
 from web.client_api import router as client_router
 from web.auth import decode_token, encrypt_secret, decrypt_secret, _fernet
 from web.db import get_db, db_fetchone, db_execute, db_fetchall
-from hub.event_bus import event_bus
 import asyncio
 import logging
 
@@ -288,7 +287,8 @@ async def zerodha_oauth_callback(
             (enc_token, now_ist, client_id)
         )
 
-        await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': client_id, 'broker': 'zerodha', 'access_token': access_token})
+        import hub.event_bus
+        await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': client_id, 'broker': 'zerodha', 'access_token': access_token})
         return _get_success_html("Zerodha")
     except Exception as e:
         return _get_error_html("Zerodha", str(e))
@@ -330,7 +330,8 @@ async def dhan_oauth_callback(
                 "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE client_id=? AND broker='dhan'",
                 (enc_token, now_ist, client_id)
             )
-            await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': client_id, 'broker': 'dhan', 'access_token': access_token})
+            import hub.event_bus
+            await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': client_id, 'broker': 'dhan', 'access_token': access_token})
             return _get_success_html("Dhan")
     except Exception as e:
         return _get_error_html("Dhan", str(e))
@@ -399,7 +400,8 @@ async def upstox_oauth_callback(
                 (enc_token, now_ist, client_id)
             )
 
-            await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': client_id, 'broker': 'upstox', 'access_token': access_token})
+            import hub.event_bus
+            await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': client_id, 'broker': 'upstox', 'access_token': access_token})
             return _get_success_html("Upstox")
         except Exception as e:
             return _get_error_html("Upstox", str(e))
@@ -729,8 +731,8 @@ async def _kill_switch_enforcer():
                         unlock = unlock.replace(hour=9, minute=15, second=0, microsecond=0)
 
                         # Stop the instance and lock
-                        from hub.instance_manager import instance_manager as _im
-                        _im.stop_instance(inst["id"], reason=trigger_reason)
+                        import hub.instance_manager
+                        hub.instance_manager.instance_manager.stop_instance(inst["id"], reason=trigger_reason)
                         db_execute(
                             "UPDATE client_broker_instances SET status='idle', bot_pid=NULL, "
                             "trading_locked_until=? WHERE id=?",
@@ -1106,14 +1108,14 @@ def _hub_schedule_reconnect_for_instance(row: dict):
       - a loop is not already active or in cooldown.
     Called at server startup and periodically to detect mid-day token expiry.
     """
-    from hub.reconnect_manager import reconnect_manager
+    import hub.reconnect_manager
     from web.client_api import _is_token_fresh, _is_dhan_token_fresh, _make_headless_login_fn
     from utils.auth_manager_dhan import is_dhan_api_key_mode as _is_akm
     from web.auth import decrypt_secret
 
     user_id = row["client_id"]
     broker  = row["broker"]
-    if reconnect_manager.is_active(user_id, broker) or reconnect_manager.is_cooldown(user_id, broker):
+    if hub.reconnect_manager.reconnect_manager.is_active(user_id, broker) or hub.reconnect_manager.reconnect_manager.is_cooldown(user_id, broker):
         return
 
     if not (row.get("password_encrypted") and row.get("totp_encrypted")):
@@ -1130,7 +1132,7 @@ def _hub_schedule_reconnect_for_instance(row: dict):
         return  # token is fresh — no reconnect needed
 
     fn = _make_headless_login_fn(user_id, broker)
-    scheduled = reconnect_manager.schedule(user_id, broker, fn)
+    scheduled = hub.reconnect_manager.reconnect_manager.schedule(user_id, broker, fn)
     if scheduled:
         logger.info(
             f"[HubReconnect] Stale token detected — scheduled background reconnect for "
@@ -1232,8 +1234,8 @@ async def _feed_server_task() -> None:
     # Brief delay to let uvicorn fully initialize before binding the feed port
     await asyncio.sleep(3)
     try:
-        from hub.feed_server import get_feed_server
-        server = get_feed_server()
+        import hub.feed_server
+        server = hub.feed_server.get_feed_server()
         await server.start()          # blocks until server stops (runs indefinitely)
     except Exception as _fse:
         logger.error(f"[FeedServer] Fatal error: {_fse}", exc_info=True)

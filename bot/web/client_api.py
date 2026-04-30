@@ -12,8 +12,6 @@ from typing import Optional
 from web.deps import get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
 from web.auth import encrypt_secret, decrypt_secret, _fernet
-from hub.instance_manager import instance_manager
-from hub.reconnect_manager import reconnect_manager
 from utils.logger import logger
 
 router = APIRouter(prefix="/client", tags=["client"])
@@ -225,7 +223,8 @@ async def get_broker_config(user=Depends(get_current_user)):
             d["token_fresh"] = _is_token_fresh(d.get("token_updated_at"))
 
         # Background reconnect status from the hub manager
-        d["reconnect_status"] = reconnect_manager.get_status(user["id"], d["broker"])
+        import hub.reconnect_manager
+        d["reconnect_status"] = hub.reconnect_manager.reconnect_manager.get_status(user["id"], d["broker"])
 
         # Remove all raw encrypted fields from the API response
         for _f in ("api_key_encrypted", "api_secret_encrypted", "broker_user_id_encrypted",
@@ -370,7 +369,8 @@ async def start_broker_reconnect(broker: str, force: bool = False,
     """
     if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
-    if reconnect_manager.is_active(user["id"], broker):
+    import hub.reconnect_manager
+    if hub.reconnect_manager.reconnect_manager.is_active(user["id"], broker):
         return {"started": False, "message": "Reconnect loop already running."}
     instance = db_fetchone(
         "SELECT password_encrypted, totp_encrypted FROM client_broker_instances "
@@ -382,10 +382,11 @@ async def start_broker_reconnect(broker: str, force: bool = False,
     if not (instance.get("password_encrypted") and instance.get("totp_encrypted")):
         raise HTTPException(400, "no_auto_login")
     # Allow user to bypass cooldown with explicit force flag
+    import hub.reconnect_manager
     if force:
-        reconnect_manager.clear_exhausted(user["id"], broker)
+        hub.reconnect_manager.reconnect_manager.clear_exhausted(user["id"], broker)
     fn = _make_headless_login_fn(user["id"], broker)
-    started = reconnect_manager.schedule(user["id"], broker, fn, force=force)
+    started = hub.reconnect_manager.reconnect_manager.schedule(user["id"], broker, fn, force=force)
     if not started:
         return {"started": False, "message": "In post-exhaustion cooldown. Pass ?force=true to override."}
     logger.info(f"[Reconnect] Background loop started for {broker} (user {user['id']}, force={force})")
@@ -397,7 +398,8 @@ async def cancel_broker_reconnect(broker: str, user=Depends(get_current_user)):
     """Cancel an active background reconnect loop for the given broker."""
     if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
-    cancelled = reconnect_manager.cancel(user["id"], broker)
+    import hub.reconnect_manager
+    cancelled = hub.reconnect_manager.reconnect_manager.cancel(user["id"], broker)
     return {"cancelled": cancelled, "message": "Cancelled." if cancelled else "No active loop found."}
 
 
@@ -406,7 +408,8 @@ async def get_broker_reconnect_status(broker: str, user=Depends(get_current_user
     """Return the current background reconnect state for the given broker."""
     if broker not in HEADLESS_LOGIN_BROKERS:
         raise HTTPException(400, "Invalid broker.")
-    return reconnect_manager.get_status(user["id"], broker)
+    import hub.reconnect_manager
+    return hub.reconnect_manager.reconnect_manager.get_status(user["id"], broker)
 
 
 @router.delete("/broker/{broker}")
@@ -561,8 +564,8 @@ async def zerodha_login_url(request: Request, user=Depends(get_current_user)):
                 enc_token = encrypt_secret(token)
                 now_ist = datetime.now(IST).isoformat()
                 db_execute("UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE client_id=? AND broker='zerodha'", (enc_token, now_ist, user["id"]))
-                from hub.event_bus import event_bus
-                await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'zerodha', 'access_token': token})
+                import hub.event_bus
+                await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'zerodha', 'access_token': token})
                 return {"success": True, "automated": True, "message": "Zerodha background login successful."}
             logger.warning(f"[Zerodha] Automated login returned no token for user {user['id']} — falling back to OAuth")
         except Exception as e:
@@ -634,8 +637,8 @@ async def dhan_login_url(user=Depends(get_current_user)):
                 "WHERE client_id=? AND broker='dhan'",
                 (enc_token, now_ist, user["id"]),
             )
-            from hub.event_bus import event_bus
-            await event_bus.publish('BROKER_TOKEN_UPDATED',
+            import hub.event_bus
+            await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED',
                                     {'user_id': user["id"], 'broker': 'dhan', 'access_token': token})
             return {
                 "success": True, "automated": True,
@@ -656,8 +659,8 @@ async def dhan_login_url(user=Depends(get_current_user)):
                     "WHERE client_id=? AND broker='dhan'",
                     (enc_token, now_ist, user["id"]),
                 )
-                from hub.event_bus import event_bus
-                await event_bus.publish('BROKER_TOKEN_UPDATED',
+                import hub.event_bus
+                await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED',
                                         {'user_id': user["id"], 'broker': 'dhan', 'access_token': token})
                 return {"success": True, "automated": True, "message": "Dhan token validated."}
         except Exception as e:
@@ -700,8 +703,8 @@ async def angelone_login_url(user=Depends(get_current_user)):
             enc_token = encrypt_secret(smart_api.access_token)
             now_ist = datetime.now(IST).isoformat()
             db_execute("UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE client_id=? AND broker='angelone'", (enc_token, now_ist, user["id"]))
-            from hub.event_bus import event_bus
-            await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'angelone', 'access_token': smart_api.access_token})
+            import hub.event_bus
+            await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'angelone', 'access_token': smart_api.access_token})
             return {"success": True, "automated": True, "message": "AngelOne session generated."}
         raise HTTPException(400, "AngelOne login failed — verify your Client Code, PIN/MPIN, and TOTP secret.")
     except HTTPException:
@@ -1040,14 +1043,16 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
 
     # Already running?
     if instance["status"] == "running":
-        live = instance_manager.get_instance_status(instance["id"])
+        import hub.instance_manager
+        live = hub.instance_manager.instance_manager.get_instance_status(instance["id"])
         if live.get("running"):
             return {"broker": broker_name, "status": "already_running", "message": "Already running"}
         # DB says running but process is dead — allow restart
         db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
 
     # Launch subprocess
-    ok, msg, pid = instance_manager.start_instance(
+    import hub.instance_manager
+    ok, msg, pid = hub.instance_manager.instance_manager.start_instance(
         instance_id=instance["id"],
         client_id=user["id"],
         username=user["username"],
@@ -1227,9 +1232,10 @@ async def stop_bot(user=Depends(get_current_user)):
     actually_stopped = []
     already_idle = []
     for inst in instances:
-        live = instance_manager.get_instance_status(inst["id"])
+        import hub.instance_manager
+        live = hub.instance_manager.instance_manager.get_instance_status(inst["id"])
         was_running = live.get("running") or inst.get("status") == "running"
-        instance_manager.stop_instance(inst["id"])
+        hub.instance_manager.instance_manager.stop_instance(inst["id"])
         db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (inst["id"],))
         if was_running:
             actually_stopped.append(inst["broker"])
@@ -1270,7 +1276,8 @@ async def stop_one_broker_bot(body: BotStopOneRequest, user=Depends(get_current_
     if not instance:
         raise HTTPException(400, f"{body.broker.capitalize()} is not configured.")
 
-    instance_manager.stop_instance(instance["id"])
+    import hub.instance_manager
+    hub.instance_manager.instance_manager.stop_instance(instance["id"])
     db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?", (instance["id"],))
     _audit_client(user["id"], "bot_deactivate", {"broker": body.broker})
     return {"success": True, "message": f"{body.broker.capitalize()} bot stopped."}
@@ -1298,8 +1305,8 @@ async def upstox_login_url(request: Request, user=Depends(get_current_user)):
                 enc_token = encrypt_secret(token)
                 now_ist = datetime.now(IST).isoformat()
                 db_execute("UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE client_id=? AND broker='upstox'", (enc_token, now_ist, user["id"]))
-                from hub.event_bus import event_bus
-                await event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'upstox', 'access_token': token})
+                import hub.event_bus
+                await hub.event_bus.event_bus.publish('BROKER_TOKEN_UPDATED', {'user_id': user["id"], 'broker': 'upstox', 'access_token': token})
                 return {"success": True, "automated": True, "message": "Upstox background login successful."}
         except Exception as e:
             logger.error(f"[Upstox] Automated login failed for user {user['id']}: {e}", exc_info=True)
@@ -1456,7 +1463,8 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
     if not instance:
         return {"configured": False}
 
-    live_status = instance_manager.get_instance_status(instance["id"])
+    import hub.instance_manager
+    live_status = hub.instance_manager.instance_manager.get_instance_status(instance["id"])
 
     # If instrument is provided, filter trade history
     if instrument:
@@ -1514,7 +1522,8 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
     )
     brokers_status = []
     for bi in all_broker_instances:
-        b_live = instance_manager.get_instance_status(bi["id"])
+        import hub.instance_manager
+        b_live = hub.instance_manager.instance_manager.get_instance_status(bi["id"])
         running = b_live["running"] or bi["status"] == "running"
         brokers_status.append({
             "broker": bi["broker"],
@@ -2129,7 +2138,8 @@ async def stop_broker_bot(broker: str, user=Depends(get_current_user)):
     if not inst:
         raise HTTPException(400, f"No {broker} instance configured.")
 
-    ok, msg = instance_manager.stop_instance(inst["id"])
+    import hub.instance_manager
+    ok, msg = hub.instance_manager.instance_manager.stop_instance(inst["id"])
     db_execute(
         "UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE id=?",
         (inst["id"],)
@@ -2255,8 +2265,8 @@ async def get_market_status(user=Depends(get_current_user)):
     weekday = now.weekday()  # 0=Mon, 6=Sun
 
     try:
-        from hub.sell_v3.rust_bridge import RUST_AVAILABLE as _rust
-        rust_available = bool(_rust)
+        import hub.sell_v3.rust_bridge
+        rust_available = bool(hub.sell_v3.rust_bridge.RUST_AVAILABLE)
     except Exception:
         rust_available = False
 
