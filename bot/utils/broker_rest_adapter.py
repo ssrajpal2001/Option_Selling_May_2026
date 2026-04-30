@@ -132,8 +132,39 @@ class BrokerRestAdapter:
             elif self.broker_name == 'dhan':
                 # Handle both wrapper client and raw dhanhq object
                 dhan = getattr(self.client, 'dhan', self.client)
-                res = await asyncio.to_thread(dhan.quote_data, broker_key)
-                if res and res.get('status') == 'success':
+                # Dhan SDK quote_data expects a dictionary or specific string format.
+                # In v2, it often wants a payload like {"securityId": "...", "exchangeSegment": "..."}
+                # if we have the segment, or just the security_id.
+                # However, many versions of the SDK wrap the basic API which expects:
+                # quote_data(security_id, exchange_segment, instrument_type)
+
+                # Check if instrument_key has segment info
+                segment = 'NSE_FNO'
+                if isinstance(instrument_key, str):
+                    if 'INDEX' in instrument_key: segment = 'IDX_I'
+                    elif 'NSE_EQ' in instrument_key: segment = 'NSE_EQ'
+
+                # Dhan SDK quote_data in newer versions expects a dictionary.
+                # In older/wrapped versions it might expect positional args.
+                # The 'str' has no attribute 'items' error suggests it's calling .items() on a string.
+                quote_params = {
+                    "securityId": str(broker_key),
+                    "exchangeSegment": segment,
+                    "instrumentType": 'OPTIDX' if 'NSE_FO' in str(instrument_key) else 'INDEX'
+                }
+
+                try:
+                    # Try passing as a dictionary first (Modern SDK)
+                    res = await asyncio.to_thread(dhan.quote_data, quote_params)
+                except Exception:
+                    try:
+                        # Fallback to positional args
+                        res = await asyncio.to_thread(dhan.quote_data, str(broker_key), segment, quote_params["instrumentType"])
+                    except:
+                        # Final fallback to just key
+                        res = await asyncio.to_thread(dhan.quote_data, str(broker_key))
+
+                if res and isinstance(res, dict) and res.get('status') == 'success':
                     return float(res.get('data', {}).get('last_price', 0.0))
                 return 0.0
 

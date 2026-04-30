@@ -354,10 +354,20 @@ class ProviderFactory:
                      if getattr(b, 'broker_name', '') == _preferred),
                     None
                 )
+                # Ensure the broker is authenticated before choosing it as REST primary
                 if _b:
-                    rest_client = BrokerRestAdapter(_b, _preferred)
-                    logger.info(f"[ProviderFactory] Using {_preferred} execution broker as primary REST client for contracts.")
-                    break
+                    is_auth = False
+                    if _preferred == 'zerodha' and getattr(_b, 'kite', None): is_auth = True
+                    elif _preferred == 'angelone' and getattr(_b, 'smart_api', None): is_auth = True
+                    elif _preferred == 'dhan' and getattr(_b, 'dhan', None): is_auth = True
+                    elif _preferred == 'upstox' and getattr(_b, 'api_client', None): is_auth = True
+
+                    if is_auth:
+                        rest_client = BrokerRestAdapter(_b, _preferred)
+                        logger.info(f"[ProviderFactory] Using {_preferred} execution broker as primary REST client for contracts.")
+                        break
+                    else:
+                        logger.debug(f"[ProviderFactory] Skipping {_preferred} as REST primary (not authenticated).")
 
         # ENFORCEMENT: Websocket Data MUST come from Global Feeds (Upstox/Dhan)
         # We removed Zerodha as a data provider as per requirement.

@@ -269,7 +269,8 @@ class AngelOneClient(BaseBroker):
 
         urls = [
             "https://margincalculator.angelbroking.com/OpenAPI_Standard_MSil.php?Exchange=NFO",
-            "https://margincalculator.angelbroking.com/OpenAPI_Standard_MSil.php?Exchange=NSE"
+            "https://margincalculator.angelbroking.com/OpenAPI_Standard_MSil.php?Exchange=NSE",
+            "https://margincalculator.angelone.in/OpenAPI_File/files/OpenAPIScripMaster.json"
         ]
 
         try:
