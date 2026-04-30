@@ -53,6 +53,7 @@ class ProviderFactory:
                                 from dhanhq import DhanContext
                             except ImportError:
                                 DhanContext = None
+                            # Use positional args or resolve correct names for dhanhq constructor
                             client = (dhanhq(DhanContext(api_key, access_token))
                                       if DhanContext else dhanhq(api_key, access_token))
                             # Dhan doesn't have a simple 'profile' that doesn't cost an API hit?
@@ -315,10 +316,8 @@ class ProviderFactory:
             websocket_manager = None
 
         # REST CLIENT SELECTION: Must support get_option_contracts for expiry resolution.
-        # Dhan is intentionally excluded — its BrokerRestAdapter.get_option_contracts()
-        # returns [] (no implementation), which silently corrupts expiry resolution by
-        # forcing a CSV fallback that never includes today's expiring contracts.
-        _CONTRACT_CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue']
+        # Dhan is now supported via its shared security list fallback.
+        _CONTRACT_CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue', 'dhan']
 
         if not rest_client:
             # For historical data and option contracts, we still need a rest_client.
@@ -338,18 +337,16 @@ class ProviderFactory:
                         "which has no option-contract support — skipping."
                     )
 
-        # BROKER REST PREFERENCE: For non-Upstox execution brokers (Zerodha, AngelOne, etc.),
+        # BROKER REST PREFERENCE: For ALL execution brokers,
         # ALWAYS prefer the execution broker over the global Upstox REST client for contract data.
         # These brokers have fresh authenticated sessions and their instrument masters contain
         # ALL current weekly expiries (May 5, May 12, May 19, etc.) — unlike the global Upstox
         # data provider which may have a stale token, and unlike the CSV which lacks near-weekly
         # contracts entirely and causes wrong expiry / LTP stuck at 0.
         #
-        # Upstox is EXCLUDED here — Upstox sessions use the same-account RestApiClient set
-        # earlier (via the same-account short-circuit block), which already uses the fresh
-        # broker token and must not be overridden.
-        # Dhan is also excluded — it has no option-contract API support.
-        _PREFERRED_EXECUTION_BROKERS = ['zerodha', 'angelone', 'fyers', 'aliceblue']
+        # Dhan is now included as it supports contract fetching via security list.
+        # Upstox is included as a fallback if the same-account short-circuit was skipped.
+        _PREFERRED_EXECUTION_BROKERS = ['zerodha', 'angelone', 'fyers', 'aliceblue', 'dhan', 'upstox']
         if broker_manager and broker_manager.brokers:
             for _preferred in _PREFERRED_EXECUTION_BROKERS:
                 _b = next(

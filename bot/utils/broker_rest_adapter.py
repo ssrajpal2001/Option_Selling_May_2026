@@ -389,12 +389,15 @@ class BrokerRestAdapter:
 
             elif self.broker_name == 'dhan':
                 # Dhan security list fallback for option contracts
-                if hasattr(self.client, '_load_security_list'):
+                # We need to access DhanClient class properties via deferred import
+                from brokers.dhan_client import DhanClient
+
+                # Check if we can trigger a load (if client is actually a DhanClient instance)
+                if isinstance(self.client, DhanClient) and hasattr(self.client, '_load_security_list'):
                     await self.client._load_security_list()
 
                 # Get from Dhan's shared security list (Task #153 redundancy improvement)
-                # Note: self.client._shared_security_list_df is class-level in DhanClient
-                df = getattr(self.client, '_shared_security_list_df', None)
+                df = DhanClient._shared_security_list_df
                 if df is None or df.empty:
                     return []
 

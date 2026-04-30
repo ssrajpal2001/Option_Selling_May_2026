@@ -436,8 +436,14 @@ class BaseBroker(ABC):
             yield
 
     def is_configured_for_instrument(self, instrument_name):
-        """Checks if this broker instance is configured to trade the given instrument."""
-        return instrument_name.upper() in self.instruments
+        """Checks if this broker instance is configured to trade the given instrument.
+        Uses normalized names to handle "NIFTY 50" vs "NIFTY" variations.
+        """
+        norm_input = self._normalize_instrument_name(instrument_name)
+        for config_inst in self.instruments:
+            if self._normalize_instrument_name(config_inst) == norm_input:
+                return True
+        return False
 
     def set_state_manager(self, state_manager):
         """Receives the shared StateManager instance."""

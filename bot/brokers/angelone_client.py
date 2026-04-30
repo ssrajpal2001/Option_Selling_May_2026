@@ -275,57 +275,58 @@ class AngelOneClient(BaseBroker):
         try:
             logger.info(f"[{self.instance_name}] AngelOne: Downloading token masters...")
             all_data = []
-            raw_for_debug = ''
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                 "Accept": "application/json, text/plain, */*"
             }
-            async with aiohttp.ClientSession(headers=headers) as session:
-                for url in urls:
-                    async with session.get(url, timeout=30) as response:
-                        # AngelOne's CDN serves valid JSON with Content-Type: text/plain;
-                        # aiohttp's response.json() rejects non-JSON content-types, so we
-                        # use response.text() + manual JSON parsing.
-                        #
-                        # The response can contain MULTIPLE JSON arrays in one body,
-                        # sometimes separated by a UTF-8 BOM (\ufeff):
-                        #   e.g.  []\n\ufeff[{instruments...}]
-                        # json.loads() would raise "Extra data" after the first array.
-                        # We strip the BOM, then use raw_decode() to iterate and collect
-                        # every JSON value in the response, breaking gracefully on any
-                        # non-JSON content between arrays.
-                        raw_text = await response.text()
-                        raw = raw_text.replace('\ufeff', '').strip()
-                        raw_for_debug = raw  # keep reference for empty-master diagnostics
-                        decoder = _json.JSONDecoder()
-                        pos = 0
-                        while pos < len(raw):
-                            try:
-                                obj, pos = decoder.raw_decode(raw, pos)
-                            except _json.JSONDecodeError as parse_err:
-                                logger.debug(
-                                    f"[{self.instance_name}] AngelOne master: stopped "
-                                    f"multi-array parse at pos {pos} — {parse_err}. "
-                                    f"Snippet: {raw[pos:pos+80]!r}"
-                                )
-                                break
-                            if isinstance(obj, list):
-                                all_data.extend(obj)
-                            # Skip whitespace between objects
-                            while pos < len(raw) and raw[pos] in ' \t\r\n':
-                                pos += 1
+
+            max_retries = 3
+            for attempt in range(max_retries):
+                all_data = []
+                raw_for_debug = ''
+                try:
+                    async with aiohttp.ClientSession(headers=headers) as session:
+                        for url in urls:
+                            async with session.get(url, timeout=30) as response:
+                                raw_text = await response.text()
+                                raw = raw_text.replace('\ufeff', '').strip()
+                                raw_for_debug = raw
+                                decoder = _json.JSONDecoder()
+                                pos = 0
+                                while pos < len(raw):
+                                    try:
+                                        obj, pos = decoder.raw_decode(raw, pos)
+                                    except _json.JSONDecodeError:
+                                        break
+                                    if isinstance(obj, list):
+                                        all_data.extend(obj)
+                                    while pos < len(raw) and raw[pos] in ' \t\r\n':
+                                        pos += 1
+
+                    if all_data:
+                        break # Success
+                    else:
+                        logger.warning(f"[{self.instance_name}] AngelOne: Master file empty on attempt {attempt+1}/{max_retries}. Retrying in 5s...")
+                        await asyncio.sleep(5)
+                except Exception as ex:
+                    logger.warning(f"[{self.instance_name}] AngelOne: Download error on attempt {attempt+1}: {ex}")
+                    await asyncio.sleep(5)
 
             if not all_data:
                 snippet = raw_for_debug[:500]
-                logger.debug(
+                logger.warning(
                     f"[{self.instance_name}] AngelOne master: all_data is empty after parsing. "
+                    f"Master file might be updating (Pre-market). Status: NO_DATA. "
                     f"First 500 chars of last URL response: {snippet!r}"
                 )
+                # Reset attempt time so we can retry sooner than 60s if it was an empty response
+                self._last_load_attempt = now - datetime.timedelta(seconds=45)
+
                 # If both URL calls produced no data, do not overwrite existing map
                 # (prevents transient network errors from clearing current tokens).
                 if self._token_map:
                     logger.warning(f"[{self.instance_name}] AngelOne: Token master download yielded no data; retaining existing map.")
-                    return
+                return
 
             mapping = {}
             universal_mapping = {}       # "NSE_INDEX|Nifty 50" -> token
@@ -367,14 +368,21 @@ class AngelOneClient(BaseBroker):
                         universal_mapping['NSE_INDEX|Nifty Fin Service'] = token
                     # Add more as needed...
 
-            self._token_map = mapping
-            self._universal_token_map = universal_mapping
-            self._nsefoo_tradingsymbol = nsefoo_tradingsymbol
-            self._last_token_load = now
-            logger.info(f"[{self.instance_name}] AngelOne: Token masters loaded. {len(mapping)} options, {len(universal_mapping)} universal keys.")
+            if mapping or universal_mapping:
+                self._token_map = mapping
+                self._universal_token_map = universal_mapping
+                self._nsefoo_tradingsymbol = nsefoo_tradingsymbol
+                self._last_token_load = now
+                logger.info(f"[{self.instance_name}] AngelOne: Token masters loaded. {len(mapping)} options, {len(universal_mapping)} universal keys.")
+            else:
+                logger.warning(f"[{self.instance_name}] AngelOne: Parsed {len(all_data)} items but found 0 valid options/keys. Master might be empty.")
+                # Force retry sooner
+                self._last_load_attempt = now - datetime.timedelta(seconds=45)
+
         except Exception as e:
             logger.error(f"[{self.instance_name}] Failed to load AngelOne token master: {e}")
-            # _last_load_attempt was already set above — backoff will prevent immediate retry storm.
+            # Reset attempt so we retry
+            self._last_load_attempt = now - datetime.timedelta(seconds=30)
 
     def get_token_by_universal_key(self, key):
         if not hasattr(self, '_universal_token_map'): return None
@@ -397,7 +405,7 @@ class AngelOneClient(BaseBroker):
         if not self._token_map:
             return None
 
-        name = str(getattr(contract, 'name', 'NIFTY') or 'NIFTY').upper()
+        name = self._normalize_instrument_name(getattr(contract, 'name', 'NIFTY'))
         expiry = contract.expiry.date() if isinstance(contract.expiry, datetime.datetime) else contract.expiry
         strike = float(contract.strike_price)
         opt_type = str(getattr(contract, 'instrument_type', 'CE') or 'CE').upper()
@@ -534,7 +542,16 @@ class AngelOneClient(BaseBroker):
             logger.error(f"Exception closing AngelOne position: {e}", exc_info=True)
 
     def place_order(self, contract, transaction_type, quantity, expiry, product_type='NRML', market_protection=None):
-        if not self.smart_api: return None
+        logger.info(f"[{self.instance_name}] place_order request: {transaction_type} {quantity} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={self.user_id}")
+        if not self.smart_api:
+            logger.error(f"[{self.instance_name}] AngelOne client not authenticated. Order blocked.")
+            return None
+
+        # Pre-market resilience check: if token map is empty, we cannot place orders
+        if not self._token_map:
+            logger.error(f"[{self.instance_name}] AngelOne: Token master empty (Pre-market?). Cannot resolve instrument {getattr(contract, 'instrument_key', 'N/A')}. Order blocked.")
+            return None
+
         self._validate_source_ip()
         try:
             # First, resolve instrument info

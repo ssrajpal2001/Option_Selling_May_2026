@@ -528,7 +528,7 @@ class DhanClient(BaseBroker):
         strike = float(contract.strike_price)
         expiry = contract.expiry.date() if isinstance(contract.expiry, datetime.datetime) else contract.expiry
         opt_type = contract.instrument_type.upper() # 'CE' or 'PE'
-        name = contract.name.upper()
+        name = self._normalize_instrument_name(getattr(contract, 'name', 'NIFTY'))
 
         cache_key = (name, expiry, strike, opt_type)
         if cache_key in self._security_id_cache:
@@ -721,6 +721,7 @@ class DhanClient(BaseBroker):
             logger.error(f"Exception closing Dhan position: {e}", exc_info=True)
 
     def place_order(self, contract, transaction_type, quantity, expiry, product_type='NRML', market_protection=None):
+        logger.info(f"[{self.instance_name}] place_order request: {transaction_type} {quantity} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={self.user_id}")
         if not self.dhan: return None
         self._validate_source_ip()
 
@@ -785,15 +786,50 @@ class DhanClient(BaseBroker):
             logger.error(f"Error in Dhan place_order: {e}", exc_info=True)
             return None
 
-    def get_ltp(self, symbol):
-        return 0.0
+    async def get_ltp(self, instrument_key, silence_error=False):
+        if not self.dhan: return 0.0
+        try:
+            from utils.broker_rest_adapter import BrokerRestAdapter
+            adapter = BrokerRestAdapter(self, 'dhan')
+            # Pass our own SID map if we have it (optimization)
+            if self.ikey_to_sid:
+                adapter.ikey_to_sid = self.ikey_to_sid
+            return await adapter.get_ltp(instrument_key, silence_error=silence_error)
+        except: return 0.0
+
+    async def get_ltps(self, instrument_keys, silence_error=False):
+        if not self.dhan: return {}
+        # Dhan doesn't have a batch LTP REST API in standard SDK.
+        # We could implement via iteration or just return empty and let
+        # higher layers fallback.
+        return {}
+
+    async def get_historical_candle_data(self, instrument_key, interval, to_date, from_date):
+        if not self.dhan: return pd.DataFrame()
+        try:
+            from utils.broker_rest_adapter import BrokerRestAdapter
+            adapter = BrokerRestAdapter(self, 'dhan')
+            if self.ikey_to_sid:
+                adapter.ikey_to_sid = self.ikey_to_sid
+            return await adapter.get_historical_candle_data(instrument_key, interval, to_date, from_date)
+        except: return pd.DataFrame()
+
+    async def get_option_contracts(self, instrument_key):
+        """Standard interface for ProviderFactory."""
+        if not self.dhan: return []
+        try:
+            from utils.broker_rest_adapter import BrokerRestAdapter
+            adapter = BrokerRestAdapter(self, 'dhan')
+            # Dhan's adapter uses the shared security list to resolve options
+            return await adapter.get_option_contracts(instrument_key)
+        except: return []
 
     def construct_dhan_symbol(self, contract):
         """Constructs a readable symbol for Dhan contracts."""
         strike = int(contract.strike_price)
         expiry = contract.expiry.date() if isinstance(contract.expiry, datetime.datetime) else contract.expiry
         opt_type = str(getattr(contract, 'instrument_type', 'CE') or 'CE').upper()
-        name = str(getattr(contract, 'name', 'NIFTY') or 'NIFTY').upper()
+        name = self._normalize_instrument_name(getattr(contract, 'name', 'NIFTY'))
         # Format: NIFTY 24 FEB 25000 CE
         return f"{name} {expiry.strftime('%d %b').upper()} {strike} {opt_type}"
 
