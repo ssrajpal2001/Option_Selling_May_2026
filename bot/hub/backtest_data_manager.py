@@ -39,9 +39,10 @@ class BacktestDataManager:
         if self._index_ohlc_cache is not None and not self._index_ohlc_cache.empty:
             try:
                 # Ensure matching timezone awareness
-                if hasattr(self._index_ohlc_cache.index, 'tz') and self._index_ohlc_cache.index.tz is not None and timestamp.tzinfo is None:
-                    timestamp = timestamp.replace(tzinfo=self._index_ohlc_cache.index.tz)
-                elif hasattr(self._index_ohlc_cache.index, 'tz') and self._index_ohlc_cache.index.tz is None and timestamp.tzinfo is not None:
+                idx_tz = getattr(self._index_ohlc_cache.index, 'tzinfo', getattr(self._index_ohlc_cache.index, 'tz', None))
+                if idx_tz is not None and timestamp.tzinfo is None:
+                    timestamp = timestamp.replace(tzinfo=idx_tz)
+                elif idx_tz is None and timestamp.tzinfo is not None:
                     timestamp = timestamp.replace(tzinfo=None)
 
                 relevant = self._index_ohlc_cache[self._index_ohlc_cache.index <= timestamp]
@@ -55,9 +56,10 @@ class BacktestDataManager:
         if self._futures_ohlc_cache is not None and not self._futures_ohlc_cache.empty:
             try:
                 # Ensure matching timezone awareness
-                if hasattr(self._futures_ohlc_cache.index, 'tz') and self._futures_ohlc_cache.index.tz is not None and timestamp.tzinfo is None:
-                    timestamp = timestamp.replace(tzinfo=self._futures_ohlc_cache.index.tz)
-                elif hasattr(self._futures_ohlc_cache.index, 'tz') and self._futures_ohlc_cache.index.tz is None and timestamp.tzinfo is not None:
+                idx_tz = getattr(self._futures_ohlc_cache.index, 'tzinfo', getattr(self._futures_ohlc_cache.index, 'tz', None))
+                if idx_tz is not None and timestamp.tzinfo is None:
+                    timestamp = timestamp.replace(tzinfo=idx_tz)
+                elif idx_tz is None and timestamp.tzinfo is not None:
                     timestamp = timestamp.replace(tzinfo=None)
 
                 relevant = self._futures_ohlc_cache[self._futures_ohlc_cache.index <= timestamp]

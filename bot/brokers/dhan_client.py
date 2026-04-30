@@ -39,10 +39,15 @@ class DhanClient(BaseBroker):
                 if self.db_config.get('password') and self.db_config.get('totp'):
                     try:
                         from utils.auth_manager_dhan import handle_dhan_login_automated
+                        try:
+                            from dhanhq import DhanContext
+                        except ImportError:
+                            DhanContext = None
                         with self._scoped_ip_patch():
                             token = handle_dhan_login_automated(self.db_config)
                         if token:
-                            self.dhan = dhanhq(client_id, token)
+                            self.dhan = (dhanhq(DhanContext(client_id, token))
+                                         if DhanContext else dhanhq(client_id, token))
                             logger.info(f"Dhan automated client initialized for User ID: {self.user_id}.")
                     except Exception as e:
                         logger.warning(
@@ -53,9 +58,14 @@ class DhanClient(BaseBroker):
                 # 2. Fallback to existing access token (always runs if step 1 didn't set self.dhan)
                 if not self.dhan:
                     try:
+                        try:
+                            from dhanhq import DhanContext
+                        except ImportError:
+                            DhanContext = None
                         access_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
                         if client_id and access_token:
-                            self.dhan = dhanhq(client_id, access_token)
+                            self.dhan = (dhanhq(DhanContext(client_id, access_token))
+                                         if DhanContext else dhanhq(client_id, access_token))
                             logger.info(f"Dhan client initialized from token for User ID: {self.user_id}.")
                         else:
                             logger.error(f"Dhan: Missing credentials in DB config for user {self.user_id}.")
@@ -210,12 +220,25 @@ class DhanClient(BaseBroker):
         # Older SDK versions (e.g. MarketFeed) do not accept client_id as a
         # keyword arg and raise TypeError — fall back to positional args.
         try:
-            self.feed = _DhanFeedCls(
-                client_id=client_id,
-                access_token=access_token,
-                instruments=self.subscribed_instruments,
-                version='v2',
-            )
+            try:
+                from dhanhq import DhanContext
+            except ImportError:
+                DhanContext = None
+
+            if DhanContext:
+                ctx = DhanContext(client_id, access_token)
+                self.feed = _DhanFeedCls(
+                    dhan_context=ctx,
+                    instruments=self.subscribed_instruments,
+                    version='v2',
+                )
+            else:
+                self.feed = _DhanFeedCls(
+                    client_id=client_id,
+                    access_token=access_token,
+                    instruments=self.subscribed_instruments,
+                    version='v2',
+                )
             logger.debug(
                 f"[{self.instance_name}] Dhan feed initialised with keyword-arg signature."
             )
@@ -505,7 +528,7 @@ class DhanClient(BaseBroker):
         strike = float(contract.strike_price)
         expiry = contract.expiry.date() if isinstance(contract.expiry, datetime.datetime) else contract.expiry
         opt_type = contract.instrument_type.upper() # 'CE' or 'PE'
-        name = contract.name.upper()
+        name = self._normalize_instrument_name(getattr(contract, 'name', 'NIFTY'))
 
         cache_key = (name, expiry, strike, opt_type)
         if cache_key in self._security_id_cache:
@@ -698,6 +721,7 @@ class DhanClient(BaseBroker):
             logger.error(f"Exception closing Dhan position: {e}", exc_info=True)
 
     def place_order(self, contract, transaction_type, quantity, expiry, product_type='NRML', market_protection=None):
+        logger.info(f"[{self.instance_name}] place_order request: {transaction_type} {quantity} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={self.user_id}")
         if not self.dhan: return None
         self._validate_source_ip()
 
@@ -762,15 +786,50 @@ class DhanClient(BaseBroker):
             logger.error(f"Error in Dhan place_order: {e}", exc_info=True)
             return None
 
-    def get_ltp(self, symbol):
-        return 0.0
+    async def get_ltp(self, instrument_key, silence_error=False):
+        if not self.dhan: return 0.0
+        try:
+            from utils.broker_rest_adapter import BrokerRestAdapter
+            adapter = BrokerRestAdapter(self, 'dhan')
+            # Pass our own SID map if we have it (optimization)
+            if self.ikey_to_sid:
+                adapter.ikey_to_sid = self.ikey_to_sid
+            return await adapter.get_ltp(instrument_key, silence_error=silence_error)
+        except: return 0.0
+
+    async def get_ltps(self, instrument_keys, silence_error=False):
+        if not self.dhan: return {}
+        # Dhan doesn't have a batch LTP REST API in standard SDK.
+        # We could implement via iteration or just return empty and let
+        # higher layers fallback.
+        return {}
+
+    async def get_historical_candle_data(self, instrument_key, interval, to_date, from_date):
+        if not self.dhan: return pd.DataFrame()
+        try:
+            from utils.broker_rest_adapter import BrokerRestAdapter
+            adapter = BrokerRestAdapter(self, 'dhan')
+            if self.ikey_to_sid:
+                adapter.ikey_to_sid = self.ikey_to_sid
+            return await adapter.get_historical_candle_data(instrument_key, interval, to_date, from_date)
+        except: return pd.DataFrame()
+
+    async def get_option_contracts(self, instrument_key):
+        """Standard interface for ProviderFactory."""
+        if not self.dhan: return []
+        try:
+            from utils.broker_rest_adapter import BrokerRestAdapter
+            adapter = BrokerRestAdapter(self, 'dhan')
+            # Dhan's adapter uses the shared security list to resolve options
+            return await adapter.get_option_contracts(instrument_key)
+        except: return []
 
     def construct_dhan_symbol(self, contract):
         """Constructs a readable symbol for Dhan contracts."""
         strike = int(contract.strike_price)
         expiry = contract.expiry.date() if isinstance(contract.expiry, datetime.datetime) else contract.expiry
         opt_type = str(getattr(contract, 'instrument_type', 'CE') or 'CE').upper()
-        name = str(getattr(contract, 'name', 'NIFTY') or 'NIFTY').upper()
+        name = self._normalize_instrument_name(getattr(contract, 'name', 'NIFTY'))
         # Format: NIFTY 24 FEB 25000 CE
         return f"{name} {expiry.strftime('%d %b').upper()} {strike} {opt_type}"
 

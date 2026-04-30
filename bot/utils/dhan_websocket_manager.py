@@ -105,12 +105,25 @@ class DhanWebSocketManager(DataFeed):
         while self._running:
             try:
                 logger.info(f"[Global Dhan] Connecting to Dhan Market Feed (v2)...")
-                self.feed = _DhanFeedCls(
-                    client_id=self.client_id,
-                    access_token=self.access_token,
-                    instruments=[],
-                    version='v2'
-                )
+                try:
+                    from dhanhq import DhanContext
+                except ImportError:
+                    DhanContext = None
+
+                if DhanContext:
+                    ctx = DhanContext(self.client_id, self.access_token)
+                    self.feed = _DhanFeedCls(
+                        dhan_context=ctx,
+                        instruments=[],
+                        version='v2'
+                    )
+                else:
+                    self.feed = _DhanFeedCls(
+                        client_id=self.client_id,
+                        access_token=self.access_token,
+                        instruments=[],
+                        version='v2'
+                    )
 
                 await self.feed.connect()
                 logger.info(f"[Global Dhan] Connection established successfully.")

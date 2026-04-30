@@ -520,22 +520,8 @@ class ZerodhaClient(BaseBroker):
             logger.error(f"[Zerodha] Symbol construction failed: Invalid contract object {type(contract)}")
             return None
 
-        # Dynamic prefix detection
-        name_map = {
-            "NIFTY 50": "NIFTY",
-            "NIFTY BANK": "BANKNIFTY",
-            "NIFTY FINANCIAL SERVICES": "FINNIFTY",
-            "NIFTY MIDCAP SELECT": "MIDCPNIFTY",
-            "MIDCAP": "MIDCPNIFTY",
-            "NIFTY MID SELECT": "MIDCPNIFTY",
-            "BANKNIFTY": "BANKNIFTY",
-            "FINNIFTY": "FINNIFTY",
-            "SENSEX": "SENSEX",
-            "BANKEX": "BANKEX"
-        }
-
-        raw_name = str(getattr(contract, 'name', 'NIFTY') or 'NIFTY').upper()
-        instrument_name = name_map.get(raw_name, raw_name)
+        raw_name = str(getattr(contract, 'name', 'NIFTY') or 'NIFTY')
+        instrument_name = self._normalize_instrument_name(raw_name)
 
         expiry = contract.expiry
         strike = int(contract.strike_price)

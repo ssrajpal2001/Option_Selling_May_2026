@@ -132,8 +132,39 @@ class BrokerRestAdapter:
             elif self.broker_name == 'dhan':
                 # Handle both wrapper client and raw dhanhq object
                 dhan = getattr(self.client, 'dhan', self.client)
-                res = await asyncio.to_thread(dhan.quote_data, broker_key)
-                if res and res.get('status') == 'success':
+                # Dhan SDK quote_data expects a dictionary or specific string format.
+                # In v2, it often wants a payload like {"securityId": "...", "exchangeSegment": "..."}
+                # if we have the segment, or just the security_id.
+                # However, many versions of the SDK wrap the basic API which expects:
+                # quote_data(security_id, exchange_segment, instrument_type)
+
+                # Check if instrument_key has segment info
+                segment = 'NSE_FNO'
+                if isinstance(instrument_key, str):
+                    if 'INDEX' in instrument_key: segment = 'IDX_I'
+                    elif 'NSE_EQ' in instrument_key: segment = 'NSE_EQ'
+
+                # Dhan SDK quote_data in newer versions expects a dictionary.
+                # In older/wrapped versions it might expect positional args.
+                # The 'str' has no attribute 'items' error suggests it's calling .items() on a string.
+                quote_params = {
+                    "securityId": str(broker_key),
+                    "exchangeSegment": segment,
+                    "instrumentType": 'OPTIDX' if 'NSE_FO' in str(instrument_key) else 'INDEX'
+                }
+
+                try:
+                    # Try passing as a dictionary first (Modern SDK)
+                    res = await asyncio.to_thread(dhan.quote_data, quote_params)
+                except Exception:
+                    try:
+                        # Fallback to positional args
+                        res = await asyncio.to_thread(dhan.quote_data, str(broker_key), segment, quote_params["instrumentType"])
+                    except:
+                        # Final fallback to just key
+                        res = await asyncio.to_thread(dhan.quote_data, str(broker_key))
+
+                if res and isinstance(res, dict) and res.get('status') == 'success':
                     return float(res.get('data', {}).get('last_price', 0.0))
                 return 0.0
 
@@ -145,20 +176,40 @@ class BrokerRestAdapter:
                     ao_exchange = "NFO"
                 else:
                     ao_exchange = "NSE"
+
                 # Look up the AngelOne tradingsymbol for this instrument key.
                 # When the token master is loaded, passing the real tradingsymbol
                 # alongside the symboltoken matches AngelOne's recommended API usage
                 # and avoids spurious AB4006 "Invalid symboltoken" rejections.
-                #
-                # NSE_FO keys: look up from the reverse map built during master load.
-                # NSE_INDEX / NSE_EQ keys: the symbol is the segment after '|'
-                # (e.g. "NSE_INDEX|Nifty 50" → tradingsymbol "Nifty 50").
                 ao_tradingsymbol = ""
-                if isinstance(instrument_key, str) and instrument_key.startswith('NSE_FO|'):
-                    if hasattr(self.client, 'get_tradingsymbol_for_nsefoo_key'):
-                        ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key) or ""
-                elif isinstance(instrument_key, str) and '|' in instrument_key:
-                    ao_tradingsymbol = instrument_key.split('|', 1)[1]
+
+                # If we have the wrapper client, use its high-level lookups
+                from brokers.angelone_client import AngelOneClient
+                if isinstance(self.client, AngelOneClient):
+                    if str(instrument_key).startswith('NSE_FO|'):
+                        ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key)
+                    else:
+                        # For indices/stocks, we can try to resolve it from the master map
+                        # but often it's just the part after '|'
+                        if '|' in str(instrument_key):
+                            ao_tradingsymbol = instrument_key.split('|', 1)[1]
+
+                # CRITICAL: If tradingsymbol is still empty, Angel One API often rejects the request
+                # with AB4006 even if the token is correct.
+                if not ao_tradingsymbol:
+                    # Fallback pattern for options if master reverse-map didn't have it
+                    if ao_exchange == "NFO" and hasattr(self.client, '_token_map') and self.client._token_map:
+                         # We can't easily reverse search (name, expiry, strike, type) from just a token
+                         # but we can try to find it in the values.
+                         for k, v in self.client._token_map.items():
+                             if str(v.get('token')) == str(broker_key):
+                                 ao_tradingsymbol = v.get('tradingsymbol', '')
+                                 break
+
+                # If it's an index like NIFTY 50, ensure it's correct
+                if 'Nifty 50' in str(instrument_key): ao_tradingsymbol = 'Nifty 50'
+                elif 'Nifty Bank' in str(instrument_key): ao_tradingsymbol = 'Nifty Bank'
+
                 res = await asyncio.to_thread(smart_api.ltpData, ao_exchange, ao_tradingsymbol, str(broker_key))
                 if res and res.get('status'):
                     return float(res.get('data', {}).get('lastTradedPrice', 0.0))
@@ -385,6 +436,54 @@ class BrokerRestAdapter:
                             'instrument_type': key[3],
                             'lot_size': info['lotsize']
                         })
+                return contracts
+
+            elif self.broker_name == 'dhan':
+                # Dhan security list fallback for option contracts
+                # We need to access DhanClient class properties via deferred import
+                from brokers.dhan_client import DhanClient
+
+                # Check if we can trigger a load (if client is actually a DhanClient instance)
+                if isinstance(self.client, DhanClient) and hasattr(self.client, '_load_security_list'):
+                    await self.client._load_security_list()
+
+                # Get from Dhan's shared security list (Task #153 redundancy improvement)
+                df = DhanClient._shared_security_list_df
+                if df is None or df.empty:
+                    return []
+
+                # Extract index name from key: "NSE_INDEX|Nifty 50" -> "NIFTY"
+                raw_idx = instrument_key.split('|')[1].upper()
+                name_map = {
+                    "NIFTY 50": "NIFTY",
+                    "NIFTY BANK": "BANKNIFTY",
+                    "NIFTY FIN SERVICE": "FINNIFTY",
+                    "NIFTY MID SELECT": "MIDCPNIFTY"
+                }
+                d_name = name_map.get(raw_idx, raw_idx)
+
+                # Dhan Expiry column normalization
+                if 'SEM_EXPIRY_DATE' in df.columns and 'expiry_date' not in df.columns:
+                    df['expiry_date'] = pd.to_datetime(df['SEM_EXPIRY_DATE'], errors='coerce').dt.date
+
+                # Filter for Options belonging to this index
+                mask = (
+                    (df['SEM_TRADING_SYMBOL'].str.startswith(d_name + "-")) &
+                    (df['SEM_INSTRUMENT_NAME'] == 'OPTIDX')
+                )
+                matches = df[mask]
+
+                contracts = []
+                for _, row in matches.iterrows():
+                    # Format as NSE_FO|<sid> for system compatibility
+                    contracts.append({
+                        'instrument_key': f"NSE_FO|{row['SEM_SMST_SECURITY_ID']}",
+                        'tradingsymbol': row['SEM_TRADING_SYMBOL'],
+                        'expiry': row['expiry_date'],
+                        'strike_price': float(row['SEM_STRIKE_PRICE']),
+                        'instrument_type': row['SEM_OPTION_TYPE'].upper(),
+                        'lot_size': int(row['SEM_LOT_UNITS'])
+                    })
                 return contracts
 
             return []

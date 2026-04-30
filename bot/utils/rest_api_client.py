@@ -19,10 +19,23 @@ class RestApiClient:
             connector_kwargs = {}
             if self.source_ip:
                 # Bind all outbound connections to the client's assigned Elastic IP.
-                # aiohttp TCPConnector.local_addr is the correct, native way to do this.
-                connector_kwargs['connector'] = aiohttp.TCPConnector(
-                    local_addr=(self.source_ip, 0)
-                )
+                # On AWS EC2 with an Elastic IP the IP is NOT a local interface, so
+                # socket.bind() inside TCPConnector would fail with [Errno -9] or
+                # "Address family for hostname not supported".
+                # We reuse the robust logic from BaseBroker.
+                from brokers.base_broker import _is_bindable, _check_aws_nat
+                if _is_bindable(self.source_ip):
+                    connector_kwargs['connector'] = aiohttp.TCPConnector(
+                        local_addr=(self.source_ip, 0)
+                    )
+                elif _check_aws_nat(self.source_ip):
+                    # Behind AWS NAT — skip explicit binding; orders route via EIP automatically.
+                    logger.debug(f"[RestApiClient] Behind AWS NAT — skipping explicit bind to {self.source_ip}")
+                else:
+                    # Not bindable and not AWS NAT — this IP might be invalid for this machine.
+                    # We still try WITHOUT binding to allow fallback, but log it.
+                    logger.warning(f"[RestApiClient] Source IP {self.source_ip} is not bindable and not AWS NAT. Continuing without explicit bind.")
+
             self.session = aiohttp.ClientSession(
                 headers=await self._get_headers(),
                 **connector_kwargs

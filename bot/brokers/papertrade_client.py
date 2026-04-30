@@ -94,6 +94,12 @@ class PaperTradeClient(BaseBroker):
             'direction': direction
         })
 
+    async def get_funds(self):
+        return 0.0
+
+    async def get_positions(self):
+        return []
+
     # --- Abstract Method Implementations ---
 
     def place_order(self, contract, transaction_type, quantity, expiry, product_type='NRML', market_protection=None):

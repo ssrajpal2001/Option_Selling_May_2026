@@ -184,7 +184,12 @@ def handle_dhan_login(credentials, config_manager=None):
         client_id = ''
 
     try:
-        dhan = dhanhq(client_id, access_token)
+        try:
+            from dhanhq import DhanContext
+        except ImportError:
+            DhanContext = None
+        dhan = (dhanhq(DhanContext(client_id, access_token))
+                if DhanContext else dhanhq(client_id, access_token))
         logger.info(f'[Dhan] Client initialised for {client_id}.')
         return dhan
     except Exception as e:
