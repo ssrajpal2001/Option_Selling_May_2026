@@ -186,12 +186,12 @@ class BrokerRestAdapter:
                 # If we have the wrapper client, use its high-level lookups
                 from brokers.angelone_client import AngelOneClient
                 if isinstance(self.client, AngelOneClient):
-                    if instrument_key.startswith('NSE_FO|'):
+                    if str(instrument_key).startswith('NSE_FO|'):
                         ao_tradingsymbol = self.client.get_tradingsymbol_for_nsefoo_key(instrument_key)
                     else:
                         # For indices/stocks, we can try to resolve it from the master map
                         # but often it's just the part after '|'
-                        if '|' in instrument_key:
+                        if '|' in str(instrument_key):
                             ao_tradingsymbol = instrument_key.split('|', 1)[1]
 
                 # CRITICAL: If tradingsymbol is still empty, Angel One API often rejects the request
@@ -207,8 +207,8 @@ class BrokerRestAdapter:
                                  break
 
                 # If it's an index like NIFTY 50, ensure it's correct
-                if 'Nifty 50' in instrument_key: ao_tradingsymbol = 'Nifty 50'
-                elif 'Nifty Bank' in instrument_key: ao_tradingsymbol = 'Nifty Bank'
+                if 'Nifty 50' in str(instrument_key): ao_tradingsymbol = 'Nifty 50'
+                elif 'Nifty Bank' in str(instrument_key): ao_tradingsymbol = 'Nifty Bank'
 
                 res = await asyncio.to_thread(smart_api.ltpData, ao_exchange, ao_tradingsymbol, str(broker_key))
                 if res and res.get('status'):
