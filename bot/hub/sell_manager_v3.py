@@ -809,6 +809,8 @@ class SellManagerV3:
         and respects the unified BaseBroker interface.
         """
         if self.orchestrator.is_backtest or getattr(broker, 'paper_trade', False):
+            mode = "BACKTEST" if self.orchestrator.is_backtest else "PAPER"
+            logger.info(f"[{broker.instance_name}] {mode} order simulated: {trans_type} {qty} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={getattr(broker, 'user_id', '?')}")
             return "BACKTEST_ORDER_ID"
 
         try:
