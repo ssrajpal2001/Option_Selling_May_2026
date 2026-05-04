@@ -409,6 +409,9 @@ class ZerodhaClient(BaseBroker):
         market_protection: Optional override for Zerodha's market protection feature (0-100 or -1).
         """
         logger.info(f"[{self.instance_name}] place_order request: {transaction_type} {quantity} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={self.user_id}")
+        if not self.kite:
+            logger.error(f"[{self.instance_name}] BLOCKED: Zerodha KiteConnect not authenticated. Refresh the access token via Admin → Clients → Reconnect.")
+            return None
         self._validate_source_ip()
         symbol = self.construct_zerodha_symbol(contract, signal_expiry_date)
         if not symbol:

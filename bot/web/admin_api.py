@@ -372,6 +372,13 @@ async def update_data_provider(request: Request, body: ProviderConfigRequest, ad
 
         if body.provider == 'dhan':
             set_parts.append("status='configured'")
+            # For Dhan, 'api_secret' IS the access token when entered manually.
+            # Mirror it to access_token_encrypted so provider_factory can read it.
+            if body.api_secret and body.api_secret.strip():
+                set_parts.append("access_token_encrypted=?")
+                params.append(encrypt_secret(body.api_secret))
+                set_parts.append("token_issued_at=?")
+                params.append(datetime.now(timezone.utc).isoformat())
 
         # For Upstox, record the server's callback URL alongside credentials so Background
         # Connect always uses the exact redirect_uri registered in the Upstox Developer Portal.
