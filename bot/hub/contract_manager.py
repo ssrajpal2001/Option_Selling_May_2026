@@ -236,7 +236,8 @@ class ContractManager:
 
                     # Extra level: try underlying_key from the future if available
                     if not raw_contracts:
-                        f_contract = next(iter(self.atm_manager.orchestrator.broker_manager.brokers.values())).get_contract_by_key(f_key) if self.atm_manager.orchestrator.broker_manager.brokers else None
+                        _first_broker = next(iter(self.atm_manager.orchestrator.broker_manager.brokers.values()), None) if self.atm_manager.orchestrator.broker_manager.brokers else None
+                        f_contract = _first_broker.get_contract_by_key(f_key) if _first_broker and hasattr(_first_broker, 'get_contract_by_key') else None
                         u_key = getattr(f_contract, 'underlying_key', None)
                         if u_key and u_key != f_key and u_key != instrument_key:
                             logger.info(f"ContractManager: Retrying with underlying_key '{u_key}' from future...")
