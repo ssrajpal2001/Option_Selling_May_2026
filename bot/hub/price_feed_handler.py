@@ -93,7 +93,12 @@ class PriceFeedHandler:
         broker_source = data.get('broker', 'unknown')
         user_id = data.get('user_id')
 
-        # logger.debug(f"PriceFeedHandler received normalized tick from {broker_source} for {instrument_key} (User: {user_id}, LTP: {ltp})")
+        # Keep last_exchange_time current so Feed Lag is shown in heartbeat
+        if timestamp:
+            ts = timestamp
+            if getattr(ts, 'tzinfo', None) is None:
+                ts = self._kolkata_tz.localize(ts)
+            self.state_manager.last_exchange_time = ts
 
         # DUAL-FEED REDUNDANCY LOGIC (FAILOVER)
         # We only process this tick if it's "new" for this instrument.

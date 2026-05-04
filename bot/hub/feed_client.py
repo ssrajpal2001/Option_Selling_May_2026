@@ -21,8 +21,11 @@ import asyncio
 import json
 import time
 import datetime
+import pytz
 
 from utils.logger import logger
+
+_KOLKATA = pytz.timezone('Asia/Kolkata')
 from hub.data_feed_base import DataFeed
 
 _HOST = '127.0.0.1'
@@ -279,9 +282,12 @@ class FeedClient(DataFeed):
             'user_id': 'GLOBAL',
             'instrument_key': key,
             'ltp': float(ltp),
-            'timestamp': datetime.datetime.now(),
+            'timestamp': datetime.datetime.now(_KOLKATA),
             'broker': msg.get('source', 'feed_server'),
         }
+        atp = msg.get('atp')
+        if atp:
+            tick['atp'] = float(atp)
 
         from hub.event_bus import event_bus
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)

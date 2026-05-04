@@ -167,13 +167,22 @@ class FeedServer:
             except Exception:
                 pass
             if ltp > 0:
-                await event_bus.publish('BROKER_TICK_RECEIVED', {
+                tick_data = {
                     'user_id': 'GLOBAL',
                     'instrument_key': key,
                     'ltp': ltp,
                     'timestamp': now,
                     'broker': 'upstox_global',
-                })
+                }
+                # Extract ATP (avg traded price) from marketFF for VWAP/CSV recording
+                try:
+                    if feed.HasField('fullFeed') and feed.fullFeed.HasField('marketFF'):
+                        atp_val = float(feed.fullFeed.marketFF.atp or 0)
+                        if atp_val > 0:
+                            tick_data['atp'] = atp_val
+                except Exception:
+                    pass
+                await event_bus.publish('BROKER_TICK_RECEIVED', tick_data)
 
     async def _on_normalized_tick(self, data: dict) -> None:
         """
@@ -185,13 +194,17 @@ class FeedServer:
         if not key or ltp is None:
             return
         self._last_broadcast_epoch = time.time()
-        await self._broadcast({
+        msg = {
             'type': 'tick',
             'instrument_key': key,
             'ltp': float(ltp),
             'timestamp': self._last_broadcast_epoch,
             'source': data.get('broker', 'unknown'),
-        })
+        }
+        atp = data.get('atp')
+        if atp:
+            msg['atp'] = float(atp)
+        await self._broadcast(msg)
 
     # ── TCP broadcast ─────────────────────────────────────────────────────────
 
