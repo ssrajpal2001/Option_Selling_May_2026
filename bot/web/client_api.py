@@ -1057,29 +1057,55 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
             return {"broker": broker_name, "status": "skipped",
                     "message": f"{broker_name.capitalize()} session expired — reconnect in Settings"}
     elif broker_name == "dhan":
-        _dhan_api_mode = bool(
-            instance.get("api_key_encrypted")
-            and instance.get("password_encrypted")
-            and instance.get("totp_encrypted")
+        from utils.auth_manager_dhan import handle_dhan_login_automated, generate_dhan_token
+        _dhan_api_key  = decrypt_secret(instance.get("api_key_encrypted") or "")
+        _dhan_password = decrypt_secret(instance.get("password_encrypted") or "")
+        _dhan_totp_sec = decrypt_secret(instance.get("totp_encrypted") or "")
+        _dhan_api_mode = bool(_dhan_api_key and _dhan_password and _dhan_totp_sec)
+        _dhan_access_token = decrypt_secret(
+            instance.get("access_token_encrypted") or instance.get("api_secret_encrypted") or ""
         )
-        if not _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_api_mode):
-            return {"broker": broker_name, "status": "skipped",
-                    "message": "Dhan token expired — click Connect Now or reconnect in Settings"}
 
-        from utils.auth_manager_dhan import handle_dhan_login_automated
-        _dhan_api_key = decrypt_secret(instance["api_key_encrypted"]) if instance.get("api_key_encrypted") else ""
-        _dhan_access_token = (
-            decrypt_secret(instance["access_token_encrypted"])
-            if instance.get("access_token_encrypted")
-            else decrypt_secret(instance.get("api_secret_encrypted", ""))
-        )
-        _dhan_valid_token = await asyncio.to_thread(
-            handle_dhan_login_automated,
-            {"api_key": _dhan_api_key, "access_token": _dhan_access_token},
-        )
-        if not _dhan_valid_token:
+        # Check freshness + validate existing token
+        _dhan_token_ok = False
+        if _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_api_mode) and _dhan_access_token:
+            _validated = await asyncio.to_thread(
+                handle_dhan_login_automated,
+                {"api_key": _dhan_api_key, "access_token": _dhan_access_token},
+            )
+            if _validated:
+                _dhan_access_token = _validated
+                _dhan_token_ok = True
+
+        # Auto-regenerate when token is stale/invalid and TOTP credentials are available
+        if not _dhan_token_ok and _dhan_api_mode:
+            logger.info(f"[StartBot] Dhan token stale/invalid for instance {instance['id']} — auto-generating fresh token...")
+            _regen = await asyncio.to_thread(
+                generate_dhan_token,
+                api_key=_dhan_api_key, client_id=_dhan_api_key,
+                password=_dhan_password, totp_secret=_dhan_totp_sec,
+            )
+            if _regen.get("token"):
+                _dhan_access_token = _regen["token"]
+                _enc_new = encrypt_secret(_dhan_access_token)
+                _now_ts = datetime.now(timezone.utc).isoformat()
+                db_execute(
+                    "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+                    (_enc_new, _now_ts, instance["id"]),
+                )
+                instance["access_token_encrypted"] = _enc_new
+                instance["token_updated_at"] = _now_ts
+                _dhan_token_ok = True
+                logger.info(f"[StartBot] Dhan token auto-refreshed for instance {instance['id']}.")
+            else:
+                _err = _regen.get("error", "Unknown error")
+                logger.error(f"[StartBot] Dhan auto-refresh failed for instance {instance['id']}: {_err}")
+                return {"broker": broker_name, "status": "skipped",
+                        "message": f"Dhan token expired and auto-refresh failed: {_err}. Check Client ID, PIN, and TOTP in Settings."}
+
+        if not _dhan_token_ok:
             return {"broker": broker_name, "status": "skipped",
-                    "message": "Dhan token invalid or expired — reconnect Dhan in Settings"}
+                    "message": "Dhan token invalid or expired — save Password/TOTP in Settings to enable auto-refresh, or reconnect manually."}
 
     # Already running?
     if instance["status"] == "running":
