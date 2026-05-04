@@ -1,9 +1,12 @@
 import asyncio
 import time
 import datetime
+import pytz
 from utils.logger import logger
 from hub.data_feed_base import DataFeed
 from hub.event_bus import event_bus
+
+_KOLKATA = pytz.timezone('Asia/Kolkata')
 
 # How long (seconds) a feed can be silent before the watchdog considers it stale
 _STALE_THRESHOLD_SECS = 60
@@ -76,14 +79,15 @@ class DualFeedManager(DataFeed):
             'instrument_key': inst_key,
             'ltp': float(ltp),
             'volume': int(data.get('volume') or data.get('vtt') or 0),
-            'timestamp': datetime.datetime.now(),
+            'timestamp': datetime.datetime.now(_KOLKATA),
             'broker': 'dhan_redundant'
         }
 
         if 'OI' in data or 'oi' in data:
             tick['oi'] = int(data.get('OI') or data.get('oi'))
-        if 'atp' in data or 'avg_price' in data:
-            tick['atp'] = float(data.get('atp') or data.get('avg_price'))
+        atp_raw = data.get('atp') or data.get('avg_price') or data.get('average_price')
+        if atp_raw:
+            tick['atp'] = float(atp_raw)
 
         logger.debug(f"DualFeedManager dispatching global Dhan tick for {inst_key}: LTP={ltp}")
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)

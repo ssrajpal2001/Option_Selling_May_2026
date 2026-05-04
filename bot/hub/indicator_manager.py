@@ -245,8 +245,11 @@ class IndicatorManager:
                             agg_day['volume'] = 1.0
                         vwap_val = VWAPIndicator.get_latest_value(agg_day)
                         if vwap_val is not None:
+                            tp = (agg_day['high'] + agg_day['low'] + agg_day['close']) / 3
+                            vol = agg_day['volume']
                             self._vwap_state[state_key] = {
-                                'vwap': vwap_val,
+                                'cum_pv': float((tp * vol).sum()),
+                                'cum_vol': float(vol.sum()),
                                 'last_final_minute': last_final_minute
                             }
                             return vwap_val

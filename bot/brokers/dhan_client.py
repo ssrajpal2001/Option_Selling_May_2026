@@ -3,6 +3,7 @@ import os
 import datetime
 import warnings
 import asyncio
+import pytz
 import pandas as pd
 from dhanhq import dhanhq, marketfeed as market_feed
 from .base_broker import BaseBroker
@@ -10,6 +11,8 @@ from utils.logger import logger
 from utils.auth_manager_dhan import handle_dhan_login
 from hub.event_bus import event_bus
 import threading
+
+_KOLKATA = pytz.timezone('Asia/Kolkata')
 
 class DhanClient(BaseBroker):
     # Class-level shared state to avoid redundant downloads across multiple client instances
@@ -411,7 +414,7 @@ class DhanClient(BaseBroker):
             'instrument_key': inst_key,
             'ltp': float(ltp),
             'volume': int(volume),
-            'timestamp': datetime.datetime.now(), # Dhan might not provide exch timestamp in Ticker mode
+            'timestamp': datetime.datetime.now(_KOLKATA),
             'broker': 'dhan'
         }
 
