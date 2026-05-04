@@ -57,6 +57,13 @@ class UpstoxClient(BaseBroker):
                                         (enc, now_ist, _inst_id)
                                     )
                                     logger.info(f"[UpstoxClient] Fresh token saved to DB for user {self.user_id}.")
+                                # Also update data_providers so the global FeedServer gets the fresh token
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, token_issued_at=? "
+                                    "WHERE provider='upstox'",
+                                    (enc, now_ist)
+                                )
+                                logger.info(f"[UpstoxClient] Fresh token propagated to data_providers.")
                             except Exception as _db_err:
                                 logger.warning(f"[UpstoxClient] Could not persist fresh token to DB: {_db_err}")
 

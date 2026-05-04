@@ -228,12 +228,30 @@ class IndicatorManager:
 
         current_day = timestamp.date()
         state_key = (inst_key, current_day)
-        state = self._vwap_state.get(state_key)
-
-        # Use exact minute of timestamp.
-        # When called with HH:MM:59 anchor, this correctly includes the last candle of the bucket.
         last_final_minute = timestamp.replace(second=0, microsecond=0)
 
+        # Live aggregator fallback: use accumulated OHLC bars before hitting broker API.
+        # Prevents VWAP returning None for near-expiry option strikes where the API
+        # returns HTTP 400 and they get permanently blacklisted in _api_failure_cache.
+        if not self.orchestrator.is_backtest:
+            agg = getattr(self.orchestrator, 'entry_aggregator', None)
+            if agg is not None:
+                agg_ohlc = agg.get_historical_ohlc(inst_key)
+                if agg_ohlc is not None and not agg_ohlc.empty:
+                    agg_day = agg_ohlc[agg_ohlc.index.date == current_day].copy()
+                    agg_day = agg_day[agg_day.index <= last_final_minute]
+                    if not agg_day.empty:
+                        if 'volume' not in agg_day.columns or agg_day['volume'].sum() == 0:
+                            agg_day['volume'] = 1.0
+                        vwap_val = VWAPIndicator.get_latest_value(agg_day)
+                        if vwap_val is not None:
+                            self._vwap_state[state_key] = {
+                                'vwap': vwap_val,
+                                'last_final_minute': last_final_minute
+                            }
+                            return vwap_val
+
+        state = self._vwap_state.get(state_key)
         if not state or state['last_final_minute'] < last_final_minute:
             # include_current=True ensures we get the candle at 'timestamp' minute if it exists
             ohlc_1m = await self.data_manager.get_historical_ohlc(inst_key, 1, current_timestamp=timestamp, min_candles=20, for_full_day=True, include_current=True)
