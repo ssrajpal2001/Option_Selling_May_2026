@@ -165,6 +165,8 @@ class EngineManager:
 
         # Track which orchestrators have had candidates built (avoid repeat calls)
         _sell_candidates_built = set()
+        _init_retry_count = 0
+        _init_max_wait = 120  # seconds
 
         while True:
             now_dt = datetime.datetime.now()
@@ -217,9 +219,18 @@ class EngineManager:
                         for orch in self.orchestrators.values(): subs.extend(orch.get_initial_subscriptions())
                         if ws_mgr and subs: ws_mgr.subscribe(list(set(subs)))
                         is_initialized = True
+                        _init_retry_count = 0
                         logger.info(f"[EngineManager] Bot initialized successfully. Waiting for trading window ({start_time}).")
                     except Exception as e:
-                        logger.error(f"Init error: {e}"); await asyncio.sleep(10); continue
+                        _init_retry_count += 1
+                        # Exponential backoff: 5s, 10s, 20s, 40s … capped at _init_max_wait
+                        wait = min(5 * (2 ** (_init_retry_count - 1)), _init_max_wait)
+                        logger.error(
+                            f"[EngineManager] Init error (attempt {_init_retry_count}): {e}. "
+                            f"Retrying in {wait}s. "
+                            "If this is a token error, refresh the global Upstox/Dhan token via Admin → Data Providers."
+                        )
+                        await asyncio.sleep(wait); continue
 
                 # 2. Trading Logic Gating
                 if is_initialized and not is_trading_active and now >= start_time:

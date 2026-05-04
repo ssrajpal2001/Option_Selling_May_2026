@@ -14,11 +14,24 @@ class DataManager:
         self.rest_client = rest_client
         self.instrument_key = instrument_key
         self.config_manager = config_manager
-        self.atm_manager = atm_manager
+        self._atm_manager = atm_manager
         self.is_backtest = is_backtest
 
         self.contract_manager = ContractManager(rest_client, config_manager, atm_manager)
         self.futures_manager = FuturesManager(rest_client, config_manager, atm_manager)
+
+    @property
+    def atm_manager(self):
+        return self._atm_manager
+
+    @atm_manager.setter
+    def atm_manager(self, value):
+        """Propagate atm_manager to sub-managers so broker fallback paths work."""
+        self._atm_manager = value
+        if hasattr(self, 'contract_manager') and self.contract_manager is not None:
+            self.contract_manager.atm_manager = value
+        if hasattr(self, 'futures_manager') and self.futures_manager is not None:
+            self.futures_manager.atm_manager = value
 
         self.market_data = {}
         self.daily_ohlc_cache = {}
