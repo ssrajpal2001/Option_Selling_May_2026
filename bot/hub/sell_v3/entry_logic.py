@@ -204,14 +204,21 @@ class EntryLogic(SellV3Base):
         v_slope_tf = self._v3_cfg('v_slope_entry.tf', 1, int, timestamp=timestamp)
         metric = self._v3_cfg('reentry_best_metric', 'balanced_premium', timestamp=timestamp)
 
-        # ATM Bias Detection for Matrix Filter
+        # ATM Bias Detection for Matrix Filter using corrected (time-value) LTP
+        # Strip intrinsic: CE intrinsic = max(0, spot-strike), PE intrinsic = max(0, strike-spot)
+        # Threshold check uses raw LTP only; bias direction uses corrected LTP.
         ce_key_atm = self.orchestrator.atm_manager.find_instrument_key_by_strike(atm, 'CE', expiry)
         pe_key_atm = self.orchestrator.atm_manager.find_instrument_key_by_strike(atm, 'PE', expiry)
         ce_ltp_atm = ticks.get(ce_key_atm, {}).get('ltp', 0) if ce_key_atm else 0
         pe_ltp_atm = ticks.get(pe_key_atm, {}).get('ltp', 0) if pe_key_atm else 0
+        _spot = anchor_price or atm
+        ce_corrected_atm = ce_ltp_atm - max(0.0, _spot - atm)
+        pe_corrected_atm = pe_ltp_atm - max(0.0, atm - _spot)
+        ce_bias_stronger = ce_corrected_atm > pe_corrected_atm
 
         if do_log:
-            logger.info(f"[SellManagerV3] Pool Scan (Matrix {len(strikes)}x{len(strikes)}) - ATM Bias: {'CE' if ce_ltp_atm > pe_ltp_atm else 'PE'} Stronger")
+            logger.info(f"[SellManagerV3] Pool Scan (Matrix {len(strikes)}x{len(strikes)}) - ATM Bias: {'CE' if ce_bias_stronger else 'PE'} Stronger"
+                        f" (CE corr={ce_corrected_atm:.2f}, PE corr={pe_corrected_atm:.2f})")
 
         # N x N Matrix Loop
         for s_ce in strikes:
@@ -224,13 +231,14 @@ class EntryLogic(SellV3Base):
                 pe_ltp = ticks.get(pe_key, {}).get('ltp', 0) if pe_key else 0
                 if pe_ltp == 0: continue
 
-                # Filter by LTP target
+                # Filter by LTP target (raw LTP — threshold always uses original price)
                 if ce_ltp < ltp_target or pe_ltp < ltp_target:
                     continue
 
-                # USER REQUIREMENT: Opposite Bias Filter (Flip Point)
-                # If CE > PE at ATM, we ONLY consider combinations where PE > CE (to capture reversal/balance)
-                if ce_ltp_atm > pe_ltp_atm:
+                # 1st Filter: Bias direction from corrected ATM LTP
+                # CE corrected > PE corrected → CE has more time value → only allow pairs where PE raw LTP > CE raw LTP
+                # PE corrected > CE corrected → PE has more time value → only allow pairs where CE raw LTP > PE raw LTP
+                if ce_bias_stronger:
                     if ce_ltp >= pe_ltp: continue
                 else:
                     if pe_ltp >= ce_ltp: continue
