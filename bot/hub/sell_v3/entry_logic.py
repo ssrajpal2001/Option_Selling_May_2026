@@ -152,10 +152,10 @@ class EntryLogic(SellV3Base):
                 elif do_log:
                     logger.info(f"[SellManagerV3] Beginning Concept technicals FAILED: {reason}. Searching next ATM in next pulse...")
 
-            # Hybrid transition if enabled and rules/strikes failed
-            if is_beginning and workflow_mode == 'hybrid' and not is_immediate:
-                 logger.info(f"[SellManagerV3] Hybrid Transition: Beginning Concept rules failed. Switching to Re-entry Concept (Pool Scan) for next pulse.")
-                 self.manager.workflow_phase = 'CONTINUE'
+            # Hybrid transition: Beginning failed → switch to pool scan regardless of is_immediate
+            if is_beginning and workflow_mode == 'hybrid':
+                logger.info(f"[SellManagerV3] Hybrid Transition: Beginning Concept failed. Switching to Re-entry Concept (Pool Scan) for next pulse.")
+                self.manager.workflow_phase = 'CONTINUE'
             return
 
         else:
@@ -366,8 +366,13 @@ class EntryLogic(SellV3Base):
         if ce_ltp_atm == 0 or pe_ltp_atm == 0:
             return None, None
 
-        # USER REQUIREMENT: Select ATM strike whose LTP is LOWER as the Anchor
-        if ce_ltp_atm < pe_ltp_atm:
+        # Select anchor using corrected (time-value-only) LTP to avoid ITM distortion.
+        # CE intrinsic = max(0, spot - strike), PE intrinsic = max(0, strike - spot).
+        # Whichever side has LESS time value becomes the anchor; raw LTP used for all downstream logic.
+        ce_corrected = ce_ltp_atm - max(0.0, anchor_price - atm)
+        pe_corrected = pe_ltp_atm - max(0.0, atm - anchor_price)
+
+        if ce_corrected < pe_corrected:
             anchor_cand = {'strike': atm, 'key': ce_key_atm, 'ltp': ce_ltp_atm, 'side': 'CE'}
             partner_side = 'PE'
         else:
