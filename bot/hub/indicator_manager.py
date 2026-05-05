@@ -257,7 +257,8 @@ class IndicatorManager:
         state = self._vwap_state.get(state_key)
         if not state or state['last_final_minute'] < last_final_minute:
             # include_current=True ensures we get the candle at 'timestamp' minute if it exists
-            ohlc_1m = await self.data_manager.get_historical_ohlc(inst_key, 1, current_timestamp=timestamp, min_candles=20, for_full_day=True, include_current=True)
+            _min_candles = 1 if self.orchestrator.is_backtest else 20
+            ohlc_1m = await self.data_manager.get_historical_ohlc(inst_key, 1, current_timestamp=timestamp, min_candles=_min_candles, for_full_day=True, include_current=True)
             if ohlc_1m is not None and not ohlc_1m.empty:
                 df = ohlc_1m[(ohlc_1m.index.date == current_day) & (ohlc_1m.index <= last_final_minute)].copy()
 
