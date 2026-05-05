@@ -152,9 +152,9 @@ class EntryLogic(SellV3Base):
                 elif do_log:
                     logger.info(f"[SellManagerV3] Beginning Concept technicals FAILED: {reason}. Searching next ATM in next pulse...")
 
-            # Hybrid transition if enabled and rules/strikes failed
-            if is_beginning and workflow_mode == 'hybrid' and not is_immediate:
-                 logger.info(f"[SellManagerV3] Hybrid Transition: Beginning Concept rules failed. Switching to Re-entry Concept (Pool Scan) for next pulse.")
+            # Hybrid transition if enabled and beginning concept failed (no valid pair or rules failed)
+            if is_beginning and workflow_mode == 'hybrid':
+                 logger.info(f"[SellManagerV3] Hybrid Transition: Beginning Concept failed. Switching to Re-entry Concept (Pool Scan) for next pulse.")
                  self.manager.workflow_phase = 'CONTINUE'
             return
 
@@ -164,10 +164,6 @@ class EntryLogic(SellV3Base):
             candidates = await self._scan_v_slope_pool(ticks, timestamp, anchor_ts, rules, do_log)
 
             if not candidates:
-                # If hybrid beginning pool scan failed, transition for next pulse
-                if is_beginning and workflow_mode == 'hybrid' and not is_immediate:
-                     logger.info(f"[SellManagerV3] Hybrid Transition: Re-entry Concept rules failed. Retrying next pulse.")
-                     self.manager.workflow_phase = 'CONTINUE'
                 return
 
             if not isinstance(candidates, list): candidates = [candidates]
@@ -341,14 +337,16 @@ class EntryLogic(SellV3Base):
         """
         Beginning Concept Logic:
         1. Select ATM for both sides.
-        2. Side with LOWER LTP is the Anchor.
-        3. Search OTHER side for strike whose LTP < Anchor LTP.
+        2. Strip intrinsic value → compare time value (corrected LTP) only.
+        3. Side with LOWER corrected LTP is the Anchor.
+        4. Search OTHER side for strike whose corrected LTP < Anchor corrected LTP.
         """
         interval = self.orchestrator.config_manager.get_int(self.instrument_name, 'strike_interval', 50)
         anchor_price = self.orchestrator.get_anchor_price()
         if not anchor_price: return None, None
 
         expiry = self.orchestrator.atm_manager.get_expiry_by_mode('sell', 'signal')
+        spot = anchor_price  # nifty spot/futures price
 
         # Priority hierarchy for LTP Target
         ltp_target = self._v3_cfg('ltp_target', None, float, timestamp=timestamp)
@@ -366,32 +364,38 @@ class EntryLogic(SellV3Base):
         if ce_ltp_atm == 0 or pe_ltp_atm == 0:
             return None, None
 
-        # USER REQUIREMENT: Select ATM strike whose LTP is LOWER as the Anchor
-        if ce_ltp_atm < pe_ltp_atm:
-            anchor_cand = {'strike': atm, 'key': ce_key_atm, 'ltp': ce_ltp_atm, 'side': 'CE'}
+        # Corrected LTP: strip intrinsic value so we compare time value only.
+        # CE intrinsic = max(0, spot - strike)  [positive when call is ITM]
+        # PE intrinsic = max(0, strike - spot)  [positive when put is ITM]
+        ce_corrected_atm = ce_ltp_atm - max(0, spot - atm)
+        pe_corrected_atm = pe_ltp_atm - max(0, atm - spot)
+
+        # USER REQUIREMENT: Select ATM strike whose CORRECTED LTP is LOWER as the Anchor
+        if ce_corrected_atm < pe_corrected_atm:
+            anchor_cand = {'strike': atm, 'key': ce_key_atm, 'ltp': ce_ltp_atm, 'corrected_ltp': ce_corrected_atm, 'side': 'CE'}
             partner_side = 'PE'
         else:
-            anchor_cand = {'strike': atm, 'key': pe_key_atm, 'ltp': pe_ltp_atm, 'side': 'PE'}
+            anchor_cand = {'strike': atm, 'key': pe_key_atm, 'ltp': pe_ltp_atm, 'corrected_ltp': pe_corrected_atm, 'side': 'PE'}
             partner_side = 'CE'
 
-        # 2. Check LTP Threshold for Anchor
-        if anchor_cand['ltp'] < ltp_target:
+        # 2. Check LTP Threshold for Anchor (against corrected LTP)
+        if anchor_cand['corrected_ltp'] < ltp_target:
             if getattr(self.manager, 'do_log', False):
-                logger.info(f"[SellV3] Beginning Concept: Anchor {anchor_cand['side']} {anchor_cand['strike']} LTP {anchor_cand['ltp']:.2f} below target {ltp_target}")
+                logger.info(f"[SellV3] Beginning Concept: Anchor {anchor_cand['side']} {anchor_cand['strike']} corrected LTP {anchor_cand['corrected_ltp']:.2f} below target {ltp_target}")
             return None, None
 
-        # 3. Select Partner: Strictly lower than Anchor LTP and closest to it
-        # User Requirement: Search wide (ATM and OTM) to find the best balanced premium.
+        # 3. Select Partner: corrected LTP strictly lower than anchor corrected LTP, above floor
         best_partner = None
         search_results = []
+        anchor_corrected = anchor_cand['corrected_ltp']
 
-        # Scan range based on Pool Range config, default 4 steps
         pool_range = self._v3_cfg('v_slope_pool_offset', None, int, timestamp=timestamp)
         if pool_range is None: pool_range = self._v3_cfg('reentry_offset', 4, int, timestamp=timestamp)
 
         do_log = getattr(self.manager, 'do_log', False)
         if do_log:
-            logger.info(f"[SellManagerV3] Beginning Selection - Anchor: {anchor_cand['side']} {anchor_cand['strike']} (@{anchor_cand['ltp']:.2f}, Key: {anchor_cand['key']})")
+            logger.info(f"[SellManagerV3] Beginning Selection - Anchor: {anchor_cand['side']} {anchor_cand['strike']} "
+                        f"(LTP: {anchor_cand['ltp']:.2f}, Corrected: {anchor_corrected:.2f}, Key: {anchor_cand['key']})")
 
         for i in range(-pool_range, pool_range + 1):
             s = atm + i * interval
@@ -399,27 +403,29 @@ class EntryLogic(SellV3Base):
             if not key: continue
             ltp = ticks.get(key, {}).get('ltp', 0)
 
-            # Logic: Strictly lower than anchor, but meets minimum floor
-            is_valid = (ltp_target <= ltp < anchor_cand['ltp'])
+            # Strip intrinsic value from partner candidate
+            corrected = ltp - (max(0, spot - s) if partner_side == 'CE' else max(0, s - spot))
+
+            # Valid if corrected LTP is strictly below anchor's corrected LTP but above floor
+            is_valid = (ltp_target <= corrected < anchor_corrected)
 
             if do_log:
                 status = "MATCH" if is_valid else "REJECT"
-                rej = ""
-                if not is_valid:
-                    rej = f" (LTP {ltp:.2f} out of range {ltp_target}-{anchor_cand['ltp']:.2f})"
-                logger.info(f"  - Checking {partner_side} {s} [Key: {key}] | LTP: {ltp:.2f} | {status}{rej}")
+                rej = f" (corrected {corrected:.2f} out of range {ltp_target}-{anchor_corrected:.2f})" if not is_valid else ""
+                logger.info(f"  - Checking {partner_side} {s} [Key: {key}] | LTP: {ltp:.2f} | Corrected: {corrected:.2f} | {status}{rej}")
 
             if is_valid:
-                search_results.append({'strike': s, 'key': key, 'ltp': ltp})
+                search_results.append({'strike': s, 'key': key, 'ltp': ltp, 'corrected_ltp': corrected})
 
         if search_results:
-            # Sort by LTP descending to find the one closest to the anchor from below
-            search_results.sort(key=lambda x: x['ltp'], reverse=True)
+            # Sort by corrected LTP descending → pick closest to anchor from below
+            search_results.sort(key=lambda x: x['corrected_ltp'], reverse=True)
             best_partner = search_results[0]
 
             if getattr(self.manager, 'do_log', False):
-                logger.info(f"[SellV3] Strike Selection: Anchor={anchor_cand['side']} {anchor_cand['strike']} (@{anchor_cand['ltp']:.2f}) | "
-                            f"Partner={partner_side} {best_partner['strike']} (@{best_partner['ltp']:.2f})")
+                logger.info(f"[SellV3] Strike Selection: "
+                            f"Anchor={anchor_cand['side']} {anchor_cand['strike']} (LTP: {anchor_cand['ltp']:.2f}, Corrected: {anchor_corrected:.2f}) | "
+                            f"Partner={partner_side} {best_partner['strike']} (LTP: {best_partner['ltp']:.2f}, Corrected: {best_partner['corrected_ltp']:.2f})")
 
         if not best_partner:
             return None, None
