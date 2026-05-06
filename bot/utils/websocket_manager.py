@@ -92,14 +92,14 @@ class WebSocketManager(DataFeed):
                     # a new Upstox token (invalidating the one we loaded at startup).
                     if "401" in str(e) and active_client and hasattr(active_client, 'auth_handler'):
                         try:
-                            from web.db import db_fetch_one
+                            from web.db import db_fetchone
                             from web.auth import decrypt_secret
-                            row = db_fetch_one(
+                            row = db_fetchone(
                                 "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
                                 ()
                             )
-                            if row and row[0]:
-                                fresh = decrypt_secret(row[0])
+                            if row and row.get('access_token_encrypted'):
+                                fresh = decrypt_secret(row['access_token_encrypted'])
                                 if fresh and fresh != active_client.auth_handler.get_access_token():
                                     active_client.auth_handler.token = fresh
                                     logger.info("[WSManager] 401 on auth — reloaded fresh token from data_providers.")

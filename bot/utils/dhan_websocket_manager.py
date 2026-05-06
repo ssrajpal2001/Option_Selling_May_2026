@@ -8,6 +8,7 @@ from dhanhq import marketfeed
 from hub.event_bus import event_bus
 from types import ModuleType
 import sys
+import inspect
 
 class DhanWebSocketManager(DataFeed):
     """
@@ -198,7 +199,7 @@ class DhanWebSocketManager(DataFeed):
 
             # Pass to handlers (e.g. DualFeedManager)
             for h in self.message_handlers:
-                if asyncio.iscoroutinefunction(h):
+                if inspect.iscoroutinefunction(h):
                     asyncio.create_task(h('dhan', processed))
                 else:
                     h('dhan', processed)
