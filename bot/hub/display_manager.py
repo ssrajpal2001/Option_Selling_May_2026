@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import os
+import sys
 import pytz
 from utils.logger import logger
 
@@ -21,6 +22,9 @@ class DisplayManager:
             enabled = self.config_manager.get('settings', 'display_enabled', fallback='true').lower() == 'true'
             if not enabled:
                 return
+        # Skip display when stdout is redirected to a file/pipe — ANSI codes corrupt logs.
+        if not sys.stdout.isatty():
+            return
         loop = asyncio.get_running_loop()
         while True:
             # RUN SYNCHRONOUS display_data in a separate thread to avoid blocking the event loop.
