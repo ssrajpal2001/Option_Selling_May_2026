@@ -344,6 +344,7 @@
       <button class="nav-tab" onclick="showPane('positions')" id="tab-positions">Positions</button>
       <button class="nav-tab" onclick="showPane('backtest')" id="tab-backtest">Backtest</button>
       <button class="nav-tab" onclick="showPane('history')" id="tab-history">History</button>
+      <button class="nav-tab" onclick="showPane('calendar')" id="tab-calendar">Calendar</button>
       <button class="nav-tab" onclick="showPane('settings')" id="tab-settings">Settings</button>
     </div>
 
@@ -431,6 +432,12 @@
   <div class="mbar-sep" id="mbar-engine-sep" style="display:none"></div>
   <div class="mbar-item" id="mbar-engine-wrap" style="display:none">
     <span id="mbar-engine-badge" class="mbar-status"></span>
+  </div>
+  <div class="mbar-sep"></div>
+  <div class="mbar-item" id="mbar-feed-wrap" title="Market data feed status">
+    <span class="mbar-label">Feed:</span>
+    <span id="mbar-feed-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:4px;transition:background .3s"></span>
+    <span id="mbar-feed-lbl" style="color:var(--muted);font-size:11px">—</span>
   </div>
 </div>
 
@@ -1262,6 +1269,46 @@
     <!-- ── RIGHT COLUMN ── -->
     <div>
 
+      <!-- Trading Parameters (per-user overrides) -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('trading-params-panel','arr-tp')">
+          <div>
+            <div class="sec-title">📊 Trading Parameters</div>
+            <div class="sec-sub">Override default strategy values for your account</div>
+          </div>
+          <svg class="acc-arrow" id="arr-tp" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body" id="trading-params-panel">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <div class="inp-label">LTP Target (pts)</div>
+              <input type="number" class="inp" id="tp-ltp-target" placeholder="e.g. 60" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Entry premium target per leg</div>
+            </div>
+            <div>
+              <div class="inp-label">Max Daily Trades</div>
+              <input type="number" class="inp" id="tp-max-trades" placeholder="e.g. 3" min="1">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Max entries per trading day</div>
+            </div>
+            <div>
+              <div class="inp-label">SL per Leg (pts)</div>
+              <input type="number" class="inp" id="tp-sl-pts" placeholder="e.g. 25" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Stop-loss trigger per leg</div>
+            </div>
+            <div>
+              <div class="inp-label">Target per Leg (pts)</div>
+              <input type="number" class="inp" id="tp-target-pts" placeholder="e.g. 40" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Profit target per leg</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+            ℹ️ Leave blank to use platform defaults. Changes take effect on next bot start.
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="saveTradingParams()">💾 Save Parameters</button>
+          <div id="tp-status" style="font-size:12px;margin-top:8px;text-align:center;color:var(--muted)"></div>
+        </div>
+      </div>
+
       <!-- Notifications -->
       <div class="card" style="margin-bottom:16px">
         <div class="acc-header" onclick="toggleAcc('notif-panel','arr-notif')">
@@ -1356,6 +1403,43 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ CALENDAR PANE -->
+<div class="pane" id="pane-calendar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text)">📅 Monthly PnL Calendar</h2>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="calNav(-1)" style="padding:5px 12px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px">◀</button>
+      <span id="cal-month-label" style="font-size:14px;font-weight:700;color:var(--text);min-width:120px;text-align:center">—</span>
+      <button onclick="calNav(1)" style="padding:5px 12px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px">▶</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <!-- Day-of-week headers -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">MON</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">TUE</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">WED</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">THU</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">FRI</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">SAT</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">SUN</div>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+  </div>
+
+  <!-- Day detail modal overlay -->
+  <div id="cal-day-detail" style="display:none;margin-top:4px">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span id="cal-detail-title" style="font-size:15px;font-weight:700;color:var(--text)">—</span>
+        <button onclick="document.getElementById('cal-day-detail').style.display='none'" style="font-size:18px;background:none;border:none;color:var(--muted);cursor:pointer">✕</button>
+      </div>
+      <div id="cal-detail-body" style="font-size:13px;color:var(--muted)">No trades.</div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /page -->
 
 <!-- Mobile bottom nav -->
@@ -1418,8 +1502,9 @@ function showPane(name) {
   document.getElementById('tab-' + name)?.classList.add('active');
   document.getElementById('mob-' + name)?.classList.add('active');
   if (name === 'history') loadHistory();
-  if (name === 'settings') loadSettingsPane();
+  if (name === 'settings') { loadSettingsPane(); loadTradingParams(); }
   if (name === 'backtest') loadAvailableDates();
+  if (name === 'calendar') renderCalendar();
 }
 
 function toggleUserMenu() {
@@ -3297,6 +3382,138 @@ function downloadBacktestCSV() {
   a.click();
 }
 
+// ═══════════════════════════════════════════════════════════ FEED STATUS
+async function pollFeedStatus() {
+  try {
+    const d = await api('GET', '/feed-status');
+    const feeds = d.feeds || {};
+    const providers = Object.keys(feeds);
+    if (!providers.length) return;
+    // Aggregate: best health among all providers
+    const healths = providers.map(p => feeds[p].health || 'red');
+    const best = healths.includes('green') ? 'green' : healths.includes('amber') ? 'amber' : 'red';
+    const colors = {green: '#34d399', amber: '#fb923c', red: '#ef4444'};
+    const dot = document.getElementById('mbar-feed-dot');
+    const lbl = document.getElementById('mbar-feed-lbl');
+    if (dot) dot.style.background = colors[best] || '#64748b';
+    if (lbl) {
+      const first = feeds[providers[0]];
+      const lagStr = first.lag_seconds != null ? `${first.lag_seconds}s` : '—';
+      lbl.style.color = colors[best] || 'var(--muted)';
+      lbl.textContent = best === 'green' ? `Live (${lagStr})` : best === 'amber' ? `Stale (${lagStr})` : 'Down';
+    }
+  } catch {}
+}
+
+// ══════════════════════════════════════════════ TRADING PARAMETERS (per-user)
+async function loadTradingParams() {
+  try {
+    const d = await api('GET', '/user/strategy');
+    const o = d.overrides || {};
+    if (o.ltp_target != null) document.getElementById('tp-ltp-target').value = o.ltp_target;
+    if (o.max_daily_trades != null) document.getElementById('tp-max-trades').value = o.max_daily_trades;
+    if (o.single_trade_sl_pts != null) document.getElementById('tp-sl-pts').value = o.single_trade_sl_pts;
+    if (o.single_trade_target_pts != null) document.getElementById('tp-target-pts').value = o.single_trade_target_pts;
+  } catch {}
+}
+
+async function saveTradingParams() {
+  const payload = {};
+  const ltpVal = parseFloat(document.getElementById('tp-ltp-target').value);
+  const maxVal = parseInt(document.getElementById('tp-max-trades').value);
+  const slVal  = parseFloat(document.getElementById('tp-sl-pts').value);
+  const tgtVal = parseFloat(document.getElementById('tp-target-pts').value);
+  if (!isNaN(ltpVal) && ltpVal > 0) payload.ltp_target = ltpVal;
+  if (!isNaN(maxVal) && maxVal > 0) payload.max_daily_trades = maxVal;
+  if (!isNaN(slVal)  && slVal  > 0) payload.single_trade_sl_pts = slVal;
+  if (!isNaN(tgtVal) && tgtVal > 0) payload.single_trade_target_pts = tgtVal;
+  const st = document.getElementById('tp-status');
+  try {
+    await api('POST', '/user/strategy', payload);
+    if (st) { st.style.color = 'var(--success)'; st.textContent = '✓ Saved — takes effect on next bot start.'; }
+  } catch(e) {
+    if (st) { st.style.color = 'var(--error)'; st.textContent = '✗ ' + (e.message || 'Save failed'); }
+  }
+}
+
+// ══════════════════════════════════════════════════════════ TRADE CALENDAR
+let _calYear = new Date().getFullYear();
+let _calMonth = new Date().getMonth() + 1;
+let _calData = {};
+
+function calNav(dir) {
+  _calMonth += dir;
+  if (_calMonth > 12) { _calMonth = 1; _calYear++; }
+  if (_calMonth < 1)  { _calMonth = 12; _calYear--; }
+  renderCalendar();
+}
+
+async function renderCalendar() {
+  const label = document.getElementById('cal-month-label');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (label) label.textContent = `${months[_calMonth-1]} ${_calYear}`;
+  document.getElementById('cal-day-detail').style.display = 'none';
+  try {
+    const d = await api('GET', `/trades/monthly-summary?year=${_calYear}&month=${_calMonth}`);
+    _calData = d.days || {};
+  } catch { _calData = {}; }
+  _drawCalGrid();
+}
+
+function _drawCalGrid() {
+  const grid = document.getElementById('cal-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  // First day of month (0=Sun…6=Sat), convert to Mon-based
+  const firstDay = new Date(_calYear, _calMonth - 1, 1).getDay();
+  const offset = (firstDay + 6) % 7; // Mon=0
+  const daysInMonth = new Date(_calYear, _calMonth, 0).getDate();
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Empty cells before 1st
+  for (let i = 0; i < offset; i++) {
+    grid.insertAdjacentHTML('beforeend', '<div></div>');
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${_calYear}-${String(_calMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const info = _calData[dateStr];
+    const isToday = dateStr === today;
+    let bg = 'var(--surface2)', color = 'var(--muted)', pnlHtml = '';
+    if (info) {
+      const pnl = parseFloat(info.pnl_rs || 0);
+      if (pnl > 0) { bg = 'rgba(52,211,153,.15)'; color = '#34d399'; }
+      else if (pnl < 0) { bg = 'rgba(248,113,113,.15)'; color = '#f87171'; }
+      else { bg = 'var(--surface2)'; color = 'var(--text-soft)'; }
+      pnlHtml = `<div style="font-size:10px;font-weight:700;color:${color};margin-top:2px">${pnl >= 0 ? '+' : ''}${Math.round(pnl)}</div><div style="font-size:9px;color:var(--muted)">${info.trades}T</div>`;
+    }
+    const border = isToday ? '1px solid var(--primary)' : '1px solid var(--border-soft)';
+    grid.insertAdjacentHTML('beforeend',
+      `<div onclick="showCalDay('${dateStr}')" style="border-radius:8px;padding:8px 4px;text-align:center;background:${bg};border:${border};cursor:${info ? 'pointer' : 'default'};min-height:56px">
+        <div style="font-size:12px;font-weight:${isToday ? '700' : '500'};color:${isToday ? 'var(--primary)' : 'var(--text)'}">${day}</div>
+        ${pnlHtml}
+      </div>`
+    );
+  }
+}
+
+function showCalDay(dateStr) {
+  const info = _calData[dateStr];
+  if (!info) return;
+  const detail = document.getElementById('cal-day-detail');
+  const title  = document.getElementById('cal-detail-title');
+  const body   = document.getElementById('cal-detail-body');
+  title.textContent = `${dateStr} — ${info.trades} trade(s)`;
+  const pnl = parseFloat(info.pnl_rs || 0);
+  const pts = parseFloat(info.pnl_pts || 0);
+  body.innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap">
+    <div><div style="font-size:11px;color:var(--muted)">PnL (₹)</div><div style="font-size:18px;font-weight:700;color:${pnl>=0?'#34d399':'#f87171'}">${pnl>=0?'+':''}₹${pnl.toFixed(0)}</div></div>
+    <div><div style="font-size:11px;color:var(--muted)">PnL (pts)</div><div style="font-size:18px;font-weight:700;color:${pts>=0?'#34d399':'#f87171'}">${pts>=0?'+':''}${pts.toFixed(1)}</div></div>
+    <div><div style="font-size:11px;color:var(--muted)">Trades</div><div style="font-size:18px;font-weight:700;color:var(--text)">${info.trades}</div></div>
+  </div>`;
+  detail.style.display = 'block';
+}
+
 // ═══════════════════════════════════════════════════════════════ INIT
 async function init() {
   // Load username + profile (static_ip needed for onboarding card)
@@ -3315,7 +3532,9 @@ async function init() {
 
   // Poll intervals
   setInterval(pollBotStatus, 8000);
-  setInterval(_pollBrokerStatus, 30000); // Refresh broker connection status every 30s
+  setInterval(_pollBrokerStatus, 30000);
+  setInterval(pollFeedStatus, 15000);
+  pollFeedStatus();
   setInterval(pollPositions, 2000);  // Fast 2s refresh for live P&L on Positions tab
   setInterval(loadMarketStatus, 60000);
   setInterval(tickClock, 1000);

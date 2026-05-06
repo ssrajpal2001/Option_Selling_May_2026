@@ -2410,3 +2410,108 @@ async def get_market_status(user=Depends(get_current_user)):
             "next_open": None, "server_time": now.isoformat(),
             "rust_available": rust_available,
         }
+
+
+@router.get("/feed-status")
+async def get_feed_status(user=Depends(get_current_user)):
+    """Return live WebSocket feed health for client dashboard health dot."""
+    try:
+        from hub.feed_registry import get_all_ws_state
+        state = get_all_ws_state()
+    except Exception:
+        state = {}
+
+    now = time.time()
+    result = {}
+    for provider, s in state.items():
+        connected = s.get("ws_connected", False)
+        last_tick = s.get("last_tick_time")
+        lag = round(now - last_tick, 1) if last_tick else None
+        if connected and lag is not None and lag < 30:
+            health = "green"
+        elif connected:
+            health = "amber"
+        else:
+            health = "red"
+        result[provider] = {"connected": connected, "lag_seconds": lag, "health": health}
+
+    return {"feeds": result}
+
+
+@router.get("/trades/monthly-summary")
+async def get_monthly_trade_summary(
+    year: int = Query(...), month: int = Query(...),
+    user=Depends(get_current_user)
+):
+    """Return daily PnL totals for a given month — used by trade calendar."""
+    rows = db_fetchall(
+        "SELECT date(closed_at) as day, SUM(pnl_rs) as total_rs, SUM(pnl_pts) as total_pts, "
+        "COUNT(*) as trades "
+        "FROM trade_history "
+        "WHERE client_id=? AND strftime('%Y', closed_at)=? AND strftime('%m', closed_at)=? "
+        "AND UPPER(trading_mode)='LIVE' "
+        "GROUP BY date(closed_at)",
+        (user["id"], str(year), f"{month:02d}")
+    )
+    return {"year": year, "month": month, "days": {r["day"]: {
+        "pnl_rs": round(r["total_rs"] or 0, 2),
+        "pnl_pts": round(r["total_pts"] or 0, 2),
+        "trades": r["trades"]
+    } for r in rows}}
+
+
+@router.post("/user/strategy")
+async def save_user_strategy(request: Request, user=Depends(get_current_user)):
+    """Save per-user strategy overrides (LTP target, max trades, SL, target pts)."""
+    body = await request.json()
+    allowed = {"ltp_target", "max_daily_trades", "single_trade_sl_pts", "single_trade_target_pts"}
+    overrides = {k: v for k, v in body.items() if k in allowed}
+
+    # Validate numeric values
+    for k, v in overrides.items():
+        try:
+            overrides[k] = float(v)
+        except (TypeError, ValueError):
+            raise HTTPException(400, f"Invalid value for {k}: must be numeric")
+
+    # Load existing overrides and merge
+    row = db_fetchone(
+        "SELECT client_strategy_overrides FROM client_broker_instances "
+        "WHERE client_id=? AND status != 'removed' LIMIT 1",
+        (user["id"],)
+    )
+    existing = {}
+    if row and row.get("client_strategy_overrides"):
+        try:
+            existing = json.loads(row["client_strategy_overrides"])
+        except Exception:
+            existing = {}
+
+    broker_cfg = existing.get("broker_cfg", {})
+    broker_cfg.update(overrides)
+    existing["broker_cfg"] = broker_cfg
+
+    db_execute(
+        "UPDATE client_broker_instances SET client_strategy_overrides=? "
+        "WHERE client_id=? AND status != 'removed'",
+        (json.dumps(existing), user["id"])
+    )
+    return {"ok": True, "saved": overrides}
+
+
+@router.get("/user/strategy")
+async def get_user_strategy(user=Depends(get_current_user)):
+    """Get current per-user strategy overrides."""
+    row = db_fetchone(
+        "SELECT client_strategy_overrides FROM client_broker_instances "
+        "WHERE client_id=? AND status != 'removed' LIMIT 1",
+        (user["id"],)
+    )
+    overrides = {}
+    if row and row.get("client_strategy_overrides"):
+        try:
+            data = json.loads(row["client_strategy_overrides"])
+            overrides = data.get("broker_cfg", {})
+        except Exception:
+            pass
+    return {"overrides": overrides}

@@ -8,6 +8,19 @@
   <p class="text-sm mt-1" style="color:var(--muted)">Real-time platform status</p>
 </div>
 
+<!-- ── Crash Alert Banner ─────────────────────────────────────────────────── -->
+<div id="crash-alert-banner" style="display:none;margin-bottom:1.25rem">
+  <div style="background:#450a0a;border:1px solid #dc2626;border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+    <span style="font-size:20px;line-height:1.3">🔴</span>
+    <div style="flex:1;min-width:0">
+      <div class="font-bold text-sm" style="color:#f87171;margin-bottom:4px">Bot Instance Crash Detected</div>
+      <div id="crash-alert-body" class="text-xs" style="color:#fca5a5;line-height:1.6"></div>
+    </div>
+    <button onclick="document.getElementById('crash-alert-banner').style.display='none'" title="Dismiss"
+            style="background:none;border:none;color:#991b1b;font-size:18px;cursor:pointer;line-height:1;padding:0 2px">✕</button>
+  </div>
+</div>
+
 <!-- ── IP Conflict Warning Banner ──────────────────────────────────────────── -->
 <div id="ip-conflict-banner" style="display:none;margin-bottom:1.25rem">
   <div style="background:#451a03;border:1px solid #c2410c;border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
@@ -511,5 +524,26 @@ async function loadProcessManager() {
 
 loadProcessManager();
 setInterval(loadProcessManager, 30000);
+
+// ── Crash alert polling ──────────────────────────────────────────────────
+async function loadCrashAlerts() {
+  try {
+    const r = await fetch('/api/admin/crash-alerts', {credentials: 'include'});
+    if (!r.ok) return;
+    const d = await r.json();
+    const crashed = d.crashed || [];
+    const banner = document.getElementById('crash-alert-banner');
+    const body   = document.getElementById('crash-alert-body');
+    if (crashed.length && banner && body) {
+      body.innerHTML = crashed.map(c =>
+        `<span style="font-weight:700">${c.username || c.client_id}</span> — ${c.broker || ''} instance crashed at ${c.crashed_at || 'unknown time'}`
+      ).join('<br>');
+      banner.style.display = 'block';
+    }
+  } catch {}
+}
+
+loadCrashAlerts();
+setInterval(loadCrashAlerts, 30000);
 </script>
 {% endblock %}

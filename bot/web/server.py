@@ -93,6 +93,11 @@ async def register_page(request: Request):
     return templates.TemplateResponse(request, "register.html")
 
 
+@app.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(request: Request):
+    return templates.TemplateResponse(request, "reset_password.html")
+
+
 @app.get("/logout")
 async def logout():
     response = RedirectResponse("/login")
@@ -1243,6 +1248,15 @@ async def _feed_server_task() -> None:
 
 @app.on_event("startup")
 async def startup_event():
+    # Enforce encryption key — without it all credential reads/writes silently fail
+    if not os.environ.get("TRADING_BOT_MASTER_KEY"):
+        logger.critical(
+            "TRADING_BOT_MASTER_KEY is not set. "
+            "Broker credentials cannot be encrypted/decrypted. "
+            "Set this environment variable before starting the server."
+        )
+        raise RuntimeError("TRADING_BOT_MASTER_KEY must be set in the environment.")
+
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
     _seed_global_providers_from_ini()
     # Immediately try to connect both feeders in background (non-blocking)

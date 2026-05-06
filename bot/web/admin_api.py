@@ -2118,3 +2118,75 @@ async def get_ip_conflicts(
     )
     conflicts = [dict(r) for r in rows] if rows else []
     return {"conflicts": conflicts, "hours": hours}
+
+
+# ── Crash alerts ──────────────────────────────────────────────────────────────
+
+
+@router.get("/crash-alerts")
+async def get_crash_alerts(admin=Depends(require_admin)):
+    """Return broker instances that have crashed (status='crashed' or stopped unexpectedly)."""
+    rows = db_fetchall(
+        """
+        SELECT cbi.id, cbi.client_id, cbi.broker, cbi.status,
+               cbi.last_heartbeat, u.username
+        FROM client_broker_instances cbi
+        JOIN users u ON u.id = cbi.client_id
+        WHERE cbi.status IN ('crashed', 'error')
+        ORDER BY cbi.last_heartbeat DESC
+        """,
+        (),
+    )
+    crashed = []
+    for r in (rows or []):
+        crashed.append({
+            "id": r["id"],
+            "client_id": r["client_id"],
+            "username": r["username"],
+            "broker": r["broker"],
+            "status": r["status"],
+            "crashed_at": r["last_heartbeat"],
+        })
+    return {"crashed": crashed}
+
+
+# ── Bulk operations ───────────────────────────────────────────────────────────
+
+
+@router.post("/bulk-action")
+async def bulk_action(request: Request, admin=Depends(require_admin)):
+    """
+    Bulk admin operations on multiple clients.
+    Body: {action: 'activate'|'deactivate'|'push_strategy', client_ids: [...], payload: {...}}
+    """
+    body = await request.json()
+    action = body.get("action")
+    client_ids = body.get("client_ids") or []
+    payload = body.get("payload") or {}
+
+    if not action or not client_ids:
+        raise HTTPException(status_code=400, detail="action and client_ids required")
+    if action not in ("activate", "deactivate", "push_strategy"):
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    results = {"ok": [], "failed": []}
+    for cid in client_ids:
+        try:
+            if action == "activate":
+                db_execute("UPDATE users SET status='active' WHERE id=?", (cid,))
+                results["ok"].append(cid)
+            elif action == "deactivate":
+                db_execute("UPDATE users SET status='inactive' WHERE id=?", (cid,))
+                results["ok"].append(cid)
+            elif action == "push_strategy":
+                import json as _json
+                overrides_json = _json.dumps(payload)
+                db_execute(
+                    "UPDATE client_broker_instances SET client_strategy_overrides=? WHERE client_id=?",
+                    (overrides_json, cid),
+                )
+                results["ok"].append(cid)
+        except Exception as e:
+            results["failed"].append({"id": cid, "error": str(e)})
+
+    return {"action": action, "results": results}
