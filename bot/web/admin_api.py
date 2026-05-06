@@ -99,7 +99,14 @@ async def global_provider_auth(provider: str, request: Request, admin=Depends(re
         proto = request.headers.get('x-forwarded-proto', 'http')
         if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http':
             proto = 'https'
-        redirect_uri = f"{proto}://{raw_host}/auth/upstox/callback"
+        _cb_uri = f"{proto}://{raw_host}/auth/upstox/callback"
+        # Upstox rejects HTTP redirect URIs for non-localhost hosts.
+        # Fall back to google.com (manual paste flow) when running over plain HTTP.
+        _saved_redirect = dp.get("redirect_uri") or ""
+        if proto == 'http' or _saved_redirect.startswith("https://www.google.com") or _saved_redirect.startswith("https://google.com"):
+            redirect_uri = "https://www.google.com"
+        else:
+            redirect_uri = _cb_uri
         auth_dialog = "https://api.upstox.com/v2/login/authorization/dialog"
         url = f"{auth_dialog}?response_type=code&client_id={api_key}&redirect_uri={urllib.parse.quote(redirect_uri)}&state={urllib.parse.quote(state_encrypted)}"
         return RedirectResponse(url)
@@ -388,7 +395,9 @@ async def update_data_provider(request: Request, body: ProviderConfigRequest, ad
             proto = request.headers.get('x-forwarded-proto', 'http')
             if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http':
                 proto = 'https'
-            saved_redirect_uri = f"{proto}://{raw_host}/auth/upstox/callback"
+            _cb = f"{proto}://{raw_host}/auth/upstox/callback"
+            # Upstox rejects HTTP redirect URIs — use google.com flow when on plain HTTP
+            saved_redirect_uri = "https://www.google.com" if proto == 'http' else _cb
             set_parts.append("redirect_uri=?")
             params.append(saved_redirect_uri)
             logger.info(f"[Admin] Recorded Upstox redirect_uri: {saved_redirect_uri}")
@@ -437,7 +446,7 @@ async def exchange_manual_token(body: ManualTokenRequest, admin=Depends(require_
             # redirect_uri must match exactly what was used in the original auth dialog.
             # Callers using the server-callback flow pass redirect_uri explicitly;
             # legacy google.com flows omit it and we fall back to the old hardcoded value.
-            redirect_uri = body.redirect_uri or "https://google.com"
+            redirect_uri = body.redirect_uri or "https://www.google.com"
 
             import requests as http_requests
             resp = http_requests.post(
