@@ -126,6 +126,13 @@ class PriceFeedHandler:
         """
         if not isinstance(data, dict):
             return
+
+        # Task #152: Robust user_id resolution.
+        # If user_id is not passed (global handlers), try to extract it from the data dict.
+        # This ensures 'GLOBAL' ticks from FeedServer correctly trigger state syncing.
+        if user_id is None:
+            user_id = data.get('user_id')
+
         ltp = data.get('ltp')
         timestamp = data.get('timestamp') or datetime.datetime.now(self._kolkata_tz)
 

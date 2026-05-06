@@ -249,14 +249,14 @@ class DualFeedManager(DataFeed):
             # Refresh Upstox token from DB before reconnecting to avoid 401 loops
             if name == 'upstox' and hasattr(feed, 'refresh_credentials'):
                 try:
-                    from web.db import db_fetch_one
+                    from web.db import db_fetchone
                     from web.auth import decrypt_secret
-                    row = db_fetch_one(
+                    row = db_fetchone(
                         "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
                         ()
                     )
-                    if row and row[0]:
-                        fresh_token = decrypt_secret(row[0])
+                    if row and row.get('access_token_encrypted'):
+                        fresh_token = decrypt_secret(row['access_token_encrypted'])
                         if fresh_token:
                             feed.refresh_credentials(fresh_token)
                             logger.info("[DualFeedWatchdog] upstox token refreshed from DB before reconnect.")

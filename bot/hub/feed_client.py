@@ -259,7 +259,12 @@ class FeedClient(DataFeed):
 
             msg_type = msg.get('type')
             if msg_type == 'tick':
-                self._last_tick_epoch = time.time()
+                now = time.time()
+                if now - getattr(self, '_last_client_log_time', 0) > 60:
+                    self._last_client_log_time = now
+                    logger.info(f"[FeedClient] Receiving ticks from FeedServer. Last LTP: {msg.get('ltp')} for {msg.get('instrument_key')}")
+
+                self._last_tick_epoch = now
                 await self._dispatch_tick(msg)
             elif msg_type in ('pong', 'keepalive', 'feed_status'):
                 pass

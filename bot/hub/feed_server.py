@@ -193,7 +193,14 @@ class FeedServer:
         ltp = data.get('ltp')
         if not key or ltp is None:
             return
-        self._last_broadcast_epoch = time.time()
+
+        now = time.time()
+        # Periodic heartbeat for FeedServer (every 60s per instrument, or overall)
+        if now - getattr(self, '_last_log_time', 0) > 60:
+            self._last_log_time = now
+            logger.info(f"[FeedServer] Broadcasting ticks. Active clients: {len(self._writers)}")
+
+        self._last_broadcast_epoch = now
         msg = {
             'type': 'tick',
             'instrument_key': key,
@@ -219,7 +226,15 @@ class FeedServer:
         for w in list(self._writers):
             try:
                 w.write(line)
-                await w.drain()
+                # Task #152: Harden against slow consumers.
+                # If a client is slow, drain() will block. We use a short timeout
+                # to ensure one stuck client doesn't freeze the broadcast loop
+                # or cause task accumulation.
+                try:
+                    await asyncio.wait_for(w.drain(), timeout=0.05)
+                except asyncio.TimeoutError:
+                    # Buffer full — skip waiting but keep client for next tick
+                    pass
             except Exception:
                 dead.append(w)
         for w in dead:

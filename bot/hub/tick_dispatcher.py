@@ -70,7 +70,14 @@ class TickDispatcher:
         global_handlers = self._route_map.get(instrument_key)
         if global_handlers:
             for h in global_handlers:
-                asyncio.create_task(h(instrument_key, packet))
+                # Task #152: Also pass user_id to global handlers if they accept it.
+                # PriceFeedHandler's normalized handler needs this to distinguish
+                # 'GLOBAL' ticks from FeedServer for session-wide state syncing.
+                try:
+                    asyncio.create_task(h(instrument_key, packet, user_id=user_id))
+                except TypeError:
+                    # Fallback for legacy handlers that don't accept user_id argument
+                    asyncio.create_task(h(instrument_key, packet))
 
 # Global Singleton
 tick_dispatcher = TickDispatcher()
