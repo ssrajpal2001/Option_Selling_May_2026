@@ -87,6 +87,25 @@ class WebSocketManager(DataFeed):
                     return uri
 
                 except Exception as e:
+                    # On 401, try to reload a fresher token from data_providers DB before
+                    # retrying.  This handles the case where another bot process generated
+                    # a new Upstox token (invalidating the one we loaded at startup).
+                    if "401" in str(e) and active_client and hasattr(active_client, 'auth_handler'):
+                        try:
+                            from web.db import db_fetch_one
+                            from web.auth import decrypt_secret
+                            row = db_fetch_one(
+                                "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
+                                ()
+                            )
+                            if row and row[0]:
+                                fresh = decrypt_secret(row[0])
+                                if fresh and fresh != active_client.auth_handler.get_access_token():
+                                    active_client.auth_handler.token = fresh
+                                    logger.info("[WSManager] 401 on auth — reloaded fresh token from data_providers.")
+                        except Exception as _db_err:
+                            logger.debug(f"[WSManager] Could not reload token from DB: {_db_err}")
+
                     if attempt == max_retries - 1:
                         logger.error(f"Failed to authorize WebSocket feed after {max_retries} attempts: {e}", exc_info=True)
                         raise
@@ -216,7 +235,14 @@ class WebSocketManager(DataFeed):
                 if qsize > 500 or silence_duration > 60:
                     logger.info(f"WS WATCHDOG: Silence: {silence_duration:.1f}s | Queue: {qsize} | Handlers: {len(self.message_handlers)}")
 
-                if silence_duration > 90:
+                # During pre-market hours (before 09:15 IST) exchanges don't stream ticks,
+                # so silence is expected.  Use a longer threshold to avoid needless reconnects.
+                import datetime as _dt, pytz as _ptz
+                _now_ist = _dt.datetime.now(_ptz.timezone('Asia/Kolkata'))
+                _market_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
+                _stale_threshold = 300 if _now_ist < _market_open else 90
+
+                if silence_duration > _stale_threshold:
                     logger.error(f"WATCHDOG: Proactive detection of WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
                     if self.websocket:
                         # Closing the websocket will trigger an exception in the listener loop
@@ -280,10 +306,14 @@ class WebSocketManager(DataFeed):
             except asyncio.TimeoutError:
                 if not self.is_connected or websocket is None: break
 
-                # WATCHDOG: If no message for 90 seconds, force a reconnect
-                # Market data should be flowing at least every few seconds.
+                # WATCHDOG: Force reconnect on prolonged silence.
+                # Pre-market: 300s threshold (no ticks expected before 09:15).
+                # Market hours: 90s threshold (data should flow every few seconds).
                 silence_duration = asyncio.get_event_loop().time() - self._last_message_time
-                if silence_duration > 90:
+                import datetime as _dt2, pytz as _ptz2
+                _now2 = _dt2.datetime.now(_ptz2.timezone('Asia/Kolkata'))
+                _stale2 = 300 if _now2 < _now2.replace(hour=9, minute=15, second=0, microsecond=0) else 90
+                if silence_duration > _stale2:
                     logger.error(f"WATCHDOG: WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
                     break
 
