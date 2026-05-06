@@ -220,9 +220,27 @@ class ContractManager:
         else:
             logger.warning(f"ContractManager: expired-instruments API returned data but none matched today ({today}). Bot may be unable to trade today's expiry.")
 
+    # Map bare instrument names to their proper Upstox index keys so the first
+    # API call succeeds without a guaranteed 400 + retry cycle.
+    _INDEX_KEY_MAP = {
+        'NIFTY': 'NSE_INDEX|Nifty 50',
+        'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
+        'FINNIFTY': 'NSE_INDEX|Nifty Fin Service',
+        'MIDCPNIFTY': 'NSE_INDEX|NIFTY MID SELECT',
+        'MIDCAP': 'NSE_INDEX|NIFTY MID SELECT',
+        'SENSEX': 'BSE_INDEX|SENSEX',
+        'BANKEX': 'BSE_INDEX|BANKEX',
+    }
+
     async def _load_contracts_from_api(self, instrument_key):
         try:
             if not instrument_key: return False
+            # Normalize bare names (e.g. "NIFTY") to proper exchange-prefixed keys
+            # before the first call so we skip a guaranteed 400 + noisy retry.
+            normalized_key = self._INDEX_KEY_MAP.get(instrument_key.upper(), instrument_key)
+            if normalized_key != instrument_key:
+                logger.debug(f"ContractManager: normalized '{instrument_key}' → '{normalized_key}'")
+                instrument_key = normalized_key
             raw_contracts = await self.rest_client.get_option_contracts(instrument_key)
 
             # If standard key (e.g., MCX_INDEX|CRUDEOIL) returns nothing,
