@@ -92,9 +92,9 @@ class WebSocketManager(DataFeed):
                     # a new Upstox token (invalidating the one we loaded at startup).
                     if "401" in str(e) and active_client and hasattr(active_client, 'auth_handler'):
                         try:
-                            from web.db import db_fetch_one
+                            from web.db import db_fetchone
                             from web.auth import decrypt_secret
-                            row = db_fetch_one(
+                            row = db_fetchone(
                                 "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
                                 ()
                             )
