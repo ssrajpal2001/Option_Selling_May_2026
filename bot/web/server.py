@@ -1251,12 +1251,11 @@ async def _feed_server_task() -> None:
 async def startup_event():
     # Enforce encryption key — without it all credential reads/writes silently fail
     if not os.environ.get("TRADING_BOT_MASTER_KEY"):
-        logger.critical(
+        logger.warning(
             "TRADING_BOT_MASTER_KEY is not set. "
-            "Broker credentials cannot be encrypted/decrypted. "
-            "Set this environment variable before starting the server."
+            "EncryptionManager will be unavailable. "
+            "Broker credentials use ALGOSOFT_SECRET and are unaffected."
         )
-        raise RuntimeError("TRADING_BOT_MASTER_KEY must be set in the environment.")
 
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
     _seed_global_providers_from_ini()
