@@ -593,8 +593,25 @@ class PriceFeedHandler:
     async def _tick_worker(self):
         """Dedicated background task to run process_tick one at a time."""
         logger.info(f"Tick worker started for {self.trade_orchestrator.instrument_name}.")
+        _last_tick_warn_time = 0.0
+        _NO_TICK_WARN_INTERVAL = 30.0  # warn every 30s when no ticks arrive
         while True:
-            await self._tick_event.wait()
+            # Wait for a tick, but wake every 30s to emit a dead-feed warning
+            try:
+                await asyncio.wait_for(self._tick_event.wait(), timeout=_NO_TICK_WARN_INTERVAL)
+            except asyncio.TimeoutError:
+                _now = asyncio.get_event_loop().time()
+                import datetime as _dt, pytz as _ptz
+                _now_ist = _dt.datetime.now(_ptz.timezone('Asia/Kolkata'))
+                _mkt_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
+                _mkt_close = _now_ist.replace(hour=15, minute=30, second=0, microsecond=0)
+                if _mkt_open <= _now_ist <= _mkt_close:
+                    logger.warning(
+                        f"[{self.trade_orchestrator.instrument_name}] FEED SILENT: No ticks received in "
+                        f"{_NO_TICK_WARN_INTERVAL:.0f}s during market hours. "
+                        f"FeedServer WebSocket may be disconnected — check web server logs."
+                    )
+                continue
             self._tick_event.clear()
 
             # PROTECT: Ensure orchestrator is fully initialized before processing

@@ -133,8 +133,29 @@ class FeedServer:
             # Connect the WebSockets
             ws_mgr.start()
             logger.info("[FeedServer] DualFeedManager started.")
+            # Start periodic status reporter
+            asyncio.create_task(self._status_loop())
         except Exception as exc:
             logger.error(f"[FeedServer] Feed initialization failed: {exc}", exc_info=True)
+
+    async def _status_loop(self) -> None:
+        """Log FeedServer health every 60s so web-process logs show feed state."""
+        while True:
+            try:
+                await asyncio.sleep(60)
+                age = time.time() - self._last_broadcast_epoch if self._last_broadcast_epoch else None
+                age_str = f"{age:.0f}s ago" if age is not None else "never"
+                feed_ok = self._dual_feed is not None
+                logger.info(
+                    f"[FeedServer] Status — clients={len(self._writers)} | "
+                    f"feed={'UP' if feed_ok else 'DOWN'} | "
+                    f"last_tick={age_str} | "
+                    f"subscribed={len(self._all_subscribed)}"
+                )
+            except asyncio.CancelledError:
+                break
+            except Exception:
+                pass
 
     # ── Tick capture ─────────────────────────────────────────────────────────
 
