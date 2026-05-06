@@ -262,54 +262,54 @@ class ProviderFactory:
             logger.error("No active data providers could be initialized.")
             raise RuntimeError("No data providers available.")
 
-        # If multiple feeds, try FeedClient first in client-subprocess mode to avoid
-        # the global Dhan/Upstox WebSocket eviction loop caused by 4 subprocesses
-        # each opening their own connection with the same credentials (Task #152).
-        if len(active_feeds) > 1:
-            import os as _os
-            _in_subprocess = bool(_os.environ.get('CLIENT_ID'))
-            _feed_server_init = bool(_os.environ.get('_FEED_SERVER_INIT'))
-            if _in_subprocess and not _feed_server_init:
-                # Pre-build DualFeedManager objects as a runtime fallback (NOT started yet).
-                # FeedClient will activate them only after _FALLBACK_TRIGGER_ROUNDS of
-                # consecutive connection failures, giving FeedServer ample time to come up.
+        # In client subprocesses always try FeedServer relay first — regardless of
+        # how many feeds are configured.  Previously the guard was `len > 1`, so a
+        # single-feed deployment (Upstox only) caused every subprocess to open its
+        # own Upstox WebSocket and hit the concurrent-connection limit (HTTP 403).
+        import os as _os
+        _in_subprocess = bool(_os.environ.get('CLIENT_ID'))
+        _feed_server_init = bool(_os.environ.get('_FEED_SERVER_INIT'))
+        if _in_subprocess and not _feed_server_init and active_feeds:
+            # Build the appropriate fallback (activated only after _FALLBACK_TRIGGER_ROUNDS
+            # consecutive FeedServer failures — not at startup).
+            _upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
+            _dhan_feed   = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
+            if _upstox_feed and _dhan_feed:
                 from hub.dual_feed_manager import DualFeedManager as _DFM
-                _upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
-                _dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
                 _fallback_dm = _DFM(_upstox_feed, _dhan_feed)
-
-                # Always return FeedClient — let it own all retry and fallback logic.
-                # A one-time probe is logged for diagnostics but never gates routing;
-                # if FeedServer is not yet up, FeedClient will keep retrying in its
-                # _connection_loop() before eventually activating the fallback DM.
-                from hub.feed_client import FeedClient
-                try:
-                    _probe = FeedClient()
-                    _server_up = await _probe.try_connect()
-                    await _probe.close()
-                    if _server_up:
-                        logger.info(
-                            "[ProviderFactory] FeedServer reachable — "
-                            "FeedClient will use shared tick distribution."
-                        )
-                    else:
-                        logger.info(
-                            "[ProviderFactory] FeedServer not yet reachable — "
-                            "FeedClient will retry until it comes up "
-                            f"(fallback DualFeedManager held in reserve)."
-                        )
-                except Exception as _probe_err:
-                    logger.info(
-                        f"[ProviderFactory] FeedServer probe inconclusive ({_probe_err}); "
-                        "FeedClient will retry on its own schedule."
-                    )
-                websocket_manager = FeedClient(fallback_feed=_fallback_dm)
             else:
-                from hub.dual_feed_manager import DualFeedManager
-                upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
-                dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
-                websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
-                logger.info("Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).")
+                _fallback_dm = _upstox_feed or _dhan_feed  # single WebSocketManager
+
+            from hub.feed_client import FeedClient
+            try:
+                _probe = FeedClient()
+                _server_up = await _probe.try_connect()
+                await _probe.close()
+                if _server_up:
+                    logger.info(
+                        "[ProviderFactory] FeedServer reachable — "
+                        "FeedClient will use shared tick distribution."
+                    )
+                else:
+                    logger.info(
+                        "[ProviderFactory] FeedServer not yet reachable — "
+                        "FeedClient will retry until it comes up "
+                        "(fallback held in reserve)."
+                    )
+            except Exception as _probe_err:
+                logger.info(
+                    f"[ProviderFactory] FeedServer probe inconclusive ({_probe_err}); "
+                    "FeedClient will retry on its own schedule."
+                )
+            websocket_manager = FeedClient(fallback_feed=_fallback_dm)
+
+        elif len(active_feeds) > 1:
+            # FeedServer process itself (or admin mode without CLIENT_ID) — own the feeds directly.
+            from hub.dual_feed_manager import DualFeedManager
+            upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
+            dhan_feed   = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
+            websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
+            logger.info("Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).")
         elif len(active_feeds) == 1:
             websocket_manager = active_feeds[0][1]
         else:
