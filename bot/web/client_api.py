@@ -1058,10 +1058,14 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
                     "message": f"{broker_name.capitalize()} session expired — reconnect in Settings"}
     elif broker_name == "dhan":
         from utils.auth_manager_dhan import handle_dhan_login_automated, generate_dhan_token
-        _dhan_api_key  = decrypt_secret(instance.get("api_key_encrypted") or "")
-        _dhan_password = decrypt_secret(instance.get("password_encrypted") or "")
-        _dhan_totp_sec = decrypt_secret(instance.get("totp_encrypted") or "")
-        _dhan_api_mode = bool(_dhan_api_key and _dhan_password and _dhan_totp_sec)
+        _dhan_api_key   = decrypt_secret(instance.get("api_key_encrypted") or "")
+        # Dhan Client ID (numeric, e.g. 1100123456) lives in broker_user_id_encrypted.
+        # api_key_encrypted holds the applicationId which is NOT the login client ID.
+        _dhan_client_id = decrypt_secret(instance.get("broker_user_id_encrypted") or "") or _dhan_api_key
+        _dhan_password  = decrypt_secret(instance.get("password_encrypted") or "")
+        _dhan_totp_sec  = decrypt_secret(instance.get("totp_encrypted") or "")
+        # API Key (applicationId) is optional — Client ID + PIN + TOTP are sufficient
+        _dhan_api_mode  = bool(_dhan_client_id and _dhan_password and _dhan_totp_sec)
         _dhan_access_token = decrypt_secret(
             instance.get("access_token_encrypted") or instance.get("api_secret_encrypted") or ""
         )
@@ -1071,7 +1075,7 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
         if _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_api_mode) and _dhan_access_token:
             _validated = await asyncio.to_thread(
                 handle_dhan_login_automated,
-                {"api_key": _dhan_api_key, "access_token": _dhan_access_token},
+                {"api_key": _dhan_client_id, "client_id": _dhan_client_id, "access_token": _dhan_access_token},
             )
             if _validated:
                 _dhan_access_token = _validated
@@ -1082,7 +1086,7 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
             logger.info(f"[StartBot] Dhan token stale/invalid for instance {instance['id']} — auto-generating fresh token...")
             _regen = await asyncio.to_thread(
                 generate_dhan_token,
-                api_key=_dhan_api_key, client_id=_dhan_api_key,
+                api_key=_dhan_api_key, client_id=_dhan_client_id,
                 password=_dhan_password, totp_secret=_dhan_totp_sec,
             )
             if _regen.get("token"):
