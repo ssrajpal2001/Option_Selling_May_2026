@@ -1594,6 +1594,13 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
     # Fall back to the active instance's instrument if the caller didn't pass one.
     inst_instrument = instrument or inst_dict.get("instrument")
     bot_data_per_broker = {}
+    # Backward-compat fallback: if no per-broker files exist (e.g. bot
+    # subprocesses haven't been restarted with the new code yet), read the
+    # legacy combined file so the panel doesn't go blank during deploy.
+    legacy_paths = []
+    if inst_instrument:
+        legacy_paths.append(Path(f'config/bot_status_client_{user["id"]}_{inst_instrument}.json'))
+    legacy_paths.append(Path(f'config/bot_status_client_{user["id"]}.json'))
     if inst_instrument:
         for bi in all_broker_instances:
             bf = Path(f'config/bot_status_client_{user["id"]}_{inst_instrument}_{bi["broker"]}.json')
@@ -1607,6 +1614,26 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
                 payload['stale'] = age > 30
                 payload['stale_seconds'] = round(age)
                 bot_data_per_broker[bi["broker"]] = payload
+            except (json.JSONDecodeError, OSError, TypeError, ValueError):
+                continue
+
+    # If per-broker files weren't found, fall back to legacy combined file.
+    # Surface it as the active instance's broker key so the tab strip still
+    # has something to render until the bot subprocesses restart.
+    if not bot_data_per_broker:
+        for lp in legacy_paths:
+            if not lp.exists():
+                continue
+            try:
+                with open(lp, 'r') as f:
+                    payload = json.load(f)
+                heartbeat = float(payload.get('heartbeat') or 0)
+                age = time.time() - heartbeat
+                payload['stale'] = age > 30
+                payload['stale_seconds'] = round(age)
+                fallback_broker = inst_dict.get("broker") or 'bot'
+                bot_data_per_broker[fallback_broker] = payload
+                break
             except (json.JSONDecodeError, OSError, TypeError, ValueError):
                 continue
 
