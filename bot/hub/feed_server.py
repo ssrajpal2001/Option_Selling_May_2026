@@ -161,25 +161,71 @@ class FeedServer:
 
     async def reconnect_provider(self, provider: str) -> bool:
         """
-        Called from admin 'Connect Now' after a token refresh.
-        - If DualFeedManager was never initialized (init failed at startup): re-runs _init_dual_feed.
-        - If DualFeedManager exists but the specific feed's task died: calls start() again.
-          DhanWebSocketManager and WebSocketManager both handle this idempotently after
-          their respective refresh_credentials() cleared the disabled flag / reset state.
-        Returns True if a reconnect was triggered.
-        """
-        from hub.feed_registry import get_ws_state
-        if get_ws_state(provider).get('ws_connected'):
-            return True  # already live — nothing to do
+        Called from admin 'Connect Now' after a token refresh — FORCES a clean restart of
+        the upstream WebSocket regardless of its current state.
 
+        Scenarios handled:
+        - DualFeedManager never initialized (startup init failed) → re-run _init_dual_feed.
+        - Feed task is alive but stuck in auth-retry loop → cancel and restart cleanly.
+        - Feed task already exited (max retries hit) → start a new one.
+        """
         if self._dual_feed is None:
-            # First init failed — run full initialization
             logger.info(f"[FeedServer] reconnect_provider({provider}) — no dual_feed, running full init.")
             asyncio.create_task(self._init_dual_feed())
             return True
 
-        # DualFeedManager exists but its task may have died — restart it
-        logger.info(f"[FeedServer] reconnect_provider({provider}) — restarting feed tasks.")
+        # Get the specific feed object
+        feed = None
+        if provider == 'upstox':
+            feed = getattr(self._dual_feed, 'upstox', None)
+        elif provider == 'dhan':
+            feed = getattr(self._dual_feed, 'dhan', None)
+
+        if feed is None:
+            # Provider isn't part of the current DualFeedManager — force full re-init
+            logger.info(f"[FeedServer] reconnect_provider({provider}) — feed missing in dual_feed, re-initializing.")
+            self._dual_feed = None
+            asyncio.create_task(self._init_dual_feed())
+            return True
+
+        # Cancel any existing listener/task so we can restart cleanly with the new credentials
+        existing_task = getattr(feed, '_listener_task', None) or getattr(feed, '_task', None)
+        if existing_task and not existing_task.done():
+            try:
+                existing_task.cancel()
+                logger.info(f"[FeedServer] reconnect_provider({provider}) — cancelled stale listener task.")
+            except Exception as _ce:
+                logger.debug(f"[FeedServer] cancel error for {provider}: {_ce}")
+
+        # Reset state so the new connect_and_listen() loop starts clean
+        try:
+            feed._disabled = False
+        except Exception:
+            pass
+        try:
+            feed._running = True
+            feed.reconnect_attempts = 0
+            feed.is_connected = False
+            feed.websocket = None
+        except Exception:
+            pass
+        try:
+            feed.feed = None  # Dhan-specific
+        except Exception:
+            pass
+        # Drop the cached task reference so start() creates a fresh one
+        try:
+            feed._listener_task = None
+        except Exception:
+            pass
+        try:
+            feed._task = None
+        except Exception:
+            pass
+
+        # Now restart — DualFeedManager.start() re-registers the feed and calls feed.start()
+        # which will create a new asyncio task running connect_and_listen().
+        logger.info(f"[FeedServer] reconnect_provider({provider}) — starting fresh listener.")
         self._dual_feed.start()
         return True
 
