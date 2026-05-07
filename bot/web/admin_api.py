@@ -170,23 +170,46 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                 except Exception as _ts_err:
                     logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
-            from utils.auth_manager_upstox import handle_upstox_login_automated
-            creds = {
-                "api_key": decrypt_secret(dp["api_key_encrypted"]),
-                "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                "password": decrypt_secret(dp.get("password_encrypted", "")),
-                "totp": decrypt_secret(dp.get("totp_encrypted", "")),
-                # Pass the saved redirect_uri so the token exchange step matches what is
-                # registered in the Upstox Developer Portal exactly. Falls back to the
-                # internal Upstox URI if not yet recorded (see auth_manager_upstox.py).
-                "redirect_uri": dp.get("redirect_uri") or "",
-            }
-            _result = handle_upstox_login_automated(creds, return_error=True)
-            token = (_result or {}).get("token")
-            _upstox_error = (_result or {}).get("error")
-            if token:
-                _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
+            # Before attempting TOTP re-login, check if any Upstox broker instance has
+            # a fresher token (auto-generated at bot startup). Using the broker token
+            # avoids burning TOTP attempts and hitting the OTP rate limit.
+            if not token:
+                try:
+                    _upstox_broker = db_fetchone(
+                        "SELECT access_token_encrypted, updated_at FROM client_broker_instances "
+                        "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                        "ORDER BY updated_at DESC LIMIT 1",
+                        ()
+                    )
+                    if _upstox_broker and _upstox_broker['access_token_encrypted']:
+                        _broker_token = decrypt_secret(_upstox_broker['access_token_encrypted'])
+                        _broker_updated = _upstox_broker.get('updated_at', '')
+                        _dp_updated = dp.get('updated_at', '')
+                        if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                            token = _broker_token
+                            logger.info(f"[Admin] Upstox: using fresher token from broker instance (updated {_broker_updated}).")
+                except Exception as _broker_tok_err:
+                    logger.debug(f"[Admin] Could not fetch fresher Upstox token from broker instance: {_broker_tok_err}")
+
+            # Only attempt TOTP re-login if no fresh token was found from broker
+            if not token:
+                from utils.auth_manager_upstox import handle_upstox_login_automated
+                creds = {
+                    "api_key": decrypt_secret(dp["api_key_encrypted"]),
+                    "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                    "password": decrypt_secret(dp.get("password_encrypted", "")),
+                    "totp": decrypt_secret(dp.get("totp_encrypted", "")),
+                    # Pass the saved redirect_uri so the token exchange step matches what is
+                    # registered in the Upstox Developer Portal exactly. Falls back to the
+                    # internal Upstox URI if not yet recorded (see auth_manager_upstox.py).
+                    "redirect_uri": dp.get("redirect_uri") or "",
+                }
+                _result = handle_upstox_login_automated(creds, return_error=True)
+                token = (_result or {}).get("token")
+                _upstox_error = (_result or {}).get("error")
+                if token:
+                    _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
         elif provider == 'dhan':
             from utils.auth_manager_dhan import generate_dhan_token
@@ -314,20 +337,41 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     except Exception as _ts_err:
                         logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
-                from utils.auth_manager_upstox import handle_upstox_login_automated
-                creds = {
-                    "api_key": decrypt_secret(dp["api_key_encrypted"]),
-                    "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                    "password": decrypt_secret(dp.get("password_encrypted", "")),
-                    "totp": decrypt_secret(dp.get("totp_encrypted", "")),
-                    "redirect_uri": dp.get("redirect_uri") or "",
-                }
-                _result = handle_upstox_login_automated(creds, return_error=True)
-                token = (_result or {}).get("token")
-                _upstox_error = (_result or {}).get("error")
-                if token:
-                    _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
+                # Before attempting TOTP re-login, check if any Upstox broker instance has
+                # a fresher token (auto-generated at bot startup). Avoids burning TOTP attempts.
+                if not token:
+                    try:
+                        _upstox_broker = db_fetchone(
+                            "SELECT access_token_encrypted, updated_at FROM client_broker_instances "
+                            "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                            "ORDER BY updated_at DESC LIMIT 1",
+                            ()
+                        )
+                        if _upstox_broker and _upstox_broker['access_token_encrypted']:
+                            _broker_token = decrypt_secret(_upstox_broker['access_token_encrypted'])
+                            _broker_updated = _upstox_broker.get('updated_at', '')
+                            _dp_updated = dp.get('updated_at', '')
+                            if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                                token = _broker_token
+                                logger.info(f"[Admin] Upstox: using fresher token from broker instance (updated {_broker_updated}).")
+                    except Exception as _broker_tok_err:
+                        logger.debug(f"[Admin] Could not fetch fresher Upstox token from broker instance: {_broker_tok_err}")
+
+                if not token:
+                    from utils.auth_manager_upstox import handle_upstox_login_automated
+                    creds = {
+                        "api_key": decrypt_secret(dp["api_key_encrypted"]),
+                        "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                        "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                        "password": decrypt_secret(dp.get("password_encrypted", "")),
+                        "totp": decrypt_secret(dp.get("totp_encrypted", "")),
+                        "redirect_uri": dp.get("redirect_uri") or "",
+                    }
+                    _result = handle_upstox_login_automated(creds, return_error=True)
+                    token = (_result or {}).get("token")
+                    _upstox_error = (_result or {}).get("error")
+                    if token:
+                        _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
             elif provider == "dhan":
                 from utils.auth_manager_dhan import generate_dhan_token
