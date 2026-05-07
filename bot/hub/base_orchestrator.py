@@ -103,7 +103,28 @@ class BaseOrchestrator(ABC):
             else:
                 logger.warning(f"futures_instrument_key not defined in config for {self.primary_instrument}. Relying on auto-discovery.")
 
-        self.index_instrument_key = self.config_manager.get(self.primary_instrument, 'instrument_symbol')
+        # Use data_manager's pre-mapped instrument_key (already normalized by EngineManager)
+        # instead of re-reading from config to avoid bare names like 'NIFTY'
+        if data_manager and hasattr(data_manager, 'instrument_key'):
+            self.index_instrument_key = data_manager.instrument_key
+        else:
+            # Fallback: map bare names to universal Upstox format if not already mapped
+            raw_symbol = self.config_manager.get(self.primary_instrument, 'instrument_symbol')
+            if raw_symbol:
+                # Apply mapping if raw symbol is a bare name
+                name_map = {
+                    'NIFTY': 'NSE_INDEX|Nifty 50',
+                    'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
+                    'FINNIFTY': 'NSE_INDEX|Nifty Fin Service',
+                    'SENSEX': 'BSE_INDEX|SENSEX',
+                    'MIDCAP': 'NSE_INDEX|NIFTY MID SELECT',
+                    'CRUDEOIL': 'MCX_INDEX|CRUDE OIL',
+                    'NATURALGAS': 'MCX_INDEX|NATURAL GAS'
+                }
+                self.index_instrument_key = name_map.get(raw_symbol.upper(), raw_symbol)
+            else:
+                # Default fallback
+                self.index_instrument_key = name_map.get(self.primary_instrument.upper(), 'NSE_INDEX|Nifty 50')
 
         # If a DataManager is not passed in, it's created using the correct instrument symbol.
         self.data_manager = data_manager or DataManager(self.rest_client, self.index_instrument_key, self.config_manager, is_backtest=self.is_backtest)
