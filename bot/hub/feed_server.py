@@ -306,12 +306,13 @@ class FeedServer:
         to BROKER_TICK_RECEIVED by DualFeedManager without going through this handler.
         """
         if not hasattr(feed_response, 'feeds'):
+            logger.warning(f"[FeedServer] Upstox message has no 'feeds' attribute: {type(feed_response).__name__}")
             return
         from hub.event_bus import event_bus
         now = datetime.datetime.now()
         _tick_batch = len(feed_response.feeds) if hasattr(feed_response, 'feeds') else 0
-        if _tick_batch % 10 == 0:
-            logger.debug(f"[FeedServer] Upstox raw: {_tick_batch} feeds in batch from protobuf")
+        if _tick_batch % 10 == 0 or _tick_batch == 1:
+            logger.info(f"[FeedServer] Upstox raw: {_tick_batch} feeds in batch from protobuf")
         for key, feed in feed_response.feeds.items():
             ltp = 0.0
             try:
@@ -324,8 +325,13 @@ class FeedServer:
                         ltp = float(feed.fullFeed.marketFF.ltpc.ltp)
                 elif feed.HasField('firstLevelWithGreeks'):
                     ltp = float(feed.firstLevelWithGreeks.ltpc.ltp)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[FeedServer] LTP extraction failed for {key}: {e}")
+
+            if ltp <= 0:
+                logger.warning(f"[FeedServer] Tick dropped (ltp={ltp}): {key}")
+                continue
+
             if ltp > 0:
                 tick_data = {
                     'user_id': 'GLOBAL',
