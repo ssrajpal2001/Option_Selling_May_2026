@@ -25,11 +25,44 @@ from web.db import get_db, db_fetchone, db_execute, db_fetchall
 from hub.event_bus import event_bus
 import asyncio
 import logging
+import sys
 
 BASE_DIR = Path(__file__).parent
 
+# ── Configure application logging for the web (uvicorn) process ────────────
+# Without this, the UpstoxApp logger (used by FeedServer, WebSocketManager,
+# DualFeedManager, etc.) has only a NullHandler and silently discards every
+# log message — making it impossible to diagnose WebSocket/feed issues.
+# Writes to stdout, which uvicorn captures into server.log.
+def _configure_web_logging():
+    fmt = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(fmt)
+
+    # Configure UpstoxApp logger (used throughout hub/, utils/, brokers/)
+    upstox_logger = logging.getLogger('UpstoxApp')
+    # Remove the NullHandler added in utils/logger.py module-level
+    for h in list(upstox_logger.handlers):
+        if isinstance(h, logging.NullHandler):
+            upstox_logger.removeHandler(h)
+    if not any(isinstance(h, logging.StreamHandler) for h in upstox_logger.handlers):
+        upstox_logger.addHandler(handler)
+    upstox_logger.setLevel(logging.INFO)
+    upstox_logger.propagate = False
+
+    # Configure root logger for module-level loggers (e.g. web.server, web.client_api)
+    root = logging.getLogger()
+    if not any(isinstance(h, logging.StreamHandler) and h.stream is sys.stdout for h in root.handlers):
+        root.addHandler(handler)
+    if root.level > logging.INFO or root.level == 0:
+        root.setLevel(logging.INFO)
+
+_configure_web_logging()
+
 app = FastAPI(title="AlgoSoft", version="2.0.0")
 logger = logging.getLogger(__name__)
+logger.info("[server] Web process logging configured — UpstoxApp logger active.")
 
 
 @app.exception_handler(Exception)
