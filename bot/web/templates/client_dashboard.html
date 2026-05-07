@@ -753,6 +753,10 @@
       </div>
     </div>
 
+    <!-- Active-broker label: positions follow the broker selected in the
+         broker tab strip elsewhere on the page (state.selectedBroker). -->
+    <div id="pos-broker-label" style="padding:8px 16px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border)"></div>
+
     <!-- Empty state -->
     <div id="pos-empty" class="pos-empty">
       <div class="pos-empty-icon">📭</div>
@@ -1887,6 +1891,11 @@ function selectBroker(broker) {
   renderBrokerTabs();
   renderCredForm(broker);
   updateBrokerBotStatusRow(broker);
+  // Re-render the Positions panel against the new broker's cached data so
+  // the user sees that broker's open legs immediately on tab switch.
+  if (state.lastBotStatus) {
+    renderPositions(state.lastBotStatus, state.todayTrades || []);
+  }
   // Load broker settings panel if accordion is open
   const bsPanel = document.getElementById('broker-settings-panel');
   if (bsPanel && bsPanel.classList.contains('open')) {
@@ -2084,9 +2093,15 @@ async function pollBotStatus() {
     const todayTrades = (d.trade_history || []).filter(t => (t.closed_at || '').startsWith(today));
     state.todayTrades = todayTrades;
 
-    // Open positions from status payload (CE/PE placed flags in bot_data.sell)
-    const sell = d.bot_data?.sell || {};
+    // Open positions from selected broker's status payload (each broker
+    // subprocess writes its own file under d.bot_data_per_broker).
+    const _perBroker = d.bot_data_per_broker || {};
+    const _selBd = (state.selectedBroker && _perBroker[state.selectedBroker])
+                   || d.bot_data || {};
+    const sell = _selBd.sell || {};
     state.openPositions = ['CE', 'PE'].filter(s => sell[s]?.placed).length;
+    // Cache last response so a tab-switch can re-render without refetching
+    state.lastBotStatus = d;
 
     // Compute PnL
     state.todayPnlPts = todayTrades.reduce((s, t) => s + (t.pnl_pts || 0), 0);
@@ -2105,8 +2120,25 @@ async function pollBotStatus() {
 
 // ══════════════════════════════════════════════════════ POSITIONS RENDERER
 function renderPositions(d, todayTrades) {
-  const sell = d.bot_data?.sell || {};
-  const instrument = (d.bot_data?.instrument || 'NIFTY').toUpperCase();
+  // Each broker subprocess writes its own status file. Show positions for
+  // the broker currently selected in the page-wide broker tab strip so the
+  // panel doesn't flicker between brokers' independent trades.
+  const perBroker = d.bot_data_per_broker || {};
+  const selBroker = state.selectedBroker
+    || (Object.keys(perBroker)[0] || null);
+  const broker_data = (selBroker && perBroker[selBroker]) || d.bot_data || {};
+  const sell = broker_data.sell || {};
+  const instrument = (broker_data.instrument || d.bot_data?.instrument || 'NIFTY').toUpperCase();
+
+  const labelEl = document.getElementById('pos-broker-label');
+  if (labelEl) {
+    if (selBroker && Object.keys(perBroker).length > 0) {
+      const bn = selBroker.charAt(0).toUpperCase() + selBroker.slice(1);
+      labelEl.textContent = `Positions for ${bn} — switch brokers using the tabs above`;
+    } else {
+      labelEl.textContent = '';
+    }
+  }
 
   const sides = ['CE', 'PE'];
   const activePosns = sides.filter(s => sell[s]?.placed);

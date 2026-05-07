@@ -1566,35 +1566,6 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
             FROM trade_history WHERE instance_id=? ORDER BY closed_at DESC LIMIT 50
         """, (instance["id"],))
 
-    bot_data = {}
-
-    # Try instrument-specific status file first
-    if instrument:
-        status_file = Path(f'config/bot_status_client_{user["id"]}_{instrument}.json')
-    else:
-        status_file = Path(f'config/bot_status_client_{user["id"]}.json')
-
-    if not status_file.exists() and instrument:
-        # Fallback to main file if specific instrument file not found
-        status_file = Path(f'config/bot_status_client_{user["id"]}.json')
-
-    if status_file.exists():
-        try:
-            with open(status_file, 'r') as f:
-                bot_data = json.load(f)
-            heartbeat = float(bot_data.get('heartbeat') or 0)
-            age = time.time() - heartbeat
-            bot_data['stale'] = age > 30
-            bot_data['stale_seconds'] = round(age)
-
-            # Multi-tenant logic: If we have a fresh heartbeat in the file,
-            # consider the bot running even if it's not in this web worker's memory.
-            if not live_status["running"] and heartbeat > 0 and age < 30:
-                live_status["running"] = True
-                live_status["pid"] = bot_data.get("pid")
-        except (json.JSONDecodeError, OSError, TypeError, ValueError):
-            bot_data = {}
-
     inst_dict = dict(instance)
     safe_keys = ["id", "broker", "status", "trading_mode", "instrument", "quantity", "strategy_version", "last_heartbeat", "token_updated_at"]
     inst_safe = {k: inst_dict.get(k) for k in safe_keys}
@@ -1618,12 +1589,48 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
             "quantity": bi["quantity"] or 25,
         })
 
+    # Each broker subprocess writes its own status file. Read them all so the
+    # UI can show per-broker positions without races between brokers.
+    bot_data_per_broker = {}
+    if instrument:
+        for bi in all_broker_instances:
+            bf = Path(f'config/bot_status_client_{user["id"]}_{instrument}_{bi["broker"]}.json')
+            if not bf.exists():
+                continue
+            try:
+                with open(bf, 'r') as f:
+                    payload = json.load(f)
+                heartbeat = float(payload.get('heartbeat') or 0)
+                age = time.time() - heartbeat
+                payload['stale'] = age > 30
+                payload['stale_seconds'] = round(age)
+                bot_data_per_broker[bi["broker"]] = payload
+            except (json.JSONDecodeError, OSError, TypeError, ValueError):
+                continue
+
+    # Backward-compat: pick one broker's payload as `bot_data`. Prefer the
+    # active instance's broker, then the first running one, then any.
+    primary_broker = inst_dict.get("broker")
+    bot_data = (
+        bot_data_per_broker.get(primary_broker)
+        or next((bot_data_per_broker[b["broker"]] for b in brokers_status
+                 if b["running"] and b["broker"] in bot_data_per_broker), None)
+        or next(iter(bot_data_per_broker.values()), {})
+    )
+
+    if bot_data:
+        heartbeat = float(bot_data.get('heartbeat') or 0)
+        if not live_status["running"] and heartbeat > 0 and (time.time() - heartbeat) < 30:
+            live_status["running"] = True
+            live_status["pid"] = bot_data.get("pid")
+
     return {
         "configured": True,
         "instance": inst_safe,
         "live": live_status,
         "trade_history": trades,
         "bot_data": bot_data,
+        "bot_data_per_broker": bot_data_per_broker,
         "brokers": brokers_status,
     }
 
