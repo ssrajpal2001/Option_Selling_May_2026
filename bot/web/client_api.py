@@ -1591,10 +1591,12 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
 
     # Each broker subprocess writes its own status file. Read them all so the
     # UI can show per-broker positions without races between brokers.
+    # Fall back to the active instance's instrument if the caller didn't pass one.
+    inst_instrument = instrument or inst_dict.get("instrument")
     bot_data_per_broker = {}
-    if instrument:
+    if inst_instrument:
         for bi in all_broker_instances:
-            bf = Path(f'config/bot_status_client_{user["id"]}_{instrument}_{bi["broker"]}.json')
+            bf = Path(f'config/bot_status_client_{user["id"]}_{inst_instrument}_{bi["broker"]}.json')
             if not bf.exists():
                 continue
             try:
