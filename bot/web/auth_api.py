@@ -38,6 +38,27 @@ async def register(body: RegisterRequest):
         (body.username, body.email, hashed, "client", 0, body.full_name, body.phone_number)
     )
 
+    new_user = db_fetchone("SELECT id FROM users WHERE username=?", (body.username,))
+    # Notify admin of new registration
+    try:
+        admin_email_row = db_fetchone("SELECT value FROM platform_settings WHERE key='admin_email'", ())
+        if admin_email_row and admin_email_row["value"]:
+            from utils.emailer import send_email
+            send_email(
+                to=admin_email_row["value"],
+                subject=f"New Registration: {body.username}",
+                body_html=(
+                    f"A new user has registered and is awaiting activation.\n\n"
+                    f"Username: {body.username}\n"
+                    f"Email:    {body.email}\n"
+                    f"Name:     {body.full_name}\n"
+                    f"Phone:    {body.phone_number}\n\n"
+                    f"Log in to the admin panel to activate this account."
+                )
+            )
+    except Exception:
+        pass
+
     return {"success": True, "message": "Registration successful. Awaiting admin activation."}
 
 
@@ -77,3 +98,71 @@ async def me(user=Depends(get_current_user)):
         "subscription_tier": user["subscription_tier"],
         "max_brokers": user["max_brokers"],
     }
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/forgot-password")
+async def forgot_password(body: ForgotPasswordRequest, request: Request):
+    user = db_fetchone("SELECT id, username, email FROM users WHERE email=?", (body.email,))
+    # Always return success to prevent user enumeration
+    if not user:
+        return {"success": True, "message": "If that email is registered, a reset link has been sent."}
+
+    import secrets, datetime
+    token = secrets.token_urlsafe(32)
+    expires_at = (datetime.datetime.utcnow() + datetime.timedelta(hours=2)).isoformat()
+    db_execute(
+        "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?,?,?)",
+        (user["id"], token, expires_at)
+    )
+
+    try:
+        base_url = str(request.base_url).rstrip("/")
+        reset_link = f"{base_url}/reset-password?token={token}"
+        from utils.emailer import send_email
+        send_email(
+            to=user["email"],
+            subject="AlgoSoft — Password Reset",
+            body_html=(
+                f"Hi {user['username']},<br><br>"
+                f"Click the link below to reset your password (valid for 2 hours):<br><br>"
+                f"<a href='{reset_link}'>{reset_link}</a><br><br>"
+                f"If you didn't request this, ignore this email."
+            )
+        )
+    except Exception:
+        pass
+
+    return {"success": True, "message": "If that email is registered, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(body: ResetPasswordRequest):
+    if len(body.new_password) < 6:
+        raise HTTPException(400, "Password must be at least 6 characters")
+
+    import datetime
+    row = db_fetchone(
+        "SELECT * FROM password_reset_tokens WHERE token=? AND used=0",
+        (body.token,)
+    )
+    if not row:
+        raise HTTPException(400, "Invalid or already used reset token")
+
+    expires_at = datetime.datetime.fromisoformat(row["expires_at"])
+    if datetime.datetime.utcnow() > expires_at:
+        raise HTTPException(400, "Reset token has expired. Please request a new one.")
+
+    hashed = hash_password(body.new_password)
+    db_execute("UPDATE users SET password_hash=? WHERE id=?", (hashed, row["user_id"]))
+    db_execute("UPDATE password_reset_tokens SET used=1 WHERE id=?", (row["id"],))
+
+    return {"success": True, "message": "Password updated successfully. You may now log in."}

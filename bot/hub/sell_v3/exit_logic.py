@@ -309,7 +309,8 @@ class ExitLogic(SellV3Base):
         v_slope_tf = self._v3_cfg('v_slope_entry.tf', 1, int, timestamp=timestamp)
         anchor_ts = timestamp.replace(minute=(timestamp.minute // v_slope_tf) * v_slope_tf, second=0, microsecond=0) - datetime.timedelta(seconds=1)
 
-        candidates = await self.manager.entry_logic._scan_v_slope_pool(ticks, timestamp, anchor_ts, do_log=True)
+        rules = self._v3_cfg('entry_rules_reentry', [], timestamp=timestamp)
+        candidates = await self.manager.entry_logic._scan_v_slope_pool(ticks, timestamp, anchor_ts, rules, do_log=True)
 
         if not candidates:
             logger.info(f"[SellManagerV3] Roll Rejected: No candidates passed technical gates. Performing Full Exit.")

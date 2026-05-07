@@ -408,10 +408,14 @@ class ZerodhaClient(BaseBroker):
         product_type: 'NRML' for carry-forward (sell strangle legs), 'MIS' for intraday (buy hedge legs).
         market_protection: Optional override for Zerodha's market protection feature (0-100 or -1).
         """
+        logger.info(f"[{self.instance_name}] place_order request: {transaction_type} {quantity} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={self.user_id}")
+        if not self.kite:
+            logger.error(f"[{self.instance_name}] BLOCKED: Zerodha KiteConnect not authenticated. Refresh the access token via Admin → Clients → Reconnect.")
+            return None
         self._validate_source_ip()
         symbol = self.construct_zerodha_symbol(contract, signal_expiry_date)
         if not symbol:
-            logger.error(f"Could not construct a valid symbol for contract: {contract.__dict__}")
+            logger.error(f"[{self.instance_name}] Could not construct Zerodha symbol for contract: {getattr(contract, 'instrument_key', contract)}")
             return None
 
         if transaction_type == "BUY":
@@ -497,9 +501,10 @@ class ZerodhaClient(BaseBroker):
                     place_params['market_protection'] = m_prot
 
             order_id = self.kite.place_order(**place_params)
+            logger.info(f"[ZerodhaClient] Order placed: {order_id} | {transaction_type} {quantity} x {symbol} | user={self.user_id}")
             return order_id
         except Exception as e:
-            logger.error(f"Error placing order with Zerodha. Symbol: {symbol}, Exchange: {exchange}, Type: {transaction_type}, Qty: {quantity}. API Error: {e}", exc_info=True)
+            logger.error(f"[{self.instance_name}] place_order error for user {self.user_id}: {e}", exc_info=True)
             return None
 
     def construct_zerodha_symbol(self, contract, signal_expiry_date=None):
@@ -520,22 +525,8 @@ class ZerodhaClient(BaseBroker):
             logger.error(f"[Zerodha] Symbol construction failed: Invalid contract object {type(contract)}")
             return None
 
-        # Dynamic prefix detection
-        name_map = {
-            "NIFTY 50": "NIFTY",
-            "NIFTY BANK": "BANKNIFTY",
-            "NIFTY FINANCIAL SERVICES": "FINNIFTY",
-            "NIFTY MIDCAP SELECT": "MIDCPNIFTY",
-            "MIDCAP": "MIDCPNIFTY",
-            "NIFTY MID SELECT": "MIDCPNIFTY",
-            "BANKNIFTY": "BANKNIFTY",
-            "FINNIFTY": "FINNIFTY",
-            "SENSEX": "SENSEX",
-            "BANKEX": "BANKEX"
-        }
-
-        raw_name = str(getattr(contract, 'name', 'NIFTY') or 'NIFTY').upper()
-        instrument_name = name_map.get(raw_name, raw_name)
+        raw_name = str(getattr(contract, 'name', 'NIFTY') or 'NIFTY')
+        instrument_name = self._normalize_instrument_name(raw_name)
 
         expiry = contract.expiry
         strike = int(contract.strike_price)

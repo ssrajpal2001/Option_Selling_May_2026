@@ -143,14 +143,14 @@ class TradeExecutionManager:
         }
 
         logger.info("DIAGNOSTIC: Calling broker_manager.broadcast_entry_signal...")
-        self.broker_manager.broadcast_entry_signal(
+        asyncio.create_task(self.broker_manager.broadcast_entry_signal(
             direction=direction,
             instrument_key=instrument_key,
             instrument_symbol=trade_contract.instrument_key,
             ltp=ltp,
             strike_price=trade_contract.strike_price
-        )
-        logger.info("DIAGNOSTIC: broker_manager.broadcast_entry_signal call complete.")
+        ))
+        logger.info("DIAGNOSTIC: broker_manager.broadcast_entry_signal task scheduled.")
 
     async def get_historical_ltp(self, instrument_key, timestamp):
         """Fetches the historical LTP for a given instrument and timestamp."""

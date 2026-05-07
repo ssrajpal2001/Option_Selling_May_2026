@@ -12,6 +12,7 @@
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     /* ── Theme palettes ────────────────────────────────────────────── */
     [data-theme="dark"] {
@@ -168,8 +169,8 @@
     .token-stale    { background: #450a0a; color: var(--error); }
 
     /* Broker tabs */
-    .broker-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-    .broker-tab { padding: 5px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); transition: all .2s; }
+    .broker-tabs { display: flex; gap: 4px; flex-wrap: wrap; min-height: 36px; }
+    .broker-tab { padding: 7px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); transition: all .2s; min-height: 36px; }
     .broker-tab.sel-zerodha  { background: #e54b00; color: #fff; border-color: #e54b00; }
     .broker-tab.sel-dhan     { background: #2563eb; color: #fff; border-color: #2563eb; }
     .broker-tab.sel-upstox   { background: #7c3aed; color: #fff; border-color: #7c3aed; }
@@ -250,7 +251,41 @@
     .mobile-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: var(--surface); border-top: 1px solid var(--border-soft); }
     .mobile-bar a { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0 6px; font-size: 10px; font-weight: 600; color: var(--muted); gap: 3px; cursor: pointer; }
     .mobile-bar a.active { color: var(--primary); }
-    @media (max-width: 640px) { .page { padding: 14px 14px 80px; } }
+    @media (max-width: 640px) { .page { padding: 12px 12px 80px; } }
+
+    /* ── Mobile-specific overrides ─────────────────────────────── */
+    /* Hide nav text labels + theme label on small screens */
+    @media (max-width: 640px) {
+      .toggle-label { display: none !important; }
+      #theme-label  { display: none !important; }
+      .theme-menu-btn { padding: 5px 8px !important; }
+      .nav-right { gap: 6px !important; }
+      /* Compact nav dividers */
+      .nav-right > div[style*="width:1px"] { display: none !important; }
+      /* Truncate username */
+      #nav-username { max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* Broker tabs horizontal scroll */
+      .broker-tabs { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+      .broker-tabs::-webkit-scrollbar { height: 0; }
+      .broker-tab { flex-shrink: 0; }
+      /* PnL gauge: smaller on phone */
+      .gauge-ring { width: 64px !important; height: 64px !important; }
+      .gauge-ring svg { width: 64px !important; height: 64px !important; }
+      /* Stat val smaller */
+      .stat-val { font-size: 20px !important; }
+      /* Settings two-column → one column */
+      .settings-grid { grid-template-columns: 1fr !important; }
+      /* Market bar: compact — hide separators and static labels */
+      .mbar-label { display: none !important; }
+      .mbar-sep   { display: none !important; }
+      .market-bar { gap: 10px !important; padding: 0 12px !important; }
+      /* Compact nav */
+      .nav-inner { padding: 0 12px !important; height: 50px !important; }
+      /* Inline PnL + gauge: allow wrap */
+      #gauge-wrap + div { min-width: 0; }
+    }
+    /* Settings layout: use class instead of inline style */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 
     /* Section header */
     .sec-title { font-size: 14px; font-weight: 700; color: var(--text); }
@@ -344,6 +379,7 @@
       <button class="nav-tab" onclick="showPane('positions')" id="tab-positions">Positions</button>
       <button class="nav-tab" onclick="showPane('backtest')" id="tab-backtest">Backtest</button>
       <button class="nav-tab" onclick="showPane('history')" id="tab-history">History</button>
+      <button class="nav-tab" onclick="showPane('calendar')" id="tab-calendar">Calendar</button>
       <button class="nav-tab" onclick="showPane('settings')" id="tab-settings">Settings</button>
     </div>
 
@@ -431,6 +467,12 @@
   <div class="mbar-sep" id="mbar-engine-sep" style="display:none"></div>
   <div class="mbar-item" id="mbar-engine-wrap" style="display:none">
     <span id="mbar-engine-badge" class="mbar-status"></span>
+  </div>
+  <div class="mbar-sep"></div>
+  <div class="mbar-item" id="mbar-feed-wrap" title="Market data feed status">
+    <span class="mbar-label">Feed:</span>
+    <span id="mbar-feed-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:4px;transition:background .3s"></span>
+    <span id="mbar-feed-lbl" style="color:var(--muted);font-size:11px">—</span>
   </div>
 </div>
 
@@ -712,6 +754,12 @@
       </div>
     </div>
 
+    <!-- Per-broker tab strip (one tab per running broker subprocess). -->
+    <div id="pos-broker-tabs" style="display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap"></div>
+
+    <!-- Plain-English bot status -->
+    <div id="pos-plain-status" style="padding:8px 16px 0;font-size:13px;color:var(--text-soft);line-height:1.5"></div>
+
     <!-- Empty state -->
     <div id="pos-empty" class="pos-empty">
       <div class="pos-empty-icon">📭</div>
@@ -872,6 +920,24 @@
 
 <!-- ═══════════════════════════════════════════════════════════ HISTORY PANE -->
 <div class="pane" id="pane-history">
+
+  <!-- ── Plain-language daily summary ── -->
+  <div class="card" style="padding:20px;margin-bottom:16px" id="hist-summary-card">
+    <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Today's Summary</div>
+    <div id="hist-plain-summary" style="font-size:14px;line-height:1.7;color:var(--text)">Loading summary…</div>
+  </div>
+
+  <!-- ── Cumulative P&L chart ── -->
+  <div class="card" style="padding:20px;margin-bottom:16px" id="hist-chart-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span class="sec-title">Cumulative P&amp;L (last 30 days)</span>
+      <span id="hist-chart-badge" style="font-size:11px;color:var(--muted)"></span>
+    </div>
+    <div style="position:relative;height:180px">
+      <canvas id="hist-pnl-chart"></canvas>
+    </div>
+  </div>
+
   <div class="card" style="padding:20px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
       <span class="sec-title">Trade History</span>
@@ -905,11 +971,12 @@
     </div>
     <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)" id="hist-count"></div>
   </div>
+  </div><!-- close pane-history inner wrapper -->
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ SETTINGS PANE -->
 <div class="pane" id="pane-settings">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+  <div class="settings-grid">
 
     <!-- ── LEFT COLUMN ── -->
     <div>
@@ -1069,53 +1136,56 @@
                   <span class="toggle-slider"></span>
                 </label>
               </div>
-              <div id="bs-pnl-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+              <div id="bs-pnl-body" style="display:flex;flex-direction:column;gap:14px;margin-top:12px">
+                <!-- PnL Target slider -->
                 <div>
-                  <div class="inp-label">Target (pts)</div>
-                  <input type="number" class="inp" id="bs-pnl-target" placeholder="e.g. 100" step="0.5">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Default Target (pts)</span>
+                    <span id="bs-pnl-target-val" style="font-size:15px;font-weight:800;color:var(--primary)">0 pts</span>
+                  </div>
+                  <input type="range" id="bs-pnl-target" min="0" max="500" step="5"
+                         oninput="document.getElementById('bs-pnl-target-val').textContent=this.value+' pts'"
+                         style="width:100%;accent-color:var(--primary);cursor:pointer">
                   <div class="bsettings-hint" id="bs-pnl-target-adm"></div>
                 </div>
+                <!-- PnL SL slider -->
                 <div>
-                  <div class="inp-label">Stop Loss (pts)</div>
-                  <input type="number" class="inp" id="bs-pnl-sl" placeholder="e.g. 60" step="0.5">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Default Stop Loss (pts)</span>
+                    <span id="bs-pnl-sl-val" style="font-size:15px;font-weight:800;color:var(--danger)">0 pts</span>
+                  </div>
+                  <input type="range" id="bs-pnl-sl" min="0" max="300" step="5"
+                         oninput="document.getElementById('bs-pnl-sl-val').textContent=this.value+' pts'"
+                         style="width:100%;accent-color:var(--danger);cursor:pointer">
                   <div class="bsettings-hint" id="bs-pnl-sl-adm"></div>
                 </div>
-              </div>
-            </div>
-
-            <!-- ── Single Trade Risk ── -->
-            <div class="bsettings-group" style="margin-bottom:14px">
-              <div class="bsettings-group-title">🎯 Single Trade Risk (pts)</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <!-- Lot Size slider -->
                 <div>
-                  <div class="inp-label">Target (pts)</div>
-                  <input type="number" class="inp" id="bs-st-target" placeholder="e.g. 30" step="0.5">
-                  <div class="bsettings-hint" id="bs-st-target-adm"></div>
-                </div>
-                <div>
-                  <div class="inp-label">Stop Loss (pts)</div>
-                  <input type="number" class="inp" id="bs-st-sl" placeholder="e.g. 20" step="0.5">
-                  <div class="bsettings-hint" id="bs-st-sl-adm"></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Lot Size</span>
+                    <span id="bs-lot-size-val" style="font-size:15px;font-weight:800;color:var(--link)">1 lot</span>
+                  </div>
+                  <input type="range" id="bs-lot-size" min="1" max="20" step="1"
+                         oninput="document.getElementById('bs-lot-size-val').textContent=this.value+' lot'+(+this.value>1?'s':'')"
+                         style="width:100%;accent-color:var(--link);cursor:pointer">
                 </div>
               </div>
-            </div>
 
-            <!-- ── Day-wise Overrides ── -->
-            <div class="bsettings-group" style="margin-bottom:14px">
-              <div class="bsettings-group-title">📅 Day-wise Trade Risk Overrides</div>
-              <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Leave blank to use the default target/SL above for that day.</div>
-              <table style="width:100%;border-collapse:collapse;font-size:12px">
-                <thead>
-                  <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
-                    <th style="text-align:left;padding:5px 0;width:60px">Day</th>
-                    <th style="padding:5px 4px">Target (pts)</th>
-                    <th style="padding:5px 4px">SL (pts)</th>
-                  </tr>
-                </thead>
-                <tbody id="bs-daywise-body">
-                  <!-- JS rendered -->
-                </tbody>
-              </table>
+              <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Day Override (blank = use default above)</div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px">
+                  <thead>
+                    <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
+                      <th style="text-align:left;padding:5px 0;width:60px">Day</th>
+                      <th style="padding:5px 4px">Target (pts)</th>
+                      <th style="padding:5px 4px">SL (pts)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bs-daywise-body">
+                    <!-- JS rendered -->
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- ── Scalable TSL ── -->
@@ -1262,6 +1332,46 @@
     <!-- ── RIGHT COLUMN ── -->
     <div>
 
+      <!-- Trading Parameters (per-user overrides) -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('trading-params-panel','arr-tp')">
+          <div>
+            <div class="sec-title">📊 Trading Parameters</div>
+            <div class="sec-sub">Override default strategy values for your account</div>
+          </div>
+          <svg class="acc-arrow" id="arr-tp" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body" id="trading-params-panel">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <div class="inp-label">LTP Target (pts)</div>
+              <input type="number" class="inp" id="tp-ltp-target" placeholder="e.g. 60" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Entry premium target per leg</div>
+            </div>
+            <div>
+              <div class="inp-label">Max Daily Trades</div>
+              <input type="number" class="inp" id="tp-max-trades" placeholder="e.g. 3" min="1">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Max entries per trading day</div>
+            </div>
+            <div>
+              <div class="inp-label">SL per Leg (pts)</div>
+              <input type="number" class="inp" id="tp-sl-pts" placeholder="e.g. 25" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Stop-loss trigger per leg</div>
+            </div>
+            <div>
+              <div class="inp-label">Target per Leg (pts)</div>
+              <input type="number" class="inp" id="tp-target-pts" placeholder="e.g. 40" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Profit target per leg</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+            ℹ️ Leave blank to use platform defaults. Changes take effect on next bot start.
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="saveTradingParams()">💾 Save Parameters</button>
+          <div id="tp-status" style="font-size:12px;margin-top:8px;text-align:center;color:var(--muted)"></div>
+        </div>
+      </div>
+
       <!-- Notifications -->
       <div class="card" style="margin-bottom:16px">
         <div class="acc-header" onclick="toggleAcc('notif-panel','arr-notif')">
@@ -1356,6 +1466,43 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ CALENDAR PANE -->
+<div class="pane" id="pane-calendar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text)">📅 Monthly PnL Calendar</h2>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="calNav(-1)" style="padding:5px 12px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px">◀</button>
+      <span id="cal-month-label" style="font-size:14px;font-weight:700;color:var(--text);min-width:120px;text-align:center">—</span>
+      <button onclick="calNav(1)" style="padding:5px 12px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px">▶</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <!-- Day-of-week headers -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">MON</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">TUE</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">WED</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">THU</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">FRI</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">SAT</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">SUN</div>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+  </div>
+
+  <!-- Day detail modal overlay -->
+  <div id="cal-day-detail" style="display:none;margin-top:4px">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span id="cal-detail-title" style="font-size:15px;font-weight:700;color:var(--text)">—</span>
+        <button onclick="document.getElementById('cal-day-detail').style.display='none'" style="font-size:18px;background:none;border:none;color:var(--muted);cursor:pointer">✕</button>
+      </div>
+      <div id="cal-detail-body" style="font-size:13px;color:var(--muted)">No trades.</div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /page -->
 
 <!-- Mobile bottom nav -->
@@ -1418,8 +1565,9 @@ function showPane(name) {
   document.getElementById('tab-' + name)?.classList.add('active');
   document.getElementById('mob-' + name)?.classList.add('active');
   if (name === 'history') loadHistory();
-  if (name === 'settings') loadSettingsPane();
+  if (name === 'settings') { loadSettingsPane(); loadTradingParams(); }
   if (name === 'backtest') loadAvailableDates();
+  if (name === 'calendar') renderCalendar();
 }
 
 function toggleUserMenu() {
@@ -1760,6 +1908,13 @@ async function _pollBrokerStatus() {
   }
 }
 
+function selectPosBroker(broker) {
+  state.posSelectedBroker = broker;
+  if (state.lastBotStatus) {
+    renderPositions(state.lastBotStatus, state.todayTrades || []);
+  }
+}
+
 function selectBroker(broker) {
   state.selectedBroker = broker;
   // Reset mode flag to the broker's known mode so saveQuickBrokerUpdate reads correctly
@@ -1965,9 +2120,22 @@ async function pollBotStatus() {
     const todayTrades = (d.trade_history || []).filter(t => (t.closed_at || '').startsWith(today));
     state.todayTrades = todayTrades;
 
-    // Open positions from status payload (CE/PE placed flags in bot_data.sell)
-    const sell = d.bot_data?.sell || {};
-    state.openPositions = ['CE', 'PE'].filter(s => sell[s]?.placed).length;
+    // Open positions: count across ALL brokers so the navbar/badge stays
+    // honest even if the user is viewing one broker's tab.
+    const _perBroker = d.bot_data_per_broker || {};
+    let _openCount = 0;
+    if (Object.keys(_perBroker).length > 0) {
+      for (const b of Object.keys(_perBroker)) {
+        const s = _perBroker[b]?.sell || {};
+        _openCount += ['CE','PE'].filter(x => s[x]?.placed).length;
+      }
+    } else {
+      const s = d.bot_data?.sell || {};
+      _openCount = ['CE','PE'].filter(x => s[x]?.placed).length;
+    }
+    state.openPositions = _openCount;
+    // Cache last response so a tab-switch can re-render without refetching
+    state.lastBotStatus = d;
 
     // Compute PnL
     state.todayPnlPts = todayTrades.reduce((s, t) => s + (t.pnl_pts || 0), 0);
@@ -1985,9 +2153,69 @@ async function pollBotStatus() {
 }
 
 // ══════════════════════════════════════════════════════ POSITIONS RENDERER
+function _humanBotStatus(d, activePosns, todayTrades, running) {
+  // Returns a plain-English sentence describing what the bot is currently doing.
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const isMarketHours = (h > 9 || (h === 9 && m >= 15)) && (h < 15 || (h === 15 && m <= 30));
+
+  if (!running) return 'Bot is stopped. Start it to begin monitoring.';
+  if (!isMarketHours) {
+    if (h < 9 || (h === 9 && m < 15)) return 'Waiting for market to open at 9:15 AM IST.';
+    return 'Market closed. Bot is idle until tomorrow.';
+  }
+  if (activePosns.length > 0) {
+    const sides = activePosns.map(s => {
+      const p = (d.bot_data?.sell || {})[s] || {};
+      return `${s} ${p.strike || ''} @ ₹${(p.entry || 0).toFixed(1)}`;
+    }).join(' &amp; ');
+    return `Position active — ${sides}. Watching for exit signal.`;
+  }
+  if (todayTrades.length > 0) {
+    const last = todayTrades[todayTrades.length - 1];
+    const reason = last.reason || '';
+    const pnl = last.pnl_rs || last.pnl || 0;
+    const pnlStr = pnl >= 0 ? `<span style="color:var(--success)">+₹${Math.abs(pnl).toFixed(0)} profit</span>` : `<span style="color:var(--danger)">-₹${Math.abs(pnl).toFixed(0)} loss</span>`;
+    return `Last session exited (${reason || 'signal'}). ${pnlStr}. Monitoring for next entry.`;
+  }
+  return 'Monitoring market — no entry signal yet.';
+}
+
 function renderPositions(d, todayTrades) {
-  const sell = d.bot_data?.sell || {};
-  const instrument = (d.bot_data?.instrument || 'NIFTY').toUpperCase();
+  const perBroker = d.bot_data_per_broker || {};
+  const brokerNames = Object.keys(perBroker);
+
+  // Maintain a positions-panel selection independent of the bot-control tab.
+  if (!state.posSelectedBroker || !perBroker[state.posSelectedBroker]) {
+    state.posSelectedBroker = brokerNames[0] || null;
+  }
+  const selBroker = state.posSelectedBroker;
+
+  // Build the broker tab strip (one tab per broker that wrote a status file).
+  const tabsEl = document.getElementById('pos-broker-tabs');
+  if (tabsEl) {
+    if (brokerNames.length === 0) {
+      tabsEl.style.display = 'none';
+      tabsEl.innerHTML = '';
+    } else {
+      tabsEl.style.display = 'flex';
+      tabsEl.innerHTML = brokerNames.map(b => {
+        const sell = (perBroker[b]?.sell) || {};
+        const open = ['CE','PE'].filter(s => sell[s]?.placed).length;
+        const label = b.charAt(0).toUpperCase() + b.slice(1);
+        const sel = (b === selBroker);
+        const css = `padding:6px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:600;`
+                  + (sel ? `background:var(--primary);color:#000;border-color:var(--primary);`
+                         : `background:transparent;color:var(--muted);`);
+        const dot = open > 0 ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;margin-left:6px;vertical-align:middle"></span>` : '';
+        return `<button onclick="selectPosBroker('${b}')" style="${css}">${label}${dot}</button>`;
+      }).join('');
+    }
+  }
+
+  const broker_data = (selBroker && perBroker[selBroker]) || d.bot_data || {};
+  const sell = broker_data.sell || {};
+  const instrument = (broker_data.instrument || d.bot_data?.instrument || 'NIFTY').toUpperCase();
 
   const sides = ['CE', 'PE'];
   const activePosns = sides.filter(s => sell[s]?.placed);
@@ -2030,6 +2258,12 @@ function renderPositions(d, todayTrades) {
     }
   }
 
+  // Plain-English status line
+  const plainStatusEl = document.getElementById('pos-plain-status');
+  if (plainStatusEl) {
+    plainStatusEl.innerHTML = _humanBotStatus(d, activePosns, todayTrades, state.running);
+  }
+
   // Empty/table toggle
   const emptyEl = document.getElementById('pos-empty');
   const tableWrap = document.getElementById('pos-table-wrap');
@@ -2045,7 +2279,11 @@ function renderPositions(d, todayTrades) {
 
   const tbody = document.getElementById('pos-table-body');
   if (!tbody) return;
-  tbody.innerHTML = '';
+
+  // Remove rows for sides no longer active
+  Array.from(tbody.querySelectorAll('tr[data-pos-side]')).forEach(tr => {
+    if (!activePosns.includes(tr.dataset.posSide)) tr.remove();
+  });
 
   activePosns.forEach(side => {
     const p = sell[side];
@@ -2055,35 +2293,49 @@ function renderPositions(d, todayTrades) {
     const qty   = p.qty   || '—';
     const strike = p.strike || '—';
 
-    // For SELL: profit = entry > ltp
     const pnlPct = entry > 0 ? ((entry - ltp) / entry * 100) : 0;
     const isProfit = pnl >= 0;
     const rowClass = isProfit ? 'pos-row-green' : 'pos-row-red';
     const pnlCls   = isProfit ? 'pos-pnl-green' : 'pos-pnl-red';
-
     const typeBadge = side === 'CE'
       ? `<span class="pos-badge-ce">CE</span>`
       : `<span class="pos-badge-pe">PE</span>`;
-
     const instrLabel = `${instrument}&nbsp;${strike}&nbsp;${side}`;
-
     const entryTime = p.entry_time || '—';
+    const qtyDisplay = typeof qty === 'number' ? -qty : qty;
 
-    const tr = document.createElement('tr');
+    let tr = tbody.querySelector(`tr[data-pos-side="${side}"]`);
+    if (!tr) {
+      // First render for this side — build the row once
+      tr = document.createElement('tr');
+      tr.dataset.posSide = side;
+      tr.innerHTML = `
+        <td style="font-weight:600"></td>
+        <td></td>
+        <td style="font-family:monospace"></td>
+        <td style="font-family:monospace;color:var(--muted)"></td>
+        <td style="font-family:monospace"></td>
+        <td style="font-family:monospace;font-weight:600"></td>
+        <td></td>
+        <td></td>
+        <td style="color:var(--muted);font-size:12px"></td>
+        <td><button class="sqoff-btn" onclick="squareOffLeg('${side}')">Squareoff</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // Update only the cells that carry live data — no full wipe
     tr.className = rowClass;
-    tr.innerHTML = `
-      <td style="font-weight:600">${instrLabel}</td>
-      <td>${typeBadge}</td>
-      <td style="font-family:monospace">${strike}</td>
-      <td style="font-family:monospace;color:var(--muted)">${typeof qty === 'number' ? -qty : qty}</td>
-      <td style="font-family:monospace">₹${entry.toFixed(2)}</td>
-      <td style="font-family:monospace;font-weight:600">₹${ltp.toFixed(2)}</td>
-      <td class="${pnlCls}">${fmtRs(pnl)}</td>
-      <td class="${pnlCls}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</td>
-      <td style="color:var(--muted);font-size:12px">${entryTime}</td>
-      <td><button class="sqoff-btn" onclick="squareOffLeg('${side}')">Squareoff</button></td>
-    `;
-    tbody.appendChild(tr);
+    const cells = tr.cells;
+    cells[0].innerHTML = instrLabel;
+    cells[1].innerHTML = typeBadge;
+    cells[2].textContent = strike;
+    cells[3].textContent = qtyDisplay;
+    cells[4].textContent = '₹' + entry.toFixed(2);
+    cells[5].textContent = '₹' + ltp.toFixed(2);
+    cells[6].className = pnlCls; cells[6].textContent = fmtRs(pnl);
+    cells[7].className = pnlCls; cells[7].textContent = (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%';
+    cells[8].textContent = entryTime;
   });
 }
 
@@ -2682,11 +2934,26 @@ function _setVal(id, val) {
   if (!el) return;
   if (el.type === 'checkbox') { el.checked = !!val; return; }
   if (el.type === 'time' && val) {
-    // Normalize HH:MM:SS → HH:MM
     el.value = String(val).slice(0, 5);
-  } else {
-    el.value = val != null ? val : '';
+    return;
   }
+  if (el.type === 'range') {
+    const v = val != null ? Number(val) : Number(el.min || 0);
+    el.value = v;
+    // Update paired display span (convention: span id = input id + '-val')
+    const span = document.getElementById(id + '-val');
+    if (span) {
+      if (id === 'bs-pnl-target' || id === 'bs-pnl-sl') {
+        span.textContent = v + ' pts';
+      } else if (id === 'bs-lot-size') {
+        span.textContent = v + ' lot' + (v > 1 ? 's' : '');
+      } else {
+        span.textContent = v;
+      }
+    }
+    return;
+  }
+  el.value = val != null ? val : '';
 }
 
 function _renderDaywiseTable(settings, adminDefaults) {
@@ -2748,6 +3015,9 @@ async function loadBrokerSettings(broker) {
     const admCap = document.getElementById('bs-capital-adm');
     if (admCap) admCap.textContent = d.capital_allocated > 0 ? `₹${Number(d.capital_allocated).toLocaleString()}` : 'Not set';
 
+    // Lot size slider (from top-level response field, not nested settings)
+    _setVal('bs-lot-size', d.quantity || 1);
+
     // Session PNL
     _setVal('bs-pnl-enabled', s.session_pnl_enabled != null ? s.session_pnl_enabled : adm.session_pnl_enabled);
     _setVal('bs-pnl-target', s.session_pnl_target_pts);
@@ -2755,13 +3025,7 @@ async function loadBrokerSettings(broker) {
     _setVal('bs-pnl-sl', s.session_pnl_sl_pts);
     _setHint('bs-pnl-sl-adm', adm.session_pnl_sl_pts);
 
-    // Single trade risk
-    _setVal('bs-st-target', s.single_trade_target_pts);
-    _setHint('bs-st-target-adm', adm.single_trade_target_pts);
-    _setVal('bs-st-sl', s.single_trade_sl_pts);
-    _setHint('bs-st-sl-adm', adm.single_trade_sl_pts);
-
-    // Day-wise overrides table
+    // Day-wise overrides table (now overrides Session PNL Target/SL per day)
     _renderDaywiseTable(s, adm);
 
     // Scalable TSL
@@ -2835,6 +3099,19 @@ async function saveBrokerSettings() {
   const broker = state.selectedBroker;
   if (!broker) { toast('Select a broker first', 'warn'); return; }
 
+  // Confirmation dialog — show key values before saving
+  const target = Number(document.getElementById('bs-pnl-target')?.value || 0);
+  const sl     = Number(document.getElementById('bs-pnl-sl')?.value     || 0);
+  const qty    = parseInt(document.getElementById('bs-lot-size')?.value  || 1);
+  const confirmed = confirm(
+    `Save settings for ${broker.charAt(0).toUpperCase() + broker.slice(1)}?\n\n` +
+    `  PnL Target  : ${target} pts\n` +
+    `  PnL SL      : ${sl} pts\n` +
+    `  Lot Size    : ${qty} lot${qty !== 1 ? 's' : ''}\n\n` +
+    `Click OK to apply immediately.`
+  );
+  if (!confirmed) return;
+
   const _numOrNull = id => {
     const v = document.getElementById(id)?.value;
     return (v === '' || v == null) ? null : Number(v);
@@ -2866,8 +3143,6 @@ async function saveBrokerSettings() {
     session_pnl_enabled:     _boolEl('bs-pnl-enabled'),
     session_pnl_target_pts:  _numOrNull('bs-pnl-target'),
     session_pnl_sl_pts:      _numOrNull('bs-pnl-sl'),
-    single_trade_target_pts: _numOrNull('bs-st-target'),
-    single_trade_sl_pts:     _numOrNull('bs-st-sl'),
     day_wise:                Object.keys(day_wise).length ? day_wise : null,
     tsl_enabled:             _boolEl('bs-tsl-enabled'),
     tsl_base_profit:         _numOrNull('bs-tsl-base-profit'),
@@ -2883,6 +3158,7 @@ async function saveBrokerSettings() {
     ltp_exit_min:            _numOrNull('bs-roll-ltp-min'),
     ratio_exit_enabled:      _boolEl('bs-roll-ratio-en'),
     ratio_exit_threshold:    _numOrNull('bs-roll-ratio-thr'),
+    quantity:                parseInt(document.getElementById('bs-lot-size')?.value || '1') || 1,
   };
 
   // Remove null values
@@ -2941,6 +3217,127 @@ function copyRefCode() {
 }
 
 // ═══════════════════════════════════════════════════════════════ HISTORY
+let _histChart = null;
+
+function _buildPlainSummary(allTrades) {
+  const today = new Date().toISOString().slice(0,10);
+  const todayTrades = allTrades.filter(t => (t.closed_at || '').startsWith(today));
+
+  if (!todayTrades.length) {
+    const recentDate = allTrades.length ? (allTrades[allTrades.length-1].closed_at||'').slice(0,10) : null;
+    if (!recentDate) return 'No trades recorded yet.';
+    const recentTrades = allTrades.filter(t => (t.closed_at || '').startsWith(recentDate));
+    return _summaryForTrades(recentTrades, recentDate) + ' <span style="color:var(--muted);font-size:12px">(No trades today)</span>';
+  }
+  return _summaryForTrades(todayTrades, today);
+}
+
+function _summaryForTrades(trades, dateStr) {
+  const dateLabel = dateStr === new Date().toISOString().slice(0,10) ? 'Today' :
+    new Date(dateStr).toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const pnlRs  = trades.reduce((s,t) => s + (t.pnl_rs  || 0), 0);
+  const pnlPts = trades.reduce((s,t) => s + (t.pnl_pts || 0), 0);
+  const wins   = trades.filter(t => (t.pnl_rs || 0) > 0).length;
+  const losses = trades.filter(t => (t.pnl_rs || 0) < 0).length;
+
+  const pnlCol  = pnlRs >= 0 ? 'var(--success)' : 'var(--danger)';
+  const pnlSign = pnlRs >= 0 ? '+' : '';
+  const pnlStr  = `<strong style="color:${pnlCol}">${pnlSign}₹${Math.abs(Math.round(pnlRs)).toLocaleString('en-IN')}</strong>`;
+
+  // Group by session: pair CE+PE entered at same time
+  const sessions = [];
+  const used = new Set();
+  trades.forEach((t,i) => {
+    if (used.has(i)) return;
+    const entryTime = (t.closed_at || t.opened_at || '').slice(11,16);
+    const partner = trades.findIndex((t2,j) => !used.has(j) && j !== i &&
+      t2.direction !== t.direction && (t2.opened_at||'').slice(11,16) === (t.opened_at||'').slice(11,16));
+    if (partner >= 0) {
+      used.add(i); used.add(partner);
+      sessions.push({ ce: t.direction === 'CALL' ? t : trades[partner], pe: t.direction === 'PUT' ? t : trades[partner] });
+    } else {
+      used.add(i); sessions.push({ single: t });
+    }
+  });
+
+  let detail = '';
+  sessions.forEach(s => {
+    if (s.ce && s.pe) {
+      const entryTime = (s.ce.opened_at || s.ce.closed_at || '').slice(11,16);
+      const exitTime  = (s.ce.closed_at || '').slice(11,16);
+      detail += `<br>Sold <strong>${s.ce.instrument || ''} ${s.ce.strike || ''} CE</strong> at ₹${(s.ce.entry_price||0).toFixed(0)} &amp; `;
+      detail += `<strong>${s.pe.strike || ''} PE</strong> at ₹${(s.pe.entry_price||0).toFixed(0)}`;
+      if (entryTime) detail += ` (${entryTime})`;
+      if (exitTime)  detail += ` → exited ${exitTime}`;
+    } else if (s.single) {
+      detail += `<br>${s.single.direction || ''} ${s.single.strike || ''} at ₹${(s.single.entry_price||0).toFixed(0)}`;
+    }
+  });
+
+  const slHit    = trades.some(t => (t.exit_reason || '').toLowerCase().includes('sl') || (t.exit_reason || '').toLowerCase().includes('stop'));
+  const slStatus = slHit ? '<span style="color:var(--danger)">Stop-loss was hit.</span>' : '<span style="color:var(--success)">Stop-loss was not hit.</span>';
+
+  return `<strong>${dateLabel}</strong> — ` +
+    `${trades.length} trade leg${trades.length!==1?'s':''} | ` +
+    `${wins}W / ${losses}L | P&amp;L: ${pnlStr} (${pnlPts >= 0 ? '+' : ''}${pnlPts.toFixed(1)} pts)` +
+    detail + '<br>' + slStatus;
+}
+
+function _renderPnlChart(allTrades) {
+  // Group closed trades by date and compute daily PnL
+  const byDate = {};
+  allTrades.forEach(t => {
+    const date = (t.closed_at || '').slice(0,10);
+    if (!date) return;
+    byDate[date] = (byDate[date] || 0) + (t.pnl_rs || 0);
+  });
+  const dates = Object.keys(byDate).sort().slice(-30);
+  const dailyPnl = dates.map(d => byDate[d]);
+  const cumPnl   = dailyPnl.reduce((acc, v) => { acc.push((acc.length ? acc[acc.length-1] : 0) + v); return acc; }, []);
+
+  const canvas = document.getElementById('hist-pnl-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (_histChart) { _histChart.destroy(); _histChart = null; }
+  if (!dates.length) { document.getElementById('hist-chart-badge').textContent = 'No data'; return; }
+
+  const totalPnl = cumPnl[cumPnl.length-1] || 0;
+  const sign     = totalPnl >= 0 ? '+' : '';
+  document.getElementById('hist-chart-badge').textContent = `${sign}₹${Math.round(totalPnl).toLocaleString('en-IN')} overall`;
+
+  const lineColor = totalPnl >= 0 ? '#34d399' : '#ef4444';
+  const fillColor = totalPnl >= 0 ? 'rgba(52,211,153,.12)' : 'rgba(239,68,68,.12)';
+
+  _histChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates.map(d => d.slice(5)),
+      datasets: [{
+        label: 'Cumulative P&L (₹)',
+        data: cumPnl,
+        borderColor: lineColor,
+        backgroundColor: fillColor,
+        borderWidth: 2,
+        pointRadius: dates.length > 10 ? 2 : 4,
+        tension: 0.35,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => '₹' + Math.round(ctx.parsed.y).toLocaleString('en-IN')
+      }}},
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#64748b', font: { size: 10 },
+          callback: v => '₹' + Math.round(v).toLocaleString('en-IN') } }
+      }
+    }
+  });
+}
+
 async function loadHistory() {
   const mode = document.getElementById('hist-filter-mode').value;
   const dir  = document.getElementById('hist-filter-dir').value;
@@ -2949,6 +3346,12 @@ async function loadHistory() {
   try {
     const d = await api('GET', '/trades');
     let trades = d.trades || [];
+
+    // Render summary and chart from unfiltered data
+    const summaryEl = document.getElementById('hist-plain-summary');
+    if (summaryEl) summaryEl.innerHTML = _buildPlainSummary(trades);
+    _renderPnlChart(trades);
+
     if (mode) trades = trades.filter(t => t.trading_mode === mode);
     if (dir)  trades = trades.filter(t => t.direction === dir);
     document.getElementById('hist-count').textContent = `Showing ${trades.length} trades`;
@@ -2962,7 +3365,8 @@ async function loadHistory() {
       const cls = pts > 0 ? 'text-green' : pts < 0 ? 'text-red' : 'text-muted';
       const date = (t.closed_at || '').slice(0,10);
       const time = (t.closed_at || '').slice(11,16);
-      return `<tr>
+      const pnlBg = rs > 0 ? 'rgba(52,211,153,.08)' : rs < 0 ? 'rgba(239,68,68,.08)' : '';
+      return `<tr style="background:${pnlBg}">
         <td>${date} ${time}</td>
         <td><span class="badge badge-info" style="font-size:10px">${t.broker||'—'}</span></td>
         <td>${t.instrument||'—'}</td>
@@ -3097,14 +3501,110 @@ function _btResetBtns() {
   document.getElementById('bt-running-spinner').style.display = 'none';
 }
 
+function _btRenderLive(d) {
+  // Renders real-time progress while the backtest is still running.
+  const stats  = d.stats  || {};
+  const trades = d.trades || [];
+
+  // Progress bar / status message
+  const pnl     = parseFloat(stats.pnl || 0);
+  const pnlSign = pnl >= 0 ? '+' : '';
+  const pnlCol  = pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+  const tcnt    = stats.trade_count || trades.length || 0;
+
+  // Format current simulation timestamp (strip date part if present)
+  let simTs = '';
+  if (stats.current_ts) {
+    const raw = String(stats.current_ts);
+    simTs = raw.includes('T') ? raw.split('T')[1].substring(0, 8) : raw.substring(0, 19);
+  }
+
+  const statusParts = [];
+  if (simTs)  statusParts.push('Simulating ' + simTs);
+  if (tcnt)   statusParts.push(tcnt + ' trade leg' + (tcnt !== 1 ? 's' : '') + ' found');
+  statusParts.push('P&L: <span style="color:' + pnlCol + '">' + pnlSign + pnl.toFixed(0) + ' pts</span>');
+  document.getElementById('bt-status-msg').innerHTML = statusParts.join(' &nbsp;|&nbsp; ');
+
+  // Indicator bar
+  const indParts = [];
+  if (stats.rsi   != null) indParts.push('RSI: ' + parseFloat(stats.rsi).toFixed(1));
+  if (stats.roc   != null) indParts.push('ROC: ' + parseFloat(stats.roc).toFixed(3));
+  if (stats.slope != null) indParts.push('Slope: ' + stats.slope);
+  if (stats.vwap  != null) indParts.push('VWAP: ' + parseFloat(stats.vwap).toFixed(0));
+  if (stats.entry_reason)  indParts.push('<em>' + stats.entry_reason + '</em>');
+  let indBar = document.getElementById('bt-live-ind');
+  if (!indBar) {
+    indBar = document.createElement('div');
+    indBar.id = 'bt-live-ind';
+    indBar.style.cssText = 'font-size:12px;color:var(--text-soft);margin:6px 0 4px;';
+    const statusEl = document.getElementById('bt-status-msg');
+    if (statusEl && statusEl.parentNode) statusEl.parentNode.insertBefore(indBar, statusEl.nextSibling);
+  }
+  indBar.innerHTML = indParts.join(' &nbsp;&bull;&nbsp; ');
+
+  // Live trade table — render all trades found so far
+  if (trades.length) {
+    const tbody = document.getElementById('bt-trade-body');
+    tbody.innerHTML = '';
+    const pairs = _btPairLegs(trades);
+    for (const row of pairs) {
+      const tr = document.createElement('tr');
+      if (row.type === 'pair') {
+        const c = row.call, p = row.put;
+        const totalPts = parseFloat(c.pnl_pts || 0) + parseFloat(p.pnl_pts || 0);
+        const totalRs  = parseFloat(c.pnl_rs  || 0) + parseFloat(p.pnl_rs  || 0);
+        const ptsCol   = totalPts >= 0 ? 'var(--success)' : 'var(--danger)';
+        tr.innerHTML =
+          '<td>' + (c.date || p.date || '—') + '</td>' +
+          '<td>' + _btTime(c.opened_at || c.time) + '</td>' +
+          '<td>' + _btTime(c.closed_at) + '</td>' +
+          '<td style="font-weight:700;color:var(--info)">'  + (c.strike || '—') + '</td>' +
+          '<td style="font-weight:700;color:var(--warn)">'  + (p.strike || '—') + '</td>' +
+          '<td>₹' + (c.entry_price || '—') + ' / ₹' + (p.entry_price || '—') + '</td>' +
+          '<td>₹' + (c.exit_price  || '—') + ' / ₹' + (p.exit_price  || '—') + '</td>' +
+          '<td style="font-weight:700;color:' + ptsCol + '">' + (totalPts >= 0 ? '+' : '') + totalPts.toFixed(2) + '</td>' +
+          '<td style="color:' + ptsCol + '">₹' + (totalRs >= 0 ? '+' : '') + totalRs.toFixed(2) + '</td>' +
+          '<td style="font-size:11px;color:var(--text-soft)">' + (c.reason || p.reason || '—') + '</td>';
+      } else {
+        const t = row.trade;
+        const pts = parseFloat(t.pnl_pts || 0), rs = parseFloat(t.pnl_rs || 0);
+        const ptsCol = pts >= 0 ? 'var(--success)' : 'var(--danger)';
+        const dir    = String(t.direction || t.type || '').toUpperCase();
+        const label  = dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir;
+        const dirCol = label === 'CE' ? 'var(--info)' : label === 'PE' ? 'var(--warn)' : 'var(--text)';
+        tr.innerHTML =
+          '<td>' + (t.date || '—') + '</td>' +
+          '<td>' + _btTime(t.opened_at || t.time) + '</td>' +
+          '<td>' + _btTime(t.closed_at) + '</td>' +
+          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'CE' ? t.strike : '—') + '</td>' +
+          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'PE' ? t.strike : '—') + '</td>' +
+          '<td>₹' + (t.entry_price || '—') + '</td>' +
+          '<td>₹' + (t.exit_price  || '—') + '</td>' +
+          '<td style="font-weight:700;color:' + ptsCol + '">' + (pts >= 0 ? '+' : '') + pts.toFixed(2) + '</td>' +
+          '<td style="color:' + ptsCol + '">₹' + (rs >= 0 ? '+' : '') + rs.toFixed(2) + '</td>' +
+          '<td style="font-size:11px;color:var(--text-soft)">' + (t.reason || '—') + '</td>';
+      }
+      tbody.appendChild(tr);
+    }
+    document.getElementById('bt-trade-wrap').style.display = '';
+  }
+}
+
 async function pollBacktest() {
   try {
     const jobSeg = _btJobId ? '/' + _btJobId : '/current';
     const d      = await api('GET', '/backtest/status' + jobSeg);
+
+    // Render live progress on every tick, not just on completion
+    _btRenderLive(d);
+
     if (d.running) return;
 
     clearInterval(btPollTimer);
     _btResetBtns();
+    // Remove the live indicator bar on completion
+    const indBar = document.getElementById('bt-live-ind');
+    if (indBar) indBar.remove();
 
     const trades  = d.trades  || [];
     const summary = d.summary || null;
@@ -3129,9 +3629,14 @@ async function pollBacktest() {
       return;
     }
 
-    document.getElementById('bt-status-msg').textContent =
-      'Backtest complete — ' + trades.length + ' trade leg' +
-      (trades.length !== 1 ? 's' : '') + ' simulated.';
+    // Final status message — _btRenderLive already rendered the trade table and indicators
+    const pnlFinal  = parseFloat((d.stats || {}).pnl || 0);
+    const pnlSign   = pnlFinal >= 0 ? '+' : '';
+    const pnlCol    = pnlFinal >= 0 ? 'var(--success)' : 'var(--danger)';
+    document.getElementById('bt-status-msg').innerHTML =
+      'Backtest complete &mdash; ' + trades.length + ' trade leg' +
+      (trades.length !== 1 ? 's' : '') + ' simulated. &nbsp; Final P&amp;L: ' +
+      '<strong style="color:' + pnlCol + '">' + pnlSign + pnlFinal.toFixed(1) + ' pts</strong>';
 
     // ── Summary cards ──
     if (summary) {
@@ -3153,53 +3658,10 @@ async function pollBacktest() {
       document.getElementById('bt-summary-cards').style.display = '';
     }
 
-    // ── Trade table: pair CE + PE legs ──
-    const tbody = document.getElementById('bt-trade-body');
-    tbody.innerHTML = '';
-    const pairs = _btPairLegs(trades);
-    for (const row of pairs) {
-      const tr = document.createElement('tr');
-      if (row.type === 'pair') {
-        const c = row.call, p = row.put;
-        const totalPts = parseFloat(c.pnl_pts || 0) + parseFloat(p.pnl_pts || 0);
-        const totalRs  = parseFloat(c.pnl_rs  || 0) + parseFloat(p.pnl_rs  || 0);
-        const ptsCol   = totalPts >= 0 ? 'var(--success)' : 'var(--danger)';
-        const cEntry   = _btTime(c.opened_at || c.time);
-        const cExit    = _btTime(c.closed_at);
-        tr.innerHTML =
-          '<td>' + (c.date || p.date || '—') + '</td>' +
-          '<td>' + cEntry + '</td>' +
-          '<td>' + cExit  + '</td>' +
-          '<td style="font-weight:700;color:var(--info)">' + (c.strike || '—') + '</td>' +
-          '<td style="font-weight:700;color:var(--warn)">' + (p.strike || '—') + '</td>' +
-          '<td>₹' + (c.entry_price || '—') + ' / ₹' + (p.entry_price || '—') + '</td>' +
-          '<td>₹' + (c.exit_price  || '—') + ' / ₹' + (p.exit_price  || '—') + '</td>' +
-          '<td style="font-weight:700;color:' + ptsCol + '">' + (totalPts >= 0 ? '+' : '') + totalPts.toFixed(2) + '</td>' +
-          '<td style="color:' + ptsCol + '">₹' + (totalRs >= 0 ? '+' : '') + totalRs.toFixed(2) + '</td>' +
-          '<td style="font-size:11px;color:var(--text-soft)">' + (c.reason || p.reason || '—') + '</td>';
-      } else {
-        const t      = row.trade;
-        const pts    = parseFloat(t.pnl_pts || 0);
-        const rs     = parseFloat(t.pnl_rs  || 0);
-        const ptsCol = pts >= 0 ? 'var(--success)' : 'var(--danger)';
-        const dir    = String(t.direction || t.type || '').toUpperCase();
-        const label  = dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir;
-        const dirCol = label === 'CE' ? 'var(--info)' : label === 'PE' ? 'var(--warn)' : 'var(--text)';
-        tr.innerHTML =
-          '<td>' + (t.date || '—') + '</td>' +
-          '<td>' + _btTime(t.opened_at || t.time) + '</td>' +
-          '<td>' + _btTime(t.closed_at) + '</td>' +
-          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'CE' ? t.strike : '—') + '</td>' +
-          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'PE' ? t.strike : '—') + '</td>' +
-          '<td>₹' + (t.entry_price || '—') + '</td>' +
-          '<td>₹' + (t.exit_price  || '—') + '</td>' +
-          '<td style="font-weight:700;color:' + ptsCol + '">' + (pts >= 0 ? '+' : '') + pts.toFixed(2) + '</td>' +
-          '<td style="color:' + ptsCol + '">₹' + (rs >= 0 ? '+' : '') + rs.toFixed(2) + '</td>' +
-          '<td style="font-size:11px;color:var(--text-soft)">' + (t.reason || '—') + '</td>';
-      }
-      tbody.appendChild(tr);
+    // Trade table already rendered by _btRenderLive(d) above; just ensure it's visible.
+    if (trades.length) {
+      document.getElementById('bt-trade-wrap').style.display = '';
     }
-    document.getElementById('bt-trade-wrap').style.display = '';
   } catch (e) { console.warn('backtest poll:', e); }
 }
 
@@ -3297,6 +3759,138 @@ function downloadBacktestCSV() {
   a.click();
 }
 
+// ═══════════════════════════════════════════════════════════ FEED STATUS
+async function pollFeedStatus() {
+  try {
+    const d = await api('GET', '/feed-status');
+    const feeds = d.feeds || {};
+    const providers = Object.keys(feeds);
+    if (!providers.length) return;
+    // Aggregate: best health among all providers
+    const healths = providers.map(p => feeds[p].health || 'red');
+    const best = healths.includes('green') ? 'green' : healths.includes('amber') ? 'amber' : 'red';
+    const colors = {green: '#34d399', amber: '#fb923c', red: '#ef4444'};
+    const dot = document.getElementById('mbar-feed-dot');
+    const lbl = document.getElementById('mbar-feed-lbl');
+    if (dot) dot.style.background = colors[best] || '#64748b';
+    if (lbl) {
+      const first = feeds[providers[0]];
+      const lagStr = first.lag_seconds != null ? `${first.lag_seconds}s` : '—';
+      lbl.style.color = colors[best] || 'var(--muted)';
+      lbl.textContent = best === 'green' ? `Live (${lagStr})` : best === 'amber' ? `Stale (${lagStr})` : 'Down';
+    }
+  } catch {}
+}
+
+// ══════════════════════════════════════════════ TRADING PARAMETERS (per-user)
+async function loadTradingParams() {
+  try {
+    const d = await api('GET', '/user/strategy');
+    const o = d.overrides || {};
+    if (o.ltp_target != null) document.getElementById('tp-ltp-target').value = o.ltp_target;
+    if (o.max_daily_trades != null) document.getElementById('tp-max-trades').value = o.max_daily_trades;
+    if (o.single_trade_sl_pts != null) document.getElementById('tp-sl-pts').value = o.single_trade_sl_pts;
+    if (o.single_trade_target_pts != null) document.getElementById('tp-target-pts').value = o.single_trade_target_pts;
+  } catch {}
+}
+
+async function saveTradingParams() {
+  const payload = {};
+  const ltpVal = parseFloat(document.getElementById('tp-ltp-target').value);
+  const maxVal = parseInt(document.getElementById('tp-max-trades').value);
+  const slVal  = parseFloat(document.getElementById('tp-sl-pts').value);
+  const tgtVal = parseFloat(document.getElementById('tp-target-pts').value);
+  if (!isNaN(ltpVal) && ltpVal > 0) payload.ltp_target = ltpVal;
+  if (!isNaN(maxVal) && maxVal > 0) payload.max_daily_trades = maxVal;
+  if (!isNaN(slVal)  && slVal  > 0) payload.single_trade_sl_pts = slVal;
+  if (!isNaN(tgtVal) && tgtVal > 0) payload.single_trade_target_pts = tgtVal;
+  const st = document.getElementById('tp-status');
+  try {
+    await api('POST', '/user/strategy', payload);
+    if (st) { st.style.color = 'var(--success)'; st.textContent = '✓ Saved — takes effect on next bot start.'; }
+  } catch(e) {
+    if (st) { st.style.color = 'var(--error)'; st.textContent = '✗ ' + (e.message || 'Save failed'); }
+  }
+}
+
+// ══════════════════════════════════════════════════════════ TRADE CALENDAR
+let _calYear = new Date().getFullYear();
+let _calMonth = new Date().getMonth() + 1;
+let _calData = {};
+
+function calNav(dir) {
+  _calMonth += dir;
+  if (_calMonth > 12) { _calMonth = 1; _calYear++; }
+  if (_calMonth < 1)  { _calMonth = 12; _calYear--; }
+  renderCalendar();
+}
+
+async function renderCalendar() {
+  const label = document.getElementById('cal-month-label');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (label) label.textContent = `${months[_calMonth-1]} ${_calYear}`;
+  document.getElementById('cal-day-detail').style.display = 'none';
+  try {
+    const d = await api('GET', `/trades/monthly-summary?year=${_calYear}&month=${_calMonth}`);
+    _calData = d.days || {};
+  } catch { _calData = {}; }
+  _drawCalGrid();
+}
+
+function _drawCalGrid() {
+  const grid = document.getElementById('cal-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  // First day of month (0=Sun…6=Sat), convert to Mon-based
+  const firstDay = new Date(_calYear, _calMonth - 1, 1).getDay();
+  const offset = (firstDay + 6) % 7; // Mon=0
+  const daysInMonth = new Date(_calYear, _calMonth, 0).getDate();
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Empty cells before 1st
+  for (let i = 0; i < offset; i++) {
+    grid.insertAdjacentHTML('beforeend', '<div></div>');
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${_calYear}-${String(_calMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const info = _calData[dateStr];
+    const isToday = dateStr === today;
+    let bg = 'var(--surface2)', color = 'var(--muted)', pnlHtml = '';
+    if (info) {
+      const pnl = parseFloat(info.pnl_rs || 0);
+      if (pnl > 0) { bg = 'rgba(52,211,153,.15)'; color = '#34d399'; }
+      else if (pnl < 0) { bg = 'rgba(248,113,113,.15)'; color = '#f87171'; }
+      else { bg = 'var(--surface2)'; color = 'var(--text-soft)'; }
+      pnlHtml = `<div style="font-size:10px;font-weight:700;color:${color};margin-top:2px">${pnl >= 0 ? '+' : ''}${Math.round(pnl)}</div><div style="font-size:9px;color:var(--muted)">${info.trades}T</div>`;
+    }
+    const border = isToday ? '1px solid var(--primary)' : '1px solid var(--border-soft)';
+    grid.insertAdjacentHTML('beforeend',
+      `<div onclick="showCalDay('${dateStr}')" style="border-radius:8px;padding:8px 4px;text-align:center;background:${bg};border:${border};cursor:${info ? 'pointer' : 'default'};min-height:56px">
+        <div style="font-size:12px;font-weight:${isToday ? '700' : '500'};color:${isToday ? 'var(--primary)' : 'var(--text)'}">${day}</div>
+        ${pnlHtml}
+      </div>`
+    );
+  }
+}
+
+function showCalDay(dateStr) {
+  const info = _calData[dateStr];
+  if (!info) return;
+  const detail = document.getElementById('cal-day-detail');
+  const title  = document.getElementById('cal-detail-title');
+  const body   = document.getElementById('cal-detail-body');
+  title.textContent = `${dateStr} — ${info.trades} trade(s)`;
+  const pnl = parseFloat(info.pnl_rs || 0);
+  const pts = parseFloat(info.pnl_pts || 0);
+  body.innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap">
+    <div><div style="font-size:11px;color:var(--muted)">PnL (₹)</div><div style="font-size:18px;font-weight:700;color:${pnl>=0?'#34d399':'#f87171'}">${pnl>=0?'+':''}₹${pnl.toFixed(0)}</div></div>
+    <div><div style="font-size:11px;color:var(--muted)">PnL (pts)</div><div style="font-size:18px;font-weight:700;color:${pts>=0?'#34d399':'#f87171'}">${pts>=0?'+':''}${pts.toFixed(1)}</div></div>
+    <div><div style="font-size:11px;color:var(--muted)">Trades</div><div style="font-size:18px;font-weight:700;color:var(--text)">${info.trades}</div></div>
+  </div>`;
+  detail.style.display = 'block';
+}
+
 // ═══════════════════════════════════════════════════════════════ INIT
 async function init() {
   // Load username + profile (static_ip needed for onboarding card)
@@ -3315,7 +3909,9 @@ async function init() {
 
   // Poll intervals
   setInterval(pollBotStatus, 8000);
-  setInterval(_pollBrokerStatus, 30000); // Refresh broker connection status every 30s
+  setInterval(_pollBrokerStatus, 30000);
+  setInterval(pollFeedStatus, 15000);
+  pollFeedStatus();
   setInterval(pollPositions, 2000);  // Fast 2s refresh for live P&L on Positions tab
   setInterval(loadMarketStatus, 60000);
   setInterval(tickClock, 1000);

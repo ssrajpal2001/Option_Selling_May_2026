@@ -105,12 +105,25 @@ class DhanWebSocketManager(DataFeed):
         while self._running:
             try:
                 logger.info(f"[Global Dhan] Connecting to Dhan Market Feed (v2)...")
-                self.feed = _DhanFeedCls(
-                    client_id=self.client_id,
-                    access_token=self.access_token,
-                    instruments=[],
-                    version='v2'
-                )
+                try:
+                    from dhanhq import DhanContext
+                except ImportError:
+                    DhanContext = None
+
+                if DhanContext:
+                    ctx = DhanContext(self.client_id, self.access_token)
+                    self.feed = _DhanFeedCls(
+                        dhan_context=ctx,
+                        instruments=[],
+                        version='v2'
+                    )
+                else:
+                    self.feed = _DhanFeedCls(
+                        client_id=self.client_id,
+                        access_token=self.access_token,
+                        instruments=[],
+                        version='v2'
+                    )
 
                 await self.feed.connect()
                 logger.info(f"[Global Dhan] Connection established successfully.")
@@ -233,9 +246,13 @@ class DhanWebSocketManager(DataFeed):
         self.access_token = access_token
         if api_key:
             self.client_id = api_key
+        self._disabled = False  # clear disabled flag so start() works after a failed init
         logger.info("[DhanWebSocketManager] Credentials refreshed. Triggering reconnect...")
         if self.feed:
             asyncio.create_task(self._close_for_reconnect())
+        elif not self._task or self._task.done():
+            # Task never ran (disabled at startup) or died — restart it fresh
+            self._task = asyncio.create_task(self.connect_and_listen())
 
     async def _close_for_reconnect(self):
         """Close the current WS connection so the reconnect loop re-establishes with new creds."""

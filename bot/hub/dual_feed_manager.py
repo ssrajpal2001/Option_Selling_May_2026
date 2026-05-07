@@ -1,9 +1,12 @@
 import asyncio
 import time
 import datetime
+import pytz
 from utils.logger import logger
 from hub.data_feed_base import DataFeed
 from hub.event_bus import event_bus
+
+_KOLKATA = pytz.timezone('Asia/Kolkata')
 
 # How long (seconds) a feed can be silent before the watchdog considers it stale
 _STALE_THRESHOLD_SECS = 60
@@ -36,6 +39,7 @@ class DualFeedManager(DataFeed):
 
         # Watchdog task handle
         self._watchdog_task = None
+        self._start_time = time.time()
 
     # ──────────────────────────────────────────────────────────────────────────
     # Handler registration
@@ -75,16 +79,21 @@ class DualFeedManager(DataFeed):
             'instrument_key': inst_key,
             'ltp': float(ltp),
             'volume': int(data.get('volume') or data.get('vtt') or 0),
-            'timestamp': datetime.datetime.now(),
+            'timestamp': datetime.datetime.now(_KOLKATA),
             'broker': 'dhan_redundant'
         }
 
         if 'OI' in data or 'oi' in data:
             tick['oi'] = int(data.get('OI') or data.get('oi'))
-        if 'atp' in data or 'avg_price' in data:
-            tick['atp'] = float(data.get('atp') or data.get('avg_price'))
+        atp_raw = data.get('atp') or data.get('avg_price') or data.get('average_price')
+        if atp_raw:
+            tick['atp'] = float(atp_raw)
 
         logger.debug(f"DualFeedManager dispatching global Dhan tick for {inst_key}: LTP={ltp}")
+        # One-time raw dict dump for NIFTY to verify Dhan field names/structure
+        if sid == '13' and not getattr(self, '_dhan_nifty_logged', False):
+            self._dhan_nifty_logged = True
+            logger.info(f"[DualFeed] Dhan NIFTY first tick raw: {dict(list(data.items())[:15])}")
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)
 
     # ──────────────────────────────────────────────────────────────────────────
@@ -203,11 +212,16 @@ class DualFeedManager(DataFeed):
                 for name, feed in (('upstox', self.upstox), ('dhan', self.dhan)):
                     if feed is None:
                         continue
+
+                    # 2-minute startup grace — don't evaluate staleness before feeds have time to connect
+                    if (now - self._start_time) < 120:
+                        continue
+
                     last = getattr(feed, '_last_tick_epoch', None)
                     is_conn = getattr(feed, 'is_connected', False)
 
-                    if last is None:
-                        # Feed never ticked — just log, might still be connecting
+                    # Treat 0.0 (default epoch) same as None — feed has never ticked
+                    if last is None or last == 0.0:
                         if not is_conn:
                             logger.info(f"[DualFeedWatchdog] {name}: not yet connected.")
                         continue
@@ -236,6 +250,24 @@ class DualFeedManager(DataFeed):
             logger.debug(f"[DualFeedWatchdog] {name} is disabled — skipping reconnect.")
             return
         try:
+            # Refresh Upstox token from DB before reconnecting to avoid 401 loops
+            if name == 'upstox' and hasattr(feed, 'refresh_credentials'):
+                try:
+                    from web.db import db_fetchone
+                    from web.auth import decrypt_secret
+                    row = db_fetchone(
+                        "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
+                        ()
+                    )
+                    if row and row[0]:
+                        fresh_token = decrypt_secret(row[0])
+                        if fresh_token:
+                            feed.refresh_credentials(fresh_token)
+                            logger.info("[DualFeedWatchdog] upstox token refreshed from DB before reconnect.")
+                            return  # refresh_credentials already calls _force_reconnect internally
+                except Exception as _tok_err:
+                    logger.warning(f"[DualFeedWatchdog] Could not refresh upstox token: {_tok_err}")
+
             # Force-close the existing connection so the feed's own reconnect loop
             # re-runs _get_auth_uri and reconnects with current credentials.
             if hasattr(feed, '_force_reconnect'):

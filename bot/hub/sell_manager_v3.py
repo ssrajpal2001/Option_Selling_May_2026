@@ -213,7 +213,7 @@ class SellManagerV3:
         logger.info(f"╠══════════════════════════════════════════════════════════════════════╣")
 
         # 1. Timing & Sizing
-        st = self._v3_cfg('start_time', '09:20:00')
+        st = self._v3_cfg('start_time', '09:15:00')
         et = self._v3_cfg('entry_end_time', '14:00:00')
         ct = self._v3_cfg('close_time', '15:20:00')
         ltp_tgt = self._v3_cfg('ltp_target')
@@ -558,8 +558,11 @@ class SellManagerV3:
 
         tasks = []
         for broker in self.orchestrator.broker_manager.brokers.values():
-            if not broker.is_configured_for_instrument(self.instrument_name): continue
-            qty_mult = broker.config_manager.get_int(broker.instance_name, 'quantity', 1)
+            if not broker.is_configured_for_instrument(self.instrument_name):
+                logger.warning(f"[SellManagerV3] Broker '{broker.instance_name}' skipped — not configured for {self.instrument_name}. Configured: {broker.instruments}")
+                continue
+            qty_mult = getattr(broker, 'quantity', None) or broker.config_manager.get_int(broker.instance_name, 'quantity', 1)
+            logger.info(f"[SellManagerV3] Queuing {broker.instance_name} orders: qty_mult={qty_mult}, lot_size={ce_contract.lot_size}, total_qty={qty_mult * ce_contract.lot_size}")
             tasks.append(self._place_order_on_broker(broker, ce_contract, 'SELL', qty_mult * ce_contract.lot_size, expiry, product_type))
             tasks.append(self._place_order_on_broker(broker, pe_contract, 'SELL', qty_mult * pe_contract.lot_size, expiry, product_type))
 
@@ -567,11 +570,14 @@ class SellManagerV3:
         if tasks:
             results = await asyncio.gather(*tasks)
 
-        # In Live Mode, if all orders failed, DO NOT mark the trade as active.
-        if not self.orchestrator.is_backtest and tasks:
+        # In Live Mode, abort if no brokers are configured or all orders failed.
+        if not self.orchestrator.is_backtest:
+            if not tasks:
+                logger.error(f"[SellManagerV3] ABORTING ENTRY: No brokers configured for instrument '{self.instrument_name}'. Verify broker configuration in Admin → Clients.")
+                return
             success_count = len([r for r in results if r is not None])
             if success_count == 0:
-                logger.error(f"[SellManagerV3] ABORTING ENTRY: All broker orders failed. Check API configuration/logs.")
+                logger.error(f"[SellManagerV3] ABORTING ENTRY: All broker orders failed. Check broker API token/connection logs.")
                 return
 
         # Record anchor price
@@ -659,7 +665,7 @@ class SellManagerV3:
 
         try:
             ref_broker = next(iter(self.orchestrator.broker_manager.brokers.values()), None)
-            mult = ref_broker.config_manager.get_int(ref_broker.instance_name, 'quantity', 1) if ref_broker else 1
+            mult = (getattr(ref_broker, 'quantity', None) or ref_broker.config_manager.get_int(ref_broker.instance_name, 'quantity', 1)) if ref_broker else 1
         except: mult = 1
 
         total_pnl = 0.0
@@ -683,7 +689,8 @@ class SellManagerV3:
 
             for broker in self.orchestrator.broker_manager.brokers.values():
                 if broker.is_configured_for_instrument(self.instrument_name):
-                    qty = broker.config_manager.get_int(broker.instance_name, 'quantity', 1) * trade['lot_size']
+                    qty_mult = getattr(broker, 'quantity', None) or broker.config_manager.get_int(broker.instance_name, 'quantity', 1)
+                    qty = qty_mult * trade['lot_size']
                     tasks.append(self._place_order_on_broker(broker, trade['contract'], 'BUY', qty, expiry, product_type))
 
             exit_price = self.orchestrator.state_manager.option_prices.get(trade['key']) or trade['entry_price']
@@ -809,6 +816,8 @@ class SellManagerV3:
         and respects the unified BaseBroker interface.
         """
         if self.orchestrator.is_backtest or getattr(broker, 'paper_trade', False):
+            mode = "BACKTEST" if self.orchestrator.is_backtest else "PAPER"
+            logger.info(f"[{broker.instance_name}] {mode} order simulated: {trans_type} {qty} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={getattr(broker, 'user_id', '?')}")
             return "BACKTEST_ORDER_ID"
 
         try:

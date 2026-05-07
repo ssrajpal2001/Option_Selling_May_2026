@@ -23,17 +23,24 @@ class EngineManager:
         instrument_name = instrument_name.upper().strip()
         symbol = self.config_manager.get(instrument_name, 'instrument_symbol')
 
-        # If no symbol in INI, use universal fallbacks
-        if not symbol:
-            fallbacks = {
-                'NIFTY': 'NSE_INDEX|Nifty 50',
-                'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
-                'FINNIFTY': 'NSE_INDEX|Nifty Fin Service',
-                'SENSEX': 'BSE_INDEX|SENSEX',
-                'MIDCAP': 'NSE_INDEX|NIFTY MID SELECT',
-                'CRUDEOIL': 'MCX_INDEX|CRUDE OIL',
-                'NATURALGAS': 'MCX_INDEX|NATURAL GAS'
-            }
+        # ALWAYS apply universal name mapping to convert bare names (e.g., 'NIFTY')
+        # to proper Upstox format (e.g., 'NSE_INDEX|Nifty 50'). This ensures DataManager
+        # is initialized with the correctly mapped key, not the raw config value.
+        # This applies both when symbol is empty AND when it's a bare name from config.
+        fallbacks = {
+            'NIFTY': 'NSE_INDEX|Nifty 50',
+            'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
+            'FINNIFTY': 'NSE_INDEX|Nifty Fin Service',
+            'SENSEX': 'BSE_INDEX|SENSEX',
+            'MIDCAP': 'NSE_INDEX|NIFTY MID SELECT',
+            'CRUDEOIL': 'MCX_INDEX|CRUDE OIL',
+            'NATURALGAS': 'MCX_INDEX|NATURAL GAS'
+        }
+        # If symbol is a bare name (in the fallbacks map), map it; otherwise use as-is
+        if symbol:
+            symbol = fallbacks.get(symbol.upper(), symbol)
+        else:
+            # If no symbol in INI, use instrument_name as key for fallback
             symbol = fallbacks.get(instrument_name, 'NSE_INDEX|Nifty 50')
 
         # Broker-Specific Overrides for Backtests or direct SDK calls (optional)
@@ -165,6 +172,8 @@ class EngineManager:
 
         # Track which orchestrators have had candidates built (avoid repeat calls)
         _sell_candidates_built = set()
+        _init_retry_count = 0
+        _init_max_wait = 120  # seconds
 
         while True:
             now_dt = datetime.datetime.now()
@@ -217,9 +226,18 @@ class EngineManager:
                         for orch in self.orchestrators.values(): subs.extend(orch.get_initial_subscriptions())
                         if ws_mgr and subs: ws_mgr.subscribe(list(set(subs)))
                         is_initialized = True
+                        _init_retry_count = 0
                         logger.info(f"[EngineManager] Bot initialized successfully. Waiting for trading window ({start_time}).")
                     except Exception as e:
-                        logger.error(f"Init error: {e}"); await asyncio.sleep(10); continue
+                        _init_retry_count += 1
+                        # Exponential backoff: 5s, 10s, 20s, 40s … capped at _init_max_wait
+                        wait = min(5 * (2 ** (_init_retry_count - 1)), _init_max_wait)
+                        logger.error(
+                            f"[EngineManager] Init error (attempt {_init_retry_count}): {e}. "
+                            f"Retrying in {wait}s. "
+                            "If this is a token error, refresh the global Upstox/Dhan token via Admin → Data Providers."
+                        )
+                        await asyncio.sleep(wait); continue
 
                 # 2. Trading Logic Gating
                 if is_initialized and not is_trading_active and now >= start_time:

@@ -21,8 +21,11 @@ import asyncio
 import json
 import time
 import datetime
+import pytz
 
 from utils.logger import logger
+
+_KOLKATA = pytz.timezone('Asia/Kolkata')
 from hub.data_feed_base import DataFeed
 
 _HOST = '127.0.0.1'
@@ -115,6 +118,16 @@ class FeedClient(DataFeed):
             return
         if self._connected and self._writer:
             self._write_cmd({'cmd': 'subscribe', 'instruments': symbols, 'mode': mode})
+            logger.info(
+                f"[FeedClient] Subscription sent to FeedServer: {len(symbols)} instruments "
+                f"(mode={mode}). Keys: {symbols[:3]}{'...' if len(symbols) > 3 else ''}"
+            )
+        else:
+            logger.info(
+                f"[FeedClient] Subscription QUEUED (not yet connected): {len(symbols)} instruments. "
+                f"Keys: {symbols[:3]}{'...' if len(symbols) > 3 else ''}. "
+                "Will be sent automatically on connect."
+            )
 
     def unsubscribe(self, symbols) -> None:
         for s in symbols:
@@ -128,6 +141,7 @@ class FeedClient(DataFeed):
 
     def start(self) -> asyncio.Task:
         """Begin the connection/read loop. Returns the background Task."""
+        logger.info("[FeedClient] start() called — creating _connection_loop task.")
         self._read_task = asyncio.create_task(self._connection_loop())
         return self._read_task
 
@@ -231,6 +245,10 @@ class FeedClient(DataFeed):
 
     async def _read_loop(self) -> None:
         """Read JSON lines from FeedServer and dispatch normalized ticks."""
+        logger.info(
+            f"[FeedClient] _read_loop ENTERED. connected={self._connected} "
+            f"reader_present={self._reader is not None}"
+        )
         while self._connected and self._reader:
             try:
                 line = await asyncio.wait_for(self._reader.readline(), timeout=_IDLE_TIMEOUT)
@@ -257,6 +275,13 @@ class FeedClient(DataFeed):
             msg_type = msg.get('type')
             if msg_type == 'tick':
                 self._last_tick_epoch = time.time()
+                self._rx_count = getattr(self, '_rx_count', 0) + 1
+                if self._rx_count == 1:
+                    logger.info(
+                        f"[FeedClient] RX first tick: "
+                        f"{msg.get('instrument_key')} @ {msg.get('ltp')} "
+                        f"(subscribed={len(self._subscribed_symbols)})"
+                    )
                 await self._dispatch_tick(msg)
             elif msg_type in ('pong', 'keepalive', 'feed_status'):
                 pass
@@ -279,9 +304,12 @@ class FeedClient(DataFeed):
             'user_id': 'GLOBAL',
             'instrument_key': key,
             'ltp': float(ltp),
-            'timestamp': datetime.datetime.now(),
+            'timestamp': datetime.datetime.now(_KOLKATA),
             'broker': msg.get('source', 'feed_server'),
         }
+        atp = msg.get('atp')
+        if atp:
+            tick['atp'] = float(atp)
 
         from hub.event_bus import event_bus
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)

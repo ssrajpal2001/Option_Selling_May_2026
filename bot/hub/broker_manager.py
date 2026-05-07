@@ -60,6 +60,7 @@ class BrokerManager:
             'static_ip': client_cfg.static_ip or None,   # Elastic IP for source-IP binding
             'broker_settings': {
                 'instruments_to_trade': client_cfg.instrument,
+                'quantity': client_cfg.quantity,
             },
         }
 
@@ -236,73 +237,98 @@ class BrokerManager:
         """
         Commercial Route: Sends the trade request only to the brokers belonging to the specific user.
         """
-        instrument_name = trade_data.get("instrument_name")
+        raw_instrument_name = trade_data.get("instrument_name")
         target_user_id = trade_data.get("user_id")
 
-        if not instrument_name:
+        if not raw_instrument_name:
             logger.error(f"Trade request is missing 'instrument_name'. Cannot route.")
             return
 
-        logger.debug(f"BrokerManager routing {instrument_name} signal for user_id={target_user_id}")
+        # Use normalized name for routing checks to ensure "NIFTY 50" matches "NIFTY" config
+        from brokers.base_broker import BaseBroker
+        # Temporary instance for normalization if needed, or just use the static mapping
+        # Actually, let's just use the shared mapping directly if possible or a helper.
+        # BaseBroker is an ABC, but we can call the helper if it was static.
+        # Since it's an instance method, let's just do a quick normalization here.
+        from brokers.base_broker import _INSTRUMENT_NAME_MAP
+        instrument_name = _INSTRUMENT_NAME_MAP.get(raw_instrument_name.upper(), raw_instrument_name.upper())
 
+        logger.info(f"BrokerManager routing {instrument_name} signal for user_id={target_user_id}")
+
+        tasks = []
         for broker in self.brokers.values():
             # Check if this broker instance belongs to the target user
             # and if it is configured for this instrument
             is_user_match = (target_user_id is None) or (broker.user_id == target_user_id)
 
-            if is_user_match and broker.is_configured_for_instrument(instrument_name):
-                try:
-                    logger.info(f"Executing trade on broker '{broker.instance_name}' (User: {broker.user_id})")
-                    await broker.handle_entry_signal(**trade_data)
-                except Exception as e:
-                    logger.error(f"Error executing trade on {broker.instance_name}: {e}", exc_info=True)
+            if is_user_match and broker.is_configured_for_instrument(raw_instrument_name):
+                logger.info(f"Routing trade to broker '{broker.instance_name}' (User: {broker.user_id})")
+                tasks.append(broker.handle_entry_signal(**trade_data))
+            else:
+                if is_user_match:
+                    logger.debug(f"Broker '{broker.instance_name}' NOT configured for {instrument_name}. Configured: {broker.instruments}")
+
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for i, res in enumerate(results):
+                if isinstance(res, Exception):
+                    logger.error(f"Error executing trade on a broker: {res}", exc_info=True)
 
     async def handle_exit_request(self, exit_data):
         """
         Commercial Route: Sends the exit request only to the brokers belonging to the specific user.
         """
-        instrument_name = exit_data.get("instrument_name")
+        raw_instrument_name = exit_data.get("instrument_name")
         target_user_id = exit_data.get("user_id")
 
-        if not instrument_name:
+        if not raw_instrument_name:
             logger.error(f"Exit request is missing 'instrument_name'. Cannot route.")
             return
 
-        logger.debug(f"BrokerManager routing exit signal for user_id={target_user_id}")
+        from brokers.base_broker import _INSTRUMENT_NAME_MAP
+        instrument_name = _INSTRUMENT_NAME_MAP.get(raw_instrument_name.upper(), raw_instrument_name.upper())
 
+        logger.info(f"BrokerManager routing exit signal for {instrument_name} for user_id={target_user_id}")
+
+        tasks = []
         for broker in self.brokers.values():
             is_user_match = (target_user_id is None) or (broker.user_id == target_user_id)
 
-            if is_user_match and broker.is_configured_for_instrument(instrument_name):
-                try:
-                    logger.info(f"Executing exit on broker '{broker.instance_name}' (User: {broker.user_id})")
-                    await broker.handle_close_signal(**exit_data)
-                except Exception as e:
-                    logger.error(f"Error executing exit on {broker.instance_name}: {e}", exc_info=True)
+            if is_user_match and broker.is_configured_for_instrument(raw_instrument_name):
+                logger.info(f"Routing exit to broker '{broker.instance_name}' (User: {broker.user_id})")
+                tasks.append(broker.handle_close_signal(**exit_data))
 
-    def broadcast_entry_signal(self, **kwargs):
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def broadcast_entry_signal(self, **kwargs):
         """Helper to initiate an entry signal to all brokers."""
         logger.info(f"DIAGNOSTIC: Broadcasting entry signal with data: {kwargs}")
         if not self.brokers:
             logger.error("DIAGNOSTIC: No brokers loaded. Cannot broadcast entry signal.")
             return
 
+        tasks = []
         for broker in self.brokers.values():
-            try:
-                logger.info(f"DIAGNOSTIC: Calling handle_entry_signal for broker '{broker.instance_name}'...")
-                broker.handle_entry_signal(**kwargs)
-                logger.info(f"DIAGNOSTIC: Call to handle_entry_signal for broker '{broker.instance_name}' complete.")
-            except Exception as e:
-                logger.error(f"DIAGNOSTIC: Error broadcasting entry signal to broker '{broker.instance_name}': {e}", exc_info=True)
+            logger.info(f"DIAGNOSTIC: Queueing handle_entry_signal for broker '{broker.instance_name}'...")
+            tasks.append(broker.handle_entry_signal(**kwargs))
 
-    def broadcast_close_signal(self, **kwargs):
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for i, res in enumerate(results):
+                if isinstance(res, Exception):
+                    b_name = list(self.brokers.keys())[i]
+                    logger.error(f"DIAGNOSTIC: Error broadcasting entry signal to broker '{b_name}': {res}")
+
+    async def broadcast_close_signal(self, **kwargs):
         """Helper to initiate a close signal to all brokers."""
         logger.info(f"Broadcasting close signal with data: {kwargs}")
+        tasks = []
         for broker in self.brokers.values():
-            try:
-                broker.handle_close_signal(**kwargs)
-            except Exception as e:
-                logger.error(f"Error broadcasting close signal to broker '{broker.instance_name}': {e}", exc_info=True)
+            tasks.append(broker.handle_close_signal(**kwargs))
+
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     async def close_all_positions(self):
         """

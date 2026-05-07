@@ -237,6 +237,7 @@ class BaseBroker(ABC):
             settings = self.db_config.get('broker_settings', {})
             instruments_str = settings.get('instruments_to_trade', '')
             self.instruments = {i.strip().upper() for i in instruments_str.split(',') if i.strip()}
+            self.quantity = int(settings.get('quantity', 1))
             self.api_key = self.db_config.get('api_key')
             self.api_secret = self.db_config.get('api_secret')
             self.source_ip = self.db_config.get('static_ip') or None
@@ -245,6 +246,7 @@ class BaseBroker(ABC):
             self.paper_trade = str(self.mode).lower() == 'paper'
             instruments_str = self.config_manager.get(self.instance_name, 'instruments_to_trade', fallback='')
             self.instruments = {i.strip().upper() for i in instruments_str.split(',') if i.strip()}
+            self.quantity = self.config_manager.get_int(self.instance_name, 'quantity', fallback=1)
             self.source_ip = None
 
     def _install_source_ip_adapter(self, session):
@@ -436,8 +438,14 @@ class BaseBroker(ABC):
             yield
 
     def is_configured_for_instrument(self, instrument_name):
-        """Checks if this broker instance is configured to trade the given instrument."""
-        return instrument_name.upper() in self.instruments
+        """Checks if this broker instance is configured to trade the given instrument.
+        Uses normalized names to handle "NIFTY 50" vs "NIFTY" variations.
+        """
+        norm_input = self._normalize_instrument_name(instrument_name)
+        for config_inst in self.instruments:
+            if self._normalize_instrument_name(config_inst) == norm_input:
+                return True
+        return False
 
     def set_state_manager(self, state_manager):
         """Receives the shared StateManager instance."""

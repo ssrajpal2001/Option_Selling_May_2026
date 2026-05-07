@@ -87,6 +87,130 @@ class WebSocketManager(DataFeed):
                     return uri
 
                 except Exception as e:
+                    # On 401, try to reload a fresher token from DB before retrying.
+                    if "401" in str(e) and not active_client and hasattr(self, 'access_token'):
+                        # FeedServer path: no api_client — reload directly from DB into self.access_token.
+                        # Always re-query both tables on every 401: an identical token string may still be
+                        # expired (Upstox tokens expire ~45 min after issue, not just when the value changes).
+                        try:
+                            from web.db import db_fetchone, db_execute
+                            from web.auth import decrypt_secret, encrypt_secret
+                            fresh = None
+                            _best_updated = ''
+
+                            # 1. Try data_providers first
+                            row = db_fetchone(
+                                "SELECT access_token_encrypted, updated_at FROM data_providers WHERE provider='upstox'",
+                                ()
+                            )
+                            if row and row[0]:
+                                candidate = decrypt_secret(row[0])
+                                if candidate:
+                                    fresh = candidate
+                                    _best_updated = row.get('updated_at', '') or ''
+                                    logger.info("[WSManager] 401 (FeedServer) — candidate token from data_providers.")
+
+                            # 2. Check client_broker_instances — may have a MORE RECENT token
+                            #    (ReconnectManager saves here before data_providers is updated)
+                            try:
+                                row2 = db_fetchone(
+                                    "SELECT access_token_encrypted, updated_at FROM client_broker_instances "
+                                    "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                                    "ORDER BY updated_at DESC LIMIT 1",
+                                    ()
+                                )
+                                if row2 and row2[0]:
+                                    candidate2 = decrypt_secret(row2[0])
+                                    _inst_updated = row2.get('updated_at', '') or ''
+                                    if candidate2 and _inst_updated > _best_updated:
+                                        fresh = candidate2
+                                        # Propagate back to data_providers so all paths stay in sync
+                                        try:
+                                            db_execute(
+                                                "UPDATE data_providers SET access_token_encrypted=? WHERE provider='upstox'",
+                                                (encrypt_secret(fresh),)
+                                            )
+                                        except Exception:
+                                            pass
+                                        logger.info(
+                                            f"[WSManager] 401 (FeedServer) — fresher token from client_broker_instances "
+                                            f"(updated {_inst_updated}) propagated to data_providers."
+                                        )
+                            except Exception:
+                                pass
+
+                            if fresh:
+                                self.access_token = fresh
+                            else:
+                                logger.warning(
+                                    "[WSManager] 401 on auth (FeedServer) — no token found in DB. "
+                                    "Go to Admin → Data Providers → Upstox and click 'Connect Now'."
+                                )
+                        except Exception as _db_err:
+                            logger.debug(f"[WSManager] Could not reload token from DB: {_db_err}")
+
+                    if "401" in str(e) and active_client and hasattr(active_client, 'auth_handler'):
+                        try:
+                            from web.db import db_fetchone
+                            from web.auth import decrypt_secret
+                            current_tok = active_client.auth_handler.get_access_token()
+                            fresh = None
+
+                            # 1. Try data_providers (global feed token — admin-managed)
+                            row = db_fetchone(
+                                "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
+                                ()
+                            )
+                            if row and row[0]:
+                                candidate = decrypt_secret(row[0])
+                                if candidate and candidate != current_tok:
+                                    fresh = candidate
+
+                            # 2. Fallback: try any Upstox broker instance token (covers the case
+                            #    where the Upstox broker auto-logged-in but data_providers is stale
+                            #    and only a non-Upstox broker bot is running today).
+                            if not fresh:
+                                row2 = db_fetchone(
+                                    "SELECT access_token_encrypted FROM client_broker_instances "
+                                    "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                                    "ORDER BY updated_at DESC LIMIT 1",
+                                    ()
+                                )
+                                if row2 and row2[0]:
+                                    candidate = decrypt_secret(row2[0])
+                                    if candidate and candidate != current_tok:
+                                        fresh = candidate
+                                        # Propagate to data_providers so next attempt uses it
+                                        try:
+                                            from web.db import db_execute
+                                            from web.auth import encrypt_secret
+                                            db_execute(
+                                                "UPDATE data_providers SET access_token_encrypted=? WHERE provider='upstox'",
+                                                (encrypt_secret(fresh),)
+                                            )
+                                        except Exception:
+                                            pass
+
+                            if fresh:
+                                # Update whichever attribute the auth_handler actually uses:
+                                # AuthHandler (auth_manager.py) uses .access_token;
+                                # inline handlers in upstox_client.py / provider_factory.py use .token
+                                _ah = active_client.auth_handler
+                                if hasattr(_ah, 'access_token'):
+                                    _ah.access_token = fresh
+                                elif hasattr(_ah, 'token'):
+                                    _ah.token = fresh
+                                elif hasattr(_ah, '_token'):
+                                    _ah._token = fresh
+                                logger.info("[WSManager] 401 on auth — reloaded fresh token from DB into auth_handler.")
+                            else:
+                                logger.warning(
+                                    "[WSManager] 401 on auth — no fresher token found in DB. "
+                                    "Go to Admin → Data Providers → Upstox and enter today's access token."
+                                )
+                        except Exception as _db_err:
+                            logger.debug(f"[WSManager] Could not reload token from DB: {_db_err}")
+
                     if attempt == max_retries - 1:
                         logger.error(f"Failed to authorize WebSocket feed after {max_retries} attempts: {e}", exc_info=True)
                         raise
@@ -216,7 +340,14 @@ class WebSocketManager(DataFeed):
                 if qsize > 500 or silence_duration > 60:
                     logger.info(f"WS WATCHDOG: Silence: {silence_duration:.1f}s | Queue: {qsize} | Handlers: {len(self.message_handlers)}")
 
-                if silence_duration > 90:
+                # During pre-market hours (before 09:15 IST) exchanges don't stream ticks,
+                # so silence is expected.  Use a longer threshold to avoid needless reconnects.
+                import datetime as _dt, pytz as _ptz
+                _now_ist = _dt.datetime.now(_ptz.timezone('Asia/Kolkata'))
+                _market_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
+                _stale_threshold = 300 if _now_ist < _market_open else 90
+
+                if silence_duration > _stale_threshold:
                     logger.error(f"WATCHDOG: Proactive detection of WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
                     if self.websocket:
                         # Closing the websocket will trigger an exception in the listener loop
@@ -280,19 +411,26 @@ class WebSocketManager(DataFeed):
             except asyncio.TimeoutError:
                 if not self.is_connected or websocket is None: break
 
-                # WATCHDOG: If no message for 90 seconds, force a reconnect
-                # Market data should be flowing at least every few seconds.
+                # WATCHDOG: Force reconnect on prolonged silence only if ping also fails.
+                # Strategy: send a WebSocket ping every 30s when no data arrives.
+                # If ping succeeds → market is just quiet, reset silence timer so the
+                # watchdog doesn't trigger (NIFTY can be flat for 60-120s during lunch).
+                # If ping fails → genuine connection drop, reconnect immediately.
                 silence_duration = asyncio.get_event_loop().time() - self._last_message_time
-                if silence_duration > 90:
-                    logger.error(f"WATCHDOG: WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
-                    break
+                import datetime as _dt2, pytz as _ptz2
+                _now2 = _dt2.datetime.now(_ptz2.timezone('Asia/Kolkata'))
+                _stale2 = 300 if _now2 < _now2.replace(hour=9, minute=15, second=0, microsecond=0) else 90
 
-                logger.warning("No WebSocket data for 30s, sending ping...")
+                logger.warning(f"No WebSocket data for 30s (silence={silence_duration:.0f}s), sending ping...")
                 try:
                     pong = await websocket.ping()
                     await asyncio.wait_for(pong, timeout=10.0)
+                    # Ping succeeded — connection is alive, market is just quiet.
+                    # Reset silence timer so the watchdog doesn't fire unnecessarily.
+                    self._last_message_time = asyncio.get_event_loop().time()
+                    logger.info("WebSocket ping OK — connection alive, market quiet.")
                 except Exception:
-                    logger.error("WebSocket ping failed, reconnecting...")
+                    logger.error(f"WebSocket ping FAILED after {silence_duration:.0f}s silence. Forcing reconnect.")
                     break
             except (websockets.ConnectionClosed, AttributeError):
                 # Re-raise to be handled by the outer connection loop
@@ -442,6 +580,10 @@ class WebSocketManager(DataFeed):
         await self.websocket.send(json.dumps(data).encode('utf-8'))
 
     def subscribe(self, symbols, mode='full'):
+        # Drop None/empty keys — Upstox rejects the entire batch if any key is invalid.
+        symbols = [s for s in (symbols or []) if s]
+        if not symbols:
+            return
         new_subscriptions_by_mode = {}
         for symbol in symbols:
             if symbol not in self.subscriptions:
@@ -450,14 +592,25 @@ class WebSocketManager(DataFeed):
                     new_subscriptions_by_mode[mode] = []
                 new_subscriptions_by_mode[mode].append(symbol)
 
-        if new_subscriptions_by_mode and self.is_connected:
-            for sub_mode, sub_symbols in new_subscriptions_by_mode.items():
-                asyncio.create_task(self._send_specific_subscription_request(sub_symbols, sub_mode))
+        if new_subscriptions_by_mode:
+            logger.info(
+                f"[WSManager] Subscribe request: {len(sum(new_subscriptions_by_mode.values(), []))} new symbols "
+                f"(mode={mode}). Sample: {list(sum(new_subscriptions_by_mode.values(), []))[:3]}. "
+                f"WS connected={self.is_connected}, total subscriptions={len(self.subscriptions)}"
+            )
+            if self.is_connected:
+                for sub_mode, sub_symbols in new_subscriptions_by_mode.items():
+                    asyncio.create_task(self._send_specific_subscription_request(sub_symbols, sub_mode))
 
     async def _send_specific_subscription_request(self, symbols, mode):
         if not self.is_connected or not self.websocket:
             logger.warning("Cannot subscribe, WebSocket is not connected.")
             return
+
+        logger.info(
+            f"[WSManager] Sending subscription to Upstox: {len(symbols)} symbols (mode={mode}). "
+            f"Keys: {symbols[:3]}{'...' if len(symbols) > 3 else ''}"
+        )
 
         data = {
             "guid": "guid-2",
@@ -467,7 +620,11 @@ class WebSocketManager(DataFeed):
                 "instrumentKeys": symbols
             }
         }
-        await self.websocket.send(json.dumps(data).encode('utf-8'))
+        try:
+            await self.websocket.send(json.dumps(data).encode('utf-8'))
+            logger.debug(f"[WSManager] Subscription message sent successfully for {len(symbols)} symbols.")
+        except Exception as _sub_err:
+            logger.error(f"[WSManager] Failed to send subscription message: {_sub_err}")
 
     def unsubscribe(self, symbols):
         unsubscribed = False
@@ -523,9 +680,15 @@ class WebSocketManager(DataFeed):
         if self.api_client_manager and hasattr(self.api_client_manager, 'set_access_token'):
             self.api_client_manager.set_access_token(access_token)
             logger.info("[WebSocketManager] Upstox api_client_manager token updated.")
-        # Force reconnect by closing the current connection so auth re-runs with new token
+        # Force reconnect so auth re-runs with the new token
         if self.websocket and self.is_connected:
             asyncio.create_task(self._force_reconnect())
+        elif not self._listener_task or self._listener_task.done():
+            # Connection loop has died — restart it with fresh credentials
+            self._running = True
+            self.reconnect_attempts = 0
+            self._listener_task = asyncio.create_task(self.connect_and_listen())
+            logger.info("[WebSocketManager] refresh_credentials — restarted dead connection task.")
 
     async def _force_reconnect(self):
         """Close the current WS so the reconnect loop re-establishes with the new token."""

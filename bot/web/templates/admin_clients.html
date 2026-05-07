@@ -11,17 +11,28 @@
 </div>
 
 <div class="card p-4">
-  <div class="flex gap-3 mb-4">
+  <div class="flex flex-wrap gap-3 mb-4 items-center">
     <button onclick="filterClients('all')" id="f-all" class="tab-btn active">All</button>
     <button onclick="filterClients('pending')" id="f-pending" class="tab-btn">Pending</button>
     <button onclick="filterClients('active')" id="f-active" class="tab-btn">Active</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px" id="bulk-toolbar" style="display:none">
+      <span id="bulk-count" style="font-size:12px;color:var(--muted)">0 selected</span>
+      <select id="bulk-action-select" class="input-field text-xs" style="width:auto;padding:4px 8px">
+        <option value="">-- Bulk Action --</option>
+        <option value="activate">Activate</option>
+        <option value="deactivate">Deactivate</option>
+        <option value="push_strategy">Push Strategy Defaults</option>
+      </select>
+      <button onclick="runBulkAction()" style="padding:4px 12px;font-size:12px;border-radius:6px;background:var(--primary);color:#0a0f1e;border:none;cursor:pointer;font-weight:700">Apply</button>
+    </div>
   </div>
   <table>
     <thead><tr>
+      <th style="width:32px"><input type="checkbox" id="bulk-check-all" onchange="toggleAllChecks(this.checked)" title="Select all"></th>
       <th>Username</th><th>Email</th><th>Status</th><th>Tier</th>
       <th>Broker(s)</th><th>Running</th><th>Joined</th><th>Actions</th>
     </tr></thead>
-    <tbody id="clients-tbody"><tr><td colspan="8" class="text-center" style="color:var(--muted)">Loading...</td></tr></tbody>
+    <tbody id="clients-tbody"><tr><td colspan="9" class="text-center" style="color:var(--muted)">Loading...</td></tr></tbody>
   </table>
 </div>
 {% endblock %}
@@ -62,6 +73,7 @@ function renderClients() {
     tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color:var(--muted)">No clients in this view.</td></tr>`;
     return;
   }
+  document.getElementById('bulk-check-all').checked = false;
   tbody.innerHTML = filtered.map(c => {
     const statusBadge = c.is_active ? '<span class="badge-ok">Active</span>' : '<span class="badge-warn">Pending</span>';
     const toggleBtn = c.is_active
@@ -69,6 +81,7 @@ function renderClients() {
       : `<button onclick="activate(${c.id})" class="btn-primary px-2 py-1 text-xs">Activate</button>`;
     const date = c.created_at ? c.created_at.substring(0,10) : '--';
     return `<tr>
+      <td><input type="checkbox" class="bulk-chk" data-id="${c.id}" onchange="updateBulkCount()"></td>
       <td class="text-white font-medium">${escapeHtml(c.username)}</td>
       <td style="color:var(--muted)">${escapeHtml(c.email)}</td>
       <td>${statusBadge}</td>
@@ -119,6 +132,38 @@ async function setTier(id, tier) {
   });
   const d = await r.json();
   showToast(`Tier updated to ${d.tier}`, 'success');
+  loadClients();
+}
+
+function toggleAllChecks(checked) {
+  document.querySelectorAll('.bulk-chk').forEach(cb => { cb.checked = checked; });
+  updateBulkCount();
+}
+
+function updateBulkCount() {
+  const checked = document.querySelectorAll('.bulk-chk:checked');
+  const toolbar = document.getElementById('bulk-toolbar');
+  const countEl = document.getElementById('bulk-count');
+  if (toolbar) toolbar.style.display = checked.length ? 'flex' : 'none';
+  if (countEl) countEl.textContent = `${checked.length} selected`;
+}
+
+async function runBulkAction() {
+  const action = document.getElementById('bulk-action-select').value;
+  if (!action) { showToast('Select an action first', 'warn'); return; }
+  const ids = [...document.querySelectorAll('.bulk-chk:checked')].map(cb => parseInt(cb.dataset.id));
+  if (!ids.length) { showToast('No clients selected', 'warn'); return; }
+  if (!confirm(`${action} for ${ids.length} client(s)?`)) return;
+  const r = await fetch('/api/admin/bulk-action', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
+    body: JSON.stringify({action, client_ids: ids, payload: {}})
+  });
+  const d = await r.json();
+  const ok = (d.results?.ok || []).length;
+  const fail = (d.results?.failed || []).length;
+  showToast(`Done: ${ok} succeeded, ${fail} failed`, ok > 0 ? 'success' : 'error');
   loadClients();
 }
 

@@ -30,14 +30,21 @@ class UpstoxClient(BaseBroker):
                             return False
 
                     access_token = None
-                    # 1. Automated TOTP Login
-                    # The TOTP login uses curl_cffi over regular HTTPS — it does NOT need to
-                    # originate from the static IP (that restriction is for order placement only).
-                    # Do NOT wrap in _scoped_ip_patch(): that calls _validate_source_ip() first,
-                    # which raises if the static IP is not bound — preventing the login entirely.
+                    # 1. Automated TOTP Login — skipped if a valid today's token exists in DB.
+                    # This prevents burning a new TOTP token on every intraday bot restart,
+                    # which would hit Upstox OTP rate limits and break the WebSocket connection.
                     if self.db_config.get('password') and self.db_config.get('totp'):
-                        from utils.auth_manager_upstox import handle_upstox_login_automated
-                        access_token = handle_upstox_login_automated(self.db_config)
+                        from utils.auth_manager_upstox import (
+                            handle_upstox_login_automated, is_token_valid_today
+                        )
+                        if is_token_valid_today(self.db_config):
+                            # Reuse the token already stored in db_config (loaded from DB)
+                            access_token = (
+                                self.db_config.get('access_token') or
+                                self.db_config.get('api_secret')
+                            )
+                        else:
+                            access_token = handle_upstox_login_automated(self.db_config)
 
                         # Persist the fresh token to the DB immediately so it survives even
                         # if RestApiClient construction fails below (e.g. static IP not bound).
@@ -46,9 +53,11 @@ class UpstoxClient(BaseBroker):
                             try:
                                 from web.db import db_execute
                                 from web.auth import encrypt_secret
-                                import datetime as _dt
+                                from datetime import datetime, timezone, timedelta
                                 enc = encrypt_secret(access_token)
-                                now_ist = _dt.datetime.now().isoformat()
+                                # Use IST timezone (same as Dhan) for consistency in timezone comparisons
+                                _tz_ist = timezone(timedelta(hours=5, minutes=30))
+                                now_ist = datetime.now(_tz_ist).isoformat()
                                 _inst_id = self.db_config.get('id')
                                 if _inst_id:
                                     db_execute(
@@ -57,6 +66,13 @@ class UpstoxClient(BaseBroker):
                                         (enc, now_ist, _inst_id)
                                     )
                                     logger.info(f"[UpstoxClient] Fresh token saved to DB for user {self.user_id}.")
+                                # Also update data_providers so the global FeedServer gets the fresh token
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, token_issued_at=? "
+                                    "WHERE provider='upstox'",
+                                    (enc, now_ist)
+                                )
+                                logger.info(f"[UpstoxClient] Fresh token propagated to data_providers.")
                             except Exception as _db_err:
                                 logger.warning(f"[UpstoxClient] Could not persist fresh token to DB: {_db_err}")
 
@@ -264,6 +280,7 @@ class UpstoxClient(BaseBroker):
         """Places a real order via Upstox V2 SDK OrderApi.
         Upstox natively uses instrument_key (e.g. NSE_FO|...) — no symbol construction needed.
         """
+        logger.info(f"[{self.instance_name}] place_order request: {transaction_type} {quantity} qty for {getattr(contract, 'instrument_key', 'UNKNOWN')} user={self.user_id}")
         if not self._access_token:
             logger.error(f"[UpstoxClient] No access token available. Cannot place order for user {self.user_id}.")
             return None
@@ -313,13 +330,61 @@ class UpstoxClient(BaseBroker):
             logger.error(f"[UpstoxClient] place_order error for user {self.user_id}: {e}", exc_info=True)
             return None
 
+    # --- REST API Methods (delegated to api_client) ---
+
+    async def get_ltp(self, instrument_key, silence_error=False):
+        if not self.api_client: return 0.0
+        return await self.api_client.get_ltp(instrument_key, silence_error=silence_error)
+
+    async def get_ltps(self, instrument_keys, silence_error=False):
+        if not self.api_client: return {}
+        return await self.api_client.get_ltps(instrument_keys, silence_error=silence_error)
+
+    async def get_historical_candle_data(self, instrument_key, interval, to_date, from_date):
+        if not self.api_client: return pd.DataFrame()
+        return await self.api_client.get_historical_candle_data(instrument_key, interval, to_date, from_date)
+
+    async def get_option_contracts(self, instrument_key):
+        if not self.api_client: return []
+        return await self.api_client.get_option_contracts(instrument_key)
+
+    async def get_expiring_option_contracts(self, instrument_key, expiry_date):
+        if not self.api_client: return []
+        return await self.api_client.get_expiring_option_contracts(instrument_key, expiry_date)
+
     async def close_all_positions(self):
         """Squares off positions in Upstox."""
         if not self.api_client or self.paper_trade: return
         try:
-            # Upstox doesn't have a simple 'close_all' in standard SDK
-            # Logic would involve fetching positions and closing each
-            pass
+            positions_res = await self.api_client.get_positions()
+            if not positions_res or 'data' not in positions_res: return
+
+            data = positions_res['data']
+            tasks = []
+            for pos in data:
+                qty = int(pos.get('quantity', 0))
+                if qty == 0: continue
+
+                # Opposite transaction
+                trans_type = "SELL" if qty > 0 else "BUY"
+                abs_qty = abs(qty)
+
+                # Build a minimal contract-like object for place_order
+                class _Contract:
+                    def __init__(self, key): self.instrument_key = key
+
+                logger.info(f"[{self.instance_name}] Squaring off {pos.get('tradingsymbol')} ({qty})")
+                tasks.append(asyncio.to_thread(
+                    self.place_order,
+                    _Contract(pos.get('instrument_token')),
+                    trans_type,
+                    abs_qty,
+                    product_type='MIS' if pos.get('product') == 'I' else 'NRML'
+                ))
+
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
+                logger.info(f"[{self.instance_name}] Upstox positions squared off.")
         except Exception as e:
             logger.error(f"[{self.instance_name}] Upstox close_all error: {e}")
 
@@ -327,9 +392,7 @@ class UpstoxClient(BaseBroker):
         """Returns funds from Upstox."""
         if not self.api_client: return 0.0
         try:
-            profile = await self.api_client.get_profile()
-            # Upstox profile includes fund info?
-            # Actually, Upstox has a dedicated margin endpoint
+            # Upstox has a dedicated margin endpoint
             funds = await self.api_client.get_user_fund_margin()
             if funds and 'data' in funds:
                 equity = funds['data'].get('equity', {})

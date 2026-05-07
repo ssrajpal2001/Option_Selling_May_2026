@@ -59,11 +59,12 @@ class TickDispatcher:
         if user_id:
             user_handlers = self._user_route_map.get((user_id, instrument_key))
             if user_handlers:
-                logger.debug(f"Dispatcher found {len(user_handlers)} user-scoped handlers for {instrument_key} (User: {user_id})")
+                # logger.debug(f"Dispatcher found {len(user_handlers)} user-scoped handlers for {instrument_key} (User: {user_id})")
                 for h in user_handlers:
                     asyncio.create_task(h(instrument_key, packet, user_id=user_id))
             else:
-                logger.debug(f"Dispatcher found NO user-scoped handlers for {instrument_key} (User: {user_id})")
+                # logger.debug(f"Dispatcher found NO user-scoped handlers for {instrument_key} (User: {user_id})")
+                pass
 
         # 2. Global routing (Shared Data like Index/Futures from master feed)
         global_handlers = self._route_map.get(instrument_key)

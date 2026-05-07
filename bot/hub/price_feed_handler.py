@@ -93,17 +93,36 @@ class PriceFeedHandler:
         broker_source = data.get('broker', 'unknown')
         user_id = data.get('user_id')
 
-        logger.debug(f"PriceFeedHandler received normalized tick from {broker_source} for {instrument_key} (User: {user_id}, LTP: {ltp})")
+        # First-tick log per instrument — kept at DEBUG; the FeedClient RX-first-tick
+        # log already proves the TCP→event_bus path. Re-enable by raising log level.
+        if not getattr(self, '_logged_first_ticks', None):
+            self._logged_first_ticks = set()
+        if instrument_key and instrument_key not in self._logged_first_ticks:
+            self._logged_first_ticks.add(instrument_key)
+            logger.debug(
+                f"[PriceFeedHandler] FIRST tick received for {instrument_key}: "
+                f"ltp={ltp} broker={broker_source} index_key={self.index_instrument_key}"
+            )
+
+        # Keep last_exchange_time current so Feed Lag is shown in heartbeat
+        if timestamp:
+            ts = timestamp
+            if getattr(ts, 'tzinfo', None) is None:
+                ts = self._kolkata_tz.localize(ts)
+            self.state_manager.last_exchange_time = ts
 
         # DUAL-FEED REDUNDANCY LOGIC (FAILOVER)
         # We only process this tick if it's "new" for this instrument.
         # This prevents slower redundant feeds from overriding faster ones.
+        # Guard: only drop if comparison is safe (both tz-aware or both naive).
         if instrument_key in self._last_tick_times_any_source:
-            # If the tick is significantly old compared to the last one we saw, drop it
             last_ts = self._last_tick_times_any_source[instrument_key]
-            if timestamp < last_ts:
-                # logger.debug(f"[Redundancy] Dropped late tick from {broker_source} for {instrument_key}")
-                return
+            try:
+                if timestamp < last_ts:
+                    return
+            except TypeError:
+                # Mixed tz-aware/naive comparison — don't drop, just proceed
+                pass
 
         self._last_tick_times_any_source[instrument_key] = timestamp
 
@@ -128,7 +147,11 @@ class PriceFeedHandler:
             return
 
         # 1. Update Global State (Shared data)
-        if instrument_key == self.futures_instrument_key:
+        # Safety check: if futures_key == index_key (misconfigured INI), treat as index.
+        # This prevents the NIFTY tick routing as is_futures=True which sets spot_price but
+        # never sets index_price, leaving Spot=None in heartbeat permanently.
+        _keys_same = self.futures_instrument_key and (self.futures_instrument_key == self.index_instrument_key)
+        if not _keys_same and instrument_key == self.futures_instrument_key:
             await self._update_spot_data(instrument_key, ltp, timestamp, is_futures=True, target_user_id=user_id)
         elif instrument_key == self.index_instrument_key:
             await self._update_spot_data(instrument_key, ltp, timestamp, is_futures=False, target_user_id=user_id)
@@ -588,8 +611,38 @@ class PriceFeedHandler:
     async def _tick_worker(self):
         """Dedicated background task to run process_tick one at a time."""
         logger.info(f"Tick worker started for {self.trade_orchestrator.instrument_name}.")
+        _last_tick_warn_time = 0.0
+        _NO_TICK_WARN_INTERVAL = 30.0  # warn every 30s when no ticks arrive
         while True:
-            await self._tick_event.wait()
+            # Wait for a tick, but wake every 30s to emit a dead-feed warning
+            try:
+                await asyncio.wait_for(self._tick_event.wait(), timeout=_NO_TICK_WARN_INTERVAL)
+            except asyncio.TimeoutError:
+                _now = asyncio.get_event_loop().time()
+                import datetime as _dt, pytz as _ptz
+                _now_ist = _dt.datetime.now(_ptz.timezone('Asia/Kolkata'))
+                _mkt_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
+                _mkt_close = _now_ist.replace(hour=15, minute=30, second=0, microsecond=0)
+                if _mkt_open <= _now_ist <= _mkt_close:
+                    # Bot subprocesses use FeedClient → FeedServer → upstream WS.
+                    # We can only see the FeedClient↔FeedServer link from here;
+                    # upstream WS state lives in the web process (FeedServer).
+                    _ws = getattr(self.trade_orchestrator, 'websocket', None)
+                    _fc_connected = bool(getattr(_ws, 'is_connected', False))
+                    _hint = (
+                        "FeedServer reachable but no ticks — its upstream Upstox/Dhan WS is offline. "
+                        "Open Admin → Data Providers and click 'Connect Now' for both Upstox and Dhan."
+                    ) if _fc_connected else (
+                        "Cannot reach FeedServer (web process). "
+                        "Restart the web server (botrestart) or check that uvicorn is running."
+                    )
+                    logger.warning(
+                        f"[{self.trade_orchestrator.instrument_name}] FEED SILENT: No ticks received in "
+                        f"{_NO_TICK_WARN_INTERVAL:.0f}s during market hours. "
+                        f"FeedClient↔FeedServer: {'connected' if _fc_connected else 'DISCONNECTED'}. "
+                        f"{_hint}"
+                    )
+                continue
             self._tick_event.clear()
 
             # PROTECT: Ensure orchestrator is fully initialized before processing

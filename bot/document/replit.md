@@ -33,7 +33,7 @@ Multi-tenant SaaS algorithmic trading platform for Indian markets (NSE/BSE).
 - No daily re-login needed — tokens valid for 30 days
 - `_is_dhan_token_fresh()`: checks `(now - token_updated_at).days < 30`
 - `token_updated_at` only updated when a new access token is provided (not on config-only saves)
-- `brokers/dhan_client.py`: uses `dhanhq(client_id, access_token)` constructor
+- `brokers/dhan_client.py`: uses `dhanhq(DhanContext(client_id, access_token))` constructor
 
 ### Broker Change Approval Flow
 - FREE clients can only have 1 broker; to switch they submit a **broker change request**

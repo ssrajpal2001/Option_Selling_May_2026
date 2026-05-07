@@ -2,8 +2,14 @@ import os
 import sys
 import subprocess
 import signal
+import logging
 from datetime import datetime, timezone
-from utils.logger import logger
+
+# Avoid importing utils.logger while this module is being initialized.  The web
+# app imports hub modules during startup, and importing utils.logger here can
+# participate in circular imports that leave hub.instance_manager partially
+# initialized without the singleton below.
+logger = logging.getLogger('UpstoxApp')
 
 
 class InstanceManager:

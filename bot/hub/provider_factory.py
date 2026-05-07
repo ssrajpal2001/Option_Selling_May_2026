@@ -49,7 +49,13 @@ class ProviderFactory:
 
                         elif broker == 'dhan':
                             from dhanhq import dhanhq
-                            client = dhanhq(api_key, access_token)
+                            try:
+                                from dhanhq import DhanContext
+                            except ImportError:
+                                DhanContext = None
+                            # Use positional args or resolve correct names for dhanhq constructor
+                            client = (dhanhq(DhanContext(api_key, access_token))
+                                      if DhanContext else dhanhq(api_key, access_token))
                             # Dhan doesn't have a simple 'profile' that doesn't cost an API hit?
                             # Usually get_fund_limits is safe.
                             try:
@@ -67,16 +73,14 @@ class ProviderFactory:
                                 if client:
                                     rest_client = BrokerRestAdapter(client, 'angelone')
                                     logger.info(f"Backtest: User {user_id}'s AngelOne session is VALID.")
-                                else: raise Exception("AngelOne login returned None")
+                                else:
+                                    logger.warning(f"Backtest: AngelOne login returned None for user {user_id}. Proceeding in OFFLINE mode.")
                             except Exception as ve:
-                                logger.error(f"Backtest: User {user_id}'s AngelOne login FAILED: {ve}")
-                                return None, websocket_manager
+                                logger.warning(f"Backtest: AngelOne login FAILED for user {user_id}: {ve}. Proceeding in OFFLINE mode.")
                     else:
-                        logger.error(f"Backtest: No active broker instance found for user {user_id}")
-                        return None, websocket_manager
+                        logger.warning(f"Backtest: No active broker instance found for user {user_id}. Proceeding in OFFLINE mode.")
                 except Exception as e:
-                    logger.warning(f"Failed to load user credentials for backtest REST feed: {e}")
-                    return None, websocket_manager
+                    logger.warning(f"Backtest: Failed to load user credentials for REST feed: {e}. Proceeding in OFFLINE mode.")
 
             # 2. Fallback to global active client (Legacy Path)
             if not rest_client and api_client_manager:
@@ -258,64 +262,62 @@ class ProviderFactory:
             logger.error("No active data providers could be initialized.")
             raise RuntimeError("No data providers available.")
 
-        # If multiple feeds, try FeedClient first in client-subprocess mode to avoid
-        # the global Dhan/Upstox WebSocket eviction loop caused by 4 subprocesses
-        # each opening their own connection with the same credentials (Task #152).
-        if len(active_feeds) > 1:
-            import os as _os
-            _in_subprocess = bool(_os.environ.get('CLIENT_ID'))
-            _feed_server_init = bool(_os.environ.get('_FEED_SERVER_INIT'))
-            if _in_subprocess and not _feed_server_init:
-                # Pre-build DualFeedManager objects as a runtime fallback (NOT started yet).
-                # FeedClient will activate them only after _FALLBACK_TRIGGER_ROUNDS of
-                # consecutive connection failures, giving FeedServer ample time to come up.
+        # In client subprocesses always try FeedServer relay first — regardless of
+        # how many feeds are configured.  Previously the guard was `len > 1`, so a
+        # single-feed deployment (Upstox only) caused every subprocess to open its
+        # own Upstox WebSocket and hit the concurrent-connection limit (HTTP 403).
+        import os as _os
+        _in_subprocess = bool(_os.environ.get('CLIENT_ID'))
+        _feed_server_init = bool(_os.environ.get('_FEED_SERVER_INIT'))
+        if _in_subprocess and not _feed_server_init and active_feeds:
+            # Build the appropriate fallback (activated only after _FALLBACK_TRIGGER_ROUNDS
+            # consecutive FeedServer failures — not at startup).
+            _upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
+            _dhan_feed   = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
+            if _upstox_feed and _dhan_feed:
                 from hub.dual_feed_manager import DualFeedManager as _DFM
-                _upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
-                _dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
                 _fallback_dm = _DFM(_upstox_feed, _dhan_feed)
-
-                # Always return FeedClient — let it own all retry and fallback logic.
-                # A one-time probe is logged for diagnostics but never gates routing;
-                # if FeedServer is not yet up, FeedClient will keep retrying in its
-                # _connection_loop() before eventually activating the fallback DM.
-                from hub.feed_client import FeedClient
-                try:
-                    _probe = FeedClient()
-                    _server_up = await _probe.try_connect()
-                    await _probe.close()
-                    if _server_up:
-                        logger.info(
-                            "[ProviderFactory] FeedServer reachable — "
-                            "FeedClient will use shared tick distribution."
-                        )
-                    else:
-                        logger.info(
-                            "[ProviderFactory] FeedServer not yet reachable — "
-                            "FeedClient will retry until it comes up "
-                            f"(fallback DualFeedManager held in reserve)."
-                        )
-                except Exception as _probe_err:
-                    logger.info(
-                        f"[ProviderFactory] FeedServer probe inconclusive ({_probe_err}); "
-                        "FeedClient will retry on its own schedule."
-                    )
-                websocket_manager = FeedClient(fallback_feed=_fallback_dm)
             else:
-                from hub.dual_feed_manager import DualFeedManager
-                upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
-                dhan_feed = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
-                websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
-                logger.info("Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).")
+                _fallback_dm = _upstox_feed or _dhan_feed  # single WebSocketManager
+
+            from hub.feed_client import FeedClient
+            try:
+                _probe = FeedClient()
+                _server_up = await _probe.try_connect()
+                await _probe.close()
+                if _server_up:
+                    logger.info(
+                        "[ProviderFactory] FeedServer reachable — "
+                        "FeedClient will use shared tick distribution."
+                    )
+                else:
+                    logger.info(
+                        "[ProviderFactory] FeedServer not yet reachable — "
+                        "FeedClient will retry until it comes up "
+                        "(fallback held in reserve)."
+                    )
+            except Exception as _probe_err:
+                logger.info(
+                    f"[ProviderFactory] FeedServer probe inconclusive ({_probe_err}); "
+                    "FeedClient will retry on its own schedule."
+                )
+            websocket_manager = FeedClient(fallback_feed=_fallback_dm)
+
+        elif len(active_feeds) > 1:
+            # FeedServer process itself (or admin mode without CLIENT_ID) — own the feeds directly.
+            from hub.dual_feed_manager import DualFeedManager
+            upstox_feed = next((f[1] for f in active_feeds if f[0] == 'upstox'), None)
+            dhan_feed   = next((f[1] for f in active_feeds if f[0] == 'dhan'), None)
+            websocket_manager = DualFeedManager(upstox_feed, dhan_feed)
+            logger.info("Redundant Dual-Feed mode ACTIVE (Upstox + Dhan).")
         elif len(active_feeds) == 1:
             websocket_manager = active_feeds[0][1]
         else:
             websocket_manager = None
 
         # REST CLIENT SELECTION: Must support get_option_contracts for expiry resolution.
-        # Dhan is intentionally excluded — its BrokerRestAdapter.get_option_contracts()
-        # returns [] (no implementation), which silently corrupts expiry resolution by
-        # forcing a CSV fallback that never includes today's expiring contracts.
-        _CONTRACT_CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue']
+        # Dhan is now supported via its shared security list fallback.
+        _CONTRACT_CAPABLE = ['upstox', 'zerodha', 'angelone', 'fyers', 'aliceblue', 'dhan']
 
         if not rest_client:
             # For historical data and option contracts, we still need a rest_client.
@@ -335,19 +337,16 @@ class ProviderFactory:
                         "which has no option-contract support — skipping."
                     )
 
-        # BROKER REST PREFERENCE: For non-Upstox execution brokers (Zerodha, AngelOne, etc.),
-        # ALWAYS prefer the execution broker over the global Upstox REST client for contract data.
-        # These brokers have fresh authenticated sessions and their instrument masters contain
-        # ALL current weekly expiries (May 5, May 12, May 19, etc.) — unlike the global Upstox
-        # data provider which may have a stale token, and unlike the CSV which lacks near-weekly
-        # contracts entirely and causes wrong expiry / LTP stuck at 0.
-        #
-        # Upstox is EXCLUDED here — Upstox sessions use the same-account RestApiClient set
-        # earlier (via the same-account short-circuit block), which already uses the fresh
-        # broker token and must not be overridden.
-        # Dhan is also excluded — it has no option-contract API support.
-        _PREFERRED_EXECUTION_BROKERS = ['zerodha', 'angelone', 'fyers', 'aliceblue']
-        if broker_manager and broker_manager.brokers:
+        # DATA FEEDER PRIORITY: Client-side brokers (Zerodha, AngelOne, etc.) should
+        # ONLY be used for order placement. All technical data (OHLC, Contracts, LTP)
+        # must come from the Global Data Feeder (Upstox/Dhan) to ensure consistency
+        # and avoid "Missing History Addon" or "Invalid Token" errors on client accounts.
+
+        # We already set rest_client above from global providers.
+        # We will ONLY override it with a client broker if no global provider was configured.
+
+        if not rest_client and broker_manager and broker_manager.brokers:
+            _PREFERRED_EXECUTION_BROKERS = ['upstox', 'dhan', 'zerodha', 'angelone', 'fyers', 'aliceblue']
             for _preferred in _PREFERRED_EXECUTION_BROKERS:
                 _b = next(
                     (b for b in broker_manager.brokers.values()
@@ -355,9 +354,16 @@ class ProviderFactory:
                     None
                 )
                 if _b:
-                    rest_client = BrokerRestAdapter(_b, _preferred)
-                    logger.info(f"[ProviderFactory] Using {_preferred} execution broker as primary REST client for contracts.")
-                    break
+                    is_auth = False
+                    if _preferred == 'zerodha' and getattr(_b, 'kite', None): is_auth = True
+                    elif _preferred == 'angelone' and getattr(_b, 'smart_api', None): is_auth = True
+                    elif _preferred == 'dhan' and getattr(_b, 'dhan', None): is_auth = True
+                    elif _preferred == 'upstox' and getattr(_b, 'api_client', None): is_auth = True
+
+                    if is_auth:
+                        rest_client = BrokerRestAdapter(_b, _preferred)
+                        logger.info(f"[ProviderFactory] No global rest_client. Falling back to {_preferred} execution broker for contracts.")
+                        break
 
         # ENFORCEMENT: Websocket Data MUST come from Global Feeds (Upstox/Dhan)
         # We removed Zerodha as a data provider as per requirement.

@@ -71,7 +71,8 @@ class IndicatorManager:
                 if current:
                     curr_df = pd.DataFrame([current]).set_index('timestamp')
                     curr_df.index = pd.to_datetime(curr_df.index)
-                    if curr_df.index.tz is None:
+                    curr_tz = getattr(curr_df.index, 'tzinfo', getattr(curr_df.index, 'tz', None))
+                    if curr_tz is None:
                         curr_df.index = curr_df.index.tz_localize('Asia/Kolkata')
                     else:
                         curr_df.index = curr_df.index.tz_convert('Asia/Kolkata')
@@ -84,7 +85,18 @@ class IndicatorManager:
             if one_min_live is not None and not one_min_live.empty:
                 # Filter up to timestamp to respect "Closed Candles" if requested via anchor_ts
                 if timestamp:
-                    one_min_live = one_min_live[one_min_live.index <= timestamp]
+                    ts_filter = pd.Timestamp(timestamp)
+                    if ts_filter.tzinfo is None:
+                        ts_filter = ts_filter.tz_localize('Asia/Kolkata')
+                    else:
+                        ts_filter = ts_filter.tz_convert('Asia/Kolkata')
+
+                    if one_min_live.index.tz is None:
+                        one_min_live.index = one_min_live.index.tz_localize('Asia/Kolkata')
+                    else:
+                        one_min_live.index = one_min_live.index.tz_convert('Asia/Kolkata')
+
+                    one_min_live = one_min_live[one_min_live.index <= ts_filter]
 
                 resample_freq = f"{parsed_minutes}min"
                 live_ohlc = one_min_live.resample(resample_freq).agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last'}).dropna()
@@ -113,6 +125,13 @@ class IndicatorManager:
                 # Stitch with live data
                 if ohlc is not None and not ohlc.empty:
                     # Filter API data to be before live data
+                    # Ensure matching timezone awareness for comparison
+                    if hist_api.index.tz is None: hist_api.index = hist_api.index.tz_localize('Asia/Kolkata')
+                    else: hist_api.index = hist_api.index.tz_convert('Asia/Kolkata')
+
+                    if ohlc.index.tz is None: ohlc.index = ohlc.index.tz_localize('Asia/Kolkata')
+                    else: ohlc.index = ohlc.index.tz_convert('Asia/Kolkata')
+
                     hist_api = hist_api[hist_api.index < ohlc.index[0]]
                     ohlc = pd.concat([hist_api, ohlc]).sort_index()
                 else:
@@ -120,8 +139,17 @@ class IndicatorManager:
 
                 # Trim to timestamp
                 ts_limit = pd.Timestamp(timestamp)
-                if getattr(ohlc.index, 'tz', None) is not None and ts_limit.tzinfo is None:
+                if ts_limit.tzinfo is None:
                     ts_limit = ts_limit.tz_localize('Asia/Kolkata')
+                else:
+                    ts_limit = ts_limit.tz_convert('Asia/Kolkata')
+
+                # Force OHLC index to be tz-aware Asia/Kolkata
+                if ohlc.index.tz is None:
+                    ohlc.index = ohlc.index.tz_localize('Asia/Kolkata')
+                else:
+                    ohlc.index = ohlc.index.tz_convert('Asia/Kolkata')
+
                 ohlc = ohlc[ohlc.index <= ts_limit]
 
         if ohlc is not None and not ohlc.empty:
@@ -132,7 +160,8 @@ class IndicatorManager:
                     ohlc.index = pd.to_datetime(ohlc.index)
                 except (ValueError, TypeError):
                     ohlc.index = pd.to_datetime(ohlc.index, utc=True)
-            if getattr(ohlc.index, 'tz', None) is None:
+            idx_tz = getattr(ohlc.index, 'tzinfo', getattr(ohlc.index, 'tz', None))
+            if idx_tz is None:
                 ohlc.index = ohlc.index.tz_localize('Asia/Kolkata')
             else:
                 ohlc.index = ohlc.index.tz_convert('Asia/Kolkata')
@@ -152,10 +181,11 @@ class IndicatorManager:
         if self.orchestrator.is_backtest:
             if not hasattr(self, '_bt_vwap_cache'): self._bt_vwap_cache = {}
             # Boundary minute key
-            boundary_min = timestamp.replace(second=0, microsecond=0)
-            if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo:
-                boundary_min = pd.Timestamp(boundary_min).tz_convert('Asia/Kolkata')
-            else: boundary_min = pd.Timestamp(boundary_min).tz_localize('Asia/Kolkata')
+            boundary_min = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
+            if boundary_min.tzinfo is None:
+                boundary_min = boundary_min.tz_localize('Asia/Kolkata')
+            else:
+                boundary_min = boundary_min.tz_convert('Asia/Kolkata')
 
             vwap_key = (inst_key, boundary_min)
             if vwap_key in self._bt_vwap_cache: return self._bt_vwap_cache[vwap_key]
@@ -165,9 +195,11 @@ class IndicatorManager:
         # ATP (Average Traded Price) represents the true exchange-reported VWAP.
         atp_hist = getattr(self.state_manager, 'atp_history', {}).get(inst_key, {})
         if atp_hist:
-            current_minute = pd.to_datetime(timestamp).replace(second=0, microsecond=0)
+            current_minute = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
             if current_minute.tzinfo is None:
                 current_minute = current_minute.tz_localize('Asia/Kolkata')
+            else:
+                current_minute = current_minute.tz_convert('Asia/Kolkata')
 
             # Exact match for finalized/historical minute
             if current_minute in atp_hist:
@@ -196,15 +228,37 @@ class IndicatorManager:
 
         current_day = timestamp.date()
         state_key = (inst_key, current_day)
-        state = self._vwap_state.get(state_key)
-
-        # Use exact minute of timestamp.
-        # When called with HH:MM:59 anchor, this correctly includes the last candle of the bucket.
         last_final_minute = timestamp.replace(second=0, microsecond=0)
 
+        # Live aggregator fallback: use accumulated OHLC bars before hitting broker API.
+        # Prevents VWAP returning None for near-expiry option strikes where the API
+        # returns HTTP 400 and they get permanently blacklisted in _api_failure_cache.
+        if not self.orchestrator.is_backtest:
+            agg = getattr(self.orchestrator, 'entry_aggregator', None)
+            if agg is not None:
+                agg_ohlc = agg.get_historical_ohlc(inst_key)
+                if agg_ohlc is not None and not agg_ohlc.empty:
+                    agg_day = agg_ohlc[agg_ohlc.index.date == current_day].copy()
+                    agg_day = agg_day[agg_day.index <= last_final_minute]
+                    if not agg_day.empty:
+                        if 'volume' not in agg_day.columns or agg_day['volume'].sum() == 0:
+                            agg_day['volume'] = 1.0
+                        vwap_val = VWAPIndicator.get_latest_value(agg_day)
+                        if vwap_val is not None:
+                            tp = (agg_day['high'] + agg_day['low'] + agg_day['close']) / 3
+                            vol = agg_day['volume']
+                            self._vwap_state[state_key] = {
+                                'cum_pv': float((tp * vol).sum()),
+                                'cum_vol': float(vol.sum()),
+                                'last_final_minute': last_final_minute
+                            }
+                            return vwap_val
+
+        state = self._vwap_state.get(state_key)
         if not state or state['last_final_minute'] < last_final_minute:
             # include_current=True ensures we get the candle at 'timestamp' minute if it exists
-            ohlc_1m = await self.data_manager.get_historical_ohlc(inst_key, 1, current_timestamp=timestamp, min_candles=20, for_full_day=True, include_current=True)
+            _min_candles = 1 if self.orchestrator.is_backtest else 20
+            ohlc_1m = await self.data_manager.get_historical_ohlc(inst_key, 1, current_timestamp=timestamp, min_candles=_min_candles, for_full_day=True, include_current=True)
             if ohlc_1m is not None and not ohlc_1m.empty:
                 df = ohlc_1m[(ohlc_1m.index.date == current_day) & (ohlc_1m.index <= last_final_minute)].copy()
 
@@ -607,10 +661,11 @@ class IndicatorManager:
         if self.orchestrator.is_backtest:
             if not hasattr(self, '_bt_rsi_cache'): self._bt_rsi_cache = {}
             # Boundary-based cache key
-            boundary = timestamp.replace(second=0, microsecond=0)
-            if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo:
-                boundary = pd.Timestamp(boundary).tz_convert('Asia/Kolkata')
-            else: boundary = pd.Timestamp(boundary).tz_localize('Asia/Kolkata')
+            boundary = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
+            if boundary.tzinfo is None:
+                boundary = boundary.tz_localize('Asia/Kolkata')
+            else:
+                boundary = boundary.tz_convert('Asia/Kolkata')
 
             c_key = (key1, key2, tf, period, boundary)
             if c_key in self._bt_rsi_cache: return self._bt_rsi_cache[c_key]
@@ -660,9 +715,11 @@ class IndicatorManager:
                  rsi_hist = getattr(self.state_manager, 'rsi_history', {}).get(target_key, {})
 
             if rsi_hist:
-                current_minute = pd.to_datetime(timestamp).replace(second=0, microsecond=0)
+                current_minute = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
                 if current_minute.tzinfo is None:
                     current_minute = current_minute.tz_localize('Asia/Kolkata')
+                else:
+                    current_minute = current_minute.tz_convert('Asia/Kolkata')
 
                 # Check exact match or nearest past value
                 if current_minute in rsi_hist:
@@ -684,10 +741,11 @@ class IndicatorManager:
         # PERFORMANCE: Backtest Indicator Cache
         if self.orchestrator.is_backtest:
             if not hasattr(self, '_bt_roc_cache'): self._bt_roc_cache = {}
-            boundary = timestamp.replace(second=0, microsecond=0)
-            if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo:
-                boundary = pd.Timestamp(boundary).tz_convert('Asia/Kolkata')
-            else: boundary = pd.Timestamp(boundary).tz_localize('Asia/Kolkata')
+            boundary = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
+            if boundary.tzinfo is None:
+                boundary = boundary.tz_localize('Asia/Kolkata')
+            else:
+                boundary = boundary.tz_convert('Asia/Kolkata')
 
             c_key = (key1, key2, tf, length, include_current, boundary)
             if c_key in self._bt_roc_cache: return self._bt_roc_cache[c_key]
@@ -733,9 +791,11 @@ class IndicatorManager:
                  roc_hist = getattr(self.state_manager, 'roc_history', {}).get(target_key, {})
 
             if roc_hist:
-                current_minute = pd.to_datetime(timestamp).replace(second=0, microsecond=0)
+                current_minute = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
                 if current_minute.tzinfo is None:
                     current_minute = current_minute.tz_localize('Asia/Kolkata')
+                else:
+                    current_minute = current_minute.tz_convert('Asia/Kolkata')
 
                 # Check exact match or nearest past value
                 if current_minute in roc_hist:

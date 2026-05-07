@@ -225,10 +225,9 @@ async def main():
                 # The ProviderFactory is responsible for returning either a valid rest_client
                 # or a MockRest object. If a user_id is present, we expect a real client.
                 # Logic fix: In user-driven backtests, if rest is Mock, it means credentials validation failed.
-                # We stop to prevent confusing "No Data" errors if the user expected live REST history.
+                # We log a warning but continue in OFFLINE mode using stored CSVs.
                 if user_id and (not rest or getattr(rest, 'is_mock', False)):
-                     logger.critical(f"[Backtest] User {user_id} credentials could not be validated for REST API data. Fix settings or use global config.")
-                     sys.exit(1)
+                     logger.warning(f"[Backtest] User {user_id} credentials could not be validated for REST API history. Proceeding in OFFLINE mode using CSV data.")
 
                 orch = await engine_manager.create_orchestrator(inst, rest, ws, True)
 
