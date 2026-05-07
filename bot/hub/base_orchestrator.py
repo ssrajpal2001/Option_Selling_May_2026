@@ -296,8 +296,9 @@ class BaseOrchestrator(ABC):
         if self.is_backtest:
             return []
 
-        instrument_symbol = self.config_manager.get(self.instrument_name, 'instrument_symbol')
-        instruments = [self.futures_instrument_key, instrument_symbol]
+        # Use the properly mapped index_instrument_key (e.g., NSE_INDEX|Nifty 50)
+        # instead of raw config value (e.g., NIFTY), which Upstox doesn't recognize
+        instruments = [self.futures_instrument_key, self.index_instrument_key]
         logger.debug(f"[{self.instrument_name}] Requesting initial subscriptions for: {instruments}")
         return instruments
 
