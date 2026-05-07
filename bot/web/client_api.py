@@ -1978,7 +1978,7 @@ def _read_admin_v3_defaults() -> dict:
         _pnl = _v3.get("guardrail_pnl") or {}
         _tsl = _v3.get("tsl_scalable") or {}
         return {
-            "start_time":              _v3.get("start_time") or _strat.get("NIFTY", {}).get("sell", {}).get("start_time") or "09:20",
+            "start_time":              _v3.get("start_time") or _strat.get("NIFTY", {}).get("sell", {}).get("start_time") or "09:15",
             "entry_end_time":          _v3.get("entry_end_time") or "14:00",
             "square_off_time":         _v3.get("square_off_time") or "15:15",
             "session_pnl_enabled":     bool(_pnl.get("enabled", False)),
