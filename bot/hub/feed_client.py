@@ -118,6 +118,16 @@ class FeedClient(DataFeed):
             return
         if self._connected and self._writer:
             self._write_cmd({'cmd': 'subscribe', 'instruments': symbols, 'mode': mode})
+            logger.info(
+                f"[FeedClient] Subscription sent to FeedServer: {len(symbols)} instruments "
+                f"(mode={mode}). Keys: {symbols[:3]}{'...' if len(symbols) > 3 else ''}"
+            )
+        else:
+            logger.info(
+                f"[FeedClient] Subscription QUEUED (not yet connected): {len(symbols)} instruments. "
+                f"Keys: {symbols[:3]}{'...' if len(symbols) > 3 else ''}. "
+                "Will be sent automatically on connect."
+            )
 
     def unsubscribe(self, symbols) -> None:
         for s in symbols:

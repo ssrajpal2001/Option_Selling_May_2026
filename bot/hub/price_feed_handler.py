@@ -93,6 +93,17 @@ class PriceFeedHandler:
         broker_source = data.get('broker', 'unknown')
         user_id = data.get('user_id')
 
+        # One-time first-tick log per instrument to confirm FeedClient→event_bus path is alive.
+        # Visible in the BROKER subprocess log (not server.log) so we can confirm ticks arrive here.
+        if not getattr(self, '_logged_first_ticks', None):
+            self._logged_first_ticks = set()
+        if instrument_key and instrument_key not in self._logged_first_ticks:
+            self._logged_first_ticks.add(instrument_key)
+            logger.info(
+                f"[PriceFeedHandler] FIRST tick received for {instrument_key}: "
+                f"ltp={ltp} broker={broker_source} index_key={self.index_instrument_key}"
+            )
+
         # Keep last_exchange_time current so Feed Lag is shown in heartbeat
         if timestamp:
             ts = timestamp
@@ -103,12 +114,15 @@ class PriceFeedHandler:
         # DUAL-FEED REDUNDANCY LOGIC (FAILOVER)
         # We only process this tick if it's "new" for this instrument.
         # This prevents slower redundant feeds from overriding faster ones.
+        # Guard: only drop if comparison is safe (both tz-aware or both naive).
         if instrument_key in self._last_tick_times_any_source:
-            # If the tick is significantly old compared to the last one we saw, drop it
             last_ts = self._last_tick_times_any_source[instrument_key]
-            if timestamp < last_ts:
-                # logger.debug(f"[Redundancy] Dropped late tick from {broker_source} for {instrument_key}")
-                return
+            try:
+                if timestamp < last_ts:
+                    return
+            except TypeError:
+                # Mixed tz-aware/naive comparison — don't drop, just proceed
+                pass
 
         self._last_tick_times_any_source[instrument_key] = timestamp
 

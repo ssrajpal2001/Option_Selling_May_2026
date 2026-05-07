@@ -464,12 +464,21 @@ class FeedServer:
         self._last_broadcast_epoch = time.time()
         self._tick_count += 1
 
-        # Log sample ticks for diagnostic purposes (every 10 ticks to avoid log spam)
-        if self._tick_count % 10 == 0:
-            logger.debug(
-                f"[FeedServer] Tick #{self._tick_count}: {key} @ {ltp} "
-                f"({len(self._writers)} clients subscribed)"
-            )
+        # Log writer count every 50 ticks at INFO so server.log shows whether bot clients are connected.
+        # Also warn loudly when no clients are connected so the diagnosis is immediate.
+        if self._tick_count % 50 == 1:
+            n_writers = len(self._writers)
+            if n_writers == 0:
+                logger.warning(
+                    f"[FeedServer] Tick #{self._tick_count}: {key} @ {ltp} — "
+                    f"NO FeedClients connected (0 writers). Bot subprocesses will NOT receive ticks. "
+                    f"Check that bot subprocess is running and FeedClient connected."
+                )
+            else:
+                logger.info(
+                    f"[FeedServer] Tick #{self._tick_count}: {key} @ {ltp} — "
+                    f"{n_writers} FeedClient(s) connected."
+                )
 
         msg = {
             'type': 'tick',
