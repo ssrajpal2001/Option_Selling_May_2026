@@ -246,9 +246,13 @@ class DhanWebSocketManager(DataFeed):
         self.access_token = access_token
         if api_key:
             self.client_id = api_key
+        self._disabled = False  # clear disabled flag so start() works after a failed init
         logger.info("[DhanWebSocketManager] Credentials refreshed. Triggering reconnect...")
         if self.feed:
             asyncio.create_task(self._close_for_reconnect())
+        elif not self._task or self._task.done():
+            # Task never ran (disabled at startup) or died — restart it fresh
+            self._task = asyncio.create_task(self.connect_and_listen())
 
     async def _close_for_reconnect(self):
         """Close the current WS connection so the reconnect loop re-establishes with new creds."""

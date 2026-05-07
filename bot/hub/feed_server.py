@@ -157,6 +157,32 @@ class FeedServer:
             except Exception:
                 pass
 
+    # ── Admin reconnect trigger ───────────────────────────────────────────────
+
+    async def reconnect_provider(self, provider: str) -> bool:
+        """
+        Called from admin 'Connect Now' after a token refresh.
+        - If DualFeedManager was never initialized (init failed at startup): re-runs _init_dual_feed.
+        - If DualFeedManager exists but the specific feed's task died: calls start() again.
+          DhanWebSocketManager and WebSocketManager both handle this idempotently after
+          their respective refresh_credentials() cleared the disabled flag / reset state.
+        Returns True if a reconnect was triggered.
+        """
+        from hub.feed_registry import get_ws_state
+        if get_ws_state(provider).get('ws_connected'):
+            return True  # already live — nothing to do
+
+        if self._dual_feed is None:
+            # First init failed — run full initialization
+            logger.info(f"[FeedServer] reconnect_provider({provider}) — no dual_feed, running full init.")
+            asyncio.create_task(self._init_dual_feed())
+            return True
+
+        # DualFeedManager exists but its task may have died — restart it
+        logger.info(f"[FeedServer] reconnect_provider({provider}) — restarting feed tasks.")
+        self._dual_feed.start()
+        return True
+
     # ── Tick capture ─────────────────────────────────────────────────────────
 
     async def _on_upstox_raw(self, feed_response) -> None:

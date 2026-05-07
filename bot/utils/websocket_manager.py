@@ -588,9 +588,15 @@ class WebSocketManager(DataFeed):
         if self.api_client_manager and hasattr(self.api_client_manager, 'set_access_token'):
             self.api_client_manager.set_access_token(access_token)
             logger.info("[WebSocketManager] Upstox api_client_manager token updated.")
-        # Force reconnect by closing the current connection so auth re-runs with new token
+        # Force reconnect so auth re-runs with the new token
         if self.websocket and self.is_connected:
             asyncio.create_task(self._force_reconnect())
+        elif not self._listener_task or self._listener_task.done():
+            # Connection loop has died — restart it with fresh credentials
+            self._running = True
+            self.reconnect_attempts = 0
+            self._listener_task = asyncio.create_task(self.connect_and_listen())
+            logger.info("[WebSocketManager] refresh_credentials — restarted dead connection task.")
 
     async def _force_reconnect(self):
         """Close the current WS so the reconnect loop re-establishes with the new token."""

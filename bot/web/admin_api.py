@@ -206,6 +206,19 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             except Exception as _rf_err:
                 logger.warning(f"[Admin] Could not signal live feed refresh for {provider}: {_rf_err}")
 
+            # After token refresh, ensure the WebSocket actually reconnects.
+            # refresh_feed_credentials() only works when the WS is already running.
+            # If it was offline (disabled at startup or task died), trigger FeedServer reconnect.
+            try:
+                from hub.feed_server import get_feed_server
+                from hub.feed_registry import get_ws_state
+                srv = get_feed_server()
+                if srv._started and not get_ws_state(provider).get('ws_connected'):
+                    await srv.reconnect_provider(provider)
+                    logger.info(f"[Admin] FeedServer WebSocket reconnect triggered for {provider}.")
+            except Exception as _srv_err:
+                logger.warning(f"[Admin] Could not trigger FeedServer reconnect for {provider}: {_srv_err}")
+
             if provider == 'upstox':
                 _sync_upstox_to_credentials(decrypt_secret(dp["api_key_encrypted"]), token, decrypt_secret(dp.get("api_secret_encrypted", "")))
             elif provider == 'dhan':
