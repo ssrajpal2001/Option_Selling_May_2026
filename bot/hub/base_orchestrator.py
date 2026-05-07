@@ -96,6 +96,20 @@ class BaseOrchestrator(ABC):
 
         # Read the futures_instrument_key from the specific instrument's section.
         self.futures_instrument_key = self.config_manager.get(self.primary_instrument, 'futures_instrument_key')
+
+        # Guard: if the config mistakenly sets futures_instrument_key to an index key
+        # (e.g. "NSE_INDEX|Nifty 50" instead of a real futures contract), clear it.
+        # An index key used as futures_key causes handle_tick_dispatched_normalized to route
+        # the NIFTY tick as is_futures=True → sets spot_price but never sets index_price → Spot=None.
+        _INDEX_PREFIXES = ('NSE_INDEX|', 'BSE_INDEX|', 'MCX_INDEX|')
+        if self.futures_instrument_key and any(self.futures_instrument_key.startswith(p) for p in _INDEX_PREFIXES):
+            logger.warning(
+                f"[Orchestrator] futures_instrument_key='{self.futures_instrument_key}' looks like an INDEX key, "
+                "not a futures contract. Clearing it — auto-discovery will resolve the real futures key. "
+                "Fix your config: set futures_instrument_key to a contract like NSE_FO:NIFTY25MAYFUT or leave blank."
+            )
+            self.futures_instrument_key = None
+
         if not self.futures_instrument_key:
             # Auto-discovery for MCX if missing in INI
             if self.is_mcx:

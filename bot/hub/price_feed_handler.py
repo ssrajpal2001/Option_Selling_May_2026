@@ -147,7 +147,11 @@ class PriceFeedHandler:
             return
 
         # 1. Update Global State (Shared data)
-        if instrument_key == self.futures_instrument_key:
+        # Safety check: if futures_key == index_key (misconfigured INI), treat as index.
+        # This prevents the NIFTY tick routing as is_futures=True which sets spot_price but
+        # never sets index_price, leaving Spot=None in heartbeat permanently.
+        _keys_same = self.futures_instrument_key and (self.futures_instrument_key == self.index_instrument_key)
+        if not _keys_same and instrument_key == self.futures_instrument_key:
             await self._update_spot_data(instrument_key, ltp, timestamp, is_futures=True, target_user_id=user_id)
         elif instrument_key == self.index_instrument_key:
             await self._update_spot_data(instrument_key, ltp, timestamp, is_futures=False, target_user_id=user_id)
