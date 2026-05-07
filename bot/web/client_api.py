@@ -936,6 +936,29 @@ async def square_off_one_leg(request: Request, user=Depends(get_current_user)):
     return {"success": True, "message": f"{side} square off signal sent to bot."}
 
 
+async def _ensure_feed_connected() -> None:
+    """
+    Called after bot start: reconnect any upstream provider (Upstox/Dhan) whose
+    WebSocket is currently offline.  This avoids the user having to manually click
+    'Connect Now' in Admin → Data Providers every time the bot is restarted.
+    """
+    try:
+        from hub.feed_server import get_feed_server
+        from hub import feed_registry
+        srv = get_feed_server()
+        for provider in ("upstox", "dhan"):
+            state = feed_registry.get_ws_state(provider)
+            if not state.get("ws_connected"):
+                logger.info(f"[BotStart] Feed provider '{provider}' is offline — triggering auto-reconnect.")
+                try:
+                    await srv.reconnect_provider(provider)
+                    logger.info(f"[BotStart] Auto-reconnect triggered for '{provider}'.")
+                except Exception as _re:
+                    logger.warning(f"[BotStart] Auto-reconnect failed for '{provider}': {_re}")
+    except Exception as exc:
+        logger.warning(f"[BotStart] _ensure_feed_connected error: {exc}")
+
+
 async def _start_one_broker_instance(instance: dict, user: dict, permitted_broker: str = None) -> dict:
     import hub.instance_manager
     instance_manager = hub.instance_manager.instance_manager
@@ -1224,6 +1247,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
             response = {"success": True, "message": result["message"]}
         if _plan_expiry_warning:
             response["plan_warning"] = _plan_expiry_warning
+        asyncio.create_task(_ensure_feed_connected())
         return response
 
     # ── Start-all path (no broker specified — start every configured broker) ─
@@ -1298,6 +1322,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
     }
     if _plan_expiry_warning:
         response["plan_warning"] = _plan_expiry_warning
+    asyncio.create_task(_ensure_feed_connected())
     return response
 
 
