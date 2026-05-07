@@ -188,6 +188,15 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                         if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
                             token = _broker_token
                             logger.info(f"[Admin] Upstox: using fresher token from broker instance (updated {_broker_updated}).")
+                            # Also update data_providers so FeedServer's re-init uses the fresh token
+                            try:
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='upstox'",
+                                    (_upstox_broker['access_token_encrypted'], _broker_updated)
+                                )
+                                logger.info(f"[Admin] Upstox token updated in data_providers (synced from broker instance).")
+                            except Exception as _sync_err:
+                                logger.warning(f"[Admin] Could not sync Upstox token to data_providers: {_sync_err}")
                 except Exception as _broker_tok_err:
                     logger.debug(f"[Admin] Could not fetch fresher Upstox token from broker instance: {_broker_tok_err}")
 
@@ -243,6 +252,15 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                     if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
                         token = _broker_token
                         logger.info(f"[Admin] Dhan: using fresher token from broker instance (updated {_broker_updated}).")
+                        # Also update data_providers so FeedServer's re-init uses the fresh token
+                        try:
+                            db_execute(
+                                "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='dhan'",
+                                (_dhan_broker['access_token_encrypted'], _broker_updated)
+                            )
+                            logger.info(f"[Admin] Dhan token updated in data_providers (synced from broker instance).")
+                        except Exception as _sync_err:
+                            logger.warning(f"[Admin] Could not sync Dhan token to data_providers: {_sync_err}")
             except Exception as _broker_tok_err:
                 logger.debug(f"[Admin] Could not fetch fresher Dhan token from broker instance: {_broker_tok_err}")
 
@@ -380,6 +398,15 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                             if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
                                 token = _broker_token
                                 logger.info(f"[Admin] Upstox: using fresher token from broker instance (updated {_broker_updated}).")
+                                # Also update data_providers so FeedServer's re-init uses the fresh token
+                                try:
+                                    db_execute(
+                                        "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='upstox'",
+                                        (_upstox_broker['access_token_encrypted'], _broker_updated)
+                                    )
+                                    logger.info(f"[Admin] Upstox token updated in data_providers (synced from broker instance).")
+                                except Exception as _sync_err:
+                                    logger.warning(f"[Admin] Could not sync Upstox token to data_providers: {_sync_err}")
                     except Exception as _broker_tok_err:
                         logger.debug(f"[Admin] Could not fetch fresher Upstox token from broker instance: {_broker_tok_err}")
 
@@ -431,6 +458,15 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                         if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
                             token = _broker_token
                             logger.info(f"[Admin] Dhan: using fresher token from broker instance (updated {_broker_updated}).")
+                            # Also update data_providers so FeedServer's re-init uses the fresh token
+                            try:
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='dhan'",
+                                    (_dhan_broker['access_token_encrypted'], _broker_updated)
+                                )
+                                logger.info(f"[Admin] Dhan token updated in data_providers (synced from broker instance).")
+                            except Exception as _sync_err:
+                                logger.warning(f"[Admin] Could not sync Dhan token to data_providers: {_sync_err}")
                 except Exception as _broker_tok_err:
                     logger.debug(f"[Admin] Could not fetch fresher Dhan token from broker instance: {_broker_tok_err}")
 
