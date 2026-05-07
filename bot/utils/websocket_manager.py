@@ -91,8 +91,11 @@ class WebSocketManager(DataFeed):
                     if "401" in str(e) and not active_client and hasattr(self, 'access_token'):
                         # FeedServer path: no api_client — reload directly from DB into self.access_token
                         try:
-                            from web.db import db_fetchone
-                            from web.auth import decrypt_secret
+                            from web.db import db_fetchone, db_execute
+                            from web.auth import decrypt_secret, encrypt_secret
+                            fresh = None
+
+                            # 1. Try data_providers first
                             row = db_fetchone(
                                 "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
                                 ()
@@ -100,13 +103,40 @@ class WebSocketManager(DataFeed):
                             if row and row[0]:
                                 candidate = decrypt_secret(row[0])
                                 if candidate and candidate != self.access_token:
-                                    self.access_token = candidate
+                                    fresh = candidate
                                     logger.info("[WSManager] 401 on auth (FeedServer) — reloaded token from data_providers.")
-                                else:
-                                    logger.warning(
-                                        "[WSManager] 401 on auth (FeedServer) — token in DB matches current. "
-                                        "Go to Admin → Data Providers → Upstox and click 'Connect Now'."
-                                    )
+
+                            # 2. Fallback: check client_broker_instances for a fresher token
+                            #    (covers the case where ReconnectManager saved a fresh token to the
+                            #    broker instance but data_providers was not yet updated)
+                            if not fresh:
+                                row2 = db_fetchone(
+                                    "SELECT access_token_encrypted FROM client_broker_instances "
+                                    "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                                    "ORDER BY updated_at DESC LIMIT 1",
+                                    ()
+                                )
+                                if row2 and row2[0]:
+                                    candidate = decrypt_secret(row2[0])
+                                    if candidate and candidate != self.access_token:
+                                        fresh = candidate
+                                        # Propagate to data_providers so next auth attempt uses it
+                                        try:
+                                            db_execute(
+                                                "UPDATE data_providers SET access_token_encrypted=? WHERE provider='upstox'",
+                                                (encrypt_secret(fresh),)
+                                            )
+                                            logger.info("[WSManager] 401 on auth (FeedServer) — reloaded token from client_broker_instances and propagated to data_providers.")
+                                        except Exception:
+                                            pass
+
+                            if fresh:
+                                self.access_token = fresh
+                            else:
+                                logger.warning(
+                                    "[WSManager] 401 on auth (FeedServer) — no fresher token found in DB. "
+                                    "Go to Admin → Data Providers → Upstox and click 'Connect Now'."
+                                )
                         except Exception as _db_err:
                             logger.debug(f"[WSManager] Could not reload token from DB: {_db_err}")
 
