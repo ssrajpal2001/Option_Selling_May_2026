@@ -63,8 +63,16 @@ class FeedServer:
         self._tick_count: int = 0  # For diagnostic logging
         # Queue of pending subscriptions while _dual_feed is transitioning/None
         self._pending_subscriptions: list = []  # List of (instruments, mode) tuples
+        # Lock to prevent concurrent _init_dual_feed() calls from creating duplicate WebSocket instances
+        self._init_lock = None  # Created on-demand in async context
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
+
+    def _get_init_lock(self) -> asyncio.Lock:
+        """Lazily create the lock in the current event loop."""
+        if self._init_lock is None:
+            self._init_lock = asyncio.Lock()
+        return self._init_lock
 
     async def start(self) -> None:
         if self._started:
@@ -101,51 +109,62 @@ class FeedServer:
             os.environ.pop('_FEED_SERVER_INIT', None)
 
     async def _init_dual_feed(self) -> None:
-        """Create and start a DualFeedManager using global provider credentials."""
-        try:
-            from utils.config_manager import ConfigManager
-            cfg = ConfigManager('config/config_trader.ini')
+        """Create and start a DualFeedManager using global provider credentials.
 
-            from hub.provider_factory import ProviderFactory
-            _, ws_mgr = await ProviderFactory.create_data_provider(
-                api_client_manager=None,
-                config_manager=cfg,
-                is_backtest=False,
-            )
-            if ws_mgr is None:
-                logger.warning("[FeedServer] No data feeds configured — server will forward no ticks.")
+        Serialized with a lock to prevent concurrent initialization calls from
+        creating multiple WebSocket instances (Upstox allows only 1 concurrent WS).
+        """
+        lock = self._get_init_lock()
+        async with lock:
+            # Already initialized while we were waiting? Return early.
+            if self._dual_feed is not None:
+                logger.info("[FeedServer] _init_dual_feed: dual_feed already initialized, skipping.")
                 return
 
-            self._dual_feed = ws_mgr
+            try:
+                from utils.config_manager import ConfigManager
+                cfg = ConfigManager('config/config_trader.ini')
 
-            # Immediately replay any pending subscriptions queued while feed was transitioning
-            self._replay_pending_subscriptions()
-
-            # Register a handler so that DualFeedManager wires up BOTH feeds:
-            #   • Upstox: ws_mgr.upstox.register_message_handler(_on_upstox_raw) → extracts LTP
-            #   • Dhan:   ws_mgr.dhan.register_message_handler(_on_dhan_tick)    → publishes
-            #             BROKER_TICK_RECEIVED, which _on_normalized_tick forwards to TCP clients.
-            # Without this call the DualFeedManager would start but Dhan ticks would never reach
-            # the event_bus because _on_dhan_tick is only registered via register_message_handler.
-            ws_mgr.register_message_handler(self._on_upstox_raw)
-
-            # Replay any subscriptions that connected clients already sent before the
-            # DualFeedManager was ready (clients may connect before init finishes).
-            if self._all_subscribed:
-                logger.info(
-                    f"[FeedServer] Replaying {len(self._all_subscribed)} queued subscriptions."
+                from hub.provider_factory import ProviderFactory
+                _, ws_mgr = await ProviderFactory.create_data_provider(
+                    api_client_manager=None,
+                    config_manager=cfg,
+                    is_backtest=False,
                 )
-                ws_mgr.subscribe(list(self._all_subscribed))
+                if ws_mgr is None:
+                    logger.warning("[FeedServer] No data feeds configured — server will forward no ticks.")
+                    return
 
-            # Connect the WebSockets
-            ws_mgr.start()
-            logger.info("[FeedServer] DualFeedManager started.")
-            # Start periodic status reporter — cancel previous one if it exists
-            if self._status_loop_task and not self._status_loop_task.done():
-                self._status_loop_task.cancel()
-            self._status_loop_task = asyncio.create_task(self._status_loop())
-        except Exception as exc:
-            logger.error(f"[FeedServer] Feed initialization failed: {exc}", exc_info=True)
+                self._dual_feed = ws_mgr
+
+                # Immediately replay any pending subscriptions queued while feed was transitioning
+                self._replay_pending_subscriptions()
+
+                # Register a handler so that DualFeedManager wires up BOTH feeds:
+                #   • Upstox: ws_mgr.upstox.register_message_handler(_on_upstox_raw) → extracts LTP
+                #   • Dhan:   ws_mgr.dhan.register_message_handler(_on_dhan_tick)    → publishes
+                #             BROKER_TICK_RECEIVED, which _on_normalized_tick forwards to TCP clients.
+                # Without this call the DualFeedManager would start but Dhan ticks would never reach
+                # the event_bus because _on_dhan_tick is only registered via register_message_handler.
+                ws_mgr.register_message_handler(self._on_upstox_raw)
+
+                # Replay any subscriptions that connected clients already sent before the
+                # DualFeedManager was ready (clients may connect before init finishes).
+                if self._all_subscribed:
+                    logger.info(
+                        f"[FeedServer] Replaying {len(self._all_subscribed)} queued subscriptions."
+                    )
+                    ws_mgr.subscribe(list(self._all_subscribed))
+
+                # Connect the WebSockets
+                ws_mgr.start()
+                logger.info("[FeedServer] DualFeedManager started.")
+                # Start periodic status reporter — cancel previous one if it exists
+                if self._status_loop_task and not self._status_loop_task.done():
+                    self._status_loop_task.cancel()
+                self._status_loop_task = asyncio.create_task(self._status_loop())
+            except Exception as exc:
+                logger.error(f"[FeedServer] Feed initialization failed: {exc}", exc_info=True)
 
     async def _status_loop(self) -> None:
         """Log FeedServer health every 60s so web-process logs show feed state."""
