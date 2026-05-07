@@ -141,6 +141,7 @@ class FeedClient(DataFeed):
 
     def start(self) -> asyncio.Task:
         """Begin the connection/read loop. Returns the background Task."""
+        logger.info("[FeedClient] start() called — creating _connection_loop task.")
         self._read_task = asyncio.create_task(self._connection_loop())
         return self._read_task
 
@@ -244,6 +245,10 @@ class FeedClient(DataFeed):
 
     async def _read_loop(self) -> None:
         """Read JSON lines from FeedServer and dispatch normalized ticks."""
+        logger.info(
+            f"[FeedClient] _read_loop ENTERED. connected={self._connected} "
+            f"reader_present={self._reader is not None}"
+        )
         while self._connected and self._reader:
             try:
                 line = await asyncio.wait_for(self._reader.readline(), timeout=_IDLE_TIMEOUT)
