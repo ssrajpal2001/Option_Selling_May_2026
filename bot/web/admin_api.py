@@ -134,18 +134,27 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
         _dhan_error = None
         _upstox_error = None
         if provider == 'upstox':
-            # Skip re-login if a valid token exists and was issued within the last 30 minutes
+            # Skip re-login if a valid token exists, was issued within the last 30 minutes,
+            # AND the WebSocket is currently connected (token is actually working).
             _issued_at = dp.get("token_issued_at")
             _has_token = bool(dp.get("access_token_encrypted"))
             if _issued_at and _has_token:
                 try:
+                    import pytz as _pytz
+                    _IST = _pytz.timezone('Asia/Kolkata')
                     _issued_dt = datetime.fromisoformat(_issued_at)
+                    # token_issued_at is stored in IST without tzinfo — attach IST, convert to UTC
                     if _issued_dt.tzinfo is None:
-                        _issued_dt = _issued_dt.replace(tzinfo=timezone.utc)
-                    _age_minutes = (datetime.now(timezone.utc) - _issued_dt).total_seconds() / 60
-                    if _age_minutes < 30:
-                        logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
+                        _issued_dt = _IST.localize(_issued_dt)
+                    _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
+                    # Only skip if fresh AND the WS is actually connected (not returning 401)
+                    from hub.feed_registry import get_ws_state as _gws
+                    _ws_live = _gws('upstox').get('ws_connected', False)
+                    if _age_minutes < 30 and _ws_live:
+                        logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) and WS connected — skipping re-login.")
                         return {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
+                    elif _age_minutes < 30 and not _ws_live:
+                        logger.info(f"[Admin] Upstox token appears fresh ({_age_minutes:.1f} min old) but WS is offline — attempting re-login.")
                 except Exception as _ts_err:
                     logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
@@ -260,19 +269,26 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
             _dhan_error = None
             _upstox_error = None
             if provider == "upstox":
-                # Skip re-login if a valid token exists and was issued within the last 30 minutes
+                # Skip re-login if a valid token exists, was issued within the last 30 minutes,
+                # AND the WebSocket is currently live (token is actually working).
                 _issued_at = dp.get("token_issued_at")
                 _has_token = bool(dp.get("access_token_encrypted"))
                 if _issued_at and _has_token:
                     try:
+                        import pytz as _pytz
+                        _IST = _pytz.timezone('Asia/Kolkata')
                         _issued_dt = datetime.fromisoformat(_issued_at)
                         if _issued_dt.tzinfo is None:
-                            _issued_dt = _issued_dt.replace(tzinfo=timezone.utc)
-                        _age_minutes = (datetime.now(timezone.utc) - _issued_dt).total_seconds() / 60
-                        if _age_minutes < 30:
-                            logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
+                            _issued_dt = _IST.localize(_issued_dt)
+                        _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
+                        from hub.feed_registry import get_ws_state as _gws2
+                        _ws_live2 = _gws2('upstox').get('ws_connected', False)
+                        if _age_minutes < 30 and _ws_live2:
+                            logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) and WS connected — skipping re-login.")
                             results[provider] = {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
                             continue
+                        elif _age_minutes < 30 and not _ws_live2:
+                            logger.info(f"[Admin] Upstox token appears fresh ({_age_minutes:.1f} min old) but WS offline — attempting re-login.")
                     except Exception as _ts_err:
                         logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
