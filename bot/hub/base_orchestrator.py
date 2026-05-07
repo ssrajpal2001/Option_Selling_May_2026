@@ -96,6 +96,20 @@ class BaseOrchestrator(ABC):
 
         # Read the futures_instrument_key from the specific instrument's section.
         self.futures_instrument_key = self.config_manager.get(self.primary_instrument, 'futures_instrument_key')
+
+        # Guard: if the config mistakenly sets futures_instrument_key to an index key
+        # (e.g. "NSE_INDEX|Nifty 50" instead of a real futures contract), clear it.
+        # An index key used as futures_key causes handle_tick_dispatched_normalized to route
+        # the NIFTY tick as is_futures=True → sets spot_price but never sets index_price → Spot=None.
+        _INDEX_PREFIXES = ('NSE_INDEX|', 'BSE_INDEX|', 'MCX_INDEX|')
+        if self.futures_instrument_key and any(self.futures_instrument_key.startswith(p) for p in _INDEX_PREFIXES):
+            logger.warning(
+                f"[Orchestrator] futures_instrument_key='{self.futures_instrument_key}' looks like an INDEX key, "
+                "not a futures contract. Clearing it — auto-discovery will resolve the real futures key. "
+                "Fix your config: set futures_instrument_key to a contract like NSE_FO:NIFTY25MAYFUT or leave blank."
+            )
+            self.futures_instrument_key = None
+
         if not self.futures_instrument_key:
             # Auto-discovery for MCX if missing in INI
             if self.is_mcx:
@@ -103,7 +117,28 @@ class BaseOrchestrator(ABC):
             else:
                 logger.warning(f"futures_instrument_key not defined in config for {self.primary_instrument}. Relying on auto-discovery.")
 
-        self.index_instrument_key = self.config_manager.get(self.primary_instrument, 'instrument_symbol')
+        # Use data_manager's pre-mapped instrument_key (already normalized by EngineManager)
+        # instead of re-reading from config to avoid bare names like 'NIFTY'
+        if data_manager and hasattr(data_manager, 'instrument_key'):
+            self.index_instrument_key = data_manager.instrument_key
+        else:
+            # Fallback: map bare names to universal Upstox format if not already mapped
+            raw_symbol = self.config_manager.get(self.primary_instrument, 'instrument_symbol')
+            if raw_symbol:
+                # Apply mapping if raw symbol is a bare name
+                name_map = {
+                    'NIFTY': 'NSE_INDEX|Nifty 50',
+                    'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
+                    'FINNIFTY': 'NSE_INDEX|Nifty Fin Service',
+                    'SENSEX': 'BSE_INDEX|SENSEX',
+                    'MIDCAP': 'NSE_INDEX|NIFTY MID SELECT',
+                    'CRUDEOIL': 'MCX_INDEX|CRUDE OIL',
+                    'NATURALGAS': 'MCX_INDEX|NATURAL GAS'
+                }
+                self.index_instrument_key = name_map.get(raw_symbol.upper(), raw_symbol)
+            else:
+                # Default fallback
+                self.index_instrument_key = name_map.get(self.primary_instrument.upper(), 'NSE_INDEX|Nifty 50')
 
         # If a DataManager is not passed in, it's created using the correct instrument symbol.
         self.data_manager = data_manager or DataManager(self.rest_client, self.index_instrument_key, self.config_manager, is_backtest=self.is_backtest)
@@ -296,9 +331,12 @@ class BaseOrchestrator(ABC):
         if self.is_backtest:
             return []
 
-        instrument_symbol = self.config_manager.get(self.instrument_name, 'instrument_symbol')
-        instruments = [self.futures_instrument_key, instrument_symbol]
-        logger.debug(f"[{self.instrument_name}] Requesting initial subscriptions for: {instruments}")
+        # Use the properly mapped index_instrument_key (e.g., NSE_INDEX|Nifty 50)
+        # instead of raw config value (e.g., NIFTY), which Upstox doesn't recognize.
+        # Filter out None/empty values — Upstox rejects the ENTIRE subscription
+        # batch if any key is None, so we must never send None in the list.
+        instruments = [k for k in (self.futures_instrument_key, self.index_instrument_key) if k]
+        logger.info(f"[{self.instrument_name}] Initial subscriptions: {instruments}")
         return instruments
 
     async def process_tick(self, backtest_previous_tick=None, backtest_current_tick=None):

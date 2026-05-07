@@ -4,9 +4,44 @@ import os
 import random
 import string
 import time
+from datetime import datetime, timezone, timedelta
 from urllib.parse import parse_qs, urlparse
 
 logger = logging.getLogger(__name__)
+
+_IST = timezone(timedelta(hours=5, minutes=30))
+_TOKEN_VALID_FROM_HOUR = 6  # tokens generated before 6 AM IST belong to previous session
+
+
+def is_token_valid_today(db_config: dict) -> bool:
+    """
+    Returns True if db_config contains an Upstox access token that was issued
+    today (after TOKEN_VALID_FROM_HOUR IST) and is therefore safe to reuse,
+    avoiding an unnecessary TOTP re-login during intraday bot restarts.
+    """
+    token = db_config.get('access_token') or db_config.get('api_secret')
+    if not token:
+        return False
+    token_updated_at = db_config.get('token_updated_at')
+    if not token_updated_at:
+        return False
+    try:
+        updated = datetime.fromisoformat(token_updated_at)
+        if updated.tzinfo is None:
+            updated = updated.replace(tzinfo=_IST)
+        updated_ist = updated.astimezone(_IST)
+        now_ist = datetime.now(_IST)
+        same_day = updated_ist.date() == now_ist.date()
+        after_cutoff = updated_ist.hour >= _TOKEN_VALID_FROM_HOUR
+        if same_day and after_cutoff:
+            logger.info(
+                f"[UpstoxAuth] Existing token is valid (issued {updated_ist.strftime('%H:%M IST')}). "
+                f"Skipping TOTP re-login."
+            )
+            return True
+    except Exception as e:
+        logger.warning(f"[UpstoxAuth] Could not parse token_updated_at: {e}")
+    return False
 
 _API_BASE     = "https://api.upstox.com"
 _SERVICE_BASE = "https://service.upstox.com"
@@ -129,7 +164,7 @@ def handle_upstox_login_automated(credentials, return_error=False):
     redirect_uri = (
         credentials.get("redirect_uri") or
         os.environ.get("UPSTOX_REDIRECT_URI") or
-        "https://google.com"  # Default for client Upstox accounts registered with google.com.
+        "https://www.google.com"  # Default for client Upstox accounts registered with google.com.
                               # Admin accounts pass redirect_uri explicitly from the DB
                               # (saved at credential-configure time by admin_api.py).
     )

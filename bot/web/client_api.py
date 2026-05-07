@@ -936,6 +936,29 @@ async def square_off_one_leg(request: Request, user=Depends(get_current_user)):
     return {"success": True, "message": f"{side} square off signal sent to bot."}
 
 
+async def _ensure_feed_connected() -> None:
+    """
+    Called after bot start: reconnect any upstream provider (Upstox/Dhan) whose
+    WebSocket is currently offline.  This avoids the user having to manually click
+    'Connect Now' in Admin → Data Providers every time the bot is restarted.
+    """
+    try:
+        from hub.feed_server import get_feed_server
+        from hub import feed_registry
+        srv = get_feed_server()
+        for provider in ("upstox", "dhan"):
+            state = feed_registry.get_ws_state(provider)
+            if not state.get("ws_connected"):
+                logger.info(f"[BotStart] Feed provider '{provider}' is offline — triggering auto-reconnect.")
+                try:
+                    await srv.reconnect_provider(provider)
+                    logger.info(f"[BotStart] Auto-reconnect triggered for '{provider}'.")
+                except Exception as _re:
+                    logger.warning(f"[BotStart] Auto-reconnect failed for '{provider}': {_re}")
+    except Exception as exc:
+        logger.warning(f"[BotStart] _ensure_feed_connected error: {exc}")
+
+
 async def _start_one_broker_instance(instance: dict, user: dict, permitted_broker: str = None) -> dict:
     import hub.instance_manager
     instance_manager = hub.instance_manager.instance_manager
@@ -1057,29 +1080,72 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
             return {"broker": broker_name, "status": "skipped",
                     "message": f"{broker_name.capitalize()} session expired — reconnect in Settings"}
     elif broker_name == "dhan":
-        _dhan_api_mode = bool(
-            instance.get("api_key_encrypted")
-            and instance.get("password_encrypted")
-            and instance.get("totp_encrypted")
+        from utils.auth_manager_dhan import handle_dhan_login_automated, generate_dhan_token
+        _dhan_api_key   = decrypt_secret(instance.get("api_key_encrypted") or "")
+        # Dhan Client ID (numeric, e.g. 1100123456) lives in broker_user_id_encrypted.
+        # api_key_encrypted holds the applicationId which is NOT the login client ID.
+        _dhan_client_id = decrypt_secret(instance.get("broker_user_id_encrypted") or "") or _dhan_api_key
+        _dhan_password  = decrypt_secret(instance.get("password_encrypted") or "")
+        _dhan_totp_sec  = decrypt_secret(instance.get("totp_encrypted") or "")
+        # API Key (applicationId) is optional — Client ID + PIN + TOTP are sufficient
+        _dhan_api_mode  = bool(_dhan_client_id and _dhan_password and _dhan_totp_sec)
+        _dhan_access_token = decrypt_secret(
+            instance.get("access_token_encrypted") or instance.get("api_secret_encrypted") or ""
         )
-        if not _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_api_mode):
-            return {"broker": broker_name, "status": "skipped",
-                    "message": "Dhan token expired — click Connect Now or reconnect in Settings"}
 
-        from utils.auth_manager_dhan import handle_dhan_login_automated
-        _dhan_api_key = decrypt_secret(instance["api_key_encrypted"]) if instance.get("api_key_encrypted") else ""
-        _dhan_access_token = (
-            decrypt_secret(instance["access_token_encrypted"])
-            if instance.get("access_token_encrypted")
-            else decrypt_secret(instance.get("api_secret_encrypted", ""))
-        )
-        _dhan_valid_token = await asyncio.to_thread(
-            handle_dhan_login_automated,
-            {"api_key": _dhan_api_key, "access_token": _dhan_access_token},
-        )
-        if not _dhan_valid_token:
+        # Check freshness + validate existing token
+        _dhan_token_ok = False
+        if _is_dhan_token_fresh(instance.get("token_updated_at"), api_key_mode=_dhan_api_mode) and _dhan_access_token:
+            _validated = await asyncio.to_thread(
+                handle_dhan_login_automated,
+                {"api_key": _dhan_client_id, "client_id": _dhan_client_id, "access_token": _dhan_access_token},
+            )
+            if _validated:
+                _dhan_access_token = _validated
+                _dhan_token_ok = True
+
+        # Auto-regenerate when token is stale/invalid and TOTP credentials are available
+        if not _dhan_token_ok and _dhan_api_mode:
+            logger.info(f"[StartBot] Dhan token stale/invalid for instance {instance['id']} — auto-generating fresh token...")
+            _regen = await asyncio.to_thread(
+                generate_dhan_token,
+                api_key=_dhan_api_key, client_id=_dhan_client_id,
+                password=_dhan_password, totp_secret=_dhan_totp_sec,
+            )
+            if _regen.get("token"):
+                _dhan_access_token = _regen["token"]
+                _enc_new = encrypt_secret(_dhan_access_token)
+                _now_ts = datetime.now(timezone.utc).isoformat()
+                db_execute(
+                    "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+                    (_enc_new, _now_ts, instance["id"]),
+                )
+                instance["access_token_encrypted"] = _enc_new
+                instance["token_updated_at"] = _now_ts
+
+                # Propagate fresh token to data_providers so FeedServer uses the new token
+                # on next reconnect (instead of reading stale token from data_providers)
+                try:
+                    _now_ist = datetime.now(IST).isoformat()
+                    db_execute(
+                        "UPDATE data_providers SET access_token_encrypted=?, token_issued_at=? WHERE provider='dhan'",
+                        (_enc_new, _now_ist),
+                    )
+                    logger.info("[StartBot] Dhan token propagated to data_providers for FeedServer.")
+                except Exception as _prop_err:
+                    logger.warning(f"[StartBot] Could not propagate Dhan token to data_providers: {_prop_err}")
+
+                _dhan_token_ok = True
+                logger.info(f"[StartBot] Dhan token auto-refreshed for instance {instance['id']}.")
+            else:
+                _err = _regen.get("error", "Unknown error")
+                logger.error(f"[StartBot] Dhan auto-refresh failed for instance {instance['id']}: {_err}")
+                return {"broker": broker_name, "status": "skipped",
+                        "message": f"Dhan token expired and auto-refresh failed: {_err}. Check Client ID, PIN, and TOTP in Settings."}
+
+        if not _dhan_token_ok:
             return {"broker": broker_name, "status": "skipped",
-                    "message": "Dhan token invalid or expired — reconnect Dhan in Settings"}
+                    "message": "Dhan token invalid or expired — save Password/TOTP in Settings to enable auto-refresh, or reconnect manually."}
 
     # Already running?
     if instance["status"] == "running":
@@ -1181,6 +1247,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
             response = {"success": True, "message": result["message"]}
         if _plan_expiry_warning:
             response["plan_warning"] = _plan_expiry_warning
+        asyncio.create_task(_ensure_feed_connected())
         return response
 
     # ── Start-all path (no broker specified — start every configured broker) ─
@@ -1255,6 +1322,7 @@ async def start_bot(body: BotStartRequest = BotStartRequest(), user=Depends(get_
     }
     if _plan_expiry_warning:
         response["plan_warning"] = _plan_expiry_warning
+    asyncio.create_task(_ensure_feed_connected())
     return response
 
 
@@ -1523,35 +1591,6 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
             FROM trade_history WHERE instance_id=? ORDER BY closed_at DESC LIMIT 50
         """, (instance["id"],))
 
-    bot_data = {}
-
-    # Try instrument-specific status file first
-    if instrument:
-        status_file = Path(f'config/bot_status_client_{user["id"]}_{instrument}.json')
-    else:
-        status_file = Path(f'config/bot_status_client_{user["id"]}.json')
-
-    if not status_file.exists() and instrument:
-        # Fallback to main file if specific instrument file not found
-        status_file = Path(f'config/bot_status_client_{user["id"]}.json')
-
-    if status_file.exists():
-        try:
-            with open(status_file, 'r') as f:
-                bot_data = json.load(f)
-            heartbeat = float(bot_data.get('heartbeat') or 0)
-            age = time.time() - heartbeat
-            bot_data['stale'] = age > 30
-            bot_data['stale_seconds'] = round(age)
-
-            # Multi-tenant logic: If we have a fresh heartbeat in the file,
-            # consider the bot running even if it's not in this web worker's memory.
-            if not live_status["running"] and heartbeat > 0 and age < 30:
-                live_status["running"] = True
-                live_status["pid"] = bot_data.get("pid")
-        except (json.JSONDecodeError, OSError, TypeError, ValueError):
-            bot_data = {}
-
     inst_dict = dict(instance)
     safe_keys = ["id", "broker", "status", "trading_mode", "instrument", "quantity", "strategy_version", "last_heartbeat", "token_updated_at"]
     inst_safe = {k: inst_dict.get(k) for k in safe_keys}
@@ -1575,12 +1614,77 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
             "quantity": bi["quantity"] or 25,
         })
 
+    # Each broker subprocess writes its own status file. Read them all so the
+    # UI can show per-broker positions without races between brokers.
+    # Fall back to the active instance's instrument if the caller didn't pass one.
+    inst_instrument = instrument or inst_dict.get("instrument")
+    bot_data_per_broker = {}
+    # Backward-compat fallback: if no per-broker files exist (e.g. bot
+    # subprocesses haven't been restarted with the new code yet), read the
+    # legacy combined file so the panel doesn't go blank during deploy.
+    legacy_paths = []
+    if inst_instrument:
+        legacy_paths.append(Path(f'config/bot_status_client_{user["id"]}_{inst_instrument}.json'))
+    legacy_paths.append(Path(f'config/bot_status_client_{user["id"]}.json'))
+    if inst_instrument:
+        for bi in all_broker_instances:
+            bf = Path(f'config/bot_status_client_{user["id"]}_{inst_instrument}_{bi["broker"]}.json')
+            if not bf.exists():
+                continue
+            try:
+                with open(bf, 'r') as f:
+                    payload = json.load(f)
+                heartbeat = float(payload.get('heartbeat') or 0)
+                age = time.time() - heartbeat
+                payload['stale'] = age > 30
+                payload['stale_seconds'] = round(age)
+                bot_data_per_broker[bi["broker"]] = payload
+            except (json.JSONDecodeError, OSError, TypeError, ValueError):
+                continue
+
+    # If per-broker files weren't found, fall back to legacy combined file.
+    # Surface it as the active instance's broker key so the tab strip still
+    # has something to render until the bot subprocesses restart.
+    if not bot_data_per_broker:
+        for lp in legacy_paths:
+            if not lp.exists():
+                continue
+            try:
+                with open(lp, 'r') as f:
+                    payload = json.load(f)
+                heartbeat = float(payload.get('heartbeat') or 0)
+                age = time.time() - heartbeat
+                payload['stale'] = age > 30
+                payload['stale_seconds'] = round(age)
+                fallback_broker = inst_dict.get("broker") or 'bot'
+                bot_data_per_broker[fallback_broker] = payload
+                break
+            except (json.JSONDecodeError, OSError, TypeError, ValueError):
+                continue
+
+    # Backward-compat: pick one broker's payload as `bot_data`. Prefer the
+    # active instance's broker, then the first running one, then any.
+    primary_broker = inst_dict.get("broker")
+    bot_data = (
+        bot_data_per_broker.get(primary_broker)
+        or next((bot_data_per_broker[b["broker"]] for b in brokers_status
+                 if b["running"] and b["broker"] in bot_data_per_broker), None)
+        or next(iter(bot_data_per_broker.values()), {})
+    )
+
+    if bot_data:
+        heartbeat = float(bot_data.get('heartbeat') or 0)
+        if not live_status["running"] and heartbeat > 0 and (time.time() - heartbeat) < 30:
+            live_status["running"] = True
+            live_status["pid"] = bot_data.get("pid")
+
     return {
         "configured": True,
         "instance": inst_safe,
         "live": live_status,
         "trade_history": trades,
         "bot_data": bot_data,
+        "bot_data_per_broker": bot_data_per_broker,
         "brokers": brokers_status,
     }
 
@@ -1948,7 +2052,7 @@ def _read_admin_v3_defaults() -> dict:
         _pnl = _v3.get("guardrail_pnl") or {}
         _tsl = _v3.get("tsl_scalable") or {}
         return {
-            "start_time":              _v3.get("start_time") or _strat.get("NIFTY", {}).get("sell", {}).get("start_time") or "09:20",
+            "start_time":              _v3.get("start_time") or _strat.get("NIFTY", {}).get("sell", {}).get("start_time") or "09:15",
             "entry_end_time":          _v3.get("entry_end_time") or "14:00",
             "square_off_time":         _v3.get("square_off_time") or "15:15",
             "session_pnl_enabled":     bool(_pnl.get("enabled", False)),
@@ -1971,8 +2075,8 @@ def _read_admin_v3_defaults() -> dict:
             "ratio_exit_threshold":    (_v3.get("ratio_exit") or {}).get("threshold"),
             "day_wise":                {
                 d: {
-                    "target": (_v3.get(long) or {}).get("single_trade_target_pts"),
-                    "sl":     (_v3.get(long) or {}).get("single_trade_stoploss_pts"),
+                    "target": ((_v3.get(long) or {}).get("guardrail_pnl") or {}).get("target_pts"),
+                    "sl":     ((_v3.get(long) or {}).get("guardrail_pnl") or {}).get("stoploss_pts"),
                 }
                 for d, long in _DAY_MAP.items()
             },
@@ -2009,11 +2113,11 @@ def _broker_cfg_to_ui(broker_cfg: dict) -> dict:
     for field, (key, _) in _BCK.items():
         if key in broker_cfg:
             out[field] = broker_cfg[key]
-    # Day-wise overrides
+    # Day-wise overrides (now route through Session PNL guardrail)
     day_wise = {}
     for d, long in _DAY_MAP.items():
-        t_key = f"v3.{long}.single_trade_target_pts"
-        sl_key = f"v3.{long}.single_trade_stoploss_pts"
+        t_key = f"v3.{long}.guardrail_pnl.target_pts"
+        sl_key = f"v3.{long}.guardrail_pnl.stoploss_pts"
         if t_key in broker_cfg or sl_key in broker_cfg:
             day_wise[d] = {
                 "target": broker_cfg.get(t_key),
@@ -2064,6 +2168,7 @@ async def get_broker_settings(broker: str, user=Depends(get_current_user)):
         "max_open_positions":   inst.get("max_open_positions") or 1,
         "max_drawdown_pct":     inst.get("max_drawdown_pct") or 0,
         "risk_per_trade_pct":   inst.get("risk_per_trade_pct") or 1.0,
+        "quantity":             inst.get("quantity") or 1,
     }
 
 
@@ -2092,6 +2197,7 @@ class BrokerSettingsUpdate(BaseModel):
     ltp_exit_min:            Optional[float] = None
     ratio_exit_enabled:      Optional[bool]  = None
     ratio_exit_threshold:    Optional[float] = None
+    quantity:                Optional[int]   = None
 
 
 @router.post("/broker/{broker}/settings")
@@ -2131,8 +2237,8 @@ async def save_broker_settings(broker: str, body: BrokerSettingsUpdate, user=Dep
                 continue
             target = vals.get("target")
             sl     = vals.get("sl")
-            t_key  = f"v3.{long}.single_trade_target_pts"
-            sl_key = f"v3.{long}.single_trade_stoploss_pts"
+            t_key  = f"v3.{long}.guardrail_pnl.target_pts"
+            sl_key = f"v3.{long}.guardrail_pnl.stoploss_pts"
             if target is not None:
                 broker_cfg[t_key] = float(target)
             else:
@@ -2158,6 +2264,9 @@ async def save_broker_settings(broker: str, body: BrokerSettingsUpdate, user=Dep
     if body.max_trades_per_day is not None:
         sql_sets.append("max_daily_trades=?")
         sql_vals.append(body.max_trades_per_day)
+    if body.quantity is not None and body.quantity >= 1:
+        sql_sets.append("quantity=?")
+        sql_vals.append(int(body.quantity))
 
     sql_vals.append(inst["id"])
     db_execute(f"UPDATE client_broker_instances SET {', '.join(sql_sets)} WHERE id=?", sql_vals)
@@ -2380,3 +2489,108 @@ async def get_market_status(user=Depends(get_current_user)):
             "next_open": None, "server_time": now.isoformat(),
             "rust_available": rust_available,
         }
+
+
+@router.get("/feed-status")
+async def get_feed_status(user=Depends(get_current_user)):
+    """Return live WebSocket feed health for client dashboard health dot."""
+    try:
+        from hub.feed_registry import get_all_ws_state
+        state = get_all_ws_state()
+    except Exception:
+        state = {}
+
+    now = time.time()
+    result = {}
+    for provider, s in state.items():
+        connected = s.get("ws_connected", False)
+        last_tick = s.get("last_tick_time")
+        lag = round(now - last_tick, 1) if last_tick else None
+        if connected and lag is not None and lag < 30:
+            health = "green"
+        elif connected:
+            health = "amber"
+        else:
+            health = "red"
+        result[provider] = {"connected": connected, "lag_seconds": lag, "health": health}
+
+    return {"feeds": result}
+
+
+@router.get("/trades/monthly-summary")
+async def get_monthly_trade_summary(
+    year: int = Query(...), month: int = Query(...),
+    user=Depends(get_current_user)
+):
+    """Return daily PnL totals for a given month — used by trade calendar."""
+    rows = db_fetchall(
+        "SELECT date(closed_at) as day, SUM(pnl_rs) as total_rs, SUM(pnl_pts) as total_pts, "
+        "COUNT(*) as trades "
+        "FROM trade_history "
+        "WHERE client_id=? AND strftime('%Y', closed_at)=? AND strftime('%m', closed_at)=? "
+        "AND UPPER(trading_mode)='LIVE' "
+        "GROUP BY date(closed_at)",
+        (user["id"], str(year), f"{month:02d}")
+    )
+    return {"year": year, "month": month, "days": {r["day"]: {
+        "pnl_rs": round(r["total_rs"] or 0, 2),
+        "pnl_pts": round(r["total_pts"] or 0, 2),
+        "trades": r["trades"]
+    } for r in rows}}
+
+
+@router.post("/user/strategy")
+async def save_user_strategy(request: Request, user=Depends(get_current_user)):
+    """Save per-user strategy overrides (LTP target, max trades, SL, target pts)."""
+    body = await request.json()
+    allowed = {"ltp_target", "max_daily_trades", "single_trade_sl_pts", "single_trade_target_pts"}
+    overrides = {k: v for k, v in body.items() if k in allowed}
+
+    # Validate numeric values
+    for k, v in overrides.items():
+        try:
+            overrides[k] = float(v)
+        except (TypeError, ValueError):
+            raise HTTPException(400, f"Invalid value for {k}: must be numeric")
+
+    # Load existing overrides and merge
+    row = db_fetchone(
+        "SELECT client_strategy_overrides FROM client_broker_instances "
+        "WHERE client_id=? AND status != 'removed' LIMIT 1",
+        (user["id"],)
+    )
+    existing = {}
+    if row and row.get("client_strategy_overrides"):
+        try:
+            existing = json.loads(row["client_strategy_overrides"])
+        except Exception:
+            existing = {}
+
+    broker_cfg = existing.get("broker_cfg", {})
+    broker_cfg.update(overrides)
+    existing["broker_cfg"] = broker_cfg
+
+    db_execute(
+        "UPDATE client_broker_instances SET client_strategy_overrides=? "
+        "WHERE client_id=? AND status != 'removed'",
+        (json.dumps(existing), user["id"])
+    )
+    return {"ok": True, "saved": overrides}
+
+
+@router.get("/user/strategy")
+async def get_user_strategy(user=Depends(get_current_user)):
+    """Get current per-user strategy overrides."""
+    row = db_fetchone(
+        "SELECT client_strategy_overrides FROM client_broker_instances "
+        "WHERE client_id=? AND status != 'removed' LIMIT 1",
+        (user["id"],)
+    )
+    overrides = {}
+    if row and row.get("client_strategy_overrides"):
+        try:
+            data = json.loads(row["client_strategy_overrides"])
+            overrides = data.get("broker_cfg", {})
+        except Exception:
+            pass
+    return {"overrides": overrides}

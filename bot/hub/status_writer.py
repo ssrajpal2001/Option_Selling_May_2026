@@ -25,10 +25,15 @@ class StatusWriter:
             self.status_path = Path(f"config/backtest_status_ui_{client_id}.json") if client_id else Path("config/backtest_status_ui.json")
             self.legacy_status_path = self.status_path
         elif client_id:
-            # Multi-instrument support: write one file per instrument
-            self.status_path = Path(f'config/bot_status_client_{client_id}_{orchestrator.instrument_name}.json')
-            # For backward compatibility and single-instrument UI, also write the main file
-            self.legacy_status_path = Path(f'config/bot_status_client_{client_id}.json')
+            # Multi-broker support: namespace by broker so independent broker
+            # subprocesses don't race on the same file. The web UI reads
+            # per-broker files and shows them as separate tabs.
+            broker = os.environ.get('CLIENT_BROKER', 'unknown')
+            self.status_path = Path(f'config/bot_status_client_{client_id}_{orchestrator.instrument_name}_{broker}.json')
+            # Legacy combined files would just race between brokers — point them
+            # at the same per-broker path so callers that still read them get
+            # a coherent (if broker-scoped) snapshot instead of flicker.
+            self.legacy_status_path = self.status_path
         else:
             self.status_path = Path(f'config/bot_status_{orchestrator.instrument_name}.json')
             self.legacy_status_path = Path('config/bot_status.json')

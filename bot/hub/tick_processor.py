@@ -157,12 +157,16 @@ class TickProcessor:
                 self._trading_db_last_check = _now
                 try:
                     _db = os.path.join(os.getcwd(), 'config', 'algosoft.db')
-                    with sqlite3.connect(_db, timeout=2) as _conn:
-                        _row = _conn.execute(
-                            "SELECT trading_active, trading_mode, quantity "
-                            "FROM client_broker_instances WHERE client_id=? AND broker=?",
-                            (int(user_id), broker_name)
-                        ).fetchone()
+
+                    def _read_db():
+                        with sqlite3.connect(_db, timeout=2) as _c:
+                            return _c.execute(
+                                "SELECT trading_active, trading_mode, quantity "
+                                "FROM client_broker_instances WHERE client_id=? AND broker=?",
+                                (int(user_id), broker_name)
+                            ).fetchone()
+
+                    _row = await asyncio.to_thread(_read_db)
                     if _row is not None:
                         self._cached_trading_active = bool(_row[0])
                         _new_mode = (_row[1] or 'paper').lower()

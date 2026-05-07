@@ -3,6 +3,7 @@ import os
 import datetime
 import warnings
 import asyncio
+import pytz
 import pandas as pd
 from dhanhq import dhanhq, marketfeed as market_feed
 from .base_broker import BaseBroker
@@ -10,6 +11,8 @@ from utils.logger import logger
 from utils.auth_manager_dhan import handle_dhan_login
 from hub.event_bus import event_bus
 import threading
+
+_KOLKATA = pytz.timezone('Asia/Kolkata')
 
 class DhanClient(BaseBroker):
     # Class-level shared state to avoid redundant downloads across multiple client instances
@@ -35,56 +38,96 @@ class DhanClient(BaseBroker):
                 # in automated login never prevents the stored-token fallback from running.
                 client_id = self.db_config.get('api_key', '')
 
-                # 1. Attempt automated token generation if PIN/TOTP are provided
-                if self.db_config.get('password') and self.db_config.get('totp'):
-                    try:
-                        from utils.auth_manager_dhan import handle_dhan_login_automated
-                        try:
-                            from dhanhq import DhanContext
-                        except ImportError:
-                            DhanContext = None
-                        with self._scoped_ip_patch():
-                            token = handle_dhan_login_automated(self.db_config)
-                        if token:
-                            self.dhan = (dhanhq(DhanContext(client_id, token))
-                                         if DhanContext else dhanhq(client_id, token))
-                            logger.info(f"Dhan automated client initialized for User ID: {self.user_id}.")
-                    except Exception as e:
-                        logger.warning(
-                            f"Dhan automated login failed for user {self.user_id}: {e}. "
-                            f"Trying stored access token."
-                        )
+                # 1. Attempt automated token validation/renewal if credentials are provided.
+                # Strategy (in order):
+                #   a) Validate existing token — if still valid, reuse it (no network auth needed)
+                #   b) If invalid, try Renew (cheap, no TOTP) — extends 24-hour token by another 24h
+                #   c) If renew fails and TOTP is available, generate a fresh token via full login
+                # This prevents exhausting the 125-second generation rate limit on intraday restarts.
+                try:
+                    from dhanhq import DhanContext
+                except ImportError:
+                    DhanContext = None
 
-                # 2. Fallback to existing access token, but only after the same
-                # lightweight validation used above.  Constructing dhanhq with an
-                # expired token looks "connected" until the first live order/feed
-                # call fails with DH-901.
-                if not self.dhan:
+                existing_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
+
+                if client_id and existing_token:
                     try:
-                        try:
-                            from dhanhq import DhanContext
-                        except ImportError:
-                            DhanContext = None
-                        access_token = self.db_config.get('access_token') or self.db_config.get('api_secret')
-                        if client_id and access_token:
-                            from utils.auth_manager_dhan import handle_dhan_login_automated
-                            validated_token = handle_dhan_login_automated({
-                                'api_key': client_id,
-                                'access_token': access_token,
-                            })
-                            if validated_token:
-                                self.dhan = (dhanhq(DhanContext(client_id, validated_token))
-                                             if DhanContext else dhanhq(client_id, validated_token))
-                                logger.info(f"Dhan client initialized from token for User ID: {self.user_id}.")
+                        from utils.auth_manager_dhan import (
+                            handle_dhan_login_automated, renew_dhan_token, generate_dhan_token
+                        )
+                        # Step a: validate
+                        validated = handle_dhan_login_automated({
+                            'api_key': client_id,
+                            'access_token': existing_token,
+                        })
+                        if validated:
+                            self.dhan = (dhanhq(DhanContext(client_id, validated))
+                                         if DhanContext else dhanhq(client_id, validated))
+                            logger.info(f"Dhan client initialised (token valid) for user {self.user_id}.")
+                        else:
+                            # Step b: renew (no TOTP needed)
+                            logger.info(f"[Dhan] Token expired for user {self.user_id}, attempting renewal…")
+                            with self._scoped_ip_patch():
+                                renewed = renew_dhan_token(existing_token, client_id)
+                            if renewed:
+                                self.dhan = (dhanhq(DhanContext(client_id, renewed))
+                                             if DhanContext else dhanhq(client_id, renewed))
+                                logger.info(f"Dhan client initialised (token renewed) for user {self.user_id}.")
+                                # Persist renewed token to DB
+                                try:
+                                    from web.db import db_execute
+                                    from web.auth import encrypt_secret
+                                    from datetime import datetime, timezone, timedelta
+                                    _tz_ist = timezone(timedelta(hours=5, minutes=30))
+                                    now_ist = datetime.now(_tz_ist).isoformat()
+                                    inst_id = self.db_config.get('id')
+                                    if inst_id:
+                                        db_execute(
+                                            "UPDATE client_broker_instances "
+                                            "SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
+                                            (encrypt_secret(renewed), now_ist, inst_id)
+                                        )
+                                except Exception as _dbe:
+                                    logger.warning(f"[Dhan] Could not persist renewed token: {_dbe}")
+                            elif self.db_config.get('password') and self.db_config.get('totp'):
+                                # Step c: full login with TOTP
+                                logger.info(f"[Dhan] Renewal failed, attempting full TOTP login for user {self.user_id}…")
+                                with self._scoped_ip_patch():
+                                    fresh = generate_dhan_token(self.db_config)
+                                if fresh:
+                                    new_token = fresh.get('access_token') or fresh.get('accessToken')
+                                    if new_token:
+                                        self.dhan = (dhanhq(DhanContext(client_id, new_token))
+                                                     if DhanContext else dhanhq(client_id, new_token))
+                                        logger.info(f"Dhan client initialised (fresh token) for user {self.user_id}.")
+                                    else:
+                                        logger.error(f"[Dhan] Full login response missing token for user {self.user_id}.")
+                                else:
+                                    logger.error(f"[Dhan] Full TOTP login failed for user {self.user_id}.")
                             else:
                                 logger.error(
                                     f"Dhan token invalid/expired for user {self.user_id}. "
                                     f"Reconnect Dhan from Settings before live trading."
                                 )
-                        else:
-                            logger.error(f"Dhan: Missing credentials in DB config for user {self.user_id}.")
                     except Exception as e:
-                        logger.error(f"Failed to initialize Dhan client from token for user {self.user_id}: {e}")
+                        logger.warning(f"Dhan login failed for user {self.user_id}: {e}.")
+                elif self.db_config.get('password') and self.db_config.get('totp'):
+                    # No stored token at all — do full TOTP login
+                    try:
+                        from utils.auth_manager_dhan import generate_dhan_token
+                        with self._scoped_ip_patch():
+                            fresh = generate_dhan_token(self.db_config)
+                        if fresh:
+                            new_token = fresh.get('access_token') or fresh.get('accessToken')
+                            if new_token:
+                                self.dhan = (dhanhq(DhanContext(client_id, new_token))
+                                             if DhanContext else dhanhq(client_id, new_token))
+                                logger.info(f"Dhan automated client initialized for user {self.user_id}.")
+                    except Exception as e:
+                        logger.warning(f"Dhan automated login failed for user {self.user_id}: {e}.")
+                else:
+                    logger.error(f"Dhan: Missing credentials in DB config for user {self.user_id}.")
             else:
                 # Legacy INI path
                 credentials_section = self.config_manager.get(broker_instance_name, 'credentials')
@@ -411,7 +454,7 @@ class DhanClient(BaseBroker):
             'instrument_key': inst_key,
             'ltp': float(ltp),
             'volume': int(volume),
-            'timestamp': datetime.datetime.now(), # Dhan might not provide exch timestamp in Ticker mode
+            'timestamp': datetime.datetime.now(_KOLKATA),
             'broker': 'dhan'
         }
 

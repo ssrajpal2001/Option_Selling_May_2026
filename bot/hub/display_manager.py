@@ -1,6 +1,8 @@
 import asyncio
 import datetime
 import os
+import sys
+import pytz
 from utils.logger import logger
 
 class DisplayManager:
@@ -20,6 +22,9 @@ class DisplayManager:
             enabled = self.config_manager.get('settings', 'display_enabled', fallback='true').lower() == 'true'
             if not enabled:
                 return
+        # Skip display when stdout is redirected to a file/pipe — ANSI codes corrupt logs.
+        if not sys.stdout.isatty():
+            return
         loop = asyncio.get_running_loop()
         while True:
             # RUN SYNCHRONOUS display_data in a separate thread to avoid blocking the event loop.
@@ -36,6 +41,19 @@ class DisplayManager:
         try:
             # Use ANSI escape sequence to clear screen (non-blocking)
             print("\033[H\033[2J", end="")
+
+            _IST = pytz.timezone('Asia/Kolkata')
+            _now_ist = datetime.datetime.now(_IST)
+            _market_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
+            _market_close = _now_ist.replace(hour=15, minute=30, second=0, microsecond=0)
+            if _now_ist < _market_open or _now_ist > _market_close:
+                print(f"--- AlgoSoft Bot --- {_now_ist.strftime('%Y-%m-%d %H:%M:%S IST')}")
+                if _now_ist < _market_open:
+                    opens_in = int((_market_open - _now_ist).total_seconds() // 60)
+                    print(f"  Market opens at 09:15 IST  (in {opens_in} min)")
+                else:
+                    print(f"  Market closed (15:30 IST)")
+                return
 
             header_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 

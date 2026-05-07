@@ -152,10 +152,10 @@ class EntryLogic(SellV3Base):
                 elif do_log:
                     logger.info(f"[SellManagerV3] Beginning Concept technicals FAILED: {reason}. Searching next ATM in next pulse...")
 
-            # Hybrid transition if enabled and rules/strikes failed
-            if is_beginning and workflow_mode == 'hybrid' and not is_immediate:
-                 logger.info(f"[SellManagerV3] Hybrid Transition: Beginning Concept rules failed. Switching to Re-entry Concept (Pool Scan) for next pulse.")
-                 self.manager.workflow_phase = 'CONTINUE'
+            # Hybrid transition: Beginning failed → switch to pool scan regardless of is_immediate
+            if is_beginning and workflow_mode == 'hybrid':
+                logger.info(f"[SellManagerV3] Hybrid Transition: Beginning Concept failed. Switching to Re-entry Concept (Pool Scan) for next pulse.")
+                self.manager.workflow_phase = 'CONTINUE'
             return
 
         else:
@@ -204,14 +204,21 @@ class EntryLogic(SellV3Base):
         v_slope_tf = self._v3_cfg('v_slope_entry.tf', 1, int, timestamp=timestamp)
         metric = self._v3_cfg('reentry_best_metric', 'balanced_premium', timestamp=timestamp)
 
-        # ATM Bias Detection for Matrix Filter
+        # ATM Bias Detection for Matrix Filter using corrected (time-value) LTP
+        # Strip intrinsic: CE intrinsic = max(0, spot-strike), PE intrinsic = max(0, strike-spot)
+        # Threshold check uses raw LTP only; bias direction uses corrected LTP.
         ce_key_atm = self.orchestrator.atm_manager.find_instrument_key_by_strike(atm, 'CE', expiry)
         pe_key_atm = self.orchestrator.atm_manager.find_instrument_key_by_strike(atm, 'PE', expiry)
         ce_ltp_atm = ticks.get(ce_key_atm, {}).get('ltp', 0) if ce_key_atm else 0
         pe_ltp_atm = ticks.get(pe_key_atm, {}).get('ltp', 0) if pe_key_atm else 0
+        _spot = anchor_price or atm
+        ce_corrected_atm = ce_ltp_atm - max(0.0, _spot - atm)
+        pe_corrected_atm = pe_ltp_atm - max(0.0, atm - _spot)
+        ce_bias_stronger = ce_corrected_atm > pe_corrected_atm
 
         if do_log:
-            logger.info(f"[SellManagerV3] Pool Scan (Matrix {len(strikes)}x{len(strikes)}) - ATM Bias: {'CE' if ce_ltp_atm > pe_ltp_atm else 'PE'} Stronger")
+            logger.info(f"[SellManagerV3] Pool Scan (Matrix {len(strikes)}x{len(strikes)}) - ATM Bias: {'CE' if ce_bias_stronger else 'PE'} Stronger"
+                        f" (CE corr={ce_corrected_atm:.2f}, PE corr={pe_corrected_atm:.2f})")
 
         # N x N Matrix Loop
         for s_ce in strikes:
@@ -224,13 +231,14 @@ class EntryLogic(SellV3Base):
                 pe_ltp = ticks.get(pe_key, {}).get('ltp', 0) if pe_key else 0
                 if pe_ltp == 0: continue
 
-                # Filter by LTP target
+                # Filter by LTP target (raw LTP — threshold always uses original price)
                 if ce_ltp < ltp_target or pe_ltp < ltp_target:
                     continue
 
-                # USER REQUIREMENT: Opposite Bias Filter (Flip Point)
-                # If CE > PE at ATM, we ONLY consider combinations where PE > CE (to capture reversal/balance)
-                if ce_ltp_atm > pe_ltp_atm:
+                # 1st Filter: Bias direction from corrected ATM LTP
+                # CE corrected > PE corrected → CE has more time value → only allow pairs where PE raw LTP > CE raw LTP
+                # PE corrected > CE corrected → PE has more time value → only allow pairs where CE raw LTP > PE raw LTP
+                if ce_bias_stronger:
                     if ce_ltp >= pe_ltp: continue
                 else:
                     if pe_ltp >= ce_ltp: continue
@@ -242,8 +250,19 @@ class EntryLogic(SellV3Base):
                 passed, tech_reason = await self.evaluate_rules(rules, ce_key, pe_key, timestamp, is_entry=True, anchor_ts=anchor_ts, do_log=False, return_reason=True)
 
                 if not passed:
-                    if do_log:
-                        logger.info(f"  - Strike {s_ce}/{s_pe} [Key: {ce_key}/{pe_key}] [Score: {balanced_score:.4f}] Rejected Technicals: {tech_reason}")
+                    # Always log per-pair rejection so the user can see WHY no trade fired.
+                    # Throttle: log each (ce/pe, reason) combo at most once every 60s to avoid spam.
+                    _rkey = f"{ce_key}/{pe_key}|{tech_reason}"
+                    _now_t = asyncio.get_event_loop().time()
+                    if not hasattr(self.manager, '_last_reject_log'):
+                        self.manager._last_reject_log = {}
+                    _last = self.manager._last_reject_log.get(_rkey, 0)
+                    if _now_t - _last >= 60:
+                        self.manager._last_reject_log[_rkey] = _now_t
+                        logger.info(
+                            f"  - Strike {s_ce}/{s_pe} [Key: {ce_key}/{pe_key}] "
+                            f"[Score: {balanced_score:.4f}] Rejected Technicals: {tech_reason}"
+                        )
                     continue
 
                 # Metrics for selection
@@ -366,8 +385,13 @@ class EntryLogic(SellV3Base):
         if ce_ltp_atm == 0 or pe_ltp_atm == 0:
             return None, None
 
-        # USER REQUIREMENT: Select ATM strike whose LTP is LOWER as the Anchor
-        if ce_ltp_atm < pe_ltp_atm:
+        # Select anchor using corrected (time-value-only) LTP to avoid ITM distortion.
+        # CE intrinsic = max(0, spot - strike), PE intrinsic = max(0, strike - spot).
+        # Whichever side has LESS time value becomes the anchor; raw LTP used for all downstream logic.
+        ce_corrected = ce_ltp_atm - max(0.0, anchor_price - atm)
+        pe_corrected = pe_ltp_atm - max(0.0, atm - anchor_price)
+
+        if ce_corrected < pe_corrected:
             anchor_cand = {'strike': atm, 'key': ce_key_atm, 'ltp': ce_ltp_atm, 'side': 'CE'}
             partner_side = 'PE'
         else:

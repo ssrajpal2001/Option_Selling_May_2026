@@ -99,7 +99,14 @@ async def global_provider_auth(provider: str, request: Request, admin=Depends(re
         proto = request.headers.get('x-forwarded-proto', 'http')
         if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http':
             proto = 'https'
-        redirect_uri = f"{proto}://{raw_host}/auth/upstox/callback"
+        _cb_uri = f"{proto}://{raw_host}/auth/upstox/callback"
+        # Upstox rejects HTTP redirect URIs for non-localhost hosts.
+        # Fall back to google.com (manual paste flow) when running over plain HTTP.
+        _saved_redirect = dp.get("redirect_uri") or ""
+        if proto == 'http' or _saved_redirect.startswith("https://www.google.com") or _saved_redirect.startswith("https://google.com"):
+            redirect_uri = "https://www.google.com"
+        else:
+            redirect_uri = _cb_uri
         auth_dialog = "https://api.upstox.com/v2/login/authorization/dialog"
         url = f"{auth_dialog}?response_type=code&client_id={api_key}&redirect_uri={urllib.parse.quote(redirect_uri)}&state={urllib.parse.quote(state_encrypted)}"
         return RedirectResponse(url)
@@ -127,38 +134,91 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
         _dhan_error = None
         _upstox_error = None
         if provider == 'upstox':
-            # Skip re-login if a valid token exists and was issued within the last 30 minutes
+            # Skip re-login if a valid token exists, was issued within the last 30 minutes,
+            # AND the WebSocket is currently connected (token is actually working).
             _issued_at = dp.get("token_issued_at")
             _has_token = bool(dp.get("access_token_encrypted"))
             if _issued_at and _has_token:
                 try:
+                    import pytz as _pytz
+                    _IST = _pytz.timezone('Asia/Kolkata')
                     _issued_dt = datetime.fromisoformat(_issued_at)
+                    # token_issued_at is stored in IST without tzinfo — attach IST, convert to UTC
                     if _issued_dt.tzinfo is None:
-                        _issued_dt = _issued_dt.replace(tzinfo=timezone.utc)
-                    _age_minutes = (datetime.now(timezone.utc) - _issued_dt).total_seconds() / 60
-                    if _age_minutes < 30:
-                        logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
+                        _issued_dt = _IST.localize(_issued_dt)
+                    _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
+                    # Only skip if fresh AND the WS is actually connected (not returning 401).
+                    # Also check FeedServer directly in case feed_registry hasn't updated yet
+                    # (race condition: registry updates asynchronously after WS connects).
+                    from hub.feed_registry import get_ws_state as _gws
+                    _ws_live = _gws('upstox').get('ws_connected', False)
+                    if not _ws_live:
+                        try:
+                            from hub.feed_server import get_feed_server as _gfs
+                            _fs = _gfs()
+                            _df = getattr(_fs, '_dual_feed', None)
+                            _up = getattr(_df, 'upstox', None) if _df else None
+                            if _up and getattr(_up, 'is_connected', False):
+                                _ws_live = True
+                        except Exception:
+                            pass
+                    if _age_minutes < 30 and _ws_live:
+                        logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) and WS connected — skipping re-login.")
                         return {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
+                    elif _age_minutes < 30 and not _ws_live:
+                        logger.info(f"[Admin] Upstox token appears fresh ({_age_minutes:.1f} min old) but WS is offline — attempting re-login.")
                 except Exception as _ts_err:
                     logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
-            from utils.auth_manager_upstox import handle_upstox_login_automated
-            creds = {
-                "api_key": decrypt_secret(dp["api_key_encrypted"]),
-                "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                "password": decrypt_secret(dp.get("password_encrypted", "")),
-                "totp": decrypt_secret(dp.get("totp_encrypted", "")),
-                # Pass the saved redirect_uri so the token exchange step matches what is
-                # registered in the Upstox Developer Portal exactly. Falls back to the
-                # internal Upstox URI if not yet recorded (see auth_manager_upstox.py).
-                "redirect_uri": dp.get("redirect_uri") or "",
-            }
-            _result = handle_upstox_login_automated(creds, return_error=True)
-            token = (_result or {}).get("token")
-            _upstox_error = (_result or {}).get("error")
-            if token:
-                _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
+            # Before attempting TOTP re-login, check if any Upstox broker instance has
+            # a fresher token (auto-generated at bot startup). Using the broker token
+            # avoids burning TOTP attempts and hitting the OTP rate limit.
+            if not token:
+                try:
+                    _upstox_broker = db_fetchone(
+                        "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
+                        "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                        "ORDER BY token_updated_at DESC LIMIT 1",
+                        ()
+                    )
+                    if _upstox_broker and _upstox_broker['access_token_encrypted']:
+                        _broker_token = decrypt_secret(_upstox_broker['access_token_encrypted'])
+                        _broker_updated = _upstox_broker.get('token_updated_at', '')
+                        _dp_updated = dp.get('updated_at', '')
+                        if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                            token = _broker_token
+                            logger.info(f"[Admin] Upstox: using fresher token from broker instance (updated {_broker_updated}).")
+                            # Also update data_providers so FeedServer's re-init uses the fresh token
+                            try:
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='upstox'",
+                                    (_upstox_broker['access_token_encrypted'], _broker_updated)
+                                )
+                                logger.info(f"[Admin] Upstox token updated in data_providers (synced from broker instance).")
+                            except Exception as _sync_err:
+                                logger.warning(f"[Admin] Could not sync Upstox token to data_providers: {_sync_err}")
+                except Exception as _broker_tok_err:
+                    logger.debug(f"[Admin] Could not fetch fresher Upstox token from broker instance: {_broker_tok_err}")
+
+            # Only attempt TOTP re-login if no fresh token was found from broker
+            if not token:
+                from utils.auth_manager_upstox import handle_upstox_login_automated
+                creds = {
+                    "api_key": decrypt_secret(dp["api_key_encrypted"]),
+                    "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                    "password": decrypt_secret(dp.get("password_encrypted", "")),
+                    "totp": decrypt_secret(dp.get("totp_encrypted", "")),
+                    # Pass the saved redirect_uri so the token exchange step matches what is
+                    # registered in the Upstox Developer Portal exactly. Falls back to the
+                    # internal Upstox URI if not yet recorded (see auth_manager_upstox.py).
+                    "redirect_uri": dp.get("redirect_uri") or "",
+                }
+                _result = handle_upstox_login_automated(creds, return_error=True)
+                token = (_result or {}).get("token")
+                _upstox_error = (_result or {}).get("error")
+                if token:
+                    _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
         elif provider == 'dhan':
             from utils.auth_manager_dhan import generate_dhan_token
@@ -173,14 +233,49 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             if missing:
                 return {"success": False,
                         "message": f"Dhan credentials incomplete — missing: {', '.join(missing)}. Save all fields first."}
-            _dhan_result = generate_dhan_token(
-                api_key=client_id,
-                client_id=client_id,
-                password=pin,
-                totp_secret=totp_sec,
-            )
-            token = _dhan_result['token']
-            _dhan_error = _dhan_result['error']
+
+            # Before attempting TOTP re-login, check if any Dhan broker instance has
+            # a fresher token (auto-generated at bot startup). Using the broker token
+            # avoids burning TOTP attempts and hitting the 2-minute rate limit.
+            token = None
+            try:
+                _dhan_broker = db_fetchone(
+                    "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
+                    "WHERE broker='dhan' AND access_token_encrypted IS NOT NULL "
+                    "ORDER BY token_updated_at DESC LIMIT 1",
+                    ()
+                )
+                if _dhan_broker and _dhan_broker['access_token_encrypted']:
+                    _broker_token = decrypt_secret(_dhan_broker['access_token_encrypted'])
+                    _broker_updated = _dhan_broker.get('token_updated_at', '')
+                    _dp_updated = dp.get('updated_at', '')
+                    if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                        token = _broker_token
+                        logger.info(f"[Admin] Dhan: using fresher token from broker instance (updated {_broker_updated}).")
+                        # Also update data_providers so FeedServer's re-init uses the fresh token
+                        try:
+                            db_execute(
+                                "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='dhan'",
+                                (_dhan_broker['access_token_encrypted'], _broker_updated)
+                            )
+                            logger.info(f"[Admin] Dhan token updated in data_providers (synced from broker instance).")
+                        except Exception as _sync_err:
+                            logger.warning(f"[Admin] Could not sync Dhan token to data_providers: {_sync_err}")
+            except Exception as _broker_tok_err:
+                logger.debug(f"[Admin] Could not fetch fresher Dhan token from broker instance: {_broker_tok_err}")
+
+            # Only attempt fresh token generation if no fresh token was found from broker
+            if not token:
+                _dhan_result = generate_dhan_token(
+                    api_key=client_id,
+                    client_id=client_id,
+                    password=pin,
+                    totp_secret=totp_sec,
+                )
+                token = _dhan_result['token']
+                _dhan_error = _dhan_result['error']
+            else:
+                _dhan_error = None
 
         if token:
             enc_token = encrypt_secret(token)
@@ -198,6 +293,19 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                     logger.info(f"[Admin] Live {provider} feed signaled to refresh credentials.")
             except Exception as _rf_err:
                 logger.warning(f"[Admin] Could not signal live feed refresh for {provider}: {_rf_err}")
+
+            # After token refresh, ensure the WebSocket actually reconnects.
+            # refresh_feed_credentials() only works when the WS is already running.
+            # If it was offline (disabled at startup or task died), trigger FeedServer reconnect.
+            try:
+                from hub.feed_server import get_feed_server
+                from hub.feed_registry import get_ws_state
+                srv = get_feed_server()
+                if srv._started and not get_ws_state(provider).get('ws_connected'):
+                    await srv.reconnect_provider(provider)
+                    logger.info(f"[Admin] FeedServer WebSocket reconnect triggered for {provider}.")
+            except Exception as _srv_err:
+                logger.warning(f"[Admin] Could not trigger FeedServer reconnect for {provider}: {_srv_err}")
 
             if provider == 'upstox':
                 _sync_upstox_to_credentials(decrypt_secret(dp["api_key_encrypted"]), token, decrypt_secret(dp.get("api_secret_encrypted", "")))
@@ -240,36 +348,83 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
             _dhan_error = None
             _upstox_error = None
             if provider == "upstox":
-                # Skip re-login if a valid token exists and was issued within the last 30 minutes
+                # Skip re-login if a valid token exists, was issued within the last 30 minutes,
+                # AND the WebSocket is currently live (token is actually working).
                 _issued_at = dp.get("token_issued_at")
                 _has_token = bool(dp.get("access_token_encrypted"))
                 if _issued_at and _has_token:
                     try:
+                        import pytz as _pytz
+                        _IST = _pytz.timezone('Asia/Kolkata')
                         _issued_dt = datetime.fromisoformat(_issued_at)
                         if _issued_dt.tzinfo is None:
-                            _issued_dt = _issued_dt.replace(tzinfo=timezone.utc)
-                        _age_minutes = (datetime.now(timezone.utc) - _issued_dt).total_seconds() / 60
-                        if _age_minutes < 30:
-                            logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) — skipping re-login.")
+                            _issued_dt = _IST.localize(_issued_dt)
+                        _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
+                        from hub.feed_registry import get_ws_state as _gws2
+                        _ws_live2 = _gws2('upstox').get('ws_connected', False)
+                        if not _ws_live2:
+                            try:
+                                from hub.feed_server import get_feed_server as _gfs2
+                                _fs2 = _gfs2()
+                                _df2 = getattr(_fs2, '_dual_feed', None)
+                                _up2 = getattr(_df2, 'upstox', None) if _df2 else None
+                                if _up2 and getattr(_up2, 'is_connected', False):
+                                    _ws_live2 = True
+                            except Exception:
+                                pass
+                        if _age_minutes < 30 and _ws_live2:
+                            logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) and WS connected — skipping re-login.")
                             results[provider] = {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
                             continue
+                        elif _age_minutes < 30 and not _ws_live2:
+                            logger.info(f"[Admin] Upstox token appears fresh ({_age_minutes:.1f} min old) but WS offline — attempting re-login.")
                     except Exception as _ts_err:
                         logger.debug(f"[Admin] Could not parse Upstox token_issued_at ({_issued_at!r}): {_ts_err}")
 
-                from utils.auth_manager_upstox import handle_upstox_login_automated
-                creds = {
-                    "api_key": decrypt_secret(dp["api_key_encrypted"]),
-                    "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
-                    "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
-                    "password": decrypt_secret(dp.get("password_encrypted", "")),
-                    "totp": decrypt_secret(dp.get("totp_encrypted", "")),
-                    "redirect_uri": dp.get("redirect_uri") or "",
-                }
-                _result = handle_upstox_login_automated(creds, return_error=True)
-                token = (_result or {}).get("token")
-                _upstox_error = (_result or {}).get("error")
-                if token:
-                    _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
+                # Before attempting TOTP re-login, check if any Upstox broker instance has
+                # a fresher token (auto-generated at bot startup). Avoids burning TOTP attempts.
+                if not token:
+                    try:
+                        _upstox_broker = db_fetchone(
+                            "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
+                            "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                            "ORDER BY token_updated_at DESC LIMIT 1",
+                            ()
+                        )
+                        if _upstox_broker and _upstox_broker['access_token_encrypted']:
+                            _broker_token = decrypt_secret(_upstox_broker['access_token_encrypted'])
+                            _broker_updated = _upstox_broker.get('token_updated_at', '')
+                            _dp_updated = dp.get('updated_at', '')
+                            if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                                token = _broker_token
+                                logger.info(f"[Admin] Upstox: using fresher token from broker instance (updated {_broker_updated}).")
+                                # Also update data_providers so FeedServer's re-init uses the fresh token
+                                try:
+                                    db_execute(
+                                        "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='upstox'",
+                                        (_upstox_broker['access_token_encrypted'], _broker_updated)
+                                    )
+                                    logger.info(f"[Admin] Upstox token updated in data_providers (synced from broker instance).")
+                                except Exception as _sync_err:
+                                    logger.warning(f"[Admin] Could not sync Upstox token to data_providers: {_sync_err}")
+                    except Exception as _broker_tok_err:
+                        logger.debug(f"[Admin] Could not fetch fresher Upstox token from broker instance: {_broker_tok_err}")
+
+                if not token:
+                    from utils.auth_manager_upstox import handle_upstox_login_automated
+                    creds = {
+                        "api_key": decrypt_secret(dp["api_key_encrypted"]),
+                        "api_secret": decrypt_secret(dp.get("api_secret_encrypted", "")),
+                        "user_id": decrypt_secret(dp.get("user_id_encrypted", "")),
+                        "password": decrypt_secret(dp.get("password_encrypted", "")),
+                        "totp": decrypt_secret(dp.get("totp_encrypted", "")),
+                        "redirect_uri": dp.get("redirect_uri") or "",
+                    }
+                    _result = handle_upstox_login_automated(creds, return_error=True)
+                    token = (_result or {}).get("token")
+                    _upstox_error = (_result or {}).get("error")
+                    if token:
+                        _sync_upstox_to_credentials(creds["api_key"], token, creds["api_secret"])
 
             elif provider == "dhan":
                 from utils.auth_manager_dhan import generate_dhan_token
@@ -285,14 +440,48 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     results[provider] = {"success": False,
                                          "message": f"Dhan credentials incomplete — missing: {', '.join(_missing)}."}
                     continue
-                _dhan_result = generate_dhan_token(
-                    api_key=_client_id,
-                    client_id=_client_id,
-                    password=_pin,
-                    totp_secret=_totp_sec,
-                )
-                token = _dhan_result['token']
-                _dhan_error = _dhan_result['error']
+
+                # Before attempting TOTP re-login, check if any Dhan broker instance has
+                # a fresher token (auto-generated at bot startup). Avoids the 2-minute rate limit.
+                token = None
+                try:
+                    _dhan_broker = db_fetchone(
+                        "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
+                        "WHERE broker='dhan' AND access_token_encrypted IS NOT NULL "
+                        "ORDER BY token_updated_at DESC LIMIT 1",
+                        ()
+                    )
+                    if _dhan_broker and _dhan_broker['access_token_encrypted']:
+                        _broker_token = decrypt_secret(_dhan_broker['access_token_encrypted'])
+                        _broker_updated = _dhan_broker.get('token_updated_at', '')
+                        _dp_updated = dp.get('updated_at', '')
+                        if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                            token = _broker_token
+                            logger.info(f"[Admin] Dhan: using fresher token from broker instance (updated {_broker_updated}).")
+                            # Also update data_providers so FeedServer's re-init uses the fresh token
+                            try:
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=? WHERE provider='dhan'",
+                                    (_dhan_broker['access_token_encrypted'], _broker_updated)
+                                )
+                                logger.info(f"[Admin] Dhan token updated in data_providers (synced from broker instance).")
+                            except Exception as _sync_err:
+                                logger.warning(f"[Admin] Could not sync Dhan token to data_providers: {_sync_err}")
+                except Exception as _broker_tok_err:
+                    logger.debug(f"[Admin] Could not fetch fresher Dhan token from broker instance: {_broker_tok_err}")
+
+                # Only generate fresh token if no fresh token was found from broker
+                if not token:
+                    _dhan_result = generate_dhan_token(
+                        api_key=_client_id,
+                        client_id=_client_id,
+                        password=_pin,
+                        totp_secret=_totp_sec,
+                    )
+                    token = _dhan_result['token']
+                    _dhan_error = _dhan_result['error']
+                else:
+                    _dhan_error = None
 
             if token:
                 enc_token = encrypt_secret(token)
@@ -372,6 +561,13 @@ async def update_data_provider(request: Request, body: ProviderConfigRequest, ad
 
         if body.provider == 'dhan':
             set_parts.append("status='configured'")
+            # For Dhan, 'api_secret' IS the access token when entered manually.
+            # Mirror it to access_token_encrypted so provider_factory can read it.
+            if body.api_secret and body.api_secret.strip():
+                set_parts.append("access_token_encrypted=?")
+                params.append(encrypt_secret(body.api_secret))
+                set_parts.append("token_issued_at=?")
+                params.append(datetime.now(timezone.utc).isoformat())
 
         # For Upstox, record the server's callback URL alongside credentials so Background
         # Connect always uses the exact redirect_uri registered in the Upstox Developer Portal.
@@ -381,7 +577,9 @@ async def update_data_provider(request: Request, body: ProviderConfigRequest, ad
             proto = request.headers.get('x-forwarded-proto', 'http')
             if 'localhost' not in raw_host and '127.0.0.1' not in raw_host and proto != 'http':
                 proto = 'https'
-            saved_redirect_uri = f"{proto}://{raw_host}/auth/upstox/callback"
+            _cb = f"{proto}://{raw_host}/auth/upstox/callback"
+            # Upstox rejects HTTP redirect URIs — use google.com flow when on plain HTTP
+            saved_redirect_uri = "https://www.google.com" if proto == 'http' else _cb
             set_parts.append("redirect_uri=?")
             params.append(saved_redirect_uri)
             logger.info(f"[Admin] Recorded Upstox redirect_uri: {saved_redirect_uri}")
@@ -430,7 +628,7 @@ async def exchange_manual_token(body: ManualTokenRequest, admin=Depends(require_
             # redirect_uri must match exactly what was used in the original auth dialog.
             # Callers using the server-callback flow pass redirect_uri explicitly;
             # legacy google.com flows omit it and we fall back to the old hardcoded value.
-            redirect_uri = body.redirect_uri or "https://google.com"
+            redirect_uri = body.redirect_uri or "https://www.google.com"
 
             import requests as http_requests
             resp = http_requests.post(
@@ -1087,7 +1285,8 @@ async def get_backtest_status(user=Depends(get_current_user)):
                 "tsl_lock": v3_extras.get('tsl_lock'),
                 "exit_rule_status": v3_extras.get('exit_rule_status'),
                 "entry_details": v3_extras.get('entry_details', []),
-                "exit_details": v3_extras.get('exit_details', [])
+                "exit_details": v3_extras.get('exit_details', []),
+                "current_ts": data.get('updated_at', '')
             },
             "trades": data.get('trade_history', [])
         }
@@ -2102,3 +2301,75 @@ async def get_ip_conflicts(
     )
     conflicts = [dict(r) for r in rows] if rows else []
     return {"conflicts": conflicts, "hours": hours}
+
+
+# ── Crash alerts ──────────────────────────────────────────────────────────────
+
+
+@router.get("/crash-alerts")
+async def get_crash_alerts(admin=Depends(require_admin)):
+    """Return broker instances that have crashed (status='crashed' or stopped unexpectedly)."""
+    rows = db_fetchall(
+        """
+        SELECT cbi.id, cbi.client_id, cbi.broker, cbi.status,
+               cbi.last_heartbeat, u.username
+        FROM client_broker_instances cbi
+        JOIN users u ON u.id = cbi.client_id
+        WHERE cbi.status IN ('crashed', 'error')
+        ORDER BY cbi.last_heartbeat DESC
+        """,
+        (),
+    )
+    crashed = []
+    for r in (rows or []):
+        crashed.append({
+            "id": r["id"],
+            "client_id": r["client_id"],
+            "username": r["username"],
+            "broker": r["broker"],
+            "status": r["status"],
+            "crashed_at": r["last_heartbeat"],
+        })
+    return {"crashed": crashed}
+
+
+# ── Bulk operations ───────────────────────────────────────────────────────────
+
+
+@router.post("/bulk-action")
+async def bulk_action(request: Request, admin=Depends(require_admin)):
+    """
+    Bulk admin operations on multiple clients.
+    Body: {action: 'activate'|'deactivate'|'push_strategy', client_ids: [...], payload: {...}}
+    """
+    body = await request.json()
+    action = body.get("action")
+    client_ids = body.get("client_ids") or []
+    payload = body.get("payload") or {}
+
+    if not action or not client_ids:
+        raise HTTPException(status_code=400, detail="action and client_ids required")
+    if action not in ("activate", "deactivate", "push_strategy"):
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    results = {"ok": [], "failed": []}
+    for cid in client_ids:
+        try:
+            if action == "activate":
+                db_execute("UPDATE users SET status='active' WHERE id=?", (cid,))
+                results["ok"].append(cid)
+            elif action == "deactivate":
+                db_execute("UPDATE users SET status='inactive' WHERE id=?", (cid,))
+                results["ok"].append(cid)
+            elif action == "push_strategy":
+                import json as _json
+                overrides_json = _json.dumps(payload)
+                db_execute(
+                    "UPDATE client_broker_instances SET client_strategy_overrides=? WHERE client_id=?",
+                    (overrides_json, cid),
+                )
+                results["ok"].append(cid)
+        except Exception as e:
+            results["failed"].append({"id": cid, "error": str(e)})
+
+    return {"action": action, "results": results}

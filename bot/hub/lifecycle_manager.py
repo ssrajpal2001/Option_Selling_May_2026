@@ -197,9 +197,7 @@ class LifecycleManager:
             self.websocket_manager.unsubscribe(all_subscriptions)
         
         await self.websocket_manager.close()
-        self.broker_manager.close_all_positions()
-        
-        # --- FIX: Call the new shutdown method to close file handles ---
+        await self.broker_manager.close_all_positions()
         self.broker_manager.shutdown()
 
         await self.trade_orchestrator.state_manager.reset_trade_state("CALL")

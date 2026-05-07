@@ -60,6 +60,7 @@ class BrokerManager:
             'static_ip': client_cfg.static_ip or None,   # Elastic IP for source-IP binding
             'broker_settings': {
                 'instruments_to_trade': client_cfg.instrument,
+                'quantity': client_cfg.quantity,
             },
         }
 
