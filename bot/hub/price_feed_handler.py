@@ -606,25 +606,23 @@ class PriceFeedHandler:
                 _mkt_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
                 _mkt_close = _now_ist.replace(hour=15, minute=30, second=0, microsecond=0)
                 if _mkt_open <= _now_ist <= _mkt_close:
-                    # Query FeedServer for its connection state and log it here
-                    _feed_status = "unknown"
-                    try:
-                        from hub import feed_registry as _fr
-                        _us = _fr.get_ws_state('upstox')
-                        _ds = _fr.get_ws_state('dhan')
-                        _parts = []
-                        if _us:
-                            _parts.append(f"upstox={'connected' if _us.get('ws_connected') else 'DISCONNECTED'}")
-                        if _ds:
-                            _parts.append(f"dhan={'connected' if _ds.get('ws_connected') else 'DISCONNECTED'}")
-                        _feed_status = ', '.join(_parts) if _parts else "no_feed_registry"
-                    except Exception:
-                        pass
+                    # Bot subprocesses use FeedClient → FeedServer → upstream WS.
+                    # We can only see the FeedClient↔FeedServer link from here;
+                    # upstream WS state lives in the web process (FeedServer).
+                    _ws = getattr(self.trade_orchestrator, 'websocket', None)
+                    _fc_connected = bool(getattr(_ws, 'is_connected', False))
+                    _hint = (
+                        "FeedServer reachable but no ticks — its upstream Upstox/Dhan WS is offline. "
+                        "Open Admin → Data Providers and click 'Connect Now' for both Upstox and Dhan."
+                    ) if _fc_connected else (
+                        "Cannot reach FeedServer (web process). "
+                        "Restart the web server (botrestart) or check that uvicorn is running."
+                    )
                     logger.warning(
                         f"[{self.trade_orchestrator.instrument_name}] FEED SILENT: No ticks received in "
                         f"{_NO_TICK_WARN_INTERVAL:.0f}s during market hours. "
-                        f"Feed status: [{_feed_status}]. "
-                        f"If DISCONNECTED: Admin → Data Providers → Upstox → enter today's access token, then botrestart."
+                        f"FeedClient↔FeedServer: {'connected' if _fc_connected else 'DISCONNECTED'}. "
+                        f"{_hint}"
                     )
                 continue
             self._tick_event.clear()
