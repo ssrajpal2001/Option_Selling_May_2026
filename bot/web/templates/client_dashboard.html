@@ -2164,7 +2164,11 @@ function renderPositions(d, todayTrades) {
 
   const tbody = document.getElementById('pos-table-body');
   if (!tbody) return;
-  tbody.innerHTML = '';
+
+  // Remove rows for sides no longer active
+  Array.from(tbody.querySelectorAll('tr[data-pos-side]')).forEach(tr => {
+    if (!activePosns.includes(tr.dataset.posSide)) tr.remove();
+  });
 
   activePosns.forEach(side => {
     const p = sell[side];
@@ -2174,35 +2178,49 @@ function renderPositions(d, todayTrades) {
     const qty   = p.qty   || '—';
     const strike = p.strike || '—';
 
-    // For SELL: profit = entry > ltp
     const pnlPct = entry > 0 ? ((entry - ltp) / entry * 100) : 0;
     const isProfit = pnl >= 0;
     const rowClass = isProfit ? 'pos-row-green' : 'pos-row-red';
     const pnlCls   = isProfit ? 'pos-pnl-green' : 'pos-pnl-red';
-
     const typeBadge = side === 'CE'
       ? `<span class="pos-badge-ce">CE</span>`
       : `<span class="pos-badge-pe">PE</span>`;
-
     const instrLabel = `${instrument}&nbsp;${strike}&nbsp;${side}`;
-
     const entryTime = p.entry_time || '—';
+    const qtyDisplay = typeof qty === 'number' ? -qty : qty;
 
-    const tr = document.createElement('tr');
+    let tr = tbody.querySelector(`tr[data-pos-side="${side}"]`);
+    if (!tr) {
+      // First render for this side — build the row once
+      tr = document.createElement('tr');
+      tr.dataset.posSide = side;
+      tr.innerHTML = `
+        <td style="font-weight:600"></td>
+        <td></td>
+        <td style="font-family:monospace"></td>
+        <td style="font-family:monospace;color:var(--muted)"></td>
+        <td style="font-family:monospace"></td>
+        <td style="font-family:monospace;font-weight:600"></td>
+        <td></td>
+        <td></td>
+        <td style="color:var(--muted);font-size:12px"></td>
+        <td><button class="sqoff-btn" onclick="squareOffLeg('${side}')">Squareoff</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // Update only the cells that carry live data — no full wipe
     tr.className = rowClass;
-    tr.innerHTML = `
-      <td style="font-weight:600">${instrLabel}</td>
-      <td>${typeBadge}</td>
-      <td style="font-family:monospace">${strike}</td>
-      <td style="font-family:monospace;color:var(--muted)">${typeof qty === 'number' ? -qty : qty}</td>
-      <td style="font-family:monospace">₹${entry.toFixed(2)}</td>
-      <td style="font-family:monospace;font-weight:600">₹${ltp.toFixed(2)}</td>
-      <td class="${pnlCls}">${fmtRs(pnl)}</td>
-      <td class="${pnlCls}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</td>
-      <td style="color:var(--muted);font-size:12px">${entryTime}</td>
-      <td><button class="sqoff-btn" onclick="squareOffLeg('${side}')">Squareoff</button></td>
-    `;
-    tbody.appendChild(tr);
+    const cells = tr.cells;
+    cells[0].innerHTML = instrLabel;
+    cells[1].innerHTML = typeBadge;
+    cells[2].textContent = strike;
+    cells[3].textContent = qtyDisplay;
+    cells[4].textContent = '₹' + entry.toFixed(2);
+    cells[5].textContent = '₹' + ltp.toFixed(2);
+    cells[6].className = pnlCls; cells[6].textContent = fmtRs(pnl);
+    cells[7].className = pnlCls; cells[7].textContent = (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%';
+    cells[8].textContent = entryTime;
   });
 }
 
