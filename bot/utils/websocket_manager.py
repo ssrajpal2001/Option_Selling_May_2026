@@ -345,7 +345,7 @@ class WebSocketManager(DataFeed):
                 import datetime as _dt, pytz as _ptz
                 _now_ist = _dt.datetime.now(_ptz.timezone('Asia/Kolkata'))
                 _market_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
-                _stale_threshold = 300 if _now_ist < _market_open else 45
+                _stale_threshold = 300 if _now_ist < _market_open else 90
 
                 if silence_duration > _stale_threshold:
                     logger.error(f"WATCHDOG: Proactive detection of WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
@@ -411,23 +411,26 @@ class WebSocketManager(DataFeed):
             except asyncio.TimeoutError:
                 if not self.is_connected or websocket is None: break
 
-                # WATCHDOG: Force reconnect on prolonged silence.
-                # Pre-market: 300s threshold (no ticks expected before 09:15).
-                # Market hours: 90s threshold (data should flow every few seconds).
+                # WATCHDOG: Force reconnect on prolonged silence only if ping also fails.
+                # Strategy: send a WebSocket ping every 30s when no data arrives.
+                # If ping succeeds → market is just quiet, reset silence timer so the
+                # watchdog doesn't trigger (NIFTY can be flat for 60-120s during lunch).
+                # If ping fails → genuine connection drop, reconnect immediately.
                 silence_duration = asyncio.get_event_loop().time() - self._last_message_time
                 import datetime as _dt2, pytz as _ptz2
                 _now2 = _dt2.datetime.now(_ptz2.timezone('Asia/Kolkata'))
-                _stale2 = 300 if _now2 < _now2.replace(hour=9, minute=15, second=0, microsecond=0) else 45
-                if silence_duration > _stale2:
-                    logger.error(f"WATCHDOG: WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
-                    break
+                _stale2 = 300 if _now2 < _now2.replace(hour=9, minute=15, second=0, microsecond=0) else 90
 
-                logger.warning("No WebSocket data for 30s, sending ping...")
+                logger.warning(f"No WebSocket data for 30s (silence={silence_duration:.0f}s), sending ping...")
                 try:
                     pong = await websocket.ping()
                     await asyncio.wait_for(pong, timeout=10.0)
+                    # Ping succeeded — connection is alive, market is just quiet.
+                    # Reset silence timer so the watchdog doesn't fire unnecessarily.
+                    self._last_message_time = asyncio.get_event_loop().time()
+                    logger.info("WebSocket ping OK — connection alive, market quiet.")
                 except Exception:
-                    logger.error("WebSocket ping failed, reconnecting...")
+                    logger.error(f"WebSocket ping FAILED after {silence_duration:.0f}s silence. Forcing reconnect.")
                     break
             except (websockets.ConnectionClosed, AttributeError):
                 # Re-raise to be handled by the outer connection loop

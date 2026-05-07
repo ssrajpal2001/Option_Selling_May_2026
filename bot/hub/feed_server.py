@@ -351,9 +351,12 @@ class FeedServer:
         except Exception:
             pass
 
-        # Sync the latest token from data_providers into the feed object before restarting.
-        # This ensures the new connect_and_listen() task uses a fresh token, not the expired
-        # one that was in memory when the old task failed.
+        # Sync the latest token from data_providers into the feed object, then start.
+        # IMPORTANT: refresh_credentials() already creates a new listener task internally
+        # (it calls _force_reconnect or restarts connect_and_listen if task is dead).
+        # To avoid creating DOUBLE tasks, only call self._dual_feed.start() if
+        # refresh_credentials was NOT available on this feed.
+        _refreshed_via_credentials = False
         try:
             from web.db import db_fetchone as _dbf
             from web.auth import decrypt_secret as _dec
@@ -362,17 +365,18 @@ class FeedServer:
                 _fresh_token = _dec(_row[0])
                 if _fresh_token and hasattr(feed, 'refresh_credentials'):
                     feed.refresh_credentials(_fresh_token)
-                    logger.info(f"[FeedServer] reconnect_provider({provider}) — synced fresh token from DB into feed.")
+                    logger.info(f"[FeedServer] reconnect_provider({provider}) — synced fresh token and triggered reconnect via refresh_credentials.")
+                    _refreshed_via_credentials = True
                 elif _fresh_token and hasattr(feed, 'access_token'):
                     feed.access_token = _fresh_token
                     logger.info(f"[FeedServer] reconnect_provider({provider}) — updated feed.access_token from DB.")
         except Exception as _tok_err:
             logger.debug(f"[FeedServer] reconnect_provider token sync skipped: {_tok_err}")
 
-        # Now restart — DualFeedManager.start() re-registers the feed and calls feed.start()
-        # which will create a new asyncio task running connect_and_listen().
-        logger.info(f"[FeedServer] reconnect_provider({provider}) — starting fresh listener.")
-        self._dual_feed.start()
+        if not _refreshed_via_credentials:
+            # refresh_credentials not available or no fresh token — start manually.
+            logger.info(f"[FeedServer] reconnect_provider({provider}) — starting fresh listener.")
+            self._dual_feed.start()
         return True
 
     # ── Tick capture ─────────────────────────────────────────────────────────
