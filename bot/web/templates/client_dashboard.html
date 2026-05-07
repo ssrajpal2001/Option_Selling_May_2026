@@ -12,6 +12,7 @@
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     /* ── Theme palettes ────────────────────────────────────────────── */
     [data-theme="dark"] {
@@ -756,6 +757,9 @@
     <!-- Per-broker tab strip (one tab per running broker subprocess). -->
     <div id="pos-broker-tabs" style="display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap"></div>
 
+    <!-- Plain-English bot status -->
+    <div id="pos-plain-status" style="padding:8px 16px 0;font-size:13px;color:var(--text-soft);line-height:1.5"></div>
+
     <!-- Empty state -->
     <div id="pos-empty" class="pos-empty">
       <div class="pos-empty-icon">📭</div>
@@ -916,6 +920,24 @@
 
 <!-- ═══════════════════════════════════════════════════════════ HISTORY PANE -->
 <div class="pane" id="pane-history">
+
+  <!-- ── Plain-language daily summary ── -->
+  <div class="card" style="padding:20px;margin-bottom:16px" id="hist-summary-card">
+    <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Today's Summary</div>
+    <div id="hist-plain-summary" style="font-size:14px;line-height:1.7;color:var(--text)">Loading summary…</div>
+  </div>
+
+  <!-- ── Cumulative P&L chart ── -->
+  <div class="card" style="padding:20px;margin-bottom:16px" id="hist-chart-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span class="sec-title">Cumulative P&amp;L (last 30 days)</span>
+      <span id="hist-chart-badge" style="font-size:11px;color:var(--muted)"></span>
+    </div>
+    <div style="position:relative;height:180px">
+      <canvas id="hist-pnl-chart"></canvas>
+    </div>
+  </div>
+
   <div class="card" style="padding:20px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
       <span class="sec-title">Trade History</span>
@@ -949,6 +971,7 @@
     </div>
     <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)" id="hist-count"></div>
   </div>
+  </div><!-- close pane-history inner wrapper -->
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ SETTINGS PANE -->
@@ -2108,6 +2131,34 @@ async function pollBotStatus() {
 }
 
 // ══════════════════════════════════════════════════════ POSITIONS RENDERER
+function _humanBotStatus(d, activePosns, todayTrades, running) {
+  // Returns a plain-English sentence describing what the bot is currently doing.
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const isMarketHours = (h > 9 || (h === 9 && m >= 15)) && (h < 15 || (h === 15 && m <= 30));
+
+  if (!running) return 'Bot is stopped. Start it to begin monitoring.';
+  if (!isMarketHours) {
+    if (h < 9 || (h === 9 && m < 15)) return 'Waiting for market to open at 9:15 AM IST.';
+    return 'Market closed. Bot is idle until tomorrow.';
+  }
+  if (activePosns.length > 0) {
+    const sides = activePosns.map(s => {
+      const p = (d.bot_data?.sell || {})[s] || {};
+      return `${s} ${p.strike || ''} @ ₹${(p.entry || 0).toFixed(1)}`;
+    }).join(' &amp; ');
+    return `Position active — ${sides}. Watching for exit signal.`;
+  }
+  if (todayTrades.length > 0) {
+    const last = todayTrades[todayTrades.length - 1];
+    const reason = last.reason || '';
+    const pnl = last.pnl_rs || last.pnl || 0;
+    const pnlStr = pnl >= 0 ? `<span style="color:var(--success)">+₹${Math.abs(pnl).toFixed(0)} profit</span>` : `<span style="color:var(--danger)">-₹${Math.abs(pnl).toFixed(0)} loss</span>`;
+    return `Last session exited (${reason || 'signal'}). ${pnlStr}. Monitoring for next entry.`;
+  }
+  return 'Monitoring market — no entry signal yet.';
+}
+
 function renderPositions(d, todayTrades) {
   const perBroker = d.bot_data_per_broker || {};
   const brokerNames = Object.keys(perBroker);
@@ -2183,6 +2234,12 @@ function renderPositions(d, todayTrades) {
     } else {
       badge.style.display = 'none';
     }
+  }
+
+  // Plain-English status line
+  const plainStatusEl = document.getElementById('pos-plain-status');
+  if (plainStatusEl) {
+    plainStatusEl.innerHTML = _humanBotStatus(d, activePosns, todayTrades, state.running);
   }
 
   // Empty/table toggle
@@ -3106,6 +3163,127 @@ function copyRefCode() {
 }
 
 // ═══════════════════════════════════════════════════════════════ HISTORY
+let _histChart = null;
+
+function _buildPlainSummary(allTrades) {
+  const today = new Date().toISOString().slice(0,10);
+  const todayTrades = allTrades.filter(t => (t.closed_at || '').startsWith(today));
+
+  if (!todayTrades.length) {
+    const recentDate = allTrades.length ? (allTrades[allTrades.length-1].closed_at||'').slice(0,10) : null;
+    if (!recentDate) return 'No trades recorded yet.';
+    const recentTrades = allTrades.filter(t => (t.closed_at || '').startsWith(recentDate));
+    return _summaryForTrades(recentTrades, recentDate) + ' <span style="color:var(--muted);font-size:12px">(No trades today)</span>';
+  }
+  return _summaryForTrades(todayTrades, today);
+}
+
+function _summaryForTrades(trades, dateStr) {
+  const dateLabel = dateStr === new Date().toISOString().slice(0,10) ? 'Today' :
+    new Date(dateStr).toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const pnlRs  = trades.reduce((s,t) => s + (t.pnl_rs  || 0), 0);
+  const pnlPts = trades.reduce((s,t) => s + (t.pnl_pts || 0), 0);
+  const wins   = trades.filter(t => (t.pnl_rs || 0) > 0).length;
+  const losses = trades.filter(t => (t.pnl_rs || 0) < 0).length;
+
+  const pnlCol  = pnlRs >= 0 ? 'var(--success)' : 'var(--danger)';
+  const pnlSign = pnlRs >= 0 ? '+' : '';
+  const pnlStr  = `<strong style="color:${pnlCol}">${pnlSign}₹${Math.abs(Math.round(pnlRs)).toLocaleString('en-IN')}</strong>`;
+
+  // Group by session: pair CE+PE entered at same time
+  const sessions = [];
+  const used = new Set();
+  trades.forEach((t,i) => {
+    if (used.has(i)) return;
+    const entryTime = (t.closed_at || t.opened_at || '').slice(11,16);
+    const partner = trades.findIndex((t2,j) => !used.has(j) && j !== i &&
+      t2.direction !== t.direction && (t2.opened_at||'').slice(11,16) === (t.opened_at||'').slice(11,16));
+    if (partner >= 0) {
+      used.add(i); used.add(partner);
+      sessions.push({ ce: t.direction === 'CALL' ? t : trades[partner], pe: t.direction === 'PUT' ? t : trades[partner] });
+    } else {
+      used.add(i); sessions.push({ single: t });
+    }
+  });
+
+  let detail = '';
+  sessions.forEach(s => {
+    if (s.ce && s.pe) {
+      const entryTime = (s.ce.opened_at || s.ce.closed_at || '').slice(11,16);
+      const exitTime  = (s.ce.closed_at || '').slice(11,16);
+      detail += `<br>Sold <strong>${s.ce.instrument || ''} ${s.ce.strike || ''} CE</strong> at ₹${(s.ce.entry_price||0).toFixed(0)} &amp; `;
+      detail += `<strong>${s.pe.strike || ''} PE</strong> at ₹${(s.pe.entry_price||0).toFixed(0)}`;
+      if (entryTime) detail += ` (${entryTime})`;
+      if (exitTime)  detail += ` → exited ${exitTime}`;
+    } else if (s.single) {
+      detail += `<br>${s.single.direction || ''} ${s.single.strike || ''} at ₹${(s.single.entry_price||0).toFixed(0)}`;
+    }
+  });
+
+  const slHit    = trades.some(t => (t.exit_reason || '').toLowerCase().includes('sl') || (t.exit_reason || '').toLowerCase().includes('stop'));
+  const slStatus = slHit ? '<span style="color:var(--danger)">Stop-loss was hit.</span>' : '<span style="color:var(--success)">Stop-loss was not hit.</span>';
+
+  return `<strong>${dateLabel}</strong> — ` +
+    `${trades.length} trade leg${trades.length!==1?'s':''} | ` +
+    `${wins}W / ${losses}L | P&amp;L: ${pnlStr} (${pnlPts >= 0 ? '+' : ''}${pnlPts.toFixed(1)} pts)` +
+    detail + '<br>' + slStatus;
+}
+
+function _renderPnlChart(allTrades) {
+  // Group closed trades by date and compute daily PnL
+  const byDate = {};
+  allTrades.forEach(t => {
+    const date = (t.closed_at || '').slice(0,10);
+    if (!date) return;
+    byDate[date] = (byDate[date] || 0) + (t.pnl_rs || 0);
+  });
+  const dates = Object.keys(byDate).sort().slice(-30);
+  const dailyPnl = dates.map(d => byDate[d]);
+  const cumPnl   = dailyPnl.reduce((acc, v) => { acc.push((acc.length ? acc[acc.length-1] : 0) + v); return acc; }, []);
+
+  const canvas = document.getElementById('hist-pnl-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (_histChart) { _histChart.destroy(); _histChart = null; }
+  if (!dates.length) { document.getElementById('hist-chart-badge').textContent = 'No data'; return; }
+
+  const totalPnl = cumPnl[cumPnl.length-1] || 0;
+  const sign     = totalPnl >= 0 ? '+' : '';
+  document.getElementById('hist-chart-badge').textContent = `${sign}₹${Math.round(totalPnl).toLocaleString('en-IN')} overall`;
+
+  const lineColor = totalPnl >= 0 ? '#34d399' : '#ef4444';
+  const fillColor = totalPnl >= 0 ? 'rgba(52,211,153,.12)' : 'rgba(239,68,68,.12)';
+
+  _histChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates.map(d => d.slice(5)),
+      datasets: [{
+        label: 'Cumulative P&L (₹)',
+        data: cumPnl,
+        borderColor: lineColor,
+        backgroundColor: fillColor,
+        borderWidth: 2,
+        pointRadius: dates.length > 10 ? 2 : 4,
+        tension: 0.35,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => '₹' + Math.round(ctx.parsed.y).toLocaleString('en-IN')
+      }}},
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#64748b', font: { size: 10 },
+          callback: v => '₹' + Math.round(v).toLocaleString('en-IN') } }
+      }
+    }
+  });
+}
+
 async function loadHistory() {
   const mode = document.getElementById('hist-filter-mode').value;
   const dir  = document.getElementById('hist-filter-dir').value;
@@ -3114,6 +3292,12 @@ async function loadHistory() {
   try {
     const d = await api('GET', '/trades');
     let trades = d.trades || [];
+
+    // Render summary and chart from unfiltered data
+    const summaryEl = document.getElementById('hist-plain-summary');
+    if (summaryEl) summaryEl.innerHTML = _buildPlainSummary(trades);
+    _renderPnlChart(trades);
+
     if (mode) trades = trades.filter(t => t.trading_mode === mode);
     if (dir)  trades = trades.filter(t => t.direction === dir);
     document.getElementById('hist-count').textContent = `Showing ${trades.length} trades`;
@@ -3127,7 +3311,8 @@ async function loadHistory() {
       const cls = pts > 0 ? 'text-green' : pts < 0 ? 'text-red' : 'text-muted';
       const date = (t.closed_at || '').slice(0,10);
       const time = (t.closed_at || '').slice(11,16);
-      return `<tr>
+      const pnlBg = rs > 0 ? 'rgba(52,211,153,.08)' : rs < 0 ? 'rgba(239,68,68,.08)' : '';
+      return `<tr style="background:${pnlBg}">
         <td>${date} ${time}</td>
         <td><span class="badge badge-info" style="font-size:10px">${t.broker||'—'}</span></td>
         <td>${t.instrument||'—'}</td>
@@ -3262,14 +3447,110 @@ function _btResetBtns() {
   document.getElementById('bt-running-spinner').style.display = 'none';
 }
 
+function _btRenderLive(d) {
+  // Renders real-time progress while the backtest is still running.
+  const stats  = d.stats  || {};
+  const trades = d.trades || [];
+
+  // Progress bar / status message
+  const pnl     = parseFloat(stats.pnl || 0);
+  const pnlSign = pnl >= 0 ? '+' : '';
+  const pnlCol  = pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+  const tcnt    = stats.trade_count || trades.length || 0;
+
+  // Format current simulation timestamp (strip date part if present)
+  let simTs = '';
+  if (stats.current_ts) {
+    const raw = String(stats.current_ts);
+    simTs = raw.includes('T') ? raw.split('T')[1].substring(0, 8) : raw.substring(0, 19);
+  }
+
+  const statusParts = [];
+  if (simTs)  statusParts.push('Simulating ' + simTs);
+  if (tcnt)   statusParts.push(tcnt + ' trade leg' + (tcnt !== 1 ? 's' : '') + ' found');
+  statusParts.push('P&L: <span style="color:' + pnlCol + '">' + pnlSign + pnl.toFixed(0) + ' pts</span>');
+  document.getElementById('bt-status-msg').innerHTML = statusParts.join(' &nbsp;|&nbsp; ');
+
+  // Indicator bar
+  const indParts = [];
+  if (stats.rsi   != null) indParts.push('RSI: ' + parseFloat(stats.rsi).toFixed(1));
+  if (stats.roc   != null) indParts.push('ROC: ' + parseFloat(stats.roc).toFixed(3));
+  if (stats.slope != null) indParts.push('Slope: ' + stats.slope);
+  if (stats.vwap  != null) indParts.push('VWAP: ' + parseFloat(stats.vwap).toFixed(0));
+  if (stats.entry_reason)  indParts.push('<em>' + stats.entry_reason + '</em>');
+  let indBar = document.getElementById('bt-live-ind');
+  if (!indBar) {
+    indBar = document.createElement('div');
+    indBar.id = 'bt-live-ind';
+    indBar.style.cssText = 'font-size:12px;color:var(--text-soft);margin:6px 0 4px;';
+    const statusEl = document.getElementById('bt-status-msg');
+    if (statusEl && statusEl.parentNode) statusEl.parentNode.insertBefore(indBar, statusEl.nextSibling);
+  }
+  indBar.innerHTML = indParts.join(' &nbsp;&bull;&nbsp; ');
+
+  // Live trade table — render all trades found so far
+  if (trades.length) {
+    const tbody = document.getElementById('bt-trade-body');
+    tbody.innerHTML = '';
+    const pairs = _btPairLegs(trades);
+    for (const row of pairs) {
+      const tr = document.createElement('tr');
+      if (row.type === 'pair') {
+        const c = row.call, p = row.put;
+        const totalPts = parseFloat(c.pnl_pts || 0) + parseFloat(p.pnl_pts || 0);
+        const totalRs  = parseFloat(c.pnl_rs  || 0) + parseFloat(p.pnl_rs  || 0);
+        const ptsCol   = totalPts >= 0 ? 'var(--success)' : 'var(--danger)';
+        tr.innerHTML =
+          '<td>' + (c.date || p.date || '—') + '</td>' +
+          '<td>' + _btTime(c.opened_at || c.time) + '</td>' +
+          '<td>' + _btTime(c.closed_at) + '</td>' +
+          '<td style="font-weight:700;color:var(--info)">'  + (c.strike || '—') + '</td>' +
+          '<td style="font-weight:700;color:var(--warn)">'  + (p.strike || '—') + '</td>' +
+          '<td>₹' + (c.entry_price || '—') + ' / ₹' + (p.entry_price || '—') + '</td>' +
+          '<td>₹' + (c.exit_price  || '—') + ' / ₹' + (p.exit_price  || '—') + '</td>' +
+          '<td style="font-weight:700;color:' + ptsCol + '">' + (totalPts >= 0 ? '+' : '') + totalPts.toFixed(2) + '</td>' +
+          '<td style="color:' + ptsCol + '">₹' + (totalRs >= 0 ? '+' : '') + totalRs.toFixed(2) + '</td>' +
+          '<td style="font-size:11px;color:var(--text-soft)">' + (c.reason || p.reason || '—') + '</td>';
+      } else {
+        const t = row.trade;
+        const pts = parseFloat(t.pnl_pts || 0), rs = parseFloat(t.pnl_rs || 0);
+        const ptsCol = pts >= 0 ? 'var(--success)' : 'var(--danger)';
+        const dir    = String(t.direction || t.type || '').toUpperCase();
+        const label  = dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir;
+        const dirCol = label === 'CE' ? 'var(--info)' : label === 'PE' ? 'var(--warn)' : 'var(--text)';
+        tr.innerHTML =
+          '<td>' + (t.date || '—') + '</td>' +
+          '<td>' + _btTime(t.opened_at || t.time) + '</td>' +
+          '<td>' + _btTime(t.closed_at) + '</td>' +
+          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'CE' ? t.strike : '—') + '</td>' +
+          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'PE' ? t.strike : '—') + '</td>' +
+          '<td>₹' + (t.entry_price || '—') + '</td>' +
+          '<td>₹' + (t.exit_price  || '—') + '</td>' +
+          '<td style="font-weight:700;color:' + ptsCol + '">' + (pts >= 0 ? '+' : '') + pts.toFixed(2) + '</td>' +
+          '<td style="color:' + ptsCol + '">₹' + (rs >= 0 ? '+' : '') + rs.toFixed(2) + '</td>' +
+          '<td style="font-size:11px;color:var(--text-soft)">' + (t.reason || '—') + '</td>';
+      }
+      tbody.appendChild(tr);
+    }
+    document.getElementById('bt-trade-wrap').style.display = '';
+  }
+}
+
 async function pollBacktest() {
   try {
     const jobSeg = _btJobId ? '/' + _btJobId : '/current';
     const d      = await api('GET', '/backtest/status' + jobSeg);
+
+    // Render live progress on every tick, not just on completion
+    _btRenderLive(d);
+
     if (d.running) return;
 
     clearInterval(btPollTimer);
     _btResetBtns();
+    // Remove the live indicator bar on completion
+    const indBar = document.getElementById('bt-live-ind');
+    if (indBar) indBar.remove();
 
     const trades  = d.trades  || [];
     const summary = d.summary || null;
@@ -3294,9 +3575,14 @@ async function pollBacktest() {
       return;
     }
 
-    document.getElementById('bt-status-msg').textContent =
-      'Backtest complete — ' + trades.length + ' trade leg' +
-      (trades.length !== 1 ? 's' : '') + ' simulated.';
+    // Final status message — _btRenderLive already rendered the trade table and indicators
+    const pnlFinal  = parseFloat((d.stats || {}).pnl || 0);
+    const pnlSign   = pnlFinal >= 0 ? '+' : '';
+    const pnlCol    = pnlFinal >= 0 ? 'var(--success)' : 'var(--danger)';
+    document.getElementById('bt-status-msg').innerHTML =
+      'Backtest complete &mdash; ' + trades.length + ' trade leg' +
+      (trades.length !== 1 ? 's' : '') + ' simulated. &nbsp; Final P&amp;L: ' +
+      '<strong style="color:' + pnlCol + '">' + pnlSign + pnlFinal.toFixed(1) + ' pts</strong>';
 
     // ── Summary cards ──
     if (summary) {
@@ -3318,53 +3604,10 @@ async function pollBacktest() {
       document.getElementById('bt-summary-cards').style.display = '';
     }
 
-    // ── Trade table: pair CE + PE legs ──
-    const tbody = document.getElementById('bt-trade-body');
-    tbody.innerHTML = '';
-    const pairs = _btPairLegs(trades);
-    for (const row of pairs) {
-      const tr = document.createElement('tr');
-      if (row.type === 'pair') {
-        const c = row.call, p = row.put;
-        const totalPts = parseFloat(c.pnl_pts || 0) + parseFloat(p.pnl_pts || 0);
-        const totalRs  = parseFloat(c.pnl_rs  || 0) + parseFloat(p.pnl_rs  || 0);
-        const ptsCol   = totalPts >= 0 ? 'var(--success)' : 'var(--danger)';
-        const cEntry   = _btTime(c.opened_at || c.time);
-        const cExit    = _btTime(c.closed_at);
-        tr.innerHTML =
-          '<td>' + (c.date || p.date || '—') + '</td>' +
-          '<td>' + cEntry + '</td>' +
-          '<td>' + cExit  + '</td>' +
-          '<td style="font-weight:700;color:var(--info)">' + (c.strike || '—') + '</td>' +
-          '<td style="font-weight:700;color:var(--warn)">' + (p.strike || '—') + '</td>' +
-          '<td>₹' + (c.entry_price || '—') + ' / ₹' + (p.entry_price || '—') + '</td>' +
-          '<td>₹' + (c.exit_price  || '—') + ' / ₹' + (p.exit_price  || '—') + '</td>' +
-          '<td style="font-weight:700;color:' + ptsCol + '">' + (totalPts >= 0 ? '+' : '') + totalPts.toFixed(2) + '</td>' +
-          '<td style="color:' + ptsCol + '">₹' + (totalRs >= 0 ? '+' : '') + totalRs.toFixed(2) + '</td>' +
-          '<td style="font-size:11px;color:var(--text-soft)">' + (c.reason || p.reason || '—') + '</td>';
-      } else {
-        const t      = row.trade;
-        const pts    = parseFloat(t.pnl_pts || 0);
-        const rs     = parseFloat(t.pnl_rs  || 0);
-        const ptsCol = pts >= 0 ? 'var(--success)' : 'var(--danger)';
-        const dir    = String(t.direction || t.type || '').toUpperCase();
-        const label  = dir.includes('CALL') ? 'CE' : dir.includes('PUT') ? 'PE' : dir;
-        const dirCol = label === 'CE' ? 'var(--info)' : label === 'PE' ? 'var(--warn)' : 'var(--text)';
-        tr.innerHTML =
-          '<td>' + (t.date || '—') + '</td>' +
-          '<td>' + _btTime(t.opened_at || t.time) + '</td>' +
-          '<td>' + _btTime(t.closed_at) + '</td>' +
-          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'CE' ? t.strike : '—') + '</td>' +
-          '<td style="font-weight:700;color:' + dirCol + '">' + (label === 'PE' ? t.strike : '—') + '</td>' +
-          '<td>₹' + (t.entry_price || '—') + '</td>' +
-          '<td>₹' + (t.exit_price  || '—') + '</td>' +
-          '<td style="font-weight:700;color:' + ptsCol + '">' + (pts >= 0 ? '+' : '') + pts.toFixed(2) + '</td>' +
-          '<td style="color:' + ptsCol + '">₹' + (rs >= 0 ? '+' : '') + rs.toFixed(2) + '</td>' +
-          '<td style="font-size:11px;color:var(--text-soft)">' + (t.reason || '—') + '</td>';
-      }
-      tbody.appendChild(tr);
+    // Trade table already rendered by _btRenderLive(d) above; just ensure it's visible.
+    if (trades.length) {
+      document.getElementById('bt-trade-wrap').style.display = '';
     }
-    document.getElementById('bt-trade-wrap').style.display = '';
   } catch (e) { console.warn('backtest poll:', e); }
 }
 

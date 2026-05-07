@@ -1285,7 +1285,8 @@ async def get_backtest_status(user=Depends(get_current_user)):
                 "tsl_lock": v3_extras.get('tsl_lock'),
                 "exit_rule_status": v3_extras.get('exit_rule_status'),
                 "entry_details": v3_extras.get('entry_details', []),
-                "exit_details": v3_extras.get('exit_details', [])
+                "exit_details": v3_extras.get('exit_details', []),
+                "current_ts": data.get('updated_at', '')
             },
             "trades": data.get('trade_history', [])
         }
