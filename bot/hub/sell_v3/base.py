@@ -152,7 +152,7 @@ class SellV3Base:
         # For 'advanced' rules the operand indicators inherit the advanced rule's tf.
         # First occurrence wins so that a single calc_tasks entry covers all rules
         # referencing the same indicator.
-        _KNOWN = ('vwap', 'rsi', 'roc', 'slope', 'vwap_slope', 'ltp', 'close')
+        _KNOWN = ('vwap', 'rsi', 'roc', 'slope', 'vwap_slope', 'slope_curr', 'slope_prev', 'ltp', 'close')
         # Resolve named config defaults once so call sites never use raw literals
         _rsi_period = self._v3_cfg('rsi.period', 14, int)
         _roc_length = self._v3_cfg('roc.length', 9, int)
@@ -193,6 +193,10 @@ class SellV3Base:
                 calc_tasks['roc'] = self.orchestrator.indicator_manager.calculate_combined_roc(ce_key, pe_key, anchor, tf=ind_tf, length=cfg.get('length', _roc_length))
             elif ind in ('slope', 'vwap_slope'):
                 calc_tasks['slope'] = self._get_combined_slope(ce_key, pe_key, timestamp, ind_tf)
+            elif ind == 'slope_curr':
+                calc_tasks['slope_curr'] = self._get_combined_slope_pair(ce_key, pe_key, timestamp, ind_tf, idx=0)
+            elif ind == 'slope_prev':
+                calc_tasks['slope_prev'] = self._get_combined_slope_pair(ce_key, pe_key, timestamp, ind_tf, idx=1)
             elif ind == 'ltp':
                 calc_tasks['ltp'] = self._get_combined_ltp(ce_key, pe_key)
             elif ind == 'close':
@@ -211,14 +215,19 @@ class SellV3Base:
 
             passed = False
             val = None
+            adv_label = None  # Friendly label for advanced rules in logs
             if indicator == 'advanced':
                 op1_type = r.get('operand1', '')
                 op2_type = r.get('operand2', '')
                 v1 = float(r.get('operand1_val', 0)) if op1_type == 'VALUE' else data_map.get(op1_type.lower())
                 v2 = float(r.get('operand2_val', 0)) if op2_type == 'VALUE' else data_map.get(op2_type.lower())
+                _op_sym = r.get('operator_sym', '>')
                 if v1 is not None and v2 is not None:
-                    passed = self._compare(v1, v2, r.get('operator_sym', '>'))
+                    passed = self._compare(v1, v2, _op_sym)
                     val = v1 # For logging
+                _v1s = f"{v1:.4f}" if isinstance(v1, (int, float)) else "N/A"
+                _v2s = f"{v2:.4f}" if isinstance(v2, (int, float)) else "N/A"
+                adv_label = f"{op1_type}({_v1s}){_op_sym}{op2_type}({_v2s})"
             else:
                 val = data_map.get(indicator)
                 if val is not None:
@@ -235,7 +244,12 @@ class SellV3Base:
             if i < len(rules) - 1:
                 tokens.append(r.get('operator', 'and').lower())
 
-            val_strs.append(f"{indicator.upper()}:{val:.2f}" if val is not None else "N/A")
+            if adv_label is not None:
+                val_strs.append(f"{adv_label}={'PASS' if passed else 'FAIL'}")
+            elif val is not None:
+                val_strs.append(f"{indicator.upper()}:{val:.4f}")
+            else:
+                val_strs.append(f"{indicator.upper()}:N/A")
 
         # 3. Execute Boolean Logic in Rust
         final_res = RustBridge.evaluate_boolean_logic([t for t in tokens if t])
@@ -259,6 +273,14 @@ class SellV3Base:
     async def _get_combined_slope(self, ce_key, pe_key, timestamp, tf):
         res = await self.orchestrator.indicator_manager.get_vwap_slope_pair(ce_key, pe_key, timestamp, tf)
         return res[0]
+
+    async def _get_combined_slope_pair(self, ce_key, pe_key, timestamp, tf, idx=0):
+        """idx=0 returns current slope, idx=1 returns previous slope.
+        Used by Advanced rules where the user compares SLOPE_CURR vs SLOPE_PREV."""
+        res = await self.orchestrator.indicator_manager.get_vwap_slope_pair(ce_key, pe_key, timestamp, tf)
+        if not res or len(res) <= idx:
+            return None
+        return res[idx]
 
     async def _get_combined_ltp(self, ce_key, pe_key):
         p1 = self.orchestrator.state_manager.get_ltp(ce_key) or 0
