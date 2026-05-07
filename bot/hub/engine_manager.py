@@ -23,17 +23,24 @@ class EngineManager:
         instrument_name = instrument_name.upper().strip()
         symbol = self.config_manager.get(instrument_name, 'instrument_symbol')
 
-        # If no symbol in INI, use universal fallbacks
-        if not symbol:
-            fallbacks = {
-                'NIFTY': 'NSE_INDEX|Nifty 50',
-                'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
-                'FINNIFTY': 'NSE_INDEX|Nifty Fin Service',
-                'SENSEX': 'BSE_INDEX|SENSEX',
-                'MIDCAP': 'NSE_INDEX|NIFTY MID SELECT',
-                'CRUDEOIL': 'MCX_INDEX|CRUDE OIL',
-                'NATURALGAS': 'MCX_INDEX|NATURAL GAS'
-            }
+        # ALWAYS apply universal name mapping to convert bare names (e.g., 'NIFTY')
+        # to proper Upstox format (e.g., 'NSE_INDEX|Nifty 50'). This ensures DataManager
+        # is initialized with the correctly mapped key, not the raw config value.
+        # This applies both when symbol is empty AND when it's a bare name from config.
+        fallbacks = {
+            'NIFTY': 'NSE_INDEX|Nifty 50',
+            'BANKNIFTY': 'NSE_INDEX|Nifty Bank',
+            'FINNIFTY': 'NSE_INDEX|Nifty Fin Service',
+            'SENSEX': 'BSE_INDEX|SENSEX',
+            'MIDCAP': 'NSE_INDEX|NIFTY MID SELECT',
+            'CRUDEOIL': 'MCX_INDEX|CRUDE OIL',
+            'NATURALGAS': 'MCX_INDEX|NATURAL GAS'
+        }
+        # If symbol is a bare name (in the fallbacks map), map it; otherwise use as-is
+        if symbol:
+            symbol = fallbacks.get(symbol.upper(), symbol)
+        else:
+            # If no symbol in INI, use instrument_name as key for fallback
             symbol = fallbacks.get(instrument_name, 'NSE_INDEX|Nifty 50')
 
         # Broker-Specific Overrides for Backtests or direct SDK calls (optional)
