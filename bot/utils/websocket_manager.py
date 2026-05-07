@@ -537,14 +537,25 @@ class WebSocketManager(DataFeed):
                     new_subscriptions_by_mode[mode] = []
                 new_subscriptions_by_mode[mode].append(symbol)
 
-        if new_subscriptions_by_mode and self.is_connected:
-            for sub_mode, sub_symbols in new_subscriptions_by_mode.items():
-                asyncio.create_task(self._send_specific_subscription_request(sub_symbols, sub_mode))
+        if new_subscriptions_by_mode:
+            logger.info(
+                f"[WSManager] Subscribe request: {len(sum(new_subscriptions_by_mode.values(), []))} new symbols "
+                f"(mode={mode}). Sample: {list(sum(new_subscriptions_by_mode.values(), []))[:3]}. "
+                f"WS connected={self.is_connected}, total subscriptions={len(self.subscriptions)}"
+            )
+            if self.is_connected:
+                for sub_mode, sub_symbols in new_subscriptions_by_mode.items():
+                    asyncio.create_task(self._send_specific_subscription_request(sub_symbols, sub_mode))
 
     async def _send_specific_subscription_request(self, symbols, mode):
         if not self.is_connected or not self.websocket:
             logger.warning("Cannot subscribe, WebSocket is not connected.")
             return
+
+        logger.debug(
+            f"[WSManager] Sending subscription to Upstox: {len(symbols)} symbols (mode={mode}). "
+            f"Keys: {symbols[:3]}{'...' if len(symbols) > 3 else ''}"
+        )
 
         data = {
             "guid": "guid-2",
@@ -554,7 +565,11 @@ class WebSocketManager(DataFeed):
                 "instrumentKeys": symbols
             }
         }
-        await self.websocket.send(json.dumps(data).encode('utf-8'))
+        try:
+            await self.websocket.send(json.dumps(data).encode('utf-8'))
+            logger.debug(f"[WSManager] Subscription message sent successfully for {len(symbols)} symbols.")
+        except Exception as _sub_err:
+            logger.error(f"[WSManager] Failed to send subscription message: {_sub_err}")
 
     def unsubscribe(self, symbols):
         unsubscribed = False

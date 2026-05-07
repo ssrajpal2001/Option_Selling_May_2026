@@ -224,14 +224,40 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             if missing:
                 return {"success": False,
                         "message": f"Dhan credentials incomplete — missing: {', '.join(missing)}. Save all fields first."}
-            _dhan_result = generate_dhan_token(
-                api_key=client_id,
-                client_id=client_id,
-                password=pin,
-                totp_secret=totp_sec,
-            )
-            token = _dhan_result['token']
-            _dhan_error = _dhan_result['error']
+
+            # Before attempting TOTP re-login, check if any Dhan broker instance has
+            # a fresher token (auto-generated at bot startup). Using the broker token
+            # avoids burning TOTP attempts and hitting the 2-minute rate limit.
+            token = None
+            try:
+                _dhan_broker = db_fetchone(
+                    "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
+                    "WHERE broker='dhan' AND access_token_encrypted IS NOT NULL "
+                    "ORDER BY token_updated_at DESC LIMIT 1",
+                    ()
+                )
+                if _dhan_broker and _dhan_broker['access_token_encrypted']:
+                    _broker_token = decrypt_secret(_dhan_broker['access_token_encrypted'])
+                    _broker_updated = _dhan_broker.get('token_updated_at', '')
+                    _dp_updated = dp.get('updated_at', '')
+                    if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                        token = _broker_token
+                        logger.info(f"[Admin] Dhan: using fresher token from broker instance (updated {_broker_updated}).")
+            except Exception as _broker_tok_err:
+                logger.debug(f"[Admin] Could not fetch fresher Dhan token from broker instance: {_broker_tok_err}")
+
+            # Only attempt fresh token generation if no fresh token was found from broker
+            if not token:
+                _dhan_result = generate_dhan_token(
+                    api_key=client_id,
+                    client_id=client_id,
+                    password=pin,
+                    totp_secret=totp_sec,
+                )
+                token = _dhan_result['token']
+                _dhan_error = _dhan_result['error']
+            else:
+                _dhan_error = None
 
         if token:
             enc_token = encrypt_secret(token)
@@ -387,14 +413,39 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                     results[provider] = {"success": False,
                                          "message": f"Dhan credentials incomplete — missing: {', '.join(_missing)}."}
                     continue
-                _dhan_result = generate_dhan_token(
-                    api_key=_client_id,
-                    client_id=_client_id,
-                    password=_pin,
-                    totp_secret=_totp_sec,
-                )
-                token = _dhan_result['token']
-                _dhan_error = _dhan_result['error']
+
+                # Before attempting TOTP re-login, check if any Dhan broker instance has
+                # a fresher token (auto-generated at bot startup). Avoids the 2-minute rate limit.
+                token = None
+                try:
+                    _dhan_broker = db_fetchone(
+                        "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
+                        "WHERE broker='dhan' AND access_token_encrypted IS NOT NULL "
+                        "ORDER BY token_updated_at DESC LIMIT 1",
+                        ()
+                    )
+                    if _dhan_broker and _dhan_broker['access_token_encrypted']:
+                        _broker_token = decrypt_secret(_dhan_broker['access_token_encrypted'])
+                        _broker_updated = _dhan_broker.get('token_updated_at', '')
+                        _dp_updated = dp.get('updated_at', '')
+                        if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
+                            token = _broker_token
+                            logger.info(f"[Admin] Dhan: using fresher token from broker instance (updated {_broker_updated}).")
+                except Exception as _broker_tok_err:
+                    logger.debug(f"[Admin] Could not fetch fresher Dhan token from broker instance: {_broker_tok_err}")
+
+                # Only generate fresh token if no fresh token was found from broker
+                if not token:
+                    _dhan_result = generate_dhan_token(
+                        api_key=_client_id,
+                        client_id=_client_id,
+                        password=_pin,
+                        totp_secret=_totp_sec,
+                    )
+                    token = _dhan_result['token']
+                    _dhan_error = _dhan_result['error']
+                else:
+                    _dhan_error = None
 
             if token:
                 enc_token = encrypt_secret(token)

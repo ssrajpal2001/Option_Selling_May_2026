@@ -1099,6 +1099,19 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
                 )
                 instance["access_token_encrypted"] = _enc_new
                 instance["token_updated_at"] = _now_ts
+
+                # Propagate fresh token to data_providers so FeedServer uses the new token
+                # on next reconnect (instead of reading stale token from data_providers)
+                try:
+                    _now_ist = datetime.now(IST).isoformat()
+                    db_execute(
+                        "UPDATE data_providers SET access_token_encrypted=?, token_issued_at=? WHERE provider='dhan'",
+                        (_enc_new, _now_ist),
+                    )
+                    logger.info("[StartBot] Dhan token propagated to data_providers for FeedServer.")
+                except Exception as _prop_err:
+                    logger.warning(f"[StartBot] Could not propagate Dhan token to data_providers: {_prop_err}")
+
                 _dhan_token_ok = True
                 logger.info(f"[StartBot] Dhan token auto-refreshed for instance {instance['id']}.")
             else:

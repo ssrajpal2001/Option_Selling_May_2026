@@ -60,6 +60,7 @@ class FeedServer:
         # Used to re-subscribe the DualFeedManager after a reconnect/restart.
         self._all_subscribed: set = set()
         self._last_broadcast_epoch: float = 0.0
+        self._tick_count: int = 0  # For diagnostic logging
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -280,6 +281,9 @@ class FeedServer:
             return
         from hub.event_bus import event_bus
         now = datetime.datetime.now()
+        _tick_batch = len(feed_response.feeds) if hasattr(feed_response, 'feeds') else 0
+        if _tick_batch % 10 == 0:
+            logger.debug(f"[FeedServer] Upstox raw: {_tick_batch} feeds in batch from protobuf")
         for key, feed in feed_response.feeds.items():
             ltp = 0.0
             try:
@@ -322,6 +326,15 @@ class FeedServer:
         if not key or ltp is None:
             return
         self._last_broadcast_epoch = time.time()
+        self._tick_count += 1
+
+        # Log sample ticks for diagnostic purposes (every 10 ticks to avoid log spam)
+        if self._tick_count % 10 == 0:
+            logger.debug(
+                f"[FeedServer] Tick #{self._tick_count}: {key} @ {ltp} "
+                f"({len(self._writers)} clients subscribed)"
+            )
+
         msg = {
             'type': 'tick',
             'instrument_key': key,
@@ -387,8 +400,9 @@ class FeedServer:
                         if self._dual_feed:
                             self._dual_feed.subscribe(instruments, mode)
                         logger.info(
-                            f"[FeedServer] Subscribed {len(instruments)} instruments from {peer}. "
-                            f"Total: {len(self._all_subscribed)}."
+                            f"[FeedServer] Subscribed {len(instruments)} instruments from {peer} (mode={mode}). "
+                            f"Keys: {instruments[:3]}{'...' if len(instruments) > 3 else ''}. "
+                            f"Total tracked: {len(self._all_subscribed)}."
                         )
                 elif cmd == 'unsubscribe':
                     instruments = msg.get('instruments') or []
