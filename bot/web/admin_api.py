@@ -176,14 +176,14 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
             if not token:
                 try:
                     _upstox_broker = db_fetchone(
-                        "SELECT access_token_encrypted, updated_at FROM client_broker_instances "
+                        "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
                         "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
-                        "ORDER BY updated_at DESC LIMIT 1",
+                        "ORDER BY token_updated_at DESC LIMIT 1",
                         ()
                     )
                     if _upstox_broker and _upstox_broker['access_token_encrypted']:
                         _broker_token = decrypt_secret(_upstox_broker['access_token_encrypted'])
-                        _broker_updated = _upstox_broker.get('updated_at', '')
+                        _broker_updated = _upstox_broker.get('token_updated_at', '')
                         _dp_updated = dp.get('updated_at', '')
                         if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
                             token = _broker_token
@@ -368,14 +368,14 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                 if not token:
                     try:
                         _upstox_broker = db_fetchone(
-                            "SELECT access_token_encrypted, updated_at FROM client_broker_instances "
+                            "SELECT access_token_encrypted, token_updated_at FROM client_broker_instances "
                             "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
-                            "ORDER BY updated_at DESC LIMIT 1",
+                            "ORDER BY token_updated_at DESC LIMIT 1",
                             ()
                         )
                         if _upstox_broker and _upstox_broker['access_token_encrypted']:
                             _broker_token = decrypt_secret(_upstox_broker['access_token_encrypted'])
-                            _broker_updated = _upstox_broker.get('updated_at', '')
+                            _broker_updated = _upstox_broker.get('token_updated_at', '')
                             _dp_updated = dp.get('updated_at', '')
                             if _broker_token and _broker_updated and (_broker_updated > _dp_updated or not _dp_updated):
                                 token = _broker_token

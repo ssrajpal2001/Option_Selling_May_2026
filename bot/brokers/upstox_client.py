@@ -46,9 +46,11 @@ class UpstoxClient(BaseBroker):
                             try:
                                 from web.db import db_execute
                                 from web.auth import encrypt_secret
-                                import datetime as _dt
+                                from datetime import datetime, timezone, timedelta
                                 enc = encrypt_secret(access_token)
-                                now_ist = _dt.datetime.now().isoformat()
+                                # Use IST timezone (same as Dhan) for consistency in timezone comparisons
+                                _tz_ist = timezone(timedelta(hours=5, minutes=30))
+                                now_ist = datetime.now(_tz_ist).isoformat()
                                 _inst_id = self.db_config.get('id')
                                 if _inst_id:
                                     db_execute(
