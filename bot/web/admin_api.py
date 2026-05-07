@@ -147,9 +147,21 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                     if _issued_dt.tzinfo is None:
                         _issued_dt = _IST.localize(_issued_dt)
                     _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
-                    # Only skip if fresh AND the WS is actually connected (not returning 401)
+                    # Only skip if fresh AND the WS is actually connected (not returning 401).
+                    # Also check FeedServer directly in case feed_registry hasn't updated yet
+                    # (race condition: registry updates asynchronously after WS connects).
                     from hub.feed_registry import get_ws_state as _gws
                     _ws_live = _gws('upstox').get('ws_connected', False)
+                    if not _ws_live:
+                        try:
+                            from hub.feed_server import get_feed_server as _gfs
+                            _fs = _gfs()
+                            _df = getattr(_fs, '_dual_feed', None)
+                            _up = getattr(_df, 'upstox', None) if _df else None
+                            if _up and getattr(_up, 'is_connected', False):
+                                _ws_live = True
+                        except Exception:
+                            pass
                     if _age_minutes < 30 and _ws_live:
                         logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) and WS connected — skipping re-login.")
                         return {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}
@@ -283,6 +295,16 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                         _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
                         from hub.feed_registry import get_ws_state as _gws2
                         _ws_live2 = _gws2('upstox').get('ws_connected', False)
+                        if not _ws_live2:
+                            try:
+                                from hub.feed_server import get_feed_server as _gfs2
+                                _fs2 = _gfs2()
+                                _df2 = getattr(_fs2, '_dual_feed', None)
+                                _up2 = getattr(_df2, 'upstox', None) if _df2 else None
+                                if _up2 and getattr(_up2, 'is_connected', False):
+                                    _ws_live2 = True
+                            except Exception:
+                                pass
                         if _age_minutes < 30 and _ws_live2:
                             logger.info(f"[Admin] Upstox token is fresh ({_age_minutes:.1f} min old) and WS connected — skipping re-login.")
                             results[provider] = {"success": True, "message": f"Upstox token is fresh ({_age_minutes:.1f} min old). No re-login needed."}

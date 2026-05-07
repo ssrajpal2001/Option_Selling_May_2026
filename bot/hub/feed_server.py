@@ -55,6 +55,7 @@ class FeedServer:
         self._dual_feed = None
         self._server = None
         self._started = False
+        self._status_loop_task = None
         # Union of all instrument keys requested by any connected FeedClient.
         # Used to re-subscribe the DualFeedManager after a reconnect/restart.
         self._all_subscribed: set = set()
@@ -133,8 +134,10 @@ class FeedServer:
             # Connect the WebSockets
             ws_mgr.start()
             logger.info("[FeedServer] DualFeedManager started.")
-            # Start periodic status reporter
-            asyncio.create_task(self._status_loop())
+            # Start periodic status reporter — cancel previous one if it exists
+            if self._status_loop_task and not self._status_loop_task.done():
+                self._status_loop_task.cancel()
+            self._status_loop_task = asyncio.create_task(self._status_loop())
         except Exception as exc:
             logger.error(f"[FeedServer] Feed initialization failed: {exc}", exc_info=True)
 
