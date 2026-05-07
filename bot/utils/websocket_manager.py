@@ -552,7 +552,7 @@ class WebSocketManager(DataFeed):
             logger.warning("Cannot subscribe, WebSocket is not connected.")
             return
 
-        logger.debug(
+        logger.info(
             f"[WSManager] Sending subscription to Upstox: {len(symbols)} symbols (mode={mode}). "
             f"Keys: {symbols[:3]}{'...' if len(symbols) > 3 else ''}"
         )

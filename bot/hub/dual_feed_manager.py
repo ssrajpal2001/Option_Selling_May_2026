@@ -90,6 +90,10 @@ class DualFeedManager(DataFeed):
             tick['atp'] = float(atp_raw)
 
         logger.debug(f"DualFeedManager dispatching global Dhan tick for {inst_key}: LTP={ltp}")
+        # One-time raw dict dump for NIFTY to verify Dhan field names/structure
+        if sid == '13' and not getattr(self, '_dhan_nifty_logged', False):
+            self._dhan_nifty_logged = True
+            logger.info(f"[DualFeed] Dhan NIFTY first tick raw: {dict(list(data.items())[:15])}")
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)
 
     # ──────────────────────────────────────────────────────────────────────────

@@ -330,8 +330,9 @@ class FeedServer:
         from hub.event_bus import event_bus
         now = datetime.datetime.now()
         _tick_batch = len(feed_response.feeds) if hasattr(feed_response, 'feeds') else 0
+        _msg_type = getattr(feed_response, 'type', '?')
         if _tick_batch % 10 == 0 or _tick_batch == 1:
-            logger.info(f"[FeedServer] Upstox raw: {_tick_batch} feeds in batch from protobuf")
+            logger.info(f"[FeedServer] Upstox raw: {_tick_batch} feeds (type={_msg_type})")
         for key, feed in feed_response.feeds.items():
             ltp = 0.0
             _has_field = 'none'
@@ -353,6 +354,19 @@ class FeedServer:
                 continue
 
             logger.info(f"[FeedServer] Tick: {key} ltp={ltp} ({_has_field})")
+            # One-time detailed dump for the first index tick to verify protobuf field structure
+            if 'INDEX' in key and not getattr(self, '_nifty_tick_logged', False):
+                self._nifty_tick_logged = True
+                try:
+                    fields = []
+                    if feed.HasField('ltpc'): fields.append(f"ltpc.ltp={feed.ltpc.ltp}")
+                    if feed.HasField('fullFeed'):
+                        if feed.fullFeed.HasField('indexFF'): fields.append(f"indexFF.ltp={feed.fullFeed.indexFF.ltpc.ltp}")
+                        if feed.fullFeed.HasField('marketFF'): fields.append(f"marketFF.ltp={feed.fullFeed.marketFF.ltpc.ltp}")
+                    if feed.HasField('firstLevelWithGreeks'): fields.append(f"greeks.ltp={feed.firstLevelWithGreeks.ltpc.ltp}")
+                    logger.info(f"[FeedServer] INDEX first tick: key={key} | {' | '.join(fields) or 'NO_FIELDS_FOUND'}")
+                except Exception as _dump_e:
+                    logger.info(f"[FeedServer] INDEX first tick dump failed: {_dump_e}")
             if ltp <= 0:
                 logger.warning(f"[FeedServer] Tick dropped (ltp={ltp}): {key}")
                 continue
