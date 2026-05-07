@@ -351,6 +351,24 @@ class FeedServer:
         except Exception:
             pass
 
+        # Sync the latest token from data_providers into the feed object before restarting.
+        # This ensures the new connect_and_listen() task uses a fresh token, not the expired
+        # one that was in memory when the old task failed.
+        try:
+            from web.db import db_fetchone as _dbf
+            from web.auth import decrypt_secret as _dec
+            _row = _dbf("SELECT access_token_encrypted FROM data_providers WHERE provider=?", (provider,))
+            if _row and _row[0]:
+                _fresh_token = _dec(_row[0])
+                if _fresh_token and hasattr(feed, 'refresh_credentials'):
+                    feed.refresh_credentials(_fresh_token)
+                    logger.info(f"[FeedServer] reconnect_provider({provider}) — synced fresh token from DB into feed.")
+                elif _fresh_token and hasattr(feed, 'access_token'):
+                    feed.access_token = _fresh_token
+                    logger.info(f"[FeedServer] reconnect_provider({provider}) — updated feed.access_token from DB.")
+        except Exception as _tok_err:
+            logger.debug(f"[FeedServer] reconnect_provider token sync skipped: {_tok_err}")
+
         # Now restart — DualFeedManager.start() re-registers the feed and calls feed.start()
         # which will create a new asyncio task running connect_and_listen().
         logger.info(f"[FeedServer] reconnect_provider({provider}) — starting fresh listener.")

@@ -208,17 +208,56 @@ class ContractManager:
             return
 
         expiring_raw = await supplement_client.get_expiring_option_contracts(instrument_key, today)
-        if not expiring_raw:
-            logger.warning("ContractManager: expired-instruments API returned no contracts. Bot may be unable to trade today's expiry.")
-            return
 
-        today_contracts = [OptionContract(c) for c in expiring_raw
-                           if c.get('expiry') == today.strftime('%Y-%m-%d')]
-        if today_contracts:
-            self.all_options.extend(today_contracts)
-            logger.info(f"ContractManager: Supplemented with {len(today_contracts)} expiry-day contracts for {today}. Total option contracts: {len(self.all_options)}")
+        today_contracts = []
+        if expiring_raw:
+            today_contracts = [OptionContract(c) for c in expiring_raw
+                               if c.get('expiry') == today.strftime('%Y-%m-%d')]
+            if today_contracts:
+                self.all_options.extend(today_contracts)
+                logger.info(f"ContractManager: Supplemented with {len(today_contracts)} expiry-day contracts for {today}. Total option contracts: {len(self.all_options)}")
+            else:
+                logger.warning(f"ContractManager: expired-instruments API returned data but none matched today ({today}). Trying /option/chain fallback …")
         else:
-            logger.warning(f"ContractManager: expired-instruments API returned data but none matched today ({today}). Bot may be unable to trade today's expiry.")
+            logger.warning("ContractManager: expired-instruments API returned no contracts. Trying /option/chain fallback …")
+
+        # Fallback: query /option/chain with today's expiry.  The chain endpoint is always
+        # available (it serves live quotes) and includes today's contracts even on expiry day.
+        if not today_contracts and hasattr(supplement_client, 'get_option_chain'):
+            try:
+                chain_data = await supplement_client.get_option_chain(instrument_key, today.strftime('%Y-%m-%d'))
+                chain_contracts = []
+                for strike_row in (chain_data or []):
+                    for side_key in ('call_options', 'put_options'):
+                        leg = strike_row.get(side_key)
+                        if not leg:
+                            continue
+                        inst_key = leg.get('instrument_key') or (leg.get('market_data') or {}).get('instrument_key')
+                        if not inst_key:
+                            continue
+                        chain_contracts.append(OptionContract({
+                            'instrument_key': inst_key,
+                            'expiry': today.strftime('%Y-%m-%d'),
+                            'strike_price': strike_row.get('strike_price'),
+                            'instrument_type': 'CE' if side_key == 'call_options' else 'PE',
+                            'trading_symbol': leg.get('trading_symbol', inst_key),
+                            'lot_size': leg.get('lot_size'),
+                            'exchange': 'NSE',
+                        }))
+                if chain_contracts:
+                    self.all_options.extend(chain_contracts)
+                    logger.info(
+                        f"ContractManager: /option/chain fallback succeeded — "
+                        f"added {len(chain_contracts)} expiry-day contracts for {today}. "
+                        f"Total: {len(self.all_options)}"
+                    )
+                else:
+                    logger.warning(
+                        f"ContractManager: /option/chain fallback also returned no contracts for {today}. "
+                        "Bot will use next available expiry — today's expiry contracts unavailable."
+                    )
+            except Exception as _chain_err:
+                logger.warning(f"ContractManager: /option/chain fallback failed: {_chain_err}")
 
     # Map bare instrument names to their proper Upstox index keys so the first
     # API call succeeds without a guaranteed 400 + retry cycle.

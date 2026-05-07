@@ -10,6 +10,10 @@ _UUID_RE = re.compile(
     re.IGNORECASE
 )
 
+# Per-client cooldown tracking: client_id -> last successful generate time (monotonic)
+_last_generate_time: dict = {}
+_DHAN_RATE_LIMIT_SECS = 125  # Dhan enforces "once every 2 minutes"; add 5s buffer
+
 
 def is_dhan_api_key_mode(credentials: dict) -> bool:
     """
@@ -104,17 +108,48 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
             logger.error(f"[Dhan] Token generation error for {login_id}: {e}")
             return _fail("Could not reach Dhan servers. Check your internet connection and try again.")
 
+    # Enforce client-side cooldown so rapid successive calls (e.g. bot startup then
+    # admin "Connect Now" within seconds) don't immediately hit Dhan's 2-minute limit.
+    _now_mono = time.monotonic()
+    _last = _last_generate_time.get(login_id, 0.0)
+    _elapsed = _now_mono - _last
+    if _elapsed < _DHAN_RATE_LIMIT_SECS and _last > 0:
+        _wait = int(_DHAN_RATE_LIMIT_SECS - _elapsed) + 1
+        logger.warning(
+            f"[Dhan] Rate-limit cooldown active for {login_id} — "
+            f"last attempt was {_elapsed:.0f}s ago (limit={_DHAN_RATE_LIMIT_SECS}s). "
+            f"Waiting {_wait}s before generating new token …"
+        )
+        time.sleep(_wait)
+
     logger.info(f"[Dhan] Generating access token for client {login_id} …")
     result = _attempt(totp_code)
 
+    if result.get('token'):
+        _last_generate_time[login_id] = time.monotonic()
+        return result
+
+    # If Dhan returned "once every 2 minutes" despite our client-side guard,
+    # wait the full window and retry exactly once before giving up.
+    if result['error'] and 'once every 2 minutes' in result['error'].lower():
+        logger.warning(
+            f"[Dhan] Server-side rate limit hit for {login_id}. "
+            "Waiting 125s then retrying once …"
+        )
+        time.sleep(125)
+        try:
+            import pyotp as _pyotp2
+            fresh_totp2 = _pyotp2.TOTP(totp_secret.replace(' ', '')).now()
+        except Exception as _te2:
+            logger.error(f"[Dhan] TOTP regeneration failed on rate-limit retry: {_te2}")
+            return result
+        result = _attempt(fresh_totp2)
+        if result.get('token'):
+            _last_generate_time[login_id] = time.monotonic()
+        return result
+
     # Retry once if Dhan rejected the TOTP (race at 30s window boundary).
-    # Do not retry rate-limit/cooldown errors; that would just burn another
-    # request inside Dhan's "once every 2 minutes" window.
-    if (
-        result['error']
-        and 'totp' in result['error'].lower()
-        and 'once every 2 minutes' not in result['error'].lower()
-    ):
+    if result['error'] and 'totp' in result['error'].lower():
         logger.warning(
             f"[Dhan] TOTP rejected for {login_id} — waiting 1 s for next window, retrying …"
         )
@@ -124,9 +159,11 @@ def generate_dhan_token(api_key: str, client_id: str, password: str,
             fresh_totp = pyotp.TOTP(totp_secret.replace(' ', '')).now()
         except Exception as te:
             logger.error(f"[Dhan] TOTP regeneration failed on retry: {te}")
-            return result  # return original error
+            return result
         logger.info(f"[Dhan] Retrying token generation for {login_id} with fresh TOTP …")
         result = _attempt(fresh_totp)
+        if result.get('token'):
+            _last_generate_time[login_id] = time.monotonic()
 
     return result
 

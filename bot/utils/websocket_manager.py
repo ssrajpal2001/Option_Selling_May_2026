@@ -89,52 +89,61 @@ class WebSocketManager(DataFeed):
                 except Exception as e:
                     # On 401, try to reload a fresher token from DB before retrying.
                     if "401" in str(e) and not active_client and hasattr(self, 'access_token'):
-                        # FeedServer path: no api_client — reload directly from DB into self.access_token
+                        # FeedServer path: no api_client — reload directly from DB into self.access_token.
+                        # Always re-query both tables on every 401: an identical token string may still be
+                        # expired (Upstox tokens expire ~45 min after issue, not just when the value changes).
                         try:
                             from web.db import db_fetchone, db_execute
                             from web.auth import decrypt_secret, encrypt_secret
                             fresh = None
+                            _best_updated = ''
 
                             # 1. Try data_providers first
                             row = db_fetchone(
-                                "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
+                                "SELECT access_token_encrypted, updated_at FROM data_providers WHERE provider='upstox'",
                                 ()
                             )
                             if row and row[0]:
                                 candidate = decrypt_secret(row[0])
-                                if candidate and candidate != self.access_token:
+                                if candidate:
                                     fresh = candidate
-                                    logger.info("[WSManager] 401 on auth (FeedServer) — reloaded token from data_providers.")
+                                    _best_updated = row.get('updated_at', '') or ''
+                                    logger.info("[WSManager] 401 (FeedServer) — candidate token from data_providers.")
 
-                            # 2. Fallback: check client_broker_instances for a fresher token
-                            #    (covers the case where ReconnectManager saved a fresh token to the
-                            #    broker instance but data_providers was not yet updated)
-                            if not fresh:
+                            # 2. Check client_broker_instances — may have a MORE RECENT token
+                            #    (ReconnectManager saves here before data_providers is updated)
+                            try:
                                 row2 = db_fetchone(
-                                    "SELECT access_token_encrypted FROM client_broker_instances "
+                                    "SELECT access_token_encrypted, updated_at FROM client_broker_instances "
                                     "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
                                     "ORDER BY updated_at DESC LIMIT 1",
                                     ()
                                 )
                                 if row2 and row2[0]:
-                                    candidate = decrypt_secret(row2[0])
-                                    if candidate and candidate != self.access_token:
-                                        fresh = candidate
-                                        # Propagate to data_providers so next auth attempt uses it
+                                    candidate2 = decrypt_secret(row2[0])
+                                    _inst_updated = row2.get('updated_at', '') or ''
+                                    if candidate2 and _inst_updated > _best_updated:
+                                        fresh = candidate2
+                                        # Propagate back to data_providers so all paths stay in sync
                                         try:
                                             db_execute(
                                                 "UPDATE data_providers SET access_token_encrypted=? WHERE provider='upstox'",
                                                 (encrypt_secret(fresh),)
                                             )
-                                            logger.info("[WSManager] 401 on auth (FeedServer) — reloaded token from client_broker_instances and propagated to data_providers.")
                                         except Exception:
                                             pass
+                                        logger.info(
+                                            f"[WSManager] 401 (FeedServer) — fresher token from client_broker_instances "
+                                            f"(updated {_inst_updated}) propagated to data_providers."
+                                        )
+                            except Exception:
+                                pass
 
                             if fresh:
                                 self.access_token = fresh
                             else:
                                 logger.warning(
-                                    "[WSManager] 401 on auth (FeedServer) — no fresher token found in DB. "
+                                    "[WSManager] 401 on auth (FeedServer) — no token found in DB. "
                                     "Go to Admin → Data Providers → Upstox and click 'Connect Now'."
                                 )
                         except Exception as _db_err:
@@ -183,8 +192,17 @@ class WebSocketManager(DataFeed):
                                             pass
 
                             if fresh:
-                                active_client.auth_handler.token = fresh
-                                logger.info("[WSManager] 401 on auth — reloaded fresh token from DB.")
+                                # Update whichever attribute the auth_handler actually uses:
+                                # AuthHandler (auth_manager.py) uses .access_token;
+                                # inline handlers in upstox_client.py / provider_factory.py use .token
+                                _ah = active_client.auth_handler
+                                if hasattr(_ah, 'access_token'):
+                                    _ah.access_token = fresh
+                                elif hasattr(_ah, 'token'):
+                                    _ah.token = fresh
+                                elif hasattr(_ah, '_token'):
+                                    _ah._token = fresh
+                                logger.info("[WSManager] 401 on auth — reloaded fresh token from DB into auth_handler.")
                             else:
                                 logger.warning(
                                     "[WSManager] 401 on auth — no fresher token found in DB. "
@@ -327,7 +345,7 @@ class WebSocketManager(DataFeed):
                 import datetime as _dt, pytz as _ptz
                 _now_ist = _dt.datetime.now(_ptz.timezone('Asia/Kolkata'))
                 _market_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
-                _stale_threshold = 300 if _now_ist < _market_open else 90
+                _stale_threshold = 300 if _now_ist < _market_open else 45
 
                 if silence_duration > _stale_threshold:
                     logger.error(f"WATCHDOG: Proactive detection of WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
@@ -399,7 +417,7 @@ class WebSocketManager(DataFeed):
                 silence_duration = asyncio.get_event_loop().time() - self._last_message_time
                 import datetime as _dt2, pytz as _ptz2
                 _now2 = _dt2.datetime.now(_ptz2.timezone('Asia/Kolkata'))
-                _stale2 = 300 if _now2 < _now2.replace(hour=9, minute=15, second=0, microsecond=0) else 90
+                _stale2 = 300 if _now2 < _now2.replace(hour=9, minute=15, second=0, microsecond=0) else 45
                 if silence_duration > _stale2:
                     logger.error(f"WATCHDOG: WebSocket SILENCE for {silence_duration:.0f}s. Forcing reconnect.")
                     break
