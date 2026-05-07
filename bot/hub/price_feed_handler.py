@@ -93,13 +93,13 @@ class PriceFeedHandler:
         broker_source = data.get('broker', 'unknown')
         user_id = data.get('user_id')
 
-        # One-time first-tick log per instrument to confirm FeedClient→event_bus path is alive.
-        # Visible in the BROKER subprocess log (not server.log) so we can confirm ticks arrive here.
+        # First-tick log per instrument — kept at DEBUG; the FeedClient RX-first-tick
+        # log already proves the TCP→event_bus path. Re-enable by raising log level.
         if not getattr(self, '_logged_first_ticks', None):
             self._logged_first_ticks = set()
         if instrument_key and instrument_key not in self._logged_first_ticks:
             self._logged_first_ticks.add(instrument_key)
-            logger.info(
+            logger.debug(
                 f"[PriceFeedHandler] FIRST tick received for {instrument_key}: "
                 f"ltp={ltp} broker={broker_source} index_key={self.index_instrument_key}"
             )
