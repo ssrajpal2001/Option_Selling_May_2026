@@ -332,9 +332,11 @@ class BaseOrchestrator(ABC):
             return []
 
         # Use the properly mapped index_instrument_key (e.g., NSE_INDEX|Nifty 50)
-        # instead of raw config value (e.g., NIFTY), which Upstox doesn't recognize
-        instruments = [self.futures_instrument_key, self.index_instrument_key]
-        logger.debug(f"[{self.instrument_name}] Requesting initial subscriptions for: {instruments}")
+        # instead of raw config value (e.g., NIFTY), which Upstox doesn't recognize.
+        # Filter out None/empty values — Upstox rejects the ENTIRE subscription
+        # batch if any key is None, so we must never send None in the list.
+        instruments = [k for k in (self.futures_instrument_key, self.index_instrument_key) if k]
+        logger.info(f"[{self.instrument_name}] Initial subscriptions: {instruments}")
         return instruments
 
     async def process_tick(self, backtest_previous_tick=None, backtest_current_tick=None):

@@ -580,6 +580,10 @@ class WebSocketManager(DataFeed):
         await self.websocket.send(json.dumps(data).encode('utf-8'))
 
     def subscribe(self, symbols, mode='full'):
+        # Drop None/empty keys — Upstox rejects the entire batch if any key is invalid.
+        symbols = [s for s in (symbols or []) if s]
+        if not symbols:
+            return
         new_subscriptions_by_mode = {}
         for symbol in symbols:
             if symbol not in self.subscriptions:
