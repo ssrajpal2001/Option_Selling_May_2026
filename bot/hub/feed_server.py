@@ -137,6 +137,18 @@ class FeedServer:
 
                 self._dual_feed = ws_mgr
 
+                # If ws_mgr is a plain WebSocketManager (single-provider mode), it won't
+                # call register_feed() itself (only DualFeedManager.start() does that).
+                # Register it manually so get_ws_state('upstox') works and the admin
+                # startup check doesn't see "offline" and tear down a working connection.
+                if not hasattr(ws_mgr, 'upstox') and not hasattr(ws_mgr, 'dhan'):
+                    try:
+                        from hub.feed_registry import register_feed
+                        register_feed('upstox', ws_mgr)
+                        logger.info("[FeedServer] Registered plain WebSocketManager as 'upstox' in feed_registry.")
+                    except Exception as _re:
+                        logger.warning(f"[FeedServer] Could not register in feed_registry: {_re}")
+
                 # Immediately replay any pending subscriptions queued while feed was transitioning
                 self._replay_pending_subscriptions()
 
@@ -211,21 +223,39 @@ class FeedServer:
     # ── Admin reconnect trigger ───────────────────────────────────────────────
 
     async def _shutdown_dual_feed(self) -> None:
-        """Cancel all running WebSocket tasks in the current DualFeedManager."""
+        """Cancel ALL running WebSocket tasks in the current feed manager.
+
+        Handles both DualFeedManager (has .upstox/.dhan) and a plain
+        WebSocketManager used in single-provider mode.  Cancels listener_task
+        AND all auxiliary tasks (watchdog, processor, latency) so no zombie tasks
+        survive to force-reconnect with stale credentials.
+        """
         if self._dual_feed is None:
             return
         old = self._dual_feed
         self._dual_feed = None
+
+        # Build list of individual feed objects to shut down.
+        feeds_to_kill = []
         for attr in ('upstox', 'dhan'):
             feed = getattr(old, attr, None)
-            if feed is None:
-                continue
-            for task_attr in ('_listener_task', '_task'):
+            if feed is not None:
+                feeds_to_kill.append((attr, feed))
+        if not feeds_to_kill:
+            # _dual_feed is a plain WebSocketManager or DhanWebSocketManager
+            feeds_to_kill.append(('feed', old))
+
+        for name, feed in feeds_to_kill:
+            # Cancel ALL tasks the WS manager may have spawned — including watchdog
+            # and processor tasks that would otherwise survive as zombies and
+            # call _force_reconnect() at the 90s silence threshold.
+            for task_attr in ('_listener_task', '_task', '_watchdog_task',
+                              '_processor_task', '_latency_task'):
                 task = getattr(feed, task_attr, None)
                 if task and not task.done():
                     try:
                         task.cancel()
-                        logger.info(f"[FeedServer] Cancelled {attr} WS task during shutdown.")
+                        logger.info(f"[FeedServer] Cancelled {name}.{task_attr} during shutdown.")
                     except Exception:
                         pass
                 try:
@@ -236,7 +266,16 @@ class FeedServer:
                 feed._running = False
             except Exception:
                 pass
-        logger.info("[FeedServer] Old DualFeedManager shut down.")
+
+        # Unregister from feed_registry so admin status reflects the shutdown
+        try:
+            from hub.feed_registry import unregister_feed
+            for provider in ('upstox', 'dhan'):
+                unregister_feed(provider)
+        except Exception:
+            pass
+
+        logger.info("[FeedServer] Old feed manager shut down.")
 
     async def reconnect_provider(self, provider: str) -> bool:
         """
@@ -253,16 +292,22 @@ class FeedServer:
             asyncio.create_task(self._init_dual_feed())
             return True
 
-        # Get the specific feed object
+        # Get the specific feed object.
+        # DualFeedManager exposes .upstox and .dhan attributes.
+        # A plain WebSocketManager (single Upstox provider) has no such attrs —
+        # in that case _dual_feed itself IS the upstox feed.
         feed = None
         if provider == 'upstox':
             feed = getattr(self._dual_feed, 'upstox', None)
+            if feed is None and not hasattr(self._dual_feed, 'dhan'):
+                # Single-provider mode: _dual_feed is the plain Upstox WebSocketManager
+                feed = self._dual_feed
+                logger.info(f"[FeedServer] reconnect_provider({provider}) — plain WebSocketManager used as feed.")
         elif provider == 'dhan':
             feed = getattr(self._dual_feed, 'dhan', None)
 
         if feed is None:
-            # Provider isn't part of the current DualFeedManager — tear down old one first
-            # to prevent zombie Upstox WebSocket connections, then re-init with all providers.
+            # Provider truly missing from the current manager — tear down and full reinit
             logger.info(
                 f"[FeedServer] reconnect_provider({provider}) — feed missing in dual_feed; "
                 "shutting down existing manager before re-init to avoid duplicate WS connections."
