@@ -1115,51 +1115,32 @@
               </div>
               <div id="bs-pnl-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
                 <div>
-                  <div class="inp-label">Target (pts)</div>
+                  <div class="inp-label">Default Target (pts)</div>
                   <input type="number" class="inp" id="bs-pnl-target" placeholder="e.g. 100" step="0.5">
                   <div class="bsettings-hint" id="bs-pnl-target-adm"></div>
                 </div>
                 <div>
-                  <div class="inp-label">Stop Loss (pts)</div>
+                  <div class="inp-label">Default Stop Loss (pts)</div>
                   <input type="number" class="inp" id="bs-pnl-sl" placeholder="e.g. 60" step="0.5">
                   <div class="bsettings-hint" id="bs-pnl-sl-adm"></div>
                 </div>
               </div>
-            </div>
 
-            <!-- ── Single Trade Risk ── -->
-            <div class="bsettings-group" style="margin-bottom:14px">
-              <div class="bsettings-group-title">🎯 Single Trade Risk (pts)</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div>
-                  <div class="inp-label">Target (pts)</div>
-                  <input type="number" class="inp" id="bs-st-target" placeholder="e.g. 30" step="0.5">
-                  <div class="bsettings-hint" id="bs-st-target-adm"></div>
-                </div>
-                <div>
-                  <div class="inp-label">Stop Loss (pts)</div>
-                  <input type="number" class="inp" id="bs-st-sl" placeholder="e.g. 20" step="0.5">
-                  <div class="bsettings-hint" id="bs-st-sl-adm"></div>
-                </div>
+              <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Day Override (blank = use default above)</div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px">
+                  <thead>
+                    <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
+                      <th style="text-align:left;padding:5px 0;width:60px">Day</th>
+                      <th style="padding:5px 4px">Target (pts)</th>
+                      <th style="padding:5px 4px">SL (pts)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bs-daywise-body">
+                    <!-- JS rendered -->
+                  </tbody>
+                </table>
               </div>
-            </div>
-
-            <!-- ── Day-wise Overrides ── -->
-            <div class="bsettings-group" style="margin-bottom:14px">
-              <div class="bsettings-group-title">📅 Day-wise Trade Risk Overrides</div>
-              <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Leave blank to use the default target/SL above for that day.</div>
-              <table style="width:100%;border-collapse:collapse;font-size:12px">
-                <thead>
-                  <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
-                    <th style="text-align:left;padding:5px 0;width:60px">Day</th>
-                    <th style="padding:5px 4px">Target (pts)</th>
-                    <th style="padding:5px 4px">SL (pts)</th>
-                  </tr>
-                </thead>
-                <tbody id="bs-daywise-body">
-                  <!-- JS rendered -->
-                </tbody>
-              </table>
             </div>
 
             <!-- ── Scalable TSL ── -->
@@ -2947,13 +2928,7 @@ async function loadBrokerSettings(broker) {
     _setVal('bs-pnl-sl', s.session_pnl_sl_pts);
     _setHint('bs-pnl-sl-adm', adm.session_pnl_sl_pts);
 
-    // Single trade risk
-    _setVal('bs-st-target', s.single_trade_target_pts);
-    _setHint('bs-st-target-adm', adm.single_trade_target_pts);
-    _setVal('bs-st-sl', s.single_trade_sl_pts);
-    _setHint('bs-st-sl-adm', adm.single_trade_sl_pts);
-
-    // Day-wise overrides table
+    // Day-wise overrides table (now overrides Session PNL Target/SL per day)
     _renderDaywiseTable(s, adm);
 
     // Scalable TSL
@@ -3058,8 +3033,6 @@ async function saveBrokerSettings() {
     session_pnl_enabled:     _boolEl('bs-pnl-enabled'),
     session_pnl_target_pts:  _numOrNull('bs-pnl-target'),
     session_pnl_sl_pts:      _numOrNull('bs-pnl-sl'),
-    single_trade_target_pts: _numOrNull('bs-st-target'),
-    single_trade_sl_pts:     _numOrNull('bs-st-sl'),
     day_wise:                Object.keys(day_wise).length ? day_wise : null,
     tsl_enabled:             _boolEl('bs-tsl-enabled'),
     tsl_base_profit:         _numOrNull('bs-tsl-base-profit'),

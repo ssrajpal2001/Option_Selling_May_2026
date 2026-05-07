@@ -2050,8 +2050,8 @@ def _read_admin_v3_defaults() -> dict:
             "ratio_exit_threshold":    (_v3.get("ratio_exit") or {}).get("threshold"),
             "day_wise":                {
                 d: {
-                    "target": (_v3.get(long) or {}).get("single_trade_target_pts"),
-                    "sl":     (_v3.get(long) or {}).get("single_trade_stoploss_pts"),
+                    "target": ((_v3.get(long) or {}).get("guardrail_pnl") or {}).get("target_pts"),
+                    "sl":     ((_v3.get(long) or {}).get("guardrail_pnl") or {}).get("stoploss_pts"),
                 }
                 for d, long in _DAY_MAP.items()
             },
@@ -2088,11 +2088,11 @@ def _broker_cfg_to_ui(broker_cfg: dict) -> dict:
     for field, (key, _) in _BCK.items():
         if key in broker_cfg:
             out[field] = broker_cfg[key]
-    # Day-wise overrides
+    # Day-wise overrides (now route through Session PNL guardrail)
     day_wise = {}
     for d, long in _DAY_MAP.items():
-        t_key = f"v3.{long}.single_trade_target_pts"
-        sl_key = f"v3.{long}.single_trade_stoploss_pts"
+        t_key = f"v3.{long}.guardrail_pnl.target_pts"
+        sl_key = f"v3.{long}.guardrail_pnl.stoploss_pts"
         if t_key in broker_cfg or sl_key in broker_cfg:
             day_wise[d] = {
                 "target": broker_cfg.get(t_key),
@@ -2210,8 +2210,8 @@ async def save_broker_settings(broker: str, body: BrokerSettingsUpdate, user=Dep
                 continue
             target = vals.get("target")
             sl     = vals.get("sl")
-            t_key  = f"v3.{long}.single_trade_target_pts"
-            sl_key = f"v3.{long}.single_trade_stoploss_pts"
+            t_key  = f"v3.{long}.guardrail_pnl.target_pts"
+            sl_key = f"v3.{long}.guardrail_pnl.stoploss_pts"
             if target is not None:
                 broker_cfg[t_key] = float(target)
             else:
