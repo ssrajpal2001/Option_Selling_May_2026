@@ -61,6 +61,8 @@ class FeedServer:
         self._all_subscribed: set = set()
         self._last_broadcast_epoch: float = 0.0
         self._tick_count: int = 0  # For diagnostic logging
+        # Queue of pending subscriptions while _dual_feed is transitioning/None
+        self._pending_subscriptions: list = []  # List of (instruments, mode) tuples
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -116,6 +118,9 @@ class FeedServer:
 
             self._dual_feed = ws_mgr
 
+            # Immediately replay any pending subscriptions queued while feed was transitioning
+            self._replay_pending_subscriptions()
+
             # Register a handler so that DualFeedManager wires up BOTH feeds:
             #   • Upstox: ws_mgr.upstox.register_message_handler(_on_upstox_raw) → extracts LTP
             #   • Dhan:   ws_mgr.dhan.register_message_handler(_on_dhan_tick)    → publishes
@@ -160,6 +165,29 @@ class FeedServer:
                 break
             except Exception:
                 pass
+
+    def _replay_pending_subscriptions(self) -> None:
+        """Replay all subscriptions that were queued while DualFeedManager was transitioning."""
+        if not self._pending_subscriptions:
+            return
+        if not self._dual_feed:
+            logger.warning("[FeedServer] Tried to replay pending subscriptions but _dual_feed is still None")
+            return
+
+        logger.info(f"[FeedServer] Replaying {len(self._pending_subscriptions)} PENDING subscriptions queued during transition...")
+        for instruments, mode in self._pending_subscriptions:
+            try:
+                self._dual_feed.subscribe(instruments, mode)
+                logger.info(
+                    f"[FeedServer] Replayed {len(instruments)} instruments (mode={mode}). "
+                    f"Keys: {instruments[:3]}{'...' if len(instruments) > 3 else ''}"
+                )
+            except Exception as e:
+                logger.error(f"[FeedServer] Failed to replay subscription for {instruments}: {e}")
+
+        # Clear the queue after replaying
+        self._pending_subscriptions.clear()
+        logger.info("[FeedServer] Pending subscriptions queue cleared.")
 
     # ── Admin reconnect trigger ───────────────────────────────────────────────
 
@@ -398,12 +426,21 @@ class FeedServer:
                         # Track subscription state so we can replay on DualFeedManager reinit
                         self._all_subscribed.update(instruments)
                         if self._dual_feed:
+                            # Forward immediately if feed is ready
                             self._dual_feed.subscribe(instruments, mode)
-                        logger.info(
-                            f"[FeedServer] Subscribed {len(instruments)} instruments from {peer} (mode={mode}). "
-                            f"Keys: {instruments[:3]}{'...' if len(instruments) > 3 else ''}. "
-                            f"Total tracked: {len(self._all_subscribed)}."
-                        )
+                            logger.info(
+                                f"[FeedServer] Subscribed {len(instruments)} instruments from {peer} (mode={mode}). "
+                                f"Keys: {instruments[:3]}{'...' if len(instruments) > 3 else ''}. "
+                                f"Total tracked: {len(self._all_subscribed)}."
+                            )
+                        else:
+                            # Queue for replay when _dual_feed becomes ready (during DualFeedManager transition)
+                            self._pending_subscriptions.append((instruments, mode))
+                            logger.warning(
+                                f"[FeedServer] Subscription QUEUED (feed transitioning): {len(instruments)} instruments. "
+                                f"Keys: {instruments[:3]}{'...' if len(instruments) > 3 else ''}. "
+                                f"Pending queue size: {len(self._pending_subscriptions)}"
+                            )
                 elif cmd == 'unsubscribe':
                     instruments = msg.get('instruments') or []
                     # We do NOT unsubscribe from DualFeedManager because other clients may still
