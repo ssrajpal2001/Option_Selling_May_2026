@@ -250,8 +250,19 @@ class EntryLogic(SellV3Base):
                 passed, tech_reason = await self.evaluate_rules(rules, ce_key, pe_key, timestamp, is_entry=True, anchor_ts=anchor_ts, do_log=False, return_reason=True)
 
                 if not passed:
-                    if do_log:
-                        logger.info(f"  - Strike {s_ce}/{s_pe} [Key: {ce_key}/{pe_key}] [Score: {balanced_score:.4f}] Rejected Technicals: {tech_reason}")
+                    # Always log per-pair rejection so the user can see WHY no trade fired.
+                    # Throttle: log each (ce/pe, reason) combo at most once every 60s to avoid spam.
+                    _rkey = f"{ce_key}/{pe_key}|{tech_reason}"
+                    _now_t = asyncio.get_event_loop().time()
+                    if not hasattr(self.manager, '_last_reject_log'):
+                        self.manager._last_reject_log = {}
+                    _last = self.manager._last_reject_log.get(_rkey, 0)
+                    if _now_t - _last >= 60:
+                        self.manager._last_reject_log[_rkey] = _now_t
+                        logger.info(
+                            f"  - Strike {s_ce}/{s_pe} [Key: {ce_key}/{pe_key}] "
+                            f"[Score: {balanced_score:.4f}] Rejected Technicals: {tech_reason}"
+                        )
                     continue
 
                 # Metrics for selection

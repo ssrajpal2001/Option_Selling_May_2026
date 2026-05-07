@@ -420,7 +420,7 @@ class FeedServer:
                 logger.warning(f"[FeedServer] LTP extraction failed ({_has_field}) for {key}: {e}")
                 continue
 
-            logger.info(f"[FeedServer] Tick: {key} ltp={ltp} ({_has_field})")
+            logger.debug(f"[FeedServer] Tick: {key} ltp={ltp} ({_has_field})")
             # One-time detailed dump for the first index tick to verify protobuf field structure
             if 'INDEX' in key and not getattr(self, '_nifty_tick_logged', False):
                 self._nifty_tick_logged = True

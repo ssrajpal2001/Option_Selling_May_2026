@@ -276,9 +276,9 @@ class FeedClient(DataFeed):
             if msg_type == 'tick':
                 self._last_tick_epoch = time.time()
                 self._rx_count = getattr(self, '_rx_count', 0) + 1
-                if self._rx_count == 1 or self._rx_count % 50 == 0:
+                if self._rx_count == 1:
                     logger.info(
-                        f"[FeedClient] RX tick #{self._rx_count}: "
+                        f"[FeedClient] RX first tick: "
                         f"{msg.get('instrument_key')} @ {msg.get('ltp')} "
                         f"(subscribed={len(self._subscribed_symbols)})"
                     )
@@ -311,12 +311,6 @@ class FeedClient(DataFeed):
         if atp:
             tick['atp'] = float(atp)
 
-        self._dispatch_count = getattr(self, '_dispatch_count', 0) + 1
-        if self._dispatch_count == 1 or self._dispatch_count % 50 == 0:
-            logger.info(
-                f"[FeedClient] DISPATCH #{self._dispatch_count} → event_bus "
-                f"BROKER_TICK_RECEIVED: {key} ltp={ltp}"
-            )
         from hub.event_bus import event_bus
         await event_bus.publish('BROKER_TICK_RECEIVED', tick)
 
