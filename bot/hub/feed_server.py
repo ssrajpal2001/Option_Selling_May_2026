@@ -315,19 +315,25 @@ class FeedServer:
             logger.info(f"[FeedServer] Upstox raw: {_tick_batch} feeds in batch from protobuf")
         for key, feed in feed_response.feeds.items():
             ltp = 0.0
+            _has_field = 'none'
             try:
                 if feed.HasField('ltpc'):
+                    _has_field = 'ltpc'
                     ltp = float(feed.ltpc.ltp)
                 elif feed.HasField('fullFeed'):
+                    _has_field = 'fullFeed'
                     if feed.fullFeed.HasField('indexFF'):
                         ltp = float(feed.fullFeed.indexFF.ltpc.ltp)
                     elif feed.fullFeed.HasField('marketFF'):
                         ltp = float(feed.fullFeed.marketFF.ltpc.ltp)
                 elif feed.HasField('firstLevelWithGreeks'):
+                    _has_field = 'firstLevelWithGreeks'
                     ltp = float(feed.firstLevelWithGreeks.ltpc.ltp)
             except Exception as e:
-                logger.warning(f"[FeedServer] LTP extraction failed for {key}: {e}")
+                logger.warning(f"[FeedServer] LTP extraction failed ({_has_field}) for {key}: {e}")
+                continue
 
+            logger.info(f"[FeedServer] Tick: {key} ltp={ltp} ({_has_field})")
             if ltp <= 0:
                 logger.warning(f"[FeedServer] Tick dropped (ltp={ltp}): {key}")
                 continue
