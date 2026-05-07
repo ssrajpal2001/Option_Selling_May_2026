@@ -88,6 +88,28 @@ class WebSocketManager(DataFeed):
 
                 except Exception as e:
                     # On 401, try to reload a fresher token from DB before retrying.
+                    if "401" in str(e) and not active_client and hasattr(self, 'access_token'):
+                        # FeedServer path: no api_client — reload directly from DB into self.access_token
+                        try:
+                            from web.db import db_fetchone
+                            from web.auth import decrypt_secret
+                            row = db_fetchone(
+                                "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
+                                ()
+                            )
+                            if row and row[0]:
+                                candidate = decrypt_secret(row[0])
+                                if candidate and candidate != self.access_token:
+                                    self.access_token = candidate
+                                    logger.info("[WSManager] 401 on auth (FeedServer) — reloaded token from data_providers.")
+                                else:
+                                    logger.warning(
+                                        "[WSManager] 401 on auth (FeedServer) — token in DB matches current. "
+                                        "Go to Admin → Data Providers → Upstox and click 'Connect Now'."
+                                    )
+                        except Exception as _db_err:
+                            logger.debug(f"[WSManager] Could not reload token from DB: {_db_err}")
+
                     if "401" in str(e) and active_client and hasattr(active_client, 'auth_handler'):
                         try:
                             from web.db import db_fetchone

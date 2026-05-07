@@ -159,6 +159,34 @@ class FeedServer:
 
     # ── Admin reconnect trigger ───────────────────────────────────────────────
 
+    async def _shutdown_dual_feed(self) -> None:
+        """Cancel all running WebSocket tasks in the current DualFeedManager."""
+        if self._dual_feed is None:
+            return
+        old = self._dual_feed
+        self._dual_feed = None
+        for attr in ('upstox', 'dhan'):
+            feed = getattr(old, attr, None)
+            if feed is None:
+                continue
+            for task_attr in ('_listener_task', '_task'):
+                task = getattr(feed, task_attr, None)
+                if task and not task.done():
+                    try:
+                        task.cancel()
+                        logger.info(f"[FeedServer] Cancelled {attr} WS task during shutdown.")
+                    except Exception:
+                        pass
+                try:
+                    setattr(feed, task_attr, None)
+                except Exception:
+                    pass
+            try:
+                feed._running = False
+            except Exception:
+                pass
+        logger.info("[FeedServer] Old DualFeedManager shut down.")
+
     async def reconnect_provider(self, provider: str) -> bool:
         """
         Called from admin 'Connect Now' after a token refresh — FORCES a clean restart of
@@ -182,9 +210,13 @@ class FeedServer:
             feed = getattr(self._dual_feed, 'dhan', None)
 
         if feed is None:
-            # Provider isn't part of the current DualFeedManager — force full re-init
-            logger.info(f"[FeedServer] reconnect_provider({provider}) — feed missing in dual_feed, re-initializing.")
-            self._dual_feed = None
+            # Provider isn't part of the current DualFeedManager — tear down old one first
+            # to prevent zombie Upstox WebSocket connections, then re-init with all providers.
+            logger.info(
+                f"[FeedServer] reconnect_provider({provider}) — feed missing in dual_feed; "
+                "shutting down existing manager before re-init to avoid duplicate WS connections."
+            )
+            await self._shutdown_dual_feed()
             asyncio.create_task(self._init_dual_feed())
             return True
 
