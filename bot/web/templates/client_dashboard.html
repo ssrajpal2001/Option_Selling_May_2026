@@ -1136,16 +1136,38 @@
                   <span class="toggle-slider"></span>
                 </label>
               </div>
-              <div id="bs-pnl-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+              <div id="bs-pnl-body" style="display:flex;flex-direction:column;gap:14px;margin-top:12px">
+                <!-- PnL Target slider -->
                 <div>
-                  <div class="inp-label">Default Target (pts)</div>
-                  <input type="number" class="inp" id="bs-pnl-target" placeholder="e.g. 100" step="0.5">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Default Target (pts)</span>
+                    <span id="bs-pnl-target-val" style="font-size:15px;font-weight:800;color:var(--primary)">0 pts</span>
+                  </div>
+                  <input type="range" id="bs-pnl-target" min="0" max="500" step="5"
+                         oninput="document.getElementById('bs-pnl-target-val').textContent=this.value+' pts'"
+                         style="width:100%;accent-color:var(--primary);cursor:pointer">
                   <div class="bsettings-hint" id="bs-pnl-target-adm"></div>
                 </div>
+                <!-- PnL SL slider -->
                 <div>
-                  <div class="inp-label">Default Stop Loss (pts)</div>
-                  <input type="number" class="inp" id="bs-pnl-sl" placeholder="e.g. 60" step="0.5">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Default Stop Loss (pts)</span>
+                    <span id="bs-pnl-sl-val" style="font-size:15px;font-weight:800;color:var(--danger)">0 pts</span>
+                  </div>
+                  <input type="range" id="bs-pnl-sl" min="0" max="300" step="5"
+                         oninput="document.getElementById('bs-pnl-sl-val').textContent=this.value+' pts'"
+                         style="width:100%;accent-color:var(--danger);cursor:pointer">
                   <div class="bsettings-hint" id="bs-pnl-sl-adm"></div>
+                </div>
+                <!-- Lot Size slider -->
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Lot Size</span>
+                    <span id="bs-lot-size-val" style="font-size:15px;font-weight:800;color:var(--link)">1 lot</span>
+                  </div>
+                  <input type="range" id="bs-lot-size" min="1" max="20" step="1"
+                         oninput="document.getElementById('bs-lot-size-val').textContent=this.value+' lot'+(+this.value>1?'s':'')"
+                         style="width:100%;accent-color:var(--link);cursor:pointer">
                 </div>
               </div>
 
@@ -2912,11 +2934,26 @@ function _setVal(id, val) {
   if (!el) return;
   if (el.type === 'checkbox') { el.checked = !!val; return; }
   if (el.type === 'time' && val) {
-    // Normalize HH:MM:SS → HH:MM
     el.value = String(val).slice(0, 5);
-  } else {
-    el.value = val != null ? val : '';
+    return;
   }
+  if (el.type === 'range') {
+    const v = val != null ? Number(val) : Number(el.min || 0);
+    el.value = v;
+    // Update paired display span (convention: span id = input id + '-val')
+    const span = document.getElementById(id + '-val');
+    if (span) {
+      if (id === 'bs-pnl-target' || id === 'bs-pnl-sl') {
+        span.textContent = v + ' pts';
+      } else if (id === 'bs-lot-size') {
+        span.textContent = v + ' lot' + (v > 1 ? 's' : '');
+      } else {
+        span.textContent = v;
+      }
+    }
+    return;
+  }
+  el.value = val != null ? val : '';
 }
 
 function _renderDaywiseTable(settings, adminDefaults) {
@@ -2977,6 +3014,9 @@ async function loadBrokerSettings(broker) {
     _setVal('bs-capital-pct', s.capital_deploy_pct);
     const admCap = document.getElementById('bs-capital-adm');
     if (admCap) admCap.textContent = d.capital_allocated > 0 ? `₹${Number(d.capital_allocated).toLocaleString()}` : 'Not set';
+
+    // Lot size slider (from top-level response field, not nested settings)
+    _setVal('bs-lot-size', d.quantity || 1);
 
     // Session PNL
     _setVal('bs-pnl-enabled', s.session_pnl_enabled != null ? s.session_pnl_enabled : adm.session_pnl_enabled);
@@ -3059,6 +3099,19 @@ async function saveBrokerSettings() {
   const broker = state.selectedBroker;
   if (!broker) { toast('Select a broker first', 'warn'); return; }
 
+  // Confirmation dialog — show key values before saving
+  const target = Number(document.getElementById('bs-pnl-target')?.value || 0);
+  const sl     = Number(document.getElementById('bs-pnl-sl')?.value     || 0);
+  const qty    = parseInt(document.getElementById('bs-lot-size')?.value  || 1);
+  const confirmed = confirm(
+    `Save settings for ${broker.charAt(0).toUpperCase() + broker.slice(1)}?\n\n` +
+    `  PnL Target  : ${target} pts\n` +
+    `  PnL SL      : ${sl} pts\n` +
+    `  Lot Size    : ${qty} lot${qty !== 1 ? 's' : ''}\n\n` +
+    `Click OK to apply immediately.`
+  );
+  if (!confirmed) return;
+
   const _numOrNull = id => {
     const v = document.getElementById(id)?.value;
     return (v === '' || v == null) ? null : Number(v);
@@ -3105,6 +3158,7 @@ async function saveBrokerSettings() {
     ltp_exit_min:            _numOrNull('bs-roll-ltp-min'),
     ratio_exit_enabled:      _boolEl('bs-roll-ratio-en'),
     ratio_exit_threshold:    _numOrNull('bs-roll-ratio-thr'),
+    quantity:                parseInt(document.getElementById('bs-lot-size')?.value || '1') || 1,
   };
 
   // Remove null values

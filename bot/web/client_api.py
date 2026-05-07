@@ -2168,6 +2168,7 @@ async def get_broker_settings(broker: str, user=Depends(get_current_user)):
         "max_open_positions":   inst.get("max_open_positions") or 1,
         "max_drawdown_pct":     inst.get("max_drawdown_pct") or 0,
         "risk_per_trade_pct":   inst.get("risk_per_trade_pct") or 1.0,
+        "quantity":             inst.get("quantity") or 1,
     }
 
 
@@ -2196,6 +2197,7 @@ class BrokerSettingsUpdate(BaseModel):
     ltp_exit_min:            Optional[float] = None
     ratio_exit_enabled:      Optional[bool]  = None
     ratio_exit_threshold:    Optional[float] = None
+    quantity:                Optional[int]   = None
 
 
 @router.post("/broker/{broker}/settings")
@@ -2262,6 +2264,9 @@ async def save_broker_settings(broker: str, body: BrokerSettingsUpdate, user=Dep
     if body.max_trades_per_day is not None:
         sql_sets.append("max_daily_trades=?")
         sql_vals.append(body.max_trades_per_day)
+    if body.quantity is not None and body.quantity >= 1:
+        sql_sets.append("quantity=?")
+        sql_vals.append(int(body.quantity))
 
     sql_vals.append(inst["id"])
     db_execute(f"UPDATE client_broker_instances SET {', '.join(sql_sets)} WHERE id=?", sql_vals)
