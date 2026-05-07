@@ -606,10 +606,25 @@ class PriceFeedHandler:
                 _mkt_open = _now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
                 _mkt_close = _now_ist.replace(hour=15, minute=30, second=0, microsecond=0)
                 if _mkt_open <= _now_ist <= _mkt_close:
+                    # Query FeedServer for its connection state and log it here
+                    _feed_status = "unknown"
+                    try:
+                        from hub import feed_registry as _fr
+                        _us = _fr.get_ws_state('upstox')
+                        _ds = _fr.get_ws_state('dhan')
+                        _parts = []
+                        if _us:
+                            _parts.append(f"upstox={'connected' if _us.get('ws_connected') else 'DISCONNECTED'}")
+                        if _ds:
+                            _parts.append(f"dhan={'connected' if _ds.get('ws_connected') else 'DISCONNECTED'}")
+                        _feed_status = ', '.join(_parts) if _parts else "no_feed_registry"
+                    except Exception:
+                        pass
                     logger.warning(
                         f"[{self.trade_orchestrator.instrument_name}] FEED SILENT: No ticks received in "
                         f"{_NO_TICK_WARN_INTERVAL:.0f}s during market hours. "
-                        f"FeedServer WebSocket may be disconnected — check web server logs."
+                        f"Feed status: [{_feed_status}]. "
+                        f"If DISCONNECTED: Admin → Data Providers → Upstox → enter today's access token, then botrestart."
                     )
                 continue
             self._tick_event.clear()

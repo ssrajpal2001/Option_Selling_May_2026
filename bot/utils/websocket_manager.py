@@ -87,22 +87,57 @@ class WebSocketManager(DataFeed):
                     return uri
 
                 except Exception as e:
-                    # On 401, try to reload a fresher token from data_providers DB before
-                    # retrying.  This handles the case where another bot process generated
-                    # a new Upstox token (invalidating the one we loaded at startup).
+                    # On 401, try to reload a fresher token from DB before retrying.
                     if "401" in str(e) and active_client and hasattr(active_client, 'auth_handler'):
                         try:
                             from web.db import db_fetchone
                             from web.auth import decrypt_secret
+                            current_tok = active_client.auth_handler.get_access_token()
+                            fresh = None
+
+                            # 1. Try data_providers (global feed token — admin-managed)
                             row = db_fetchone(
                                 "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
                                 ()
                             )
                             if row and row[0]:
-                                fresh = decrypt_secret(row[0])
-                                if fresh and fresh != active_client.auth_handler.get_access_token():
-                                    active_client.auth_handler.token = fresh
-                                    logger.info("[WSManager] 401 on auth — reloaded fresh token from data_providers.")
+                                candidate = decrypt_secret(row[0])
+                                if candidate and candidate != current_tok:
+                                    fresh = candidate
+
+                            # 2. Fallback: try any Upstox broker instance token (covers the case
+                            #    where the Upstox broker auto-logged-in but data_providers is stale
+                            #    and only a non-Upstox broker bot is running today).
+                            if not fresh:
+                                row2 = db_fetchone(
+                                    "SELECT access_token_encrypted FROM client_broker_instances "
+                                    "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                                    "ORDER BY updated_at DESC LIMIT 1",
+                                    ()
+                                )
+                                if row2 and row2[0]:
+                                    candidate = decrypt_secret(row2[0])
+                                    if candidate and candidate != current_tok:
+                                        fresh = candidate
+                                        # Propagate to data_providers so next attempt uses it
+                                        try:
+                                            from web.db import db_execute
+                                            from web.auth import encrypt_secret
+                                            db_execute(
+                                                "UPDATE data_providers SET access_token_encrypted=? WHERE provider='upstox'",
+                                                (encrypt_secret(fresh),)
+                                            )
+                                        except Exception:
+                                            pass
+
+                            if fresh:
+                                active_client.auth_handler.token = fresh
+                                logger.info("[WSManager] 401 on auth — reloaded fresh token from DB.")
+                            else:
+                                logger.warning(
+                                    "[WSManager] 401 on auth — no fresher token found in DB. "
+                                    "Go to Admin → Data Providers → Upstox and enter today's access token."
+                                )
                         except Exception as _db_err:
                             logger.debug(f"[WSManager] Could not reload token from DB: {_db_err}")
 
