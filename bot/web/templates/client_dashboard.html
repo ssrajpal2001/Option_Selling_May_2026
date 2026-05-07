@@ -168,8 +168,8 @@
     .token-stale    { background: #450a0a; color: var(--error); }
 
     /* Broker tabs */
-    .broker-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-    .broker-tab { padding: 5px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); transition: all .2s; }
+    .broker-tabs { display: flex; gap: 4px; flex-wrap: wrap; min-height: 36px; }
+    .broker-tab { padding: 7px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); transition: all .2s; min-height: 36px; }
     .broker-tab.sel-zerodha  { background: #e54b00; color: #fff; border-color: #e54b00; }
     .broker-tab.sel-dhan     { background: #2563eb; color: #fff; border-color: #2563eb; }
     .broker-tab.sel-upstox   { background: #7c3aed; color: #fff; border-color: #7c3aed; }
@@ -250,7 +250,41 @@
     .mobile-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: var(--surface); border-top: 1px solid var(--border-soft); }
     .mobile-bar a { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0 6px; font-size: 10px; font-weight: 600; color: var(--muted); gap: 3px; cursor: pointer; }
     .mobile-bar a.active { color: var(--primary); }
-    @media (max-width: 640px) { .page { padding: 14px 14px 80px; } }
+    @media (max-width: 640px) { .page { padding: 12px 12px 80px; } }
+
+    /* ── Mobile-specific overrides ─────────────────────────────── */
+    /* Hide nav text labels + theme label on small screens */
+    @media (max-width: 640px) {
+      .toggle-label { display: none !important; }
+      #theme-label  { display: none !important; }
+      .theme-menu-btn { padding: 5px 8px !important; }
+      .nav-right { gap: 6px !important; }
+      /* Compact nav dividers */
+      .nav-right > div[style*="width:1px"] { display: none !important; }
+      /* Truncate username */
+      #nav-username { max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* Broker tabs horizontal scroll */
+      .broker-tabs { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+      .broker-tabs::-webkit-scrollbar { height: 0; }
+      .broker-tab { flex-shrink: 0; }
+      /* PnL gauge: smaller on phone */
+      .gauge-ring { width: 64px !important; height: 64px !important; }
+      .gauge-ring svg { width: 64px !important; height: 64px !important; }
+      /* Stat val smaller */
+      .stat-val { font-size: 20px !important; }
+      /* Settings two-column → one column */
+      .settings-grid { grid-template-columns: 1fr !important; }
+      /* Market bar: compact — hide separators and static labels */
+      .mbar-label { display: none !important; }
+      .mbar-sep   { display: none !important; }
+      .market-bar { gap: 10px !important; padding: 0 12px !important; }
+      /* Compact nav */
+      .nav-inner { padding: 0 12px !important; height: 50px !important; }
+      /* Inline PnL + gauge: allow wrap */
+      #gauge-wrap + div { min-width: 0; }
+    }
+    /* Settings layout: use class instead of inline style */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 
     /* Section header */
     .sec-title { font-size: 14px; font-weight: 700; color: var(--text); }
@@ -916,7 +950,7 @@
 
 <!-- ═══════════════════════════════════════════════════════════ SETTINGS PANE -->
 <div class="pane" id="pane-settings">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+  <div class="settings-grid">
 
     <!-- ── LEFT COLUMN ── -->
     <div>
