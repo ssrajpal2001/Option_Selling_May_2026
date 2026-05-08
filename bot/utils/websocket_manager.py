@@ -34,6 +34,7 @@ class WebSocketManager(DataFeed):
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="ws_handler")
         self._last_message_time = asyncio.get_event_loop().time()
         self._last_tick_epoch: float = 0.0  # Real Unix epoch seconds for health reporting
+        self._reconnect_trigger = asyncio.Event()
 
     def register_message_handler(self, handler):
         """Adds a new message handler to the list of handlers."""
@@ -70,9 +71,14 @@ class WebSocketManager(DataFeed):
                         async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as resp:
                             if resp.status == 429:
                                 import random
-                                delay = (base_delay ** attempt) + (random.random() * 2)
+                                # Linear backoff with cap to avoid massive sleeps
+                                delay = min(base_delay * (attempt + 1), 60) + (random.random() * 2)
                                 logger.warning(f"Upstox Rate Limit (429) hit during WS auth. Retrying in {delay:.1f}s...")
-                                await asyncio.sleep(delay)
+                                try:
+                                    await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=delay)
+                                    self._reconnect_trigger.clear()
+                                except asyncio.TimeoutError:
+                                    pass
                                 continue
 
                             resp.raise_for_status()
@@ -216,7 +222,12 @@ class WebSocketManager(DataFeed):
                         raise
 
                     logger.warning(f"WebSocket auth attempt {attempt + 1} failed: {e}. Retrying...")
-                    await asyncio.sleep(base_delay)
+                    try:
+                        await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=base_delay)
+                        logger.info("[WebSocketManager] Auth retry interrupted by reconnect trigger.")
+                        self._reconnect_trigger.clear()
+                    except asyncio.TimeoutError:
+                        pass
             
             raise RuntimeError("Exhausted retries for WebSocket authorization.")
 
@@ -302,7 +313,12 @@ class WebSocketManager(DataFeed):
                 if self._running:
                     self.reconnect_attempts += 1
                     logger.info(f"Reconnect attempt {self.reconnect_attempts}/{self.max_reconnect_attempts} in {self.reconnect_delay} seconds...")
-                    await asyncio.sleep(self.reconnect_delay)
+                    try:
+                        await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=self.reconnect_delay)
+                        logger.info("[WebSocketManager] Reconnect sleep interrupted by trigger.")
+                        self._reconnect_trigger.clear()
+                    except asyncio.TimeoutError:
+                        pass
 
         if not self._running:
             logger.info("WebSocket manager stopped.")
@@ -680,6 +696,9 @@ class WebSocketManager(DataFeed):
         if self.api_client_manager and hasattr(self.api_client_manager, 'set_access_token'):
             self.api_client_manager.set_access_token(access_token)
             logger.info("[WebSocketManager] Upstox api_client_manager token updated.")
+        # Signal any sleeping reconnection loops to wake up and use the new token
+        self._reconnect_trigger.set()
+
         # Force reconnect so auth re-runs with the new token
         if self.websocket and self.is_connected:
             asyncio.create_task(self._force_reconnect())
