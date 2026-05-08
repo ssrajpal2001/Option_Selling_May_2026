@@ -207,8 +207,9 @@ class IndicatorManager:
 
             if not strict_history or self.orchestrator.is_backtest:
                 # Nearest past value match
+                # Use type-agnostic comparison for historical data robustness
                 candidates = {ts: v for ts, v in atp_hist.items()
-                              if isinstance(ts, pd.Timestamp) and ts <= current_minute}
+                              if (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')) and ts <= current_minute}
                 if candidates:
                     return float(atp_hist[max(candidates.keys())])
 
@@ -221,10 +222,18 @@ class IndicatorManager:
              # We proceed to the OHLC calculation below
              pass
         elif not self.orchestrator.is_backtest:
-            atps = getattr(self.state_manager, 'option_atps', {})
-            live_atp = atps.get(inst_key)
-            if live_atp and live_atp > 0:
-                return float(live_atp)
+            # Gated Live ATP: only use if we are asking for the current minute.
+            # This prevents look-ahead bias when evaluating rules for closed candles.
+            now_ist = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+            is_current_min = (timestamp.date() == now_ist.date() and
+                              timestamp.hour == now_ist.hour and
+                              timestamp.minute == now_ist.minute)
+
+            if is_current_min:
+                atps = getattr(self.state_manager, 'option_atps', {})
+                live_atp = atps.get(inst_key)
+                if live_atp and live_atp > 0:
+                    return float(live_atp)
 
         current_day = timestamp.date()
         state_key = (inst_key, current_day)
@@ -310,7 +319,15 @@ class IndicatorManager:
                     minute=(timestamp.minute // timeframe_minutes) * timeframe_minutes,
                     second=0, microsecond=0)
                 prev_boundary = current_interval_start - pd.Timedelta(minutes=timeframe_minutes)
-                candidates = {ts: v for ts, v in atp_hist.items() if isinstance(ts, type(prev_boundary)) and ts <= prev_boundary}
+
+                # Standardize prev_boundary for type-agnostic comparison
+                if not isinstance(prev_boundary, pd.Timestamp):
+                    prev_boundary = pd.Timestamp(prev_boundary)
+                if prev_boundary.tzinfo is None:
+                    prev_boundary = prev_boundary.tz_localize('Asia/Kolkata')
+
+                candidates = {ts: v for ts, v in atp_hist.items()
+                              if (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')) and ts <= prev_boundary}
                 if candidates:
                     v0 = candidates[max(candidates.keys())]
                     v1 = live_vwap

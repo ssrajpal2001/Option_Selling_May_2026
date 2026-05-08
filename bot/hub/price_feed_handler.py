@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import pytz
+import pandas as pd
 from collections import deque
 from utils.logger import logger
 from hub.event_bus import event_bus
@@ -205,6 +206,14 @@ class PriceFeedHandler:
             # ATP History for Data Recording & VWAP Indicators
             minute_ts = timestamp.replace(second=0, microsecond=0) if hasattr(timestamp, 'replace') else None
             if minute_ts:
+                # Standardize key as pd.Timestamp IST for consistent IndicatorManager lookups
+                if not isinstance(minute_ts, pd.Timestamp):
+                    minute_ts = pd.Timestamp(minute_ts)
+                if minute_ts.tzinfo is None:
+                    minute_ts = minute_ts.tz_localize(self._kolkata_tz)
+                else:
+                    minute_ts = minute_ts.tz_convert(self._kolkata_tz)
+
                 if not hasattr(target_sm, 'atp_history'): target_sm.atp_history = {}
                 if instrument_key not in target_sm.atp_history: target_sm.atp_history[instrument_key] = {}
 
@@ -495,6 +504,14 @@ class PriceFeedHandler:
 
                 minute_ts = timestamp.replace(second=0, microsecond=0) if hasattr(timestamp, 'replace') else None
                 if minute_ts:
+                    # Standardize key as pd.Timestamp IST for consistent IndicatorManager lookups
+                    if not isinstance(minute_ts, pd.Timestamp):
+                        minute_ts = pd.Timestamp(minute_ts)
+                    if minute_ts.tzinfo is None:
+                        minute_ts = minute_ts.tz_localize(self._kolkata_tz)
+                    else:
+                        minute_ts = minute_ts.tz_convert(self._kolkata_tz)
+
                     if not hasattr(self.state_manager, 'atp_history'):
                         self.state_manager.atp_history = {}
                     if instrument_key not in self.state_manager.atp_history:
