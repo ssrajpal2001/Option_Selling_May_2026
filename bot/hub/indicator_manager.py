@@ -195,16 +195,17 @@ class IndicatorManager:
         # ATP (Average Traded Price) represents the true exchange-reported VWAP.
         atp_hist = getattr(self.state_manager, 'atp_history', {}).get(inst_key, {})
         if atp_hist:
-            # Standardize lookup key for consistent comparison with PriceFeedHandler storage
-            current_minute = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
-            if current_minute.tzinfo is None:
-                current_minute = current_minute.tz_localize('Asia/Kolkata')
+            # Standardize lookup key for consistent comparison with PriceFeedHandler storage.
+            # PriceFeedHandler now uses CEILING bucketing for snapshots.
+            lookup_ts = pd.Timestamp(timestamp).ceil('1min')
+            if lookup_ts.tzinfo is None:
+                lookup_ts = lookup_ts.tz_localize('Asia/Kolkata')
             else:
-                current_minute = current_minute.tz_convert('Asia/Kolkata')
+                lookup_ts = lookup_ts.tz_convert('Asia/Kolkata')
 
             # Exact match for finalized/historical minute
-            if current_minute in atp_hist:
-                return float(atp_hist[current_minute])
+            if lookup_ts in atp_hist:
+                return float(atp_hist[lookup_ts])
 
             if not strict_history or self.orchestrator.is_backtest:
                 # OPTIMIZED Nearest past value match: find latest applicable without full dict scan
@@ -213,14 +214,14 @@ class IndicatorManager:
                     if not (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')):
                         continue
                     try:
-                        if ts <= current_minute:
+                        if ts <= lookup_ts:
                             return float(atp_hist[ts])
                     except TypeError:
-                        # Handle mixed awareness: localize/convert to match current_minute
+                        # Handle mixed awareness: localize/convert to match lookup_ts
                         _ts = pd.Timestamp(ts)
                         if _ts.tzinfo is None: _ts = _ts.tz_localize('Asia/Kolkata')
                         else: _ts = _ts.tz_convert('Asia/Kolkata')
-                        if _ts <= current_minute:
+                        if _ts <= lookup_ts:
                             return float(atp_hist[ts])
 
         if strict_history and not self.orchestrator.is_backtest:
@@ -232,7 +233,7 @@ class IndicatorManager:
              # We proceed to the OHLC calculation below
              pass
         elif not self.orchestrator.is_backtest:
-            # Gated Live ATP: only use if we are asking for the current minute.
+            # Gated Live ATP: only use if we are asking for the current active candle.
             # This prevents look-ahead bias when evaluating rules for closed candles.
             now_ist = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
 
@@ -243,11 +244,15 @@ class IndicatorManager:
             else:
                 ts_ist = ts_ist.tz_convert('Asia/Kolkata')
 
-            is_current_min = (ts_ist.date() == now_ist.date() and
-                              ts_ist.hour == now_ist.hour and
-                              ts_ist.minute == now_ist.minute)
+            # Strictly allow live ATP only if we are in the middle of a minute (seconds > 0)
+            # and it's the current wall-clock minute. Boundary requests (seconds == 0)
+            # must use the historical snapshots retrieved above.
+            is_active_candle = (ts_ist.date() == now_ist.date() and
+                                ts_ist.hour == now_ist.hour and
+                                ts_ist.minute == now_ist.minute and
+                                ts_ist.second > 0)
 
-            if is_current_min:
+            if is_active_candle:
                 atps = getattr(self.state_manager, 'option_atps', {})
                 live_atp = atps.get(inst_key)
                 if live_atp and live_atp > 0:

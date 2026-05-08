@@ -204,11 +204,11 @@ class PriceFeedHandler:
             target_sm.option_atps[instrument_key] = atp
 
             # ATP History for Data Recording & VWAP Indicators
-            minute_ts = timestamp.replace(second=0, microsecond=0) if hasattr(timestamp, 'replace') else None
-            if minute_ts:
-                # Standardize key as pd.Timestamp IST for consistent IndicatorManager lookups
-                if not isinstance(minute_ts, pd.Timestamp):
-                    minute_ts = pd.Timestamp(minute_ts)
+            # Standardize key as pd.Timestamp IST for consistent IndicatorManager lookups
+            if timestamp:
+                # Use CEILING bucketing: A tick at 09:21:59 maps to 09:22:00.
+                # This ensures technical indicators anchored at minute turns use the finalized data.
+                minute_ts = pd.Timestamp(timestamp).ceil('1min')
                 if minute_ts.tzinfo is None:
                     minute_ts = minute_ts.tz_localize(self._kolkata_tz)
                 else:
@@ -502,11 +502,10 @@ class PriceFeedHandler:
                 self.state_manager.option_atps[instrument_key] = atp
                 self._sync_market_data('option_atps', instrument_key, atp)
 
-                minute_ts = timestamp.replace(second=0, microsecond=0) if hasattr(timestamp, 'replace') else None
-                if minute_ts:
-                    # Standardize key as pd.Timestamp IST for consistent IndicatorManager lookups
-                    if not isinstance(minute_ts, pd.Timestamp):
-                        minute_ts = pd.Timestamp(minute_ts)
+                # ATP History for Data Recording & VWAP Indicators
+                if timestamp:
+                    # Use CEILING bucketing for consistency with normalized path
+                    minute_ts = pd.Timestamp(timestamp).ceil('1min')
                     if minute_ts.tzinfo is None:
                         minute_ts = minute_ts.tz_localize(self._kolkata_tz)
                     else:

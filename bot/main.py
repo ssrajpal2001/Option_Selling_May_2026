@@ -88,6 +88,7 @@ async def main():
                 json.dump({"enabled": False, "updated_at": time.time()}, _tf)
 
         with open(_status_path, "w") as _sf:
+            _tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
             json.dump({
                 "bot_running": True,
                 "trading_active": False, # Initialize status with trading OFF
@@ -96,7 +97,7 @@ async def main():
                 "instrument": client_cfg.instrument,
                 "broker": client_cfg.broker,
                 "heartbeat": time.time(),
-                "updated_at": datetime.datetime.now().isoformat(),
+                "updated_at": datetime.datetime.now(_tz_ist).isoformat(),
                 "session_pnl": 0,
                 "trade_count": 0,
                 "trade_history": [],

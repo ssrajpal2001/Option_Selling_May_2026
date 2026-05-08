@@ -535,7 +535,7 @@ class DhanClient(BaseBroker):
     async def _load_security_list(self):
         """Downloads and loads the Dhan security list into a DataFrame with disk caching."""
         async with self._shared_load_lock:
-            now = datetime.datetime.now()
+            now = datetime.datetime.now(_KOLKATA)
 
             # 1. Check if already loaded in memory today
             if self._shared_security_list_df is not None and self._last_shared_load_time and self._last_shared_load_time.date() == now.date():

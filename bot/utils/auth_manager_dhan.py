@@ -259,9 +259,9 @@ def _estimate_dhan_token_expiry(token_updated_at: str, api_key_mode: bool = Fals
     try:
         updated = datetime.fromisoformat(token_updated_at)
         if updated.tzinfo is None:
-            updated = updated.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        elapsed_seconds = (now - updated).total_seconds()
+            updated = updated.replace(tzinfo=timezone(timedelta(hours=5, minutes=30)))
+        now = datetime.now(timezone(timedelta(hours=5, minutes=30)))
+        elapsed_seconds = (now - updated.astimezone(now.tzinfo)).total_seconds()
 
         if api_key_mode:
             total_seconds = 24 * 3600

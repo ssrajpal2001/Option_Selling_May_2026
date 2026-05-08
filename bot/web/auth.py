@@ -9,6 +9,7 @@ import base64
 SECRET_KEY = os.environ.get("ALGOSOFT_SECRET", "algosoft-default-secret-change-in-prod-32chars!")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
+IST = timezone(timedelta(hours=5, minutes=30))
 
 _FERNET_KEY = base64.urlsafe_b64encode(
     (SECRET_KEY + "x" * 32)[:32].encode()
@@ -29,6 +30,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(data: dict, expires_hours: int = ACCESS_TOKEN_EXPIRE_HOURS) -> str:
     payload = data.copy()
+    # JWT standard recommends UTC for 'exp' claim
     payload["exp"] = datetime.now(timezone.utc) + timedelta(hours=expires_hours)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 

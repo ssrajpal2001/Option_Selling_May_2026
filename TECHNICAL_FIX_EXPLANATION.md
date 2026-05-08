@@ -36,3 +36,18 @@ When you set a rule such as `VWAP(1m) > CLOSE(1m)`:
 4.  **Comparison:** It compares these two finalized values.
 
 **Result:** The bot's trade decision will now strictly match what you see on the chart at the moment the candle closes. It will no longer be "fooled" by price spikes that happen in the first few seconds of a new candle.
+
+## 4. Token Timestamp Standardization (IST)
+Previously, the bot used a mixture of UTC and IST for token expiration and session management. This often caused issues where tokens appeared "fresh" in one part of the system but "expired" in another due to the 5.5-hour difference.
+
+**Changes:**
+*   **Unified Timezone:** All token-related timestamps (`token_updated_at`, `token_issued_at`, password reset expiry) are now stored and compared using **Asia/Kolkata (IST)**.
+*   **Consistent Freshness:** The bot's internal freshness checks now correctly align with the timestamps stored in the database by the web interface, ensuring stable multi-day sessions for Dhan and consistent daily renewals for Upstox.
+
+## 5. Investigation: 14:22 Square-off
+We investigated the early square-off reported at 14:22.
+
+**Finding:**
+The logs confirm that the bot received a `SIGTERM` (Termination Signal) from the system/user at **14:22:20**. This is an external command telling the bot to shut down gracefully.
+*   The bot correctly followed its "Industrial Square-off" protocol: upon receiving the signal, it closed all active positions and exited.
+*   This was **not** caused by a bot logic error or a "Square-off Time" setting (which was set to 15:15), but by an external termination of the process.
