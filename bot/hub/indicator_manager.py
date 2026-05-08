@@ -195,6 +195,7 @@ class IndicatorManager:
         # ATP (Average Traded Price) represents the true exchange-reported VWAP.
         atp_hist = getattr(self.state_manager, 'atp_history', {}).get(inst_key, {})
         if atp_hist:
+            # Standardize lookup key for consistent comparison with PriceFeedHandler storage
             current_minute = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
             if current_minute.tzinfo is None:
                 current_minute = current_minute.tz_localize('Asia/Kolkata')
@@ -208,8 +209,21 @@ class IndicatorManager:
             if not strict_history or self.orchestrator.is_backtest:
                 # Nearest past value match
                 # Use type-agnostic comparison for historical data robustness
-                candidates = {ts: v for ts, v in atp_hist.items()
-                              if (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')) and ts <= current_minute}
+                candidates = {}
+                for ts, v in atp_hist.items():
+                    if not (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')):
+                        continue
+                    try:
+                        if ts <= current_minute:
+                            candidates[ts] = v
+                    except TypeError:
+                        # Handle mixed awareness: localize/convert to match current_minute
+                        _ts = pd.Timestamp(ts)
+                        if _ts.tzinfo is None: _ts = _ts.tz_localize('Asia/Kolkata')
+                        else: _ts = _ts.tz_convert('Asia/Kolkata')
+                        if _ts <= current_minute:
+                            candidates[ts] = v
+
                 if candidates:
                     return float(atp_hist[max(candidates.keys())])
 
@@ -225,9 +239,17 @@ class IndicatorManager:
             # Gated Live ATP: only use if we are asking for the current minute.
             # This prevents look-ahead bias when evaluating rules for closed candles.
             now_ist = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
-            is_current_min = (timestamp.date() == now_ist.date() and
-                              timestamp.hour == now_ist.hour and
-                              timestamp.minute == now_ist.minute)
+
+            # Standardize input timestamp to IST for accurate current minute comparison
+            ts_ist = pd.Timestamp(timestamp)
+            if ts_ist.tzinfo is None:
+                ts_ist = ts_ist.tz_localize('Asia/Kolkata')
+            else:
+                ts_ist = ts_ist.tz_convert('Asia/Kolkata')
+
+            is_current_min = (ts_ist.date() == now_ist.date() and
+                              ts_ist.hour == now_ist.hour and
+                              ts_ist.minute == now_ist.minute)
 
             if is_current_min:
                 atps = getattr(self.state_manager, 'option_atps', {})
@@ -326,8 +348,20 @@ class IndicatorManager:
                 if prev_boundary.tzinfo is None:
                     prev_boundary = prev_boundary.tz_localize('Asia/Kolkata')
 
-                candidates = {ts: v for ts, v in atp_hist.items()
-                              if (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')) and ts <= prev_boundary}
+                candidates = {}
+                for ts, v in atp_hist.items():
+                    if not (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')):
+                        continue
+                    try:
+                        if ts <= prev_boundary:
+                            candidates[ts] = v
+                    except TypeError:
+                        _ts = pd.Timestamp(ts)
+                        if _ts.tzinfo is None: _ts = _ts.tz_localize('Asia/Kolkata')
+                        else: _ts = _ts.tz_convert('Asia/Kolkata')
+                        if _ts <= prev_boundary:
+                            candidates[ts] = v
+
                 if candidates:
                     v0 = candidates[max(candidates.keys())]
                     v1 = live_vwap
