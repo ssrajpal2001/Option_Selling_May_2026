@@ -207,25 +207,21 @@ class IndicatorManager:
                 return float(atp_hist[current_minute])
 
             if not strict_history or self.orchestrator.is_backtest:
-                # Nearest past value match
-                # Use type-agnostic comparison for historical data robustness
-                candidates = {}
-                for ts, v in atp_hist.items():
+                # OPTIMIZED Nearest past value match: find latest applicable without full dict scan
+                sorted_keys = sorted(atp_hist.keys(), reverse=True)
+                for ts in sorted_keys:
                     if not (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')):
                         continue
                     try:
                         if ts <= current_minute:
-                            candidates[ts] = v
+                            return float(atp_hist[ts])
                     except TypeError:
                         # Handle mixed awareness: localize/convert to match current_minute
                         _ts = pd.Timestamp(ts)
                         if _ts.tzinfo is None: _ts = _ts.tz_localize('Asia/Kolkata')
                         else: _ts = _ts.tz_convert('Asia/Kolkata')
                         if _ts <= current_minute:
-                            candidates[ts] = v
-
-                if candidates:
-                    return float(atp_hist[max(candidates.keys())])
+                            return float(atp_hist[ts])
 
         if strict_history and not self.orchestrator.is_backtest:
             return None
@@ -348,22 +344,25 @@ class IndicatorManager:
                 if prev_boundary.tzinfo is None:
                     prev_boundary = prev_boundary.tz_localize('Asia/Kolkata')
 
-                candidates = {}
-                for ts, v in atp_hist.items():
+                # OPTIMIZED Nearest past value match: find latest applicable without full dict scan
+                v0 = None
+                sorted_keys = sorted(atp_hist.keys(), reverse=True)
+                for ts in sorted_keys:
                     if not (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')):
                         continue
                     try:
                         if ts <= prev_boundary:
-                            candidates[ts] = v
+                            v0 = atp_hist[ts]
+                            break
                     except TypeError:
                         _ts = pd.Timestamp(ts)
                         if _ts.tzinfo is None: _ts = _ts.tz_localize('Asia/Kolkata')
                         else: _ts = _ts.tz_convert('Asia/Kolkata')
                         if _ts <= prev_boundary:
-                            candidates[ts] = v
+                            v0 = atp_hist[ts]
+                            break
 
-                if candidates:
-                    v0 = candidates[max(candidates.keys())]
+                if v0 is not None:
                     v1 = live_vwap
                     is_rising = v1 > v0
                     is_falling = v1 < v0

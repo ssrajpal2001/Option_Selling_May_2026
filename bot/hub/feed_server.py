@@ -509,7 +509,8 @@ class FeedServer:
         for w in list(self._writers):
             try:
                 w.write(line)
-                await w.drain()
+                # Short timeout to avoid stalling the entire broadcast if one client is slow/blocked
+                await asyncio.wait_for(w.drain(), timeout=0.01)
             except Exception:
                 dead.append(w)
         for w in dead:
