@@ -159,28 +159,31 @@
   </style>
 </head>
 <body>
-<nav style="background:var(--surface);border-bottom:1px solid var(--border-soft);" class="px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+<nav style="background:var(--surface);border-bottom:1px solid var(--border-soft);" class="px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-50">
   <div class="flex items-center gap-3">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#00d4aa"/><path d="M6 20 L10 14 L14 17 L18 10 L22 14" stroke="#0a0f1e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span style="color:var(--text)" class="font-bold text-lg">Algo<span style="color:var(--primary)">Soft</span></span>
-    <span class="text-xs px-2 py-0.5 rounded ml-1" style="background:var(--card);color:#fb923c;border:1px solid #431407;">ADMIN</span>
+    <span style="color:var(--text)" class="font-bold text-lg hidden sm:inline">Algo<span style="color:var(--primary)">Soft</span></span>
+    <span class="text-[10px] px-1.5 py-0.5 rounded ml-1 font-bold" style="background:var(--card);color:#fb923c;border:1px solid #431407;">ADMIN</span>
   </div>
-  <div class="flex items-center gap-2">
-    <a href="/admin" class="nav-link {% if active_page=='overview' %}active{% endif %}">Overview</a>
-    <a href="/admin/clients" class="nav-link {% if active_page=='clients' %}active{% endif %}">Clients</a>
-    <a href="/admin/subscription-plans" class="nav-link {% if active_page=='plans' %}active{% endif %}">Plans</a>
-    <a href="/admin/strategy" class="nav-link {% if active_page=='strategy' %}active{% endif %}">Strategy</a>
-    <a href="/admin/data-providers-page" class="nav-link {% if active_page=='providers' %}active{% endif %}">Data Feeds</a>
-    <a href="/admin/audit-log" class="nav-link {% if active_page=='audit' %}active{% endif %}">Audit Log</a>
-    <a href="/admin/global-logs" class="nav-link {% if active_page=='logs' %}active{% endif %}">Global Logs</a>
-    <a href="/admin/platform-settings" class="nav-link {% if active_page=='platform' %}active{% endif %}">⚙️ Settings</a>
+
+  <!-- Desktop Navigation -->
+  <div class="hidden lg:flex items-center gap-1 overflow-x-auto no-scrollbar">
+    <a href="/admin" class="nav-link whitespace-nowrap {% if active_page=='overview' %}active{% endif %}">Overview</a>
+    <a href="/admin/clients" class="nav-link whitespace-nowrap {% if active_page=='clients' %}active{% endif %}">Clients</a>
+    <a href="/admin/subscription-plans" class="nav-link whitespace-nowrap {% if active_page=='plans' %}active{% endif %}">Plans</a>
+    <a href="/admin/strategy" class="nav-link whitespace-nowrap {% if active_page=='strategy' %}active{% endif %}">Strategy</a>
+    <a href="/admin/data-providers-page" class="nav-link whitespace-nowrap {% if active_page=='providers' %}active{% endif %}">Data Feeds</a>
+    <a href="/admin/audit-log" class="nav-link whitespace-nowrap {% if active_page=='audit' %}active{% endif %}">Audit</a>
+    <a href="/admin/global-logs" class="nav-link whitespace-nowrap {% if active_page=='logs' %}active{% endif %}">Logs</a>
+    <a href="/admin/platform-settings" class="nav-link whitespace-nowrap {% if active_page=='platform' %}active{% endif %}">⚙️ Settings</a>
   </div>
-  <div class="flex items-center gap-3">
+
+  <div class="flex items-center gap-2 md:gap-3">
     <!-- Theme switcher -->
     <div class="relative" id="theme-switcher">
       <button class="theme-menu-btn" onclick="toggleThemeMenu()" title="Switch theme">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-        <span id="theme-label">Theme</span>
+        <span id="theme-label" class="hidden sm:inline">Theme</span>
       </button>
       <div id="theme-menu" class="theme-dropdown hidden">
         <button class="theme-option" data-theme="dark"     onclick="applyTheme('dark')">🌑 Dark</button>
@@ -189,10 +192,37 @@
         <button class="theme-option" data-theme="saffron"  onclick="applyTheme('saffron')">🌅 Saffron</button>
       </div>
     </div>
-    <span class="text-sm" style="color:var(--muted)">admin</span>
-    <a href="/logout" class="btn-ghost px-3 py-1.5 text-xs">Sign out</a>
+    <span class="text-xs hidden sm:inline" style="color:var(--muted)">admin</span>
+    <a href="/logout" class="btn-ghost px-2 md:px-3 py-1.5 text-[10px] md:text-xs">Sign out</a>
+
+    <!-- Mobile Menu Button -->
+    <button class="lg:hidden p-2 text-soft hover:text-brand" onclick="toggleMobileMenu()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
   </div>
 </nav>
+
+<!-- Mobile Navigation Menu -->
+<div id="mobile-menu" class="hidden lg:hidden fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm">
+  <div class="absolute right-0 top-0 h-full w-64 p-6 shadow-xl" style="background:var(--card); border-left:1px solid var(--border);">
+    <div class="flex justify-between items-center mb-8">
+      <span class="font-bold text-lg" style="color:var(--text)">Admin Menu</span>
+      <button onclick="toggleMobileMenu()" class="p-2 text-soft">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-100px)] no-scrollbar">
+      <a href="/admin" class="nav-link text-lg {% if active_page=='overview' %}active{% endif %}" onclick="toggleMobileMenu()">Overview</a>
+      <a href="/admin/clients" class="nav-link text-lg {% if active_page=='clients' %}active{% endif %}" onclick="toggleMobileMenu()">Clients</a>
+      <a href="/admin/subscription-plans" class="nav-link text-lg {% if active_page=='plans' %}active{% endif %}" onclick="toggleMobileMenu()">Plans</a>
+      <a href="/admin/strategy" class="nav-link text-lg {% if active_page=='strategy' %}active{% endif %}" onclick="toggleMobileMenu()">Strategy</a>
+      <a href="/admin/data-providers-page" class="nav-link text-lg {% if active_page=='providers' %}active{% endif %}" onclick="toggleMobileMenu()">Data Feeds</a>
+      <a href="/admin/audit-log" class="nav-link text-lg {% if active_page=='audit' %}active{% endif %}" onclick="toggleMobileMenu()">Audit Log</a>
+      <a href="/admin/global-logs" class="nav-link text-lg {% if active_page=='logs' %}active{% endif %}" onclick="toggleMobileMenu()">Global Logs</a>
+      <a href="/admin/platform-settings" class="nav-link text-lg {% if active_page=='platform' %}active{% endif %}" onclick="toggleMobileMenu()">Settings</a>
+    </div>
+  </div>
+</div>
 
 <div class="px-6 py-6 max-w-screen-xl mx-auto">
   {% block content %}{% endblock %}
@@ -219,11 +249,19 @@
     var m=document.getElementById('theme-menu');
     if(m)m.classList.toggle('hidden');
   };
+  window.toggleMobileMenu=function(){
+    var m=document.getElementById('mobile-menu');
+    if(m)m.classList.toggle('hidden');
+  };
   document.addEventListener('click',function(e){
     var sw=document.getElementById('theme-switcher');
     if(sw&&!sw.contains(e.target)){
       var m=document.getElementById('theme-menu');
       if(m)m.classList.add('hidden');
+    }
+    var mm=document.getElementById('mobile-menu');
+    if(mm && e.target === mm){
+      mm.classList.add('hidden');
     }
   });
   _apply(localStorage.getItem('algosoft-theme')||'{{ default_theme() }}');

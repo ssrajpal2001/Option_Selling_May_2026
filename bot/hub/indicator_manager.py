@@ -170,9 +170,8 @@ class IndicatorManager:
 
     async def calculate_vwap(self, inst_key, timestamp, strict_history=False):
         """
-        High-fidelity VWAP calculation utilizing stored tick-by-tick ATP data.
+        High-fidelity VWAP calculation utilizing Exchange-reported ATP data.
         Prioritizes the exact minute bucket from state history for precision.
-        strict_history=False: Ignores live fallbacks and only uses stored 1m boundaries.
         """
         if not inst_key:
             return None
@@ -180,7 +179,6 @@ class IndicatorManager:
         # PERFORMANCE: Backtest VWAP Minute Cache
         if self.orchestrator.is_backtest:
             if not hasattr(self, '_bt_vwap_cache'): self._bt_vwap_cache = {}
-            # Boundary minute key
             boundary_min = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
             if boundary_min.tzinfo is None:
                 boundary_min = boundary_min.tz_localize('Asia/Kolkata')
@@ -191,12 +189,9 @@ class IndicatorManager:
             if vwap_key in self._bt_vwap_cache: return self._bt_vwap_cache[vwap_key]
 
         # 1. Try stored ATP history (Live/Backtest cache)
-        # In Backtest, we prioritize the ATP value provided for the SPECIFIC instrument key
-        # ATP (Average Traded Price) represents the true exchange-reported VWAP.
+        # This is the PRIMARY source of truth — Exchange-calculated VWAP.
         atp_hist = getattr(self.state_manager, 'atp_history', {}).get(inst_key, {})
         if atp_hist:
-            # Standardize lookup key for consistent comparison with PriceFeedHandler storage.
-            # PriceFeedHandler now uses CEILING bucketing for snapshots.
             lookup_ts = pd.Timestamp(timestamp).ceil('1min')
             if lookup_ts.tzinfo is None:
                 lookup_ts = lookup_ts.tz_localize('Asia/Kolkata')
@@ -208,45 +203,38 @@ class IndicatorManager:
                 return float(atp_hist[lookup_ts])
 
             if not strict_history or self.orchestrator.is_backtest:
-                # OPTIMIZED Nearest past value match: find latest applicable without full dict scan
-                sorted_keys = sorted(atp_hist.keys(), reverse=True)
+                # Find latest applicable ATP snapshot
+                # Use _last_minute hint if available for O(1) lookup in most cases
+                last_m = atp_hist.get('_last_minute')
+                if last_m and last_m <= lookup_ts:
+                    return float(atp_hist[last_m])
+
+                # Fallback to scan ONLY if necessary (rare for hot path)
+                # Optimization: only sort if dict changed since last sort
+                hist_len = len(atp_hist)
+                cache_attr = f"_sorted_keys_{inst_key}"
+                cached_keys = getattr(self, cache_attr, (0, []))
+                if cached_keys[0] != hist_len:
+                    sorted_keys = sorted([k for k in atp_hist.keys() if isinstance(k, (pd.Timestamp, datetime.datetime))], reverse=True)
+                    setattr(self, cache_attr, (hist_len, sorted_keys))
+                else:
+                    sorted_keys = cached_keys[1]
+
                 for ts in sorted_keys:
-                    if not (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')):
-                        continue
                     try:
                         if ts <= lookup_ts:
                             return float(atp_hist[ts])
                     except TypeError:
-                        # Handle mixed awareness: localize/convert to match lookup_ts
-                        _ts = pd.Timestamp(ts)
-                        if _ts.tzinfo is None: _ts = _ts.tz_localize('Asia/Kolkata')
-                        else: _ts = _ts.tz_convert('Asia/Kolkata')
-                        if _ts <= lookup_ts:
-                            return float(atp_hist[ts])
+                        continue
 
-        if strict_history and not self.orchestrator.is_backtest:
-            return None
-
-        # 2. Backtest fallback: If strict_history (from ATP file) failed, allow falling back to OHLC
-        # to ensure indicators like V-Slope don't stay at 0.0 or WaitData.
-        if self.orchestrator.is_backtest and strict_history:
-             # We proceed to the OHLC calculation below
-             pass
-        elif not self.orchestrator.is_backtest:
-            # Gated Live ATP: only use if we are asking for the current active candle.
-            # This prevents look-ahead bias when evaluating rules for closed candles.
+        # 2. Live Active Candle Gate
+        # Only allow real-time ATP if we are currently inside the active minute.
+        if not self.orchestrator.is_backtest:
             now_ist = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
-
-            # Standardize input timestamp to IST for accurate current minute comparison
             ts_ist = pd.Timestamp(timestamp)
-            if ts_ist.tzinfo is None:
-                ts_ist = ts_ist.tz_localize('Asia/Kolkata')
-            else:
-                ts_ist = ts_ist.tz_convert('Asia/Kolkata')
+            if ts_ist.tzinfo is None: ts_ist = ts_ist.tz_localize('Asia/Kolkata')
+            else: ts_ist = ts_ist.tz_convert('Asia/Kolkata')
 
-            # Strictly allow live ATP only if we are in the middle of a minute (seconds > 0)
-            # and it's the current wall-clock minute. Boundary requests (seconds == 0)
-            # must use the historical snapshots retrieved above.
             is_active_candle = (ts_ist.date() == now_ist.date() and
                                 ts_ist.hour == now_ist.hour and
                                 ts_ist.minute == now_ist.minute and
@@ -258,54 +246,35 @@ class IndicatorManager:
                 if live_atp and live_atp > 0:
                     return float(live_atp)
 
+        # 3. BACKTEST ONLY: Fallback to OHLC-based calculation if ATP history is missing.
+        # This is DISABLED for Live mode to ensure 100% adherence to exchange data.
+        if not self.orchestrator.is_backtest:
+            if strict_history: return None
+            # Return last known state if available
+            current_day = timestamp.date()
+            state_key = (inst_key, current_day)
+            state = self._vwap_state.get(state_key)
+            if state: return state['cum_pv'] / state['cum_vol'] if state['cum_vol'] > 0 else None
+            return None
+
+        # Backtest OHLC Fallback Logic
         current_day = timestamp.date()
         state_key = (inst_key, current_day)
         last_final_minute = timestamp.replace(second=0, microsecond=0)
 
-        # Live aggregator fallback: use accumulated OHLC bars before hitting broker API.
-        # Prevents VWAP returning None for near-expiry option strikes where the API
-        # returns HTTP 400 and they get permanently blacklisted in _api_failure_cache.
-        if not self.orchestrator.is_backtest:
-            agg = getattr(self.orchestrator, 'entry_aggregator', None)
-            if agg is not None:
-                agg_ohlc = agg.get_historical_ohlc(inst_key)
-                if agg_ohlc is not None and not agg_ohlc.empty:
-                    agg_day = agg_ohlc[agg_ohlc.index.date == current_day].copy()
-                    agg_day = agg_day[agg_day.index <= last_final_minute]
-                    if not agg_day.empty:
-                        if 'volume' not in agg_day.columns or agg_day['volume'].sum() == 0:
-                            agg_day['volume'] = 1.0
-                        vwap_val = VWAPIndicator.get_latest_value(agg_day)
-                        if vwap_val is not None:
-                            tp = (agg_day['high'] + agg_day['low'] + agg_day['close']) / 3
-                            vol = agg_day['volume']
-                            self._vwap_state[state_key] = {
-                                'cum_pv': float((tp * vol).sum()),
-                                'cum_vol': float(vol.sum()),
-                                'last_final_minute': last_final_minute
-                            }
-                            return vwap_val
-
         state = self._vwap_state.get(state_key)
         if not state or state['last_final_minute'] < last_final_minute:
-            # include_current=True ensures we get the candle at 'timestamp' minute if it exists
-            _min_candles = 1 if self.orchestrator.is_backtest else 20
+            _min_candles = 1
             ohlc_1m = await self.data_manager.get_historical_ohlc(inst_key, 1, current_timestamp=timestamp, min_candles=_min_candles, for_full_day=True, include_current=True)
             if ohlc_1m is not None and not ohlc_1m.empty:
                 df = ohlc_1m[(ohlc_1m.index.date == current_day) & (ohlc_1m.index <= last_final_minute)].copy()
 
-                # Backtest fallback: ensure VWAP always calculates even if volume is missing or 0
-                if self.orchestrator.is_backtest:
-                    if 'volume' not in df.columns:
-                        df['volume'] = 1.0
-                    elif df['volume'].sum() == 0:
-                        df['volume'] = 1.0
+                if 'volume' not in df.columns or df['volume'].sum() == 0:
+                    df['volume'] = 1.0
 
                 if not df.empty:
-                    # Modularized calculation (Rust Optimized if available)
                     vwap_val = RustBridge.calculate_vwap(df)
                     if vwap_val:
-                        # For state persistence, we still store sums, but calculation is modular
                         tp = (df['high'] + df['low'] + df['close']) / 3
                         vol = df['volume']
                         state = {
@@ -319,7 +288,6 @@ class IndicatorManager:
             val = state['cum_pv'] / state['cum_vol'] if state['cum_vol'] > 0 else None
             if self.orchestrator.is_backtest and val is not None:
                 self._bt_vwap_cache[vwap_key] = val
-                if len(self._bt_vwap_cache) > 50: self._bt_vwap_cache.pop(next(iter(self._bt_vwap_cache)))
             return val
         return None
 
@@ -328,122 +296,74 @@ class IndicatorManager:
         return self.orchestrator.get_market_open_time(timestamp)
 
     async def get_vwap_slope_status(self, inst_key, timestamp, timeframe_minutes, count=1, live_vwap=None):
+        """
+        High-fidelity VWAP slope calculation utilizing Exchange-reported ATP data.
+        Returns: (is_rising_now, is_falling_now, v_curr, v_prev, cons_rising, cons_falling)
+        """
         if not inst_key:
             return None, None, None, None, 0, 0
-        cache_key = (inst_key, timeframe_minutes, count, live_vwap, timestamp.date(), timestamp.hour, timestamp.minute)
-        cached = self._vwap_slope_cache.get(cache_key)
-        if cached and (timestamp - cached['ts']).total_seconds() < 5.0:
-            return cached['val']
 
-        if live_vwap is not None:
-            atp_hist = getattr(self.state_manager, 'atp_history', {}).get(inst_key, {})
-            if atp_hist:
-                current_interval_start = timestamp.replace(
-                    minute=(timestamp.minute // timeframe_minutes) * timeframe_minutes,
-                    second=0, microsecond=0)
-                prev_boundary = current_interval_start - pd.Timedelta(minutes=timeframe_minutes)
+        # PERFORMANCE: Minute-Pulse Cache (exclude live_vwap from key to improve hits)
+        t_pulse = pd.Timestamp(timestamp).replace(second=0, microsecond=0)
+        if t_pulse.tzinfo is None: t_pulse = t_pulse.tz_localize('Asia/Kolkata')
 
-                # Standardize prev_boundary for type-agnostic comparison
-                if not isinstance(prev_boundary, pd.Timestamp):
-                    prev_boundary = pd.Timestamp(prev_boundary)
-                if prev_boundary.tzinfo is None:
-                    prev_boundary = prev_boundary.tz_localize('Asia/Kolkata')
+        # Caching historical base to avoid redundant lookups
+        hist_cache_key = (inst_key, timeframe_minutes, count, t_pulse)
+        if not hasattr(self, '_vwap_hist_slope_cache'): self._vwap_hist_slope_cache = {}
 
-                # OPTIMIZED Nearest past value match: find latest applicable without full dict scan
-                v0 = None
-                sorted_keys = sorted(atp_hist.keys(), reverse=True)
-                for ts in sorted_keys:
-                    if not (isinstance(ts, (pd.Timestamp, datetime.datetime)) or hasattr(ts, 'date')):
-                        continue
-                    try:
-                        if ts <= prev_boundary:
-                            v0 = atp_hist[ts]
-                            break
-                    except TypeError:
-                        _ts = pd.Timestamp(ts)
-                        if _ts.tzinfo is None: _ts = _ts.tz_localize('Asia/Kolkata')
-                        else: _ts = _ts.tz_convert('Asia/Kolkata')
-                        if _ts <= prev_boundary:
-                            v0 = atp_hist[ts]
-                            break
+        # Boundaries for evaluation
+        t_curr = t_pulse
+        t_prev = t_curr - pd.Timedelta(minutes=timeframe_minutes)
 
-                if v0 is not None:
-                    v1 = live_vwap
-                    is_rising = v1 > v0
-                    is_falling = v1 < v0
-                    cons_r = 1 if is_rising else 0
-                    cons_f = 1 if is_falling else 0
-                    res = (is_rising, is_falling, v1, v0, cons_r, cons_f)
-                    self._vwap_slope_cache[cache_key] = {'ts': timestamp, 'val': res}
-                    return res
+        # Fetch historical VWAPs (excluding live/current)
+        if hist_cache_key in self._vwap_hist_slope_cache:
+            h_vwaps = self._vwap_hist_slope_cache[hist_cache_key]
+        else:
+            h_vwaps = []
+            for i in range(count + 1):
+                ts = t_prev - pd.Timedelta(minutes=i * timeframe_minutes)
+                v = await self.calculate_vwap(inst_key, ts, strict_history=True)
+                if v is None: break
+                h_vwaps.append(v)
+            self._vwap_hist_slope_cache[hist_cache_key] = h_vwaps
 
-        ohlc_1m = await self.get_robust_ohlc(inst_key, 1, timestamp)
-        if ohlc_1m is None or ohlc_1m.empty:
-            return None, None, None, None, 0, 0
+        # 1. Get Current VWAP (v1)
+        v1 = float(live_vwap) if live_vwap is not None else await self.calculate_vwap(inst_key, timestamp, strict_history=False)
+        if v1 is None: return None, None, None, None, 0, 0
 
-        current_interval_start = timestamp.replace(minute=(timestamp.minute // timeframe_minutes) * timeframe_minutes, second=0, microsecond=0)
-        t0 = current_interval_start - pd.Timedelta(minutes=timeframe_minutes)
-        df = ohlc_1m[ohlc_1m.index.date == timestamp.date()].copy()
+        vwaps = [v1] + h_vwaps
 
-        if live_vwap is None and (len(df) < 2 or (ohlc_1m.index.empty or ohlc_1m.index[-1] < timestamp.replace(second=0, microsecond=0))):
-            return None, None, None, None, 0, 0
-        if live_vwap is not None and df.empty:
-            return None, None, None, None, 0, 0
+        if len(vwaps) < 2:
+            return False, False, v1, None, 0, 0
 
-        if not df.empty:
-            df = df.sort_index()
-            anchor_ts = self._get_market_open_time(timestamp)
-            boundary_ts = timestamp.replace(second=0, microsecond=0)
-            if boundary_ts > anchor_ts:
-                expected_range = pd.date_range(start=anchor_ts, end=boundary_ts, freq='1min')
-                df_vol = df['volume'] if 'volume' in df.columns else pd.Series(0, index=df.index)
-                df = df.reindex(expected_range).ffill()
-                df['volume'] = df_vol.reindex(expected_range).fillna(0)
+        v_curr = vwaps[0]
+        v_prev = vwaps[1]
 
-        if not df.empty and 'volume' not in df.columns:
-            df['volume'] = 0.0
-
-        def get_vwap_at(ts):
-            d = df[df.index <= ts]
-            if d.empty: return None
-            tp = (d['high'] + d['low'] + d['close']) / 3
-            vol = d.get('volume', pd.Series(0, index=d.index))
-            return (tp * vol).sum() / vol.sum() if vol.sum() > 0 else tp.mean()
-
-        finalized_vwaps = []
-        for i in range(count):
-            boundary_ts = t0 - pd.Timedelta(minutes=i * timeframe_minutes)
-            val = get_vwap_at(boundary_ts)
-            if val is None: break
-            finalized_vwaps.append((boundary_ts, val))
-
-        if not finalized_vwaps:
-            return False, False, live_vwap, None, 0, 0
-
-        if live_vwap is None:
-            live_vwap = get_vwap_at(timestamp)
-
-        last_final_val = finalized_vwaps[0][1]
-        is_rising_now = (live_vwap > last_final_val) if live_vwap is not None and last_final_val is not None else False
-        is_falling_now = (live_vwap < last_final_val) if live_vwap is not None and last_final_val is not None else False
+        is_rising_now = (v_curr > v_prev)
+        is_falling_now = (v_curr < v_prev)
 
         cons_rising = 0
-        for i in range(len(finalized_vwaps) - 1):
-            if finalized_vwaps[i][1] > finalized_vwaps[i+1][1]: cons_rising += 1
+        for i in range(len(vwaps) - 1):
+            if vwaps[i] > vwaps[i+1]: cons_rising += 1
             else: break
+
         cons_falling = 0
-        for i in range(len(finalized_vwaps) - 1):
-            if finalized_vwaps[i][1] < finalized_vwaps[i+1][1]: cons_falling += 1
+        for i in range(len(vwaps) - 1):
+            if vwaps[i] < vwaps[i+1]: cons_falling += 1
             else: break
 
-        res = (is_rising_now and (1 + cons_rising) >= count, is_falling_now and (1 + cons_falling) >= count, live_vwap, last_final_val, (1 + cons_rising) if is_rising_now else 0, (1 + cons_falling) if is_falling_now else 0)
+        # Legacy-compatible result format
+        res = (
+            is_rising_now and cons_rising >= count,
+            is_falling_now and cons_falling >= count,
+            v_curr, v_prev,
+            cons_rising if is_rising_now else 0,
+            cons_falling if is_falling_now else 0
+        )
 
-        # Performance: Pre-check logging flag
         if logger.isEnabledFor(10): # DEBUG
-            log_msg = f"[IndicatorManager] VWAP Slope for {inst_key} at {timeframe_minutes}m: Rising={res[0]}, Falling={res[1]} (LTP_VWAP={live_vwap:.2f}, Prev={last_final_val:.2f})"
-        logger.debug(log_msg)
+            logger.debug(f"[IndicatorManager] Slope Status for {inst_key}: Rising={res[0]}, Falling={res[1]} (V0={v_curr:.2f}, V-1={v_prev:.2f})")
 
-        self._vwap_slope_cache[cache_key] = {'ts': timestamp, 'val': res}
         return res
 
     async def get_vwap_slope_pair(self, key1, key2, timestamp, tf_minutes):

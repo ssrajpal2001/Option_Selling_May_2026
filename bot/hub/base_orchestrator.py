@@ -152,9 +152,12 @@ class BaseOrchestrator(ABC):
         self.pnl_tracker = BacktestPnLTracker(self.instrument_name, self.config_manager) if self.is_backtest else None
         self.trade_log = LiveTradeLog()
 
-        # Initialize DataRecorder for live/paper V2 recording (Default: Disabled in Bot)
-        # Recording is now handled by a standalone script scripts/run_recorder.py
-        should_record = self.config_manager.get_boolean('settings', 'record_data', fallback=False)
+        # Initialize DataRecorder for live/paper V2 recording
+        # Priority: Strategy JSON fallback to config_manager (INI)
+        should_record = self.get_strat_cfg("record_data", default=None, type_func=bool)
+        if should_record is None:
+            should_record = self.config_manager.get_boolean('settings', 'record_data', fallback=False)
+
         self.data_recorder = DataRecorder(self.instrument_name) if (not self.is_backtest and should_record) else None
 
         self.orchestrator_state = OrchestratorState()

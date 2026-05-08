@@ -61,8 +61,13 @@ class DataRecorder:
         self._io_queue.put(('ATP', data_snapshot))
 
     def _execute_record_ticks(self, d):
-        filename = f"market_data_{self.instrument_name}_{datetime.date.today().isoformat()}.csv"
-        _bt_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backtest_data')
+        # Use the data's own timestamp for the filename to support multi-day backtest recording
+        data_date = d['ts'].date().isoformat() if hasattr(d['ts'], 'date') else datetime.date.today().isoformat()
+        filename = f"market_data_{self.instrument_name}_{data_date}.csv"
+
+        # Ensure path is absolute relative to bot root
+        _bot_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+        _bt_dir = os.path.join(_bot_root, 'backtest_data')
         os.makedirs(_bt_dir, exist_ok=True)
         filepath = os.path.join(_bt_dir, filename)
 
@@ -94,8 +99,12 @@ class DataRecorder:
             logger.error(f"Tick Write Failure: {e}")
 
     def _execute_record_atp(self, d):
-        atp_filename = f"atp_data_{self.instrument_name}_{datetime.date.today().isoformat()}.csv"
-        _bt_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backtest_data')
+        # Use the data's own timestamp for the filename
+        data_date = d['ts'].date().isoformat() if hasattr(d['ts'], 'date') else datetime.date.today().isoformat()
+        atp_filename = f"atp_data_{self.instrument_name}_{data_date}.csv"
+
+        _bot_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+        _bt_dir = os.path.join(_bot_root, 'backtest_data')
         os.makedirs(_bt_dir, exist_ok=True)
         atp_filepath = os.path.join(_bt_dir, atp_filename)
 

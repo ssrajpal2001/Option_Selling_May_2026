@@ -15,11 +15,12 @@ If the price moved significantly in those first 5 seconds of the **new** candle,
 ## 2. The Implementation Fix
 I have modified the **Indicator Manager** and **Price Feed Handler** to ensure the bot uses **Current Intraday snapshots** instead of live instantaneous data for historical candle checks.
 
-### A. Gated "Current Data" Logic
-The bot now distinguishes between "Live" requests and "Historical Intraday" requests:
+### A. Gated "Current Data" Logic (ATP Only)
+The bot now distinguishes between "Live" requests and "Finalized" candle evaluations:
+*   **No More Estimates:** "Custom" VWAP calculations using OHLC averages `(H+L+C)/3` are now **disabled** for Live trading. The bot relies strictly on the **Exchange ATP** (Average Traded Price) provided in every tick.
 *   **Candle Boundary Check:** When evaluating a finished candle (e.g., checking the 09:20 candle while the time is 09:21:05), the bot is now **strictly forbidden** from using the latest live tick price.
-*   **Intraday Snapshot Lookup:** Instead, it looks up the **exact Intraday VWAP snapshot** that was recorded at the moment that specific minute ended (`09:21:00:00`).
-*   **OHLC Fallback:** If a snapshot is missing, it reconstructs the VWAP using only the 1-minute candles from **today**, ensuring it never "leaks" data from the current active minute into the decision for the previous minute.
+*   **Intraday Snapshot Lookup:** Instead, it looks up the **exact Exchange ATP snapshot** that was recorded at the moment that specific minute ended (`09:21:00:00`).
+*   **Grouping vs. Accuracy:** While the bot still groups ticks to find the **Close price** of the 1-minute candle, it uses the Exchange's own running running session average (ATP) at that boundary for VWAP, ensuring 100% accuracy matching professional charts.
 
 ### B. Standardized Data Storage (Type-Safe)
 To ensure the bot never misses a snapshot due to technical mismatches (e.g., comparing a standard Python time to a Pandas high-precision timestamp), I have standardized the internal storage:
