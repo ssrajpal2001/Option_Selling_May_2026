@@ -94,7 +94,11 @@ class DhanClient(BaseBroker):
                                 # Step c: full login with TOTP
                                 logger.info(f"[Dhan] Renewal failed, attempting full TOTP login for user {self.user_id}…")
                                 with self._scoped_ip_patch():
-                                    fresh = generate_dhan_token(self.db_config)
+                                    fresh = generate_dhan_token(
+                                        client_id, client_id,
+                                        self.db_config.get('password'),
+                                        self.db_config.get('totp')
+                                    )
                                 if fresh:
                                     new_token = fresh.get('access_token') or fresh.get('accessToken')
                                     if new_token:
@@ -117,7 +121,11 @@ class DhanClient(BaseBroker):
                     try:
                         from utils.auth_manager_dhan import generate_dhan_token
                         with self._scoped_ip_patch():
-                            fresh = generate_dhan_token(self.db_config)
+                            fresh = generate_dhan_token(
+                                client_id, client_id,
+                                self.db_config.get('password'),
+                                self.db_config.get('totp')
+                            )
                         if fresh:
                             new_token = fresh.get('access_token') or fresh.get('accessToken')
                             if new_token:

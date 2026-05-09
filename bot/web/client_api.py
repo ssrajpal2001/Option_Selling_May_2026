@@ -112,7 +112,23 @@ def _make_headless_login_fn(user_id: int, broker: str):
                 "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
                 (enc_token, now_ist, instance["id"])
             )
-            logger.info(f"[ReconnectFn] {broker} token saved for user {user_id}")
+            # For Upstox/Dhan, also update the global data provider table so the FeedServer benefits
+            if broker in ('upstox', 'dhan'):
+                _dbe(
+                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider=?",
+                    (enc_token, now_ist, now_ist, broker)
+                )
+                # Poke FeedServer to adopt new token immediately
+                try:
+                    from hub.feed_server import get_feed_server
+                    srv = get_feed_server()
+                    if srv._started:
+                        # FeedServer is in the same process, we can call it directly
+                        asyncio.create_task(srv.reconnect_provider(broker))
+                except Exception:
+                    pass
+
+            logger.info(f"[ReconnectFn] {broker} token saved and propagated for user {user_id}")
         return token
 
     return _fn
