@@ -12,7 +12,7 @@ from utils.auth_manager_dhan import handle_dhan_login
 from hub.event_bus import event_bus
 import threading
 
-_KOLKATA = pytz.timezone('Asia/Kolkata')
+IST = pytz.timezone('Asia/Kolkata')
 
 class DhanClient(BaseBroker):
     # Class-level shared state to avoid redundant downloads across multiple client instances
@@ -78,9 +78,7 @@ class DhanClient(BaseBroker):
                                 try:
                                     from web.db import db_execute
                                     from web.auth import encrypt_secret
-                                    from datetime import datetime, timezone, timedelta
-                                    _tz_ist = timezone(timedelta(hours=5, minutes=30))
-                                    now_ist = datetime.now(_tz_ist).isoformat()
+                                    now_ist = datetime.datetime.now(IST).isoformat()
                                     inst_id = self.db_config.get('id')
                                     if inst_id:
                                         db_execute(
@@ -100,7 +98,7 @@ class DhanClient(BaseBroker):
                                         self.db_config.get('totp')
                                     )
                                 if fresh:
-                                    new_token = fresh.get('access_token') or fresh.get('accessToken')
+                                    new_token = fresh.get('token') or fresh.get('accessToken')
                                     if new_token:
                                         self.dhan = (dhanhq(DhanContext(client_id, new_token))
                                                      if DhanContext else dhanhq(client_id, new_token))
@@ -127,7 +125,7 @@ class DhanClient(BaseBroker):
                                 self.db_config.get('totp')
                             )
                         if fresh:
-                            new_token = fresh.get('access_token') or fresh.get('accessToken')
+                            new_token = fresh.get('token') or fresh.get('accessToken')
                             if new_token:
                                 self.dhan = (dhanhq(DhanContext(client_id, new_token))
                                              if DhanContext else dhanhq(client_id, new_token))
@@ -543,7 +541,7 @@ class DhanClient(BaseBroker):
     async def _load_security_list(self):
         """Downloads and loads the Dhan security list into a DataFrame with disk caching."""
         async with self._shared_load_lock:
-            now = datetime.datetime.now(_KOLKATA)
+            now = datetime.datetime.now(IST)
 
             # 1. Check if already loaded in memory today
             if self._shared_security_list_df is not None and self._last_shared_load_time and self._last_shared_load_time.date() == now.date():
