@@ -15,6 +15,8 @@ from pydantic import BaseModel, field_validator
 from typing import Optional
 from datetime import datetime, timezone, timedelta
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
 from web.deps import require_admin, get_current_user
 from web.db import db_fetchone, db_fetchall, db_execute
 from web.auth import encrypt_secret, decrypt_secret
@@ -146,7 +148,7 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
                     # token_issued_at is stored in IST without tzinfo — attach IST, convert to UTC
                     if _issued_dt.tzinfo is None:
                         _issued_dt = _IST.localize(_issued_dt)
-                    _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
+                    _age_minutes = (datetime.now(IST) - _issued_dt.astimezone(IST)).total_seconds() / 60
                     # Only skip if fresh AND the WS is actually connected (not returning 401).
                     # Also check FeedServer directly in case feed_registry hasn't updated yet
                     # (race condition: registry updates asynchronously after WS connects).
@@ -279,7 +281,7 @@ async def global_provider_connect_background(provider: str, admin=Depends(requir
 
         if token:
             enc_token = encrypt_secret(token)
-            now = datetime.now(timezone.utc).isoformat()
+            now = datetime.now(IST).isoformat()
             db_execute(
                 "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
                 (enc_token, now, now, provider)
@@ -359,7 +361,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
                         _issued_dt = datetime.fromisoformat(_issued_at)
                         if _issued_dt.tzinfo is None:
                             _issued_dt = _IST.localize(_issued_dt)
-                        _age_minutes = (datetime.now(timezone.utc) - _issued_dt.astimezone(timezone.utc)).total_seconds() / 60
+                        _age_minutes = (datetime.now(IST) - _issued_dt.astimezone(IST)).total_seconds() / 60
                         from hub.feed_registry import get_ws_state as _gws2
                         _ws_live2 = _gws2('upstox').get('ws_connected', False)
                         if not _ws_live2:
@@ -485,7 +487,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
 
             if token:
                 enc_token = encrypt_secret(token)
-                now = datetime.now(timezone.utc).isoformat()
+                now = datetime.now(IST).isoformat()
                 db_execute(
                     "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider=?",
                     (enc_token, now, now, provider)
@@ -533,7 +535,7 @@ async def connect_all_global_providers(admin=Depends(require_admin)):
 @router.post("/data-providers")
 async def update_data_provider(request: Request, body: ProviderConfigRequest, admin=Depends(require_admin)):
     try:
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(IST).isoformat()
 
         # Build a dynamic SET clause — only update fields that have non-empty submitted values.
         # This prevents accidental credential wipes when the admin only changes one field.
@@ -567,7 +569,7 @@ async def update_data_provider(request: Request, body: ProviderConfigRequest, ad
                 set_parts.append("access_token_encrypted=?")
                 params.append(encrypt_secret(body.api_secret))
                 set_parts.append("token_issued_at=?")
-                params.append(datetime.now(timezone.utc).isoformat())
+                params.append(datetime.now(IST).isoformat())
 
         # For Upstox, record the server's callback URL alongside credentials so Background
         # Connect always uses the exact redirect_uri registered in the Upstox Developer Portal.
@@ -648,7 +650,7 @@ async def exchange_manual_token(body: ManualTokenRequest, admin=Depends(require_
 
             access_token = resp_data.get("access_token", "")
             enc_token = encrypt_secret(access_token)
-            now = datetime.now(timezone.utc).isoformat()
+            now = datetime.now(IST).isoformat()
             # Upstox: always reset token_issued_at (daily token replaced)
             db_execute(
                 "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider='upstox'",
@@ -659,7 +661,7 @@ async def exchange_manual_token(body: ManualTokenRequest, admin=Depends(require_
         elif provider == 'dhan':
             # Dhan: new token being manually entered — always reset token_issued_at (30-day countdown restarts)
             enc_token = encrypt_secret(code)
-            now = datetime.now(timezone.utc).isoformat()
+            now = datetime.now(IST).isoformat()
             db_execute(
                 "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=?, token_issued_at=? WHERE provider='dhan'",
                 (enc_token, now, now)
@@ -706,7 +708,7 @@ async def activate_client(client_id: int, admin=Depends(require_admin)):
     user = db_fetchone("SELECT * FROM users WHERE id=? AND role='client'", (client_id,))
     if not user:
         raise HTTPException(404, "Client not found")
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(IST).isoformat()
     db_execute(
         "UPDATE users SET is_active=1, activated_at=?, activated_by=? WHERE id=?",
         (now, admin["id"], client_id)
@@ -739,8 +741,8 @@ def _resolve_effective_max_brokers(user: dict) -> int:
         try:
             exp = datetime.fromisoformat(expiry_str)
             if exp.tzinfo is None:
-                exp = exp.replace(tzinfo=timezone.utc)
-            if datetime.now(timezone.utc) > exp:
+                exp = exp.replace(tzinfo=IST)
+            if datetime.now(IST) > exp:
                 # Plan expired — fall back to BASIC (1 broker)
                 return 1
         except Exception:
@@ -1116,7 +1118,7 @@ async def approve_broker_request(request_id: int, admin=Depends(require_admin)):
         instance_manager.stop_all_for_client(req["client_id"])
         db_execute("UPDATE client_broker_instances SET status='idle', bot_pid=NULL WHERE client_id=? AND status='running'", (req["client_id"],))
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(IST).isoformat()
     db_execute(
         "UPDATE client_broker_instances SET status='removed' WHERE client_id=? AND broker=?",
         (req["client_id"], req["current_broker"])
@@ -1137,7 +1139,7 @@ async def deny_broker_request(request_id: int, admin=Depends(require_admin)):
         raise HTTPException(404, "Request not found")
     if req["status"] != "pending":
         raise HTTPException(400, "Request already resolved")
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(IST).isoformat()
     db_execute(
         "UPDATE broker_change_requests SET status='denied', resolved_at=?, resolved_by_id=? WHERE id=?",
         (now, admin["id"], request_id)
@@ -1333,7 +1335,7 @@ async def list_subscription_plans(admin=Depends(require_admin)):
 @router.post("/plans")
 async def create_subscription_plan(body: SubscriptionPlanBody, admin=Depends(require_admin)):
     try:
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(IST).isoformat()
         plan_id = db_execute("""
             INSERT INTO subscription_plans (plan_name, display_name, max_broker_instances, description, is_active, price_monthly, created_at, updated_at)
             VALUES (?,?,?,?,?,?,?,?)
@@ -1351,7 +1353,7 @@ async def update_subscription_plan(plan_id: int, body: SubscriptionPlanBody, adm
     plan = db_fetchone("SELECT * FROM subscription_plans WHERE id=?", (plan_id,))
     if not plan:
         raise HTTPException(404, "Plan not found.")
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(IST).isoformat()
     db_execute("""
         UPDATE subscription_plans
         SET plan_name=?, display_name=?, max_broker_instances=?, description=?, is_active=?, price_monthly=?, updated_at=?
@@ -1391,7 +1393,7 @@ async def feeder_health_status(admin=Depends(require_admin)):
     """Returns token health AND live WebSocket connectivity state for global data providers."""
     from hub.feed_registry import get_ws_state
     providers = db_fetchall("SELECT * FROM data_providers WHERE provider IN ('upstox', 'dhan')")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(IST)
     result = {}
     for p in providers:
         ws = get_ws_state(p["provider"])
@@ -1413,7 +1415,7 @@ async def feeder_health_status(admin=Depends(require_admin)):
             try:
                 upd = datetime.fromisoformat(p["updated_at"])
                 if upd.tzinfo is None:
-                    upd = upd.replace(tzinfo=timezone.utc)
+                    upd = upd.replace(tzinfo=IST)
                 age_s = (now - upd).total_seconds()
                 info["token_age_hours"] = round(age_s / 3600, 1)
                 if p["provider"] == "upstox":
@@ -1425,7 +1427,7 @@ async def feeder_health_status(admin=Depends(require_admin)):
                     issued_str = p.get("token_issued_at") or p.get("updated_at")
                     issued = datetime.fromisoformat(issued_str)
                     if issued.tzinfo is None:
-                        issued = issued.replace(tzinfo=timezone.utc)
+                        issued = issued.replace(tzinfo=IST)
                     issued_age_s = (now - issued).total_seconds()
                     days_remaining = 30 - (issued_age_s / 86400)
                     info["token_fresh"] = days_remaining > 0
@@ -1549,7 +1551,7 @@ async def system_health(admin=Depends(require_admin)):
         mins, secs = divmod(rem, 60)
         info["uptime"] = f"{hrs}h {mins}m {secs}s"
         info["uptime_seconds"] = uptime_secs
-        info["started_at"] = _dt.datetime.fromtimestamp(started_at, tz=timezone.utc).isoformat()
+        info["started_at"] = _dt.datetime.fromtimestamp(started_at, tz=IST).isoformat()
     except Exception as _e:
         info["uptime"] = "unavailable"
 
@@ -1616,7 +1618,7 @@ async def system_health(admin=Depends(require_admin)):
     except Exception:
         info["rust_available"] = False
 
-    info["timestamp"] = _dt.datetime.now(timezone.utc).isoformat()
+    info["timestamp"] = _dt.datetime.now(IST).isoformat()
     return info
 
 
@@ -1645,7 +1647,7 @@ async def save_platform_settings(body: PlatformSettingsBatch, admin=Depends(requ
     """Upsert platform settings. Pass empty string to clear a key."""
     if "default_theme" in body.settings and body.settings["default_theme"] not in _VALID_THEMES:
         raise HTTPException(400, f"Invalid theme. Allowed values: {sorted(_VALID_THEMES)}")
-    now = _dt.datetime.now(timezone.utc).isoformat()
+    now = _dt.datetime.now(IST).isoformat()
     for k, v in body.settings.items():
         # Do not overwrite password with mask placeholder
         if v == "••••••••":
@@ -2111,12 +2113,12 @@ async def save_client_risk_params(client_id: int, body: RiskParamsBody,
         raise HTTPException(404, "No broker instance found for client. Connect a broker first.")
 
     inst_id = inst["id"]
-    now_utc = datetime.now(timezone.utc).isoformat()
+    now_ist_str = datetime.now(IST).isoformat()
 
     lock_val = None
     if body.lock_trading is True:
         # Lock for 24 hours
-        lock_val = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+        lock_val = (datetime.now(IST) + timedelta(hours=24)).isoformat()
     elif body.unlock_trading is True:
         lock_val = None
     else:
@@ -2154,7 +2156,7 @@ async def reset_client_daily_pnl(client_id: int, admin=Depends(require_admin)):
         raise HTTPException(404, "No broker instance found.")
     db_execute(
         "UPDATE client_broker_instances SET daily_pnl=0, daily_trade_count=0, pnl_reset_date=? WHERE id=?",
-        (datetime.now(timezone.utc).date().isoformat(), inst["id"])
+        (datetime.now(IST).date().isoformat(), inst["id"])
     )
     _audit(admin["id"], admin["role"], "client_daily_pnl_reset", inst["id"], {})
     return {"success": True}

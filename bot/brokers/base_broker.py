@@ -373,8 +373,9 @@ class BaseBroker(ABC):
         # Use plain UTC format so SQLite datetime() comparisons work correctly.
         try:
             from web.db import db_execute
-            from datetime import datetime
-            _now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+            from datetime import datetime, timezone, timedelta
+            _tz_ist = timezone(timedelta(hours=5, minutes=30))
+            _now = datetime.now(_tz_ist).strftime('%Y-%m-%d %H:%M:%S')
             if self.user_id and self.broker_name:
                 db_execute(
                     "UPDATE client_broker_instances SET ip_last_failed_at=? "

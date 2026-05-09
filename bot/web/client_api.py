@@ -112,7 +112,23 @@ def _make_headless_login_fn(user_id: int, broker: str):
                 "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
                 (enc_token, now_ist, instance["id"])
             )
-            logger.info(f"[ReconnectFn] {broker} token saved for user {user_id}")
+            # For Upstox/Dhan, also update the global data provider table so the FeedServer benefits
+            if broker in ('upstox', 'dhan'):
+                _dbe(
+                    "UPDATE data_providers SET access_token_encrypted=?, updated_at=?, token_issued_at=? WHERE provider=?",
+                    (enc_token, now_ist, now_ist, broker)
+                )
+                # Poke FeedServer to adopt new token immediately
+                try:
+                    from hub.feed_server import get_feed_server
+                    srv = get_feed_server()
+                    if srv._started:
+                        # FeedServer is in the same process, we can call it directly
+                        asyncio.create_task(srv.reconnect_provider(broker))
+                except Exception:
+                    pass
+
+            logger.info(f"[ReconnectFn] {broker} token saved and propagated for user {user_id}")
         return token
 
     return _fn
@@ -137,12 +153,15 @@ def _is_token_fresh(token_updated_at: str) -> bool:
     if not token_updated_at:
         return False
     try:
-        updated = datetime.fromisoformat(token_updated_at).replace(tzinfo=IST)
+        updated = datetime.fromisoformat(token_updated_at)
+        if updated.tzinfo is None:
+            updated = updated.replace(tzinfo=IST)
+        updated_ist = updated.astimezone(IST)
         now_ist = datetime.now(IST)
         today_6am = now_ist.replace(hour=6, minute=0, second=0, microsecond=0)
         if now_ist < today_6am:
             today_6am -= timedelta(days=1)
-        return updated > today_6am
+        return updated_ist > today_6am
     except Exception:
         return False
 
@@ -151,9 +170,12 @@ def _is_dhan_token_fresh(token_updated_at: str, api_key_mode: bool = False) -> b
     if not token_updated_at:
         return False
     try:
-        updated = datetime.fromisoformat(token_updated_at).replace(tzinfo=IST)
+        updated = datetime.fromisoformat(token_updated_at)
+        if updated.tzinfo is None:
+            updated = updated.replace(tzinfo=IST)
+        updated_ist = updated.astimezone(IST)
         now_ist = datetime.now(IST)
-        elapsed = (now_ist - updated).total_seconds()
+        elapsed = (now_ist - updated_ist).total_seconds()
         if api_key_mode:
             return elapsed < 23 * 3600
         return elapsed < 30 * 86400
@@ -1115,18 +1137,17 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
             if _regen.get("token"):
                 _dhan_access_token = _regen["token"]
                 _enc_new = encrypt_secret(_dhan_access_token)
-                _now_ts = datetime.now(timezone.utc).isoformat()
+                _now_ist = datetime.now(IST).isoformat()
                 db_execute(
                     "UPDATE client_broker_instances SET access_token_encrypted=?, token_updated_at=? WHERE id=?",
-                    (_enc_new, _now_ts, instance["id"]),
+                    (_enc_new, _now_ist, instance["id"]),
                 )
                 instance["access_token_encrypted"] = _enc_new
-                instance["token_updated_at"] = _now_ts
+                instance["token_updated_at"] = _now_ist
 
                 # Propagate fresh token to data_providers so FeedServer uses the new token
                 # on next reconnect (instead of reading stale token from data_providers)
                 try:
-                    _now_ist = datetime.now(IST).isoformat()
                     db_execute(
                         "UPDATE data_providers SET access_token_encrypted=?, token_issued_at=? WHERE provider='dhan'",
                         (_enc_new, _now_ist),

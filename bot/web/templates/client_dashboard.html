@@ -100,7 +100,10 @@
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 1024px) { .grid-3 { grid-template-columns: 1fr 1fr; } .grid-4 { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 640px) { .grid-3, .grid-4, .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .grid-3, .grid-2 { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr; } /* Stats grid stays 2 columns on mobile */
+    }
 
     /* Stat cards */
     .stat-val { font-size: 26px; font-weight: 800; line-height: 1; }
@@ -245,7 +248,7 @@
 
     /* Mobile nav bottom bar */
     @media (max-width: 640px) {
-      .nav-tabs { display: none; }
+      .nav-tabs { display: none !important; }
       .mobile-bar { display: flex !important; }
     }
     .mobile-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: var(--surface); border-top: 1px solid var(--border-soft); }

@@ -26,6 +26,7 @@ class DhanWebSocketManager(DataFeed):
         self._retry_delay = 2
         self._last_tick_time = 0
         self._last_tick_epoch: float = 0.0  # Real Unix epoch seconds
+        self._reconnect_trigger = asyncio.Event()
 
     @property
     def is_connected(self) -> bool:
@@ -166,13 +167,23 @@ class DhanWebSocketManager(DataFeed):
                 # Apply backoff before reconnecting — critical to prevent HTTP 429 bursts
                 # when the server repeatedly closes the connection (e.g. expired token).
                 if self._running:
-                    await asyncio.sleep(self._retry_delay)
+                    try:
+                        await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=self._retry_delay)
+                        logger.info("[DhanWebSocketManager] Reconnect backoff interrupted by trigger.")
+                        self._reconnect_trigger.clear()
+                    except asyncio.TimeoutError:
+                        pass
                     self._retry_delay = min(self._retry_delay * 2, 60)
 
             except Exception as e:
                 if self._running:
                     logger.error(f"[Global Dhan] Connection failed: {e}. Retrying in {self._retry_delay}s...")
-                    await asyncio.sleep(self._retry_delay)
+                    try:
+                        await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=self._retry_delay)
+                        logger.info("[DhanWebSocketManager] Connection retry backoff interrupted by trigger.")
+                        self._reconnect_trigger.clear()
+                    except asyncio.TimeoutError:
+                        pass
                     self._retry_delay = min(self._retry_delay * 2, 60)
 
     def _process_raw_packet(self, raw_data):
@@ -247,6 +258,10 @@ class DhanWebSocketManager(DataFeed):
         if api_key:
             self.client_id = api_key
         self._disabled = False  # clear disabled flag so start() works after a failed init
+
+        # Signal any sleeping reconnection loops to wake up and use the new token
+        self._reconnect_trigger.set()
+
         logger.info("[DhanWebSocketManager] Credentials refreshed. Triggering reconnect...")
         if self.feed:
             asyncio.create_task(self._close_for_reconnect())

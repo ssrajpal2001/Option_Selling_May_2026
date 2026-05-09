@@ -139,12 +139,13 @@ class UpstoxClient(BaseBroker):
                     ltp = feed.fullFeed.indexFF.ltpc.ltp
 
             if ltp is not None:
+                _tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
                 normalized_tick = {
                     'user_id': self.user_id,
                     'instrument_key': key,
                     'ltp': ltp,
                     'broker': 'upstox',
-                    'timestamp': datetime.datetime.now()
+                    'timestamp': datetime.datetime.now(_tz_ist)
                 }
 
                 # Full Quotes for strategy V3

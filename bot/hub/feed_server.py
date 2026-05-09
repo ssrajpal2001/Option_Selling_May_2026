@@ -373,9 +373,9 @@ class FeedServer:
         except Exception as _tok_err:
             logger.debug(f"[FeedServer] reconnect_provider token sync skipped: {_tok_err}")
 
-        if not _refreshed_via_credentials:
-            # refresh_credentials not available or no fresh token — start manually.
-            logger.info(f"[FeedServer] reconnect_provider({provider}) — starting fresh listener.")
+        # Final safety check: if the main task is still missing/dead, force a restart
+        if not _refreshed_via_credentials or not existing_task or existing_task.done():
+            logger.info(f"[FeedServer] reconnect_provider({provider}) — starting fresh listener (task was dead).")
             self._dual_feed.start()
         return True
 
@@ -509,7 +509,9 @@ class FeedServer:
         for w in list(self._writers):
             try:
                 w.write(line)
-                await w.drain()
+                # Moderate timeout to avoid stalling the entire broadcast if one client is slow/blocked.
+                # 0.05s (50ms) is enough for local TCP but prevents long stalls.
+                await asyncio.wait_for(w.drain(), timeout=0.05)
             except Exception:
                 dead.append(w)
         for w in dead:

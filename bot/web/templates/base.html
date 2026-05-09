@@ -135,26 +135,30 @@
 </head>
 <body>
 
-<nav style="background:var(--surface);border-bottom:1px solid var(--border-soft);" class="px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+<nav style="background:var(--surface);border-bottom:1px solid var(--border-soft);" class="px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-50">
   <div class="flex items-center gap-3">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#00d4aa"/><path d="M6 20 L10 14 L14 17 L18 10 L22 14" stroke="#0a0f1e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span style="color:var(--text)" class="font-bold text-lg tracking-wide">Algo<span style="color:var(--primary)">Soft</span></span>
   </div>
-  <div class="flex items-center gap-8">
+
+  <!-- Desktop Navigation -->
+  <div class="hidden md:flex items-center gap-8">
     <a href="/" class="nav-link text-sm font-medium {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
     <a href="/strategy" class="nav-link text-sm font-medium {% if active_page == 'strategy' %}active{% endif %}">Strategy</a>
     <a href="/brokers" class="nav-link text-sm font-medium {% if active_page == 'brokers' %}active{% endif %}">Brokers</a>
   </div>
-  <div class="flex items-center gap-3">
-    <div id="nav-bot-status" class="flex items-center gap-2 text-sm px-3 py-1 rounded-full badge-stopped">
+
+  <div class="flex items-center gap-2 md:gap-3">
+    <div id="nav-bot-status" class="flex items-center gap-2 text-xs md:text-sm px-2 md:px-3 py-1 rounded-full badge-stopped">
       <span class="pulse-dot pulse-red"></span>
-      <span>Loading…</span>
+      <span class="hidden sm:inline">Loading…</span>
     </div>
+
     <!-- Theme switcher -->
     <div class="relative" id="theme-switcher">
       <button class="theme-menu-btn" onclick="toggleThemeMenu()" title="Switch theme">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-        <span id="theme-label">Theme</span>
+        <span id="theme-label" class="hidden sm:inline">Theme</span>
       </button>
       <div id="theme-menu" class="theme-dropdown hidden">
         <button class="theme-option" data-theme="dark"     onclick="applyTheme('dark')">🌑 Dark</button>
@@ -163,8 +167,32 @@
         <button class="theme-option" data-theme="saffron"  onclick="applyTheme('saffron')">🌅 Saffron</button>
       </div>
     </div>
+
+    <!-- Mobile Menu Button -->
+    <button class="md:hidden p-2 text-soft hover:text-brand" onclick="toggleMobileMenu()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
   </div>
 </nav>
+
+<!-- Mobile Navigation Menu -->
+<div id="mobile-menu" class="hidden md:hidden fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm">
+  <div class="absolute right-0 top-0 h-full w-64 p-6 shadow-xl" style="background:var(--card); border-left:1px solid var(--border);">
+    <div class="flex justify-between items-center mb-8">
+      <span class="font-bold text-lg" style="color:var(--text)">Menu</span>
+      <button onclick="toggleMobileMenu()" class="p-2 text-soft">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="flex flex-col gap-4">
+      <a href="/" class="nav-link text-lg {% if active_page == 'dashboard' %}active{% endif %}" onclick="toggleMobileMenu()">Dashboard</a>
+      <a href="/strategy" class="nav-link text-lg {% if active_page == 'strategy' %}active{% endif %}" onclick="toggleMobileMenu()">Strategy</a>
+      <a href="/brokers" class="nav-link text-lg {% if active_page == 'brokers' %}active{% endif %}" onclick="toggleMobileMenu()">Brokers</a>
+      <hr class="my-2" style="border-color:var(--border);">
+      <a href="/logout" class="nav-link text-lg text-red-400">Sign Out</a>
+    </div>
+  </div>
+</div>
 
 <div class="px-6 py-6 max-w-screen-xl mx-auto">
   {% block content %}{% endblock %}
@@ -192,11 +220,19 @@
     var m=document.getElementById('theme-menu');
     if(m)m.classList.toggle('hidden');
   };
+  window.toggleMobileMenu=function(){
+    var m=document.getElementById('mobile-menu');
+    if(m)m.classList.toggle('hidden');
+  };
   document.addEventListener('click',function(e){
     var sw=document.getElementById('theme-switcher');
     if(sw&&!sw.contains(e.target)){
       var m=document.getElementById('theme-menu');
       if(m)m.classList.add('hidden');
+    }
+    var mm=document.getElementById('mobile-menu');
+    if(mm && e.target === mm){
+      mm.classList.add('hidden');
     }
   });
   _apply(localStorage.getItem('algosoft-theme')||'{{ default_theme() }}');

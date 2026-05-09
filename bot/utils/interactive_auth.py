@@ -33,9 +33,10 @@ def get_new_token_interactively(config_manager, credentials_section):
                 try:
                     from web.db import db_execute
                     from web.auth import encrypt_secret
-                    from datetime import datetime, timezone
+                    from datetime import datetime, timezone, timedelta
+                    IST = timezone(timedelta(hours=5, minutes=30))
                     enc_token = encrypt_secret(new_token)
-                    now = datetime.now(timezone.utc).isoformat()
+                    now = datetime.now(IST).isoformat()
                     db_execute(
                         "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider='upstox'",
                         (enc_token, now)

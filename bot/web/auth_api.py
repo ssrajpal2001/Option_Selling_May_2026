@@ -117,8 +117,9 @@ async def forgot_password(body: ForgotPasswordRequest, request: Request):
         return {"success": True, "message": "If that email is registered, a reset link has been sent."}
 
     import secrets, datetime
+    IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
     token = secrets.token_urlsafe(32)
-    expires_at = (datetime.datetime.utcnow() + datetime.timedelta(hours=2)).isoformat()
+    expires_at = (datetime.datetime.now(IST) + datetime.timedelta(hours=2)).isoformat()
     db_execute(
         "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?,?,?)",
         (user["id"], token, expires_at)
@@ -157,8 +158,11 @@ async def reset_password(body: ResetPasswordRequest):
     if not row:
         raise HTTPException(400, "Invalid or already used reset token")
 
+    IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
     expires_at = datetime.datetime.fromisoformat(row["expires_at"])
-    if datetime.datetime.utcnow() > expires_at:
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=IST)
+    if datetime.datetime.now(IST) > expires_at:
         raise HTTPException(400, "Reset token has expired. Please request a new one.")
 
     hashed = hash_password(body.new_password)

@@ -271,6 +271,7 @@
       "enabled": false,
       "points": ""
     },
-    "range_915_gate_enabled": false
+    "range_915_gate_enabled": false,
+    "record_data": true
   }
 }

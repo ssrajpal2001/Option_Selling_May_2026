@@ -357,7 +357,7 @@ async def dhan_oauth_callback(
     try:
         enc_token = encrypt_secret(access_token)
         if client_id == "admin":
-            now = datetime.now(timezone.utc).isoformat()
+            now = datetime.now(IST).isoformat()
             db_execute(
                 "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider='dhan'",
                 (enc_token, now)
@@ -474,7 +474,7 @@ async def upstox_oauth_callback(
 
             access_token = resp_data.get("access_token", "")
             enc_token = encrypt_secret(access_token)
-            now = datetime.now(timezone.utc).isoformat()
+            now = datetime.now(IST).isoformat()
             db_execute(
                 "UPDATE data_providers SET access_token_encrypted=?, status='configured', updated_at=? WHERE provider='upstox'",
                 (enc_token, now)
@@ -1130,11 +1130,11 @@ async def health_check():
         "status": "ok",
         "uptime_seconds": round(uptime_secs, 1),
         "uptime": f"{hrs}h {mins}m {secs}s",
-        "started_at": datetime.fromtimestamp(APP_START_TIME, tz=timezone.utc).isoformat(),
+        "started_at": datetime.fromtimestamp(APP_START_TIME, tz=IST).isoformat(),
         "active_sessions": active_sessions,
         "pid": os.getpid(),
         "version": app.version,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(IST).isoformat(),
     }
 
 
