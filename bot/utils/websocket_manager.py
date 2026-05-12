@@ -312,9 +312,15 @@ class WebSocketManager(DataFeed):
                 self.websocket = None
                 if self._running:
                     self.reconnect_attempts += 1
-                    logger.info(f"Reconnect attempt {self.reconnect_attempts}/{self.max_reconnect_attempts} in {self.reconnect_delay} seconds...")
+                    import datetime as _dt_rc, pytz as _ptz_rc
+                    _now_ist_rc = _dt_rc.datetime.now(_ptz_rc.timezone('Asia/Kolkata'))
+                    _h = _now_ist_rc.hour
+                    _in_mkt = 9 <= _h < 23 or (_h == 23 and _now_ist_rc.minute < 30)
+                    _max_delay = 300 if _in_mkt else 900
+                    _delay = min(self.reconnect_delay * (2 ** min(self.reconnect_attempts - 1, 6)), _max_delay)
+                    logger.info(f"Reconnect attempt {self.reconnect_attempts}/{self.max_reconnect_attempts} in {_delay:.0f}s (backoff)...")
                     try:
-                        await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=self.reconnect_delay)
+                        await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=_delay)
                         logger.info("[WebSocketManager] Reconnect sleep interrupted by trigger.")
                         self._reconnect_trigger.clear()
                     except asyncio.TimeoutError:

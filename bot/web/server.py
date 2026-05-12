@@ -820,6 +820,140 @@ async def _kill_switch_enforcer():
             await asyncio.sleep(60)
 
 
+async def _upstox_token_watchdog():
+    """
+    Every 10 minutes: validate the Upstox data-feed token via GET /user/profile.
+    On 401: auto-renew using stored TOTP credentials, save to DB, and signal the
+    live WebSocket manager to reconnect immediately.
+
+    Requires api_key, password, and totp_secret to be stored in Admin → Data Providers → Upstox.
+    Pattern mirrors _dhan_auto_renewal_scheduler.
+    """
+    CHECK_INTERVAL = 600  # 10 minutes
+    while True:
+        try:
+            await asyncio.sleep(CHECK_INTERVAL)
+            logger.debug("[UpstoxWatchdog] Running token health check...")
+            try:
+                import aiohttp as _aio
+                from web.auth import encrypt_secret, decrypt_secret
+
+                dp = db_fetchone(
+                    "SELECT access_token_encrypted, api_key_encrypted, api_secret_encrypted, "
+                    "user_id_encrypted, password_encrypted, totp_encrypted, token_issued_at, "
+                    "redirect_uri FROM data_providers WHERE provider='upstox'",
+                    ()
+                )
+                if not dp or not dp.get("access_token_encrypted"):
+                    continue  # Not configured yet
+
+                token = decrypt_secret(dp["access_token_encrypted"])
+                if not token:
+                    continue
+
+                # 1. Validate token via lightweight profile call
+                token_valid = False
+                try:
+                    async with _aio.ClientSession() as _sess:
+                        async with _sess.get(
+                            "https://api.upstox.com/v2/user/profile",
+                            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+                            timeout=_aio.ClientTimeout(total=10),
+                        ) as _resp:
+                            if _resp.status == 200:
+                                token_valid = True
+                            elif _resp.status != 401:
+                                logger.warning(f"[UpstoxWatchdog] Profile check returned HTTP {_resp.status} — skipping renewal this cycle.")
+                                continue
+                except Exception as _ve:
+                    logger.debug(f"[UpstoxWatchdog] Could not reach Upstox profile endpoint: {_ve}")
+                    continue
+
+                if token_valid:
+                    logger.debug("[UpstoxWatchdog] Token is valid.")
+                    continue
+
+                # 2. Token is invalid (401) — attempt auto-renewal
+                logger.warning("[UpstoxWatchdog] Upstox data-feed token is invalid (401). Attempting background auto-renewal...")
+
+                api_key     = decrypt_secret(dp.get("api_key_encrypted")    or "")
+                api_secret  = decrypt_secret(dp.get("api_secret_encrypted") or "")
+                user_id     = decrypt_secret(dp.get("user_id_encrypted")    or "")
+                password    = decrypt_secret(dp.get("password_encrypted")   or "")
+                totp_secret = decrypt_secret(dp.get("totp_encrypted")       or "")
+
+                if not all([api_key, password, totp_secret]):
+                    logger.warning(
+                        "[UpstoxWatchdog] Auto-renewal skipped — TOTP credentials not fully configured. "
+                        "Go to Admin → Data Providers → Upstox and save API Key, Password, and TOTP Secret."
+                    )
+                    continue
+
+                creds = {
+                    "api_key":      api_key,
+                    "api_secret":   api_secret,
+                    "user_id":      user_id,
+                    "password":     password,
+                    "totp":         totp_secret,
+                    "redirect_uri": dp.get("redirect_uri") or "",
+                }
+
+                from utils.auth_manager_upstox import handle_upstox_login_automated
+                _result = await asyncio.to_thread(handle_upstox_login_automated, creds, True)
+                new_token = (_result or {}).get("token")
+                _err      = (_result or {}).get("error")
+
+                if not new_token:
+                    logger.error(f"[UpstoxWatchdog] Auto-renewal FAILED: {_err}")
+                    continue
+
+                # 3. Persist new token to DB
+                enc      = encrypt_secret(new_token)
+                now_ist  = datetime.now(IST).isoformat()
+                db_execute(
+                    "UPDATE data_providers SET access_token_encrypted=?, status='configured', "
+                    "updated_at=?, token_issued_at=? WHERE provider='upstox'",
+                    (enc, now_ist, now_ist)
+                )
+
+                # 4. Signal live feed manager to adopt new token immediately
+                try:
+                    from hub.feed_registry import refresh_feed_credentials, get_ws_state
+                    refresh_feed_credentials("upstox", new_token, api_key=api_key)
+                    logger.info("[UpstoxWatchdog] Live feed signaled to use renewed token.")
+                except Exception as _rf_err:
+                    logger.warning(f"[UpstoxWatchdog] Could not signal live feed: {_rf_err}")
+
+                # 5. If WebSocket is offline, trigger FeedServer reconnect
+                try:
+                    from hub.feed_server import get_feed_server
+                    from hub.feed_registry import get_ws_state
+                    srv = get_feed_server()
+                    if srv._started and not get_ws_state("upstox").get("ws_connected"):
+                        await srv.reconnect_provider("upstox")
+                        logger.info("[UpstoxWatchdog] FeedServer WebSocket reconnect triggered.")
+                except Exception as _srv_err:
+                    logger.warning(f"[UpstoxWatchdog] Could not trigger FeedServer reconnect: {_srv_err}")
+
+                # 6. Sync to credentials.ini for legacy broker compatibility
+                try:
+                    from web.admin_api import _sync_upstox_to_credentials
+                    _sync_upstox_to_credentials(api_key, new_token, api_secret)
+                except Exception as _sync_err:
+                    logger.debug(f"[UpstoxWatchdog] credentials.ini sync skipped: {_sync_err}")
+
+                logger.info("[UpstoxWatchdog] Upstox token auto-renewed successfully.")
+
+            except Exception as _inner:
+                logger.error(f"[UpstoxWatchdog] Inner error: {_inner}")
+
+        except asyncio.CancelledError:
+            break
+        except Exception as _outer:
+            logger.error(f"[UpstoxWatchdog] Scheduler error: {_outer}")
+            await asyncio.sleep(60)
+
+
 async def _dhan_auto_renewal_scheduler():
     """
     Run every hour — check client Dhan instances in API Key mode.
@@ -1306,6 +1440,8 @@ async def startup_event():
     asyncio.create_task(_instance_crash_monitor())
     # Dhan token auto-renewal (hourly, renews when token age > 22h)
     asyncio.create_task(_dhan_auto_renewal_scheduler())
+    # Upstox token watchdog (every 10 min, auto-renews via TOTP on 401)
+    asyncio.create_task(_upstox_token_watchdog())
     # Daily loss kill-switch enforcer (runs every 5 minutes during market hours)
     asyncio.create_task(_kill_switch_enforcer())
     # Hub-driven broker reconnect scanner (startup + every 30 min)
