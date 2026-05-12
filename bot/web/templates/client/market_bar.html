@@ -1,0 +1,40 @@
+﻿<!-- MARKET STATUS BAR -->
+<div class="market-bar" id="market-bar">
+  <div class="mbar-item">
+    <span class="mbar-label">NSE Market</span>
+    <span class="mbar-status mbar-closed" id="mbar-status">LOADING</span>
+  </div>
+  <div class="mbar-sep"></div>
+  <div class="mbar-item" id="mbar-next-wrap">
+    <span class="mbar-label">Next:</span>
+    <span id="mbar-next" style="color:var(--text)">—</span>
+  </div>
+  <div class="mbar-sep"></div>
+  <div class="mbar-item">
+    <span class="mbar-label">Time (IST):</span>
+    <span id="mbar-time" style="color:var(--text)">—</span>
+  </div>
+  <div class="mbar-sep"></div>
+  <div class="mbar-item" id="mbar-broker-wrap">
+    <span class="mbar-label">Broker:</span>
+    <span id="mbar-broker" style="color:var(--text)">—</span>
+  </div>
+  <div class="mbar-sep"></div>
+  <div class="mbar-item">
+    <span class="mbar-label">Plan:</span>
+    <span id="mbar-plan" style="color:var(--text)">—</span>
+  </div>
+  <div class="mbar-sep" id="mbar-engine-sep" style="display:none"></div>
+  <div class="mbar-item" id="mbar-engine-wrap" style="display:none">
+    <span id="mbar-engine-badge" class="mbar-status"></span>
+  </div>
+  <div class="mbar-sep"></div>
+  <div class="mbar-item" id="mbar-feed-wrap" title="Market data feed status">
+    <span class="mbar-label">Feed:</span>
+    <span id="mbar-feed-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:4px;transition:background .3s"></span>
+    <span id="mbar-feed-lbl" style="color:var(--muted);font-size:11px">—</span>
+  </div>
+</div>
+
+<div class="page">
+

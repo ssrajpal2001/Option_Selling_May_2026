@@ -1,0 +1,110 @@
+﻿<!-- ═══════════════════════════════════════════════════════════ BACKTEST PANE -->
+<div class="pane" id="pane-backtest">
+
+  <!-- Config card -->
+  <div class="card" style="padding:20px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <div class="sec-title">Backtest Engine</div>
+        <div class="sec-sub">Simulate your strategy on historical recorded data</div>
+      </div>
+      <div id="bt-available-badge" style="display:none;font-size:12px;color:var(--muted);padding:4px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;align-items:end">
+      <div>
+        <div class="inp-label">Start Date</div>
+        <input type="date" class="inp" id="bt-start-date"
+               onchange="_btDateHint(this.value,'bt-start-hint')">
+        <div id="bt-start-hint" style="display:none;font-size:11px;color:var(--warn);margin-top:3px"></div>
+      </div>
+      <div>
+        <div class="inp-label">End Date</div>
+        <input type="date" class="inp" id="bt-end-date"
+               onchange="_btDateHint(this.value,'bt-end-hint')">
+        <div id="bt-end-hint" style="display:none;font-size:11px;color:var(--warn);margin-top:3px"></div>
+      </div>
+      <div>
+        <div class="inp-label">Instrument</div>
+        <div class="inp" style="display:flex;align-items:center;font-weight:700;color:var(--primary);cursor:default" id="bt-instrument-display">NIFTY</div>
+      </div>
+      <div>
+        <div class="inp-label">Lot Quantity</div>
+        <input type="number" class="inp" id="bt-qty" value="1" min="1">
+      </div>
+    </div>
+
+    <div id="bt-dates-notice" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:12px;color:var(--text-soft);line-height:1.6"></div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" onclick="startBacktest()" id="bt-start-btn">▶ Run Backtest</button>
+      <button class="btn btn-ghost" onclick="stopBacktest()" id="bt-stop-btn" disabled>■ Stop</button>
+      <span id="bt-running-spinner" style="display:none;font-size:13px;color:var(--muted);display:none;align-items:center;gap:6px">
+        <span class="dot dot-blue" style="display:inline-block"></span>Running…
+      </span>
+    </div>
+  </div>
+
+  <!-- Results area -->
+  <div id="bt-results-wrap" style="display:none">
+
+    <div id="bt-status-msg" style="font-size:13px;color:var(--muted);margin-bottom:12px;padding:0 2px"></div>
+
+    <!-- Summary cards -->
+    <div id="bt-summary-cards" style="display:none;margin-bottom:16px">
+      <div class="pos-summary-bar card" style="border-radius:10px;margin:0;flex-wrap:wrap;gap:0;padding:0">
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Total P&amp;L (pts)</span>
+          <span class="pos-summary-val" id="bt-sum-pnl-pts">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Total P&amp;L (₹)</span>
+          <span class="pos-summary-val" id="bt-sum-pnl-rs">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Win Rate</span>
+          <span class="pos-summary-val" id="bt-sum-wr">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Max Drawdown</span>
+          <span class="pos-summary-val" id="bt-sum-dd">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px;border-right:1px solid var(--border)">
+          <span class="pos-summary-lbl">Trades</span>
+          <span class="pos-summary-val" id="bt-sum-trades">—</span>
+        </div>
+        <div class="pos-summary-item" style="padding:14px 20px">
+          <span class="pos-summary-lbl">Avg P&amp;L / Trade</span>
+          <span class="pos-summary-val" id="bt-sum-avg">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- No data message -->
+    <div id="bt-no-data-msg" style="display:none;padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:16px"></div>
+
+    <!-- Trade table -->
+    <div id="bt-trade-wrap" style="display:none" class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:16px 16px 0">
+        <span class="sec-title">Trade-by-Trade Results</span>
+        <button class="btn btn-ghost btn-sm" onclick="downloadBacktestCSV()">⬇ Download CSV</button>
+      </div>
+      <div style="overflow-x:auto;padding:0 16px 16px">
+        <table class="trade-table" id="bt-trade-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Entry</th><th>Exit</th>
+              <th style="color:var(--info)">CE Strike</th>
+              <th style="color:var(--warn)">PE Strike</th>
+              <th>Entry ₹</th><th>Exit ₹</th>
+              <th>P&amp;L (pts)</th><th>P&amp;L (₹)</th><th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="bt-trade-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+

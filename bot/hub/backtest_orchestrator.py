@@ -11,14 +11,9 @@ class BacktestOrchestrator(BaseOrchestrator):
         self.current_timestamp = None
         self.index_instrument_key = self.config_manager.get(self.instrument_name, 'instrument_symbol')
         self.backtest_data_mgr = BacktestDataManager(self)
-        v3_mode = self.json_config.get_value(f"{self.instrument_name}.v3_mode")
-        if str(v3_mode).lower() == 'true':
-            from hub.sell_manager_v3 import SellManagerV3
-            self.sell_manager = SellManagerV3(self)
-            logger.info(f"[{self.instrument_name}] Backtest: SellManagerV3 initialized.")
-        else:
-            from hub.sell_manager import SellManager
-            self.sell_manager = SellManager(self)
+        from hub.sell_manager_v3 import SellManagerV3
+        self.sell_manager = SellManagerV3(self)
+        logger.info(f"[{self.instrument_name}] Backtest: SellManagerV3 initialized.")
         self._backtest_strangle_triggered = False
         self.profit_target_hit = False
 

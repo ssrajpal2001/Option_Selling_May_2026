@@ -2,6 +2,8 @@ import os
 import importlib
 import asyncio
 import threading
+import uuid
+import time
 from utils.logger import logger
 from hub.event_bus import event_bus
 
@@ -9,12 +11,17 @@ from utils.encryption_manager import EncryptionManager
 from utils.database_manager import DatabaseManager
 
 class BrokerManager:
+    # Dedup window: if the same correlation_id arrives again within this many seconds, drop it.
+    _IDEMPOTENCY_TTL = 60
+
     def __init__(self, config_manager, db_manager=None):
         self.config_manager = config_manager
         self.db_manager = db_manager or DatabaseManager()
         self.encryption_manager = EncryptionManager()
         self.brokers = {} # instance_name -> broker_instance
         self.state_manager = None
+        # correlation_id -> wall-clock timestamp of first dispatch (idempotency guard)
+        self._pending_orders: dict[str, float] = {}
         event_bus.subscribe('BROKER_TOKEN_UPDATED', self.handle_token_update)
 
     def set_state_manager(self, state_manager):
@@ -233,6 +240,22 @@ class BrokerManager:
                     logger.error(f"An unexpected error occurred while loading broker {broker_section}: {e}", exc_info=True)
 
 
+    def _check_idempotent(self, correlation_id: str) -> bool:
+        """
+        Returns True if this correlation_id is a duplicate within the TTL window.
+        Also prunes expired entries to prevent unbounded growth.
+        """
+        now = time.monotonic()
+        # Prune stale entries
+        expired = [cid for cid, ts in self._pending_orders.items() if now - ts > self._IDEMPOTENCY_TTL]
+        for cid in expired:
+            del self._pending_orders[cid]
+
+        if correlation_id in self._pending_orders:
+            return True
+        self._pending_orders[correlation_id] = now
+        return False
+
     async def handle_execute_trade_request(self, trade_data):
         """
         Commercial Route: Sends the trade request only to the brokers belonging to the specific user.
@@ -242,6 +265,15 @@ class BrokerManager:
 
         if not raw_instrument_name:
             logger.error(f"Trade request is missing 'instrument_name'. Cannot route.")
+            return
+
+        # Idempotency guard: drop duplicate events that arrive within the TTL window.
+        correlation_id = trade_data.get("correlation_id") or str(uuid.uuid4())
+        if self._check_idempotent(correlation_id):
+            logger.warning(
+                f"[BrokerManager] Duplicate EXECUTE_TRADE_REQUEST dropped "
+                f"(correlation_id={correlation_id}, instrument={raw_instrument_name})"
+            )
             return
 
         # Use normalized name for routing checks to ensure "NIFTY 50" matches "NIFTY" config

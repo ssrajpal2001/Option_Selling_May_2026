@@ -1,0 +1,534 @@
+﻿<!-- ═══════════════════════════════════════════════════════════ SETTINGS PANE -->
+<div class="pane" id="pane-settings">
+
+  <!-- ── Quick controls: the two most important actions, always at the top ── -->
+  <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+    <!-- Connect Broker -->
+    <div style="flex:1;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Connect Broker</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="qc-broker-hint">Authenticate with your broker API</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="refreshToken()" id="qc-connect-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Connect
+      </button>
+    </div>
+    <!-- Allow Trading toggle -->
+    <div style="flex:1;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Allow Trading</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="qc-trade-hint">Enable new order placement for selected broker</div>
+      </div>
+      <label class="toggle" title="Enable/disable order placement for this broker">
+        <input type="checkbox" id="qc-trade-toggle" onchange="onTradingToggle(this.checked);document.getElementById('trading-toggle-card').checked=this.checked;">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+  </div>
+  <script>
+    (function(){
+      function _syncQcToggle(){
+        var main=document.getElementById('trading-toggle-card');
+        var qc=document.getElementById('qc-trade-toggle');
+        if(main&&qc&&qc!==document.activeElement)qc.checked=main.checked;
+        var tok=document.getElementById('token-status-pill');
+        var hint=document.getElementById('qc-broker-hint');
+        if(tok&&hint)hint.textContent=tok.textContent||'Authenticate with your broker API';
+      }
+      setInterval(_syncQcToggle,1000);
+      document.addEventListener('DOMContentLoaded',_syncQcToggle);
+    })();
+  </script>
+
+  <div class="settings-grid">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div>
+
+      <!-- Broker Configuration -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('broker-cred','arr-broker')">
+          <div>
+            <div class="sec-title">🔐 Broker Configuration</div>
+            <div class="sec-sub">Manage credentials for all your brokers</div>
+          </div>
+          <svg class="acc-arrow" id="arr-broker" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body open" id="broker-cred">
+
+          <!-- Broker selector tabs in settings -->
+          <div class="broker-tabs" id="settings-broker-tabs" style="margin-bottom:16px"></div>
+
+          <!-- Credential form -->
+          <div id="cred-form"></div>
+
+          <!-- Connect button inside settings -->
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="btn btn-primary" style="flex:1" onclick="saveBrokerConfig()">💾 Save Credentials</button>
+            <button class="btn btn-outline" id="btn-refresh-token" onclick="refreshToken()">🔌 Connect</button>
+          </div>
+          <div id="connect-auto-hint" style="font-size:11px;margin-top:6px;color:var(--text-soft)"></div>
+
+          <!-- Per-broker controls row -->
+          <div id="broker-bot-status-row" style="margin-top:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);overflow:hidden">
+            <!-- Status + Start/Stop -->
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border-soft)">
+              <span id="broker-bot-running-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#475569;flex-shrink:0"></span>
+              <span id="broker-bot-running-label" style="font-size:12px;color:var(--muted);flex:1">Bot not configured</span>
+              <button id="broker-bot-start-btn" class="btn btn-sm" style="display:none;background:var(--primary);color:#0a0f1e;padding:4px 12px;font-size:11px;font-weight:700" onclick="startBrokerBot()">▶ Start</button>
+              <button id="broker-bot-stop-btn"  class="btn btn-sm" style="display:none;background:var(--error);color:#fff;padding:4px 12px;font-size:11px;font-weight:700" onclick="stopBrokerBot()">■ Stop</button>
+            </div>
+            <!-- Inline controls: Mode | Qty | TRADE toggle -->
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;flex-wrap:wrap">
+              <!-- Paper / Live pill -->
+              <div style="display:flex;gap:0;background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0">
+                <button id="broker-mode-paper" onclick="setBrokerMode('paper')" style="padding:4px 12px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:var(--link);color:#fff;transition:all .15s">PAPER</button>
+                <button id="broker-mode-live"  onclick="setBrokerMode('live')"  style="padding:4px 12px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s">LIVE</button>
+              </div>
+              <!-- Qty -->
+              <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                <span style="font-size:11px;color:var(--muted);font-weight:600">QTY</span>
+                <input type="number" id="broker-inline-qty" min="1" value="25" style="width:64px;padding:4px 8px;font-size:12px;font-weight:700;background:var(--card);border:1px solid var(--border);border-radius:5px;color:var(--text);text-align:center">
+                <button onclick="saveQuickBrokerUpdate()" style="padding:4px 10px;font-size:11px;font-weight:700;background:transparent;border:1px solid var(--primary);color:var(--primary);border-radius:5px;cursor:pointer">💾 Save</button>
+              </div>
+              <!-- Spacer -->
+              <div style="flex:1"></div>
+              <!-- TRADE toggle -->
+              <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+                <span style="font-size:11px;font-weight:700;color:var(--muted)">TRADE</span>
+                <label class="toggle-switch" title="Enable/disable order placement for this broker">
+                  <input type="checkbox" id="broker-trade-toggle" onchange="onBrokerTradingToggle(this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trading mode & instrument -->
+          <hr style="border-color:var(--border);margin:16px 0">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <div class="inp-label">Mode</div>
+              <select class="inp" id="set-mode">
+                <option value="paper">Paper</option>
+                <option value="live">Live</option>
+              </select>
+            </div>
+            <div>
+              <div class="inp-label">Instrument</div>
+              <select class="inp" id="set-instrument">
+                <option value="NIFTY">NIFTY</option>
+                <option value="BANKNIFTY">BANKNIFTY</option>
+                <option value="MIDCPNIFTY">MIDCPNIFTY</option>
+                <option value="FINNIFTY">FINNIFTY</option>
+                <option value="SENSEX">SENSEX</option>
+              </select>
+            </div>
+            <div>
+              <div class="inp-label">Quantity</div>
+              <input type="number" class="inp" id="set-qty" value="25" min="1">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per-Broker Settings -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('broker-settings-panel','arr-bsettings');if(document.getElementById('broker-settings-panel').classList.contains('open')&&state.selectedBroker){loadBrokerSettings(state.selectedBroker);}" id="acc-risk">
+          <div>
+            <div class="sec-title">⚙️ Broker Settings</div>
+            <div class="sec-sub">Per-broker timing, risk &amp; capital controls</div>
+          </div>
+          <svg class="acc-arrow" id="arr-bsettings" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body" id="broker-settings-panel">
+
+          <!-- Broker selector tabs -->
+          <div class="broker-tabs" id="bsettings-broker-tabs" style="margin-bottom:14px"></div>
+
+          <!-- No broker selected / not configured -->
+          <div id="bsettings-empty" style="text-align:center;color:var(--muted);padding:20px 0;font-size:13px;display:none">
+            Select a configured broker tab above to edit its settings.
+          </div>
+
+          <!-- Settings form (shown when a broker is selected) -->
+          <div id="bsettings-form" style="display:none">
+
+            <!-- ── Timing ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">⏰ Session Timing</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+                <div>
+                  <div class="inp-label">Start Time</div>
+                  <input type="time" class="inp" id="bs-start-time" step="60">
+                  <div class="bsettings-hint" id="bs-start-time-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Entry Cutoff</div>
+                  <input type="time" class="inp" id="bs-entry-end" step="60">
+                  <div class="bsettings-hint" id="bs-entry-end-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Square-off Time</div>
+                  <input type="time" class="inp" id="bs-sq-off" step="60">
+                  <div class="bsettings-hint" id="bs-sq-off-adm"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Capital Deployment ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">💰 Capital Deployment</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
+                <div>
+                  <div class="inp-label">Deploy % of Broker Funds</div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input type="number" class="inp" id="bs-capital-pct" placeholder="e.g. 80" min="1" max="100" step="1" style="flex:1">
+                    <span style="font-size:13px;color:var(--muted)">%</span>
+                  </div>
+                  <div class="bsettings-hint">Admin allocated: <span id="bs-capital-adm">—</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Session PNL Exit (Guardrail) ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title" style="display:flex;align-items:center;gap:10px">
+                <span>📊 Session PNL Exit</span>
+                <label class="toggle-switch" style="margin-left:auto">
+                  <input type="checkbox" id="bs-pnl-enabled">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div id="bs-pnl-body" style="display:flex;flex-direction:column;gap:14px;margin-top:12px">
+                <!-- PnL Target slider -->
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Default Target (pts)</span>
+                    <span id="bs-pnl-target-val" style="font-size:15px;font-weight:800;color:var(--primary)">0 pts</span>
+                  </div>
+                  <input type="range" id="bs-pnl-target" min="0" max="500" step="5"
+                         oninput="document.getElementById('bs-pnl-target-val').textContent=this.value+' pts'"
+                         style="width:100%;accent-color:var(--primary);cursor:pointer">
+                  <div class="bsettings-hint" id="bs-pnl-target-adm"></div>
+                </div>
+                <!-- PnL SL slider -->
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Default Stop Loss (pts)</span>
+                    <span id="bs-pnl-sl-val" style="font-size:15px;font-weight:800;color:var(--danger)">0 pts</span>
+                  </div>
+                  <input type="range" id="bs-pnl-sl" min="0" max="300" step="5"
+                         oninput="document.getElementById('bs-pnl-sl-val').textContent=this.value+' pts'"
+                         style="width:100%;accent-color:var(--danger);cursor:pointer">
+                  <div class="bsettings-hint" id="bs-pnl-sl-adm"></div>
+                </div>
+                <!-- Lot Size slider -->
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <span class="inp-label" style="margin:0">Lot Size</span>
+                    <span id="bs-lot-size-val" style="font-size:15px;font-weight:800;color:var(--link)">1 lot</span>
+                  </div>
+                  <input type="range" id="bs-lot-size" min="1" max="20" step="1"
+                         oninput="document.getElementById('bs-lot-size-val').textContent=this.value+' lot'+(+this.value>1?'s':'')"
+                         style="width:100%;accent-color:var(--link);cursor:pointer">
+                </div>
+              </div>
+
+              <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Day Override (blank = use default above)</div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px">
+                  <thead>
+                    <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
+                      <th style="text-align:left;padding:5px 0;width:60px">Day</th>
+                      <th style="padding:5px 4px">Target (pts)</th>
+                      <th style="padding:5px 4px">SL (pts)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bs-daywise-body">
+                    <!-- JS rendered -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- ── Scalable TSL ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title" style="display:flex;align-items:center;gap:10px">
+                <span>📈 Scalable TSL</span>
+                <label class="toggle-switch" style="margin-left:auto">
+                  <input type="checkbox" id="bs-tsl-enabled">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div id="bs-tsl-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+                <div>
+                  <div class="inp-label">Base Profit (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-base-profit" placeholder="e.g. 1000" step="50">
+                  <div class="bsettings-hint" id="bs-tsl-base-profit-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Base Lock (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-base-lock" placeholder="e.g. 250" step="25">
+                  <div class="bsettings-hint" id="bs-tsl-base-lock-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Step Profit (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-step-profit" placeholder="e.g. 250" step="25">
+                  <div class="bsettings-hint" id="bs-tsl-step-profit-adm"></div>
+                </div>
+                <div>
+                  <div class="inp-label">Step Lock (pts)</div>
+                  <input type="number" class="inp" id="bs-tsl-step-lock" placeholder="e.g. 125" step="25">
+                  <div class="bsettings-hint" id="bs-tsl-step-lock-adm"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Rollover / Smart Roll ── -->
+            <div class="bsettings-group" style="margin-bottom:14px">
+              <div class="bsettings-group-title">🔄 Rollover / Smart Roll</div>
+
+              <!-- Smart Rolling master toggle -->
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px">
+                <div>
+                  <div class="inp-label" style="font-size:12px;font-weight:600;color:var(--text)">Smart Rolling</div>
+                  <div style="font-size:11px;color:var(--muted)">Continuous trading across expiry cycles</div>
+                  <div class="bsettings-hint" id="bs-roll-smart-adm"></div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-smart">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <!-- Profit Target -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div class="inp-label" style="margin:0">Profit Target</div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-profit-en">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <div>
+                  <div class="inp-label">Target (%)</div>
+                  <input type="number" class="inp" id="bs-roll-profit-pct" placeholder="e.g. 12" step="0.5" min="0">
+                  <div class="bsettings-hint" id="bs-roll-profit-pct-adm"></div>
+                </div>
+              </div>
+
+              <!-- LTP Decay -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div class="inp-label" style="margin:0">LTP Decay Exit</div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-ltp-en">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <div>
+                  <div class="inp-label">LTP Exit Min (≤ pts)</div>
+                  <input type="number" class="inp" id="bs-roll-ltp-min" placeholder="e.g. 20" step="1" min="0">
+                  <div class="bsettings-hint" id="bs-roll-ltp-min-adm"></div>
+                </div>
+              </div>
+
+              <!-- Ratio Exit -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div class="inp-label" style="margin:0">Ratio Exit (CE:PE)</div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="bs-roll-ratio-en">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <div class="inp-label">Ratio Threshold</div>
+                  <input type="number" class="inp" id="bs-roll-ratio-thr" placeholder="e.g. 3" step="0.1" min="0">
+                  <div class="bsettings-hint" id="bs-roll-ratio-thr-adm"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Daily Limits ── -->
+            <div class="bsettings-group" style="margin-bottom:16px">
+              <div class="bsettings-group-title">🛡️ Daily Limits</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <div class="inp-label">Daily Loss Limit (₹)</div>
+                  <input type="number" class="inp" id="bs-daily-loss" placeholder="e.g. 5000" min="0">
+                </div>
+                <div>
+                  <div class="inp-label">Max Trades / Day</div>
+                  <input type="number" class="inp" id="bs-max-trades" placeholder="e.g. 6" min="0">
+                  <div class="bsettings-hint" id="bs-max-trades-adm"></div>
+                </div>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+                ⚠️ Kill-switch fires automatically when daily loss exceeds your limit.
+              </div>
+            </div>
+
+            <!-- Save button -->
+            <button class="btn btn-primary" style="width:100%" onclick="saveBrokerSettings()">💾 Save Broker Settings</button>
+
+            <!-- Admin-set limits (read-only) -->
+            <div id="admin-limits-section" style="margin-top:14px;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px;border:1px solid var(--border);display:none">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">📋 Admin-Set Limits (Read Only)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="font-size:11px"><span style="color:var(--muted)">Capital Allocated</span><div style="font-weight:700;color:var(--text)" id="adm-capital">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Per-Trade Loss Limit</span><div style="font-weight:700;color:var(--text)" id="adm-per-trade">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Max Position Size</span><div style="font-weight:700;color:var(--text)" id="adm-pos-size">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Max Drawdown %</span><div style="font-weight:700;color:var(--text)" id="adm-drawdown">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Max Open Positions</span><div style="font-weight:700;color:var(--text)" id="adm-open-pos">—</div></div>
+                <div style="font-size:11px"><span style="color:var(--muted)">Risk Per Trade %</span><div style="font-weight:700;color:var(--text)" id="adm-risk-pct">—</div></div>
+              </div>
+            </div>
+
+            <!-- Kill-switch note (the global banner at the top of settings is shown when active) -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT COLUMN ── -->
+    <div>
+
+      <!-- Trading Parameters (per-user overrides) -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('trading-params-panel','arr-tp')">
+          <div>
+            <div class="sec-title">📊 Trading Parameters</div>
+            <div class="sec-sub">Override default strategy values for your account</div>
+          </div>
+          <svg class="acc-arrow" id="arr-tp" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body" id="trading-params-panel">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <div class="inp-label">LTP Target (pts)</div>
+              <input type="number" class="inp" id="tp-ltp-target" placeholder="e.g. 60" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Entry premium target per leg</div>
+            </div>
+            <div>
+              <div class="inp-label">Max Daily Trades</div>
+              <input type="number" class="inp" id="tp-max-trades" placeholder="e.g. 3" min="1">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Max entries per trading day</div>
+            </div>
+            <div>
+              <div class="inp-label">SL per Leg (pts)</div>
+              <input type="number" class="inp" id="tp-sl-pts" placeholder="e.g. 25" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Stop-loss trigger per leg</div>
+            </div>
+            <div>
+              <div class="inp-label">Target per Leg (pts)</div>
+              <input type="number" class="inp" id="tp-target-pts" placeholder="e.g. 40" step="0.5" min="0">
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Profit target per leg</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+            ℹ️ Leave blank to use platform defaults. Changes take effect on next bot start.
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="saveTradingParams()">💾 Save Parameters</button>
+          <div id="tp-status" style="font-size:12px;margin-top:8px;text-align:center;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('notif-panel','arr-notif')">
+          <div>
+            <div class="sec-title">🔔 Notifications</div>
+            <div class="sec-sub">Telegram alerts for trades and expiry</div>
+          </div>
+          <svg class="acc-arrow open" id="arr-notif" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body open" id="notif-panel">
+          <div style="margin-bottom:12px">
+            <div class="inp-label">Telegram Chat ID</div>
+            <input type="text" class="inp" id="p-telegram" placeholder="e.g. 123456789">
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">
+              Open Telegram → search <strong>@userinfobot</strong> → send /start → copy your Chat ID
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="btn btn-primary" onclick="saveProfile()" style="flex:1">💾 Save</button>
+            <button class="btn btn-outline btn-sm" onclick="sendTestTelegram()" id="btn-test-tg" style="flex:1">✈️ Send Test</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('profile-panel','arr-profile')">
+          <div>
+            <div class="sec-title">👤 Profile</div>
+            <div class="sec-sub">Your account information</div>
+          </div>
+          <svg class="acc-arrow" id="arr-profile" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body" id="profile-panel">
+          <div style="display:grid;gap:10px;margin-bottom:12px">
+            <div>
+              <div class="inp-label">Full Name</div>
+              <input type="text" class="inp" id="p-name" placeholder="Your full name">
+            </div>
+            <div>
+              <div class="inp-label">Phone Number</div>
+              <input type="tel" class="inp" id="p-phone" placeholder="+91 98765 43210">
+            </div>
+            <div>
+              <div class="inp-label">Username (read-only)</div>
+              <input type="text" class="inp" id="p-username" readonly style="opacity:.6;cursor:not-allowed">
+            </div>
+            <div>
+              <div class="inp-label">Email (read-only)</div>
+              <input type="text" class="inp" id="p-email" readonly style="opacity:.6;cursor:not-allowed">
+            </div>
+            <div id="p-static-ip-row">
+              <div class="inp-label">Your Static IP (for broker API whitelisting)</div>
+              <div id="p-static-ip-assigned" style="display:flex;align-items:center;gap:8px;display:none">
+                <input type="text" class="inp" id="p-static-ip" readonly style="opacity:.7;cursor:not-allowed;font-family:monospace;font-size:13px;flex:1">
+                <button onclick="copyStaticIP()" style="padding:6px 10px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--text-soft);font-size:11px;cursor:pointer;white-space:nowrap">Copy</button>
+              </div>
+              <div id="p-static-ip-none" style="display:flex;align-items:center;gap:6px;margin-top:2px">
+                <span style="font-size:12px;color:var(--muted)">Not assigned yet — contact support to get your dedicated IP assigned.</span>
+              </div>
+              <div id="p-static-ip-hint" style="display:none;font-size:11px;color:var(--muted);margin-top:4px">Add this IP to your broker's developer portal to whitelist API access.</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveProfile()" style="width:100%">💾 Save Profile</button>
+        </div>
+      </div>
+
+      <!-- Referral -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="acc-header" onclick="toggleAcc('ref-panel','arr-ref')">
+          <div>
+            <div class="sec-title">🎁 Referral Program</div>
+            <div class="sec-sub">Invite friends and earn benefits</div>
+          </div>
+          <svg class="acc-arrow" id="arr-ref" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="acc-body" id="ref-panel">
+          <div style="text-align:center;padding:10px 0 16px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Your Referral Code</div>
+            <div class="ref-code" id="ref-code">——</div>
+            <button onclick="copyRefCode()" style="margin-top:10px;font-size:12px;color:var(--primary);background:transparent;border:none;cursor:pointer">📋 Copy Code</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px">
+            <span style="color:var(--muted)">Friends Referred</span>
+            <span id="ref-count" style="font-weight:700">0</span>
+          </div>
+          <div id="ref-list" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+

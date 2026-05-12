@@ -201,9 +201,19 @@ async def main():
         # 3. Signal the main loop to exit
         stop_event.set()
 
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGTERM, signal.SIGINT):
-        loop.add_signal_handler(sig, lambda s=sig: asyncio.create_task(handle_shutdown(s.name)))
+    try:
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            loop.add_signal_handler(sig, lambda s=sig: asyncio.create_task(handle_shutdown(s.name)))
+    except NotImplementedError:
+        # Windows does not support loop.add_signal_handler; use signal.signal fallback
+        def _win_signal_handler(signum, frame):
+            asyncio.ensure_future(handle_shutdown(signal.Signals(signum).name))
+        signal.signal(signal.SIGINT, _win_signal_handler)
+        try:
+            signal.signal(signal.SIGTERM, _win_signal_handler)
+        except (OSError, ValueError):
+            pass
 
     # --- 3. Engine Management ---
     engine_manager = EngineManager(config_manager, api_client_manager, broker_manager,

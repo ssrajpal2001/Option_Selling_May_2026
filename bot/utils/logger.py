@@ -20,21 +20,32 @@ def configure_logger(config_manager: ConfigManager):
     Configures the global logger instance with handlers and formatters
     based on the provided configuration. This should be called once at startup.
     """
+    # Windows cp1252 console can't render box-drawing chars used in strategy logs.
+    # Reconfigure stdout to UTF-8 with 'replace' fallback so the process never
+    # crashes on a UnicodeEncodeError regardless of what characters are logged.
+    try:
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        if hasattr(sys.stderr, 'reconfigure'):
+            sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass  # Already redirected to a binary pipe — leave it alone
+
     # Remove all existing handlers (like the NullHandler) to ensure a clean slate
     for handler in logger.handlers[:]:
         logger.removeHandler(handler)
 
     log_file = config_manager.get('app', 'log_file', fallback='bot.log')
     log_level_str = config_manager.get('app', 'log_level', fallback='INFO')
-    
-    log_level = getattr(logging, log_level_str.upper(), logging.INFO)
 
+    log_level = getattr(logging, log_level_str.upper(), logging.INFO)
 
     # Create a rotating file handler for all logs
     file_handler = RotatingFileHandler(
         log_file,
         maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
+        backupCount=5,
+        encoding='utf-8',       # Always write log files in UTF-8
     )
     # Standard log level for file
     file_handler.setLevel(log_level)

@@ -18,17 +18,11 @@ class LiveOrchestrator(BaseOrchestrator):
         if v3_mode is None:
             v3_mode = self.json_config.get_value("NIFTY.v3_mode")
 
-        # Global SellManager (Legacy / Single-User mode fallback)
         self.sell_manager = None
         if not self.config_manager.get_boolean('settings', 'multi_user_mode', fallback=False):
-            if str(v3_mode).lower() == 'true':
-                from hub.sell_manager_v3 import SellManagerV3
-                self.sell_manager = SellManagerV3(parent=self)
-                logger.info(f"[{self.instrument_name}] Global SellManagerV3 initialized.")
-            else:
-                from hub.sell_manager import SellManager
-                self.sell_manager = SellManager(self)
-                self.sell_manager.load_state()
+            from hub.sell_manager_v3 import SellManagerV3
+            self.sell_manager = SellManagerV3(parent=self)
+            logger.info(f"[{self.instrument_name}] Global SellManagerV3 initialized.")
 
         from hub.oi_exit_monitor import OIExitMonitor
         self.oi_exit_monitor = OIExitMonitor(self)

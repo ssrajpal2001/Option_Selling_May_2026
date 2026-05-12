@@ -26,6 +26,18 @@ class LifecycleManager:
         self.trade_orchestrator.is_active = True
         logger.debug("LifecycleManager started. Delegating startup sequence...")
 
+        # Cold-start recovery: warn loudly if persisted positions were loaded from state file.
+        # SellManagerV3.load_state() + reconnect_positions() already rebuilt the trade objects;
+        # this block just ensures operators see a clear log entry at startup.
+        if not self.is_backtest:
+            sm = getattr(self.trade_orchestrator, 'sell_manager', None)
+            if sm is not None and getattr(sm, 'strangle_placed', False):
+                logger.warning(
+                    f"[LifecycleManager] COLD-START RECOVERY: Active positions detected at startup "
+                    f"for {getattr(self.trade_orchestrator, 'instrument_name', '?')}. "
+                    f"Entering monitoring mode — entry logic will be skipped until positions are closed."
+                )
+
         try:
             # In the new architecture, startup is simplified. The orchestrator is already
             # initialized, and the WebSocket is connected centrally in main.py.

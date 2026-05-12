@@ -1,0 +1,298 @@
+﻿<!-- ═══════════════════════════════════════════════════════════ DASHBOARD PANE -->
+<div class="pane active" id="pane-dashboard">
+
+  <!-- ── Summary bar: always-visible mode / P&L / status at a glance ── -->
+  <div id="summary-bar" style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:7px;min-width:0">
+      <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Mode</span>
+      <span id="sb-mode" class="badge badge-paper">PAPER</span>
+    </div>
+    <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+    <div style="display:flex;align-items:center;gap:7px;min-width:0">
+      <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Today P&amp;L</span>
+      <span id="sb-pnl" style="font-size:14px;font-weight:700;color:var(--muted)">0 pts</span>
+    </div>
+    <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+    <div style="display:flex;align-items:center;gap:7px;min-width:0">
+      <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Bot</span>
+      <span id="sb-status" class="badge badge-stopped"><span class="dot dot-red"></span>STOPPED</span>
+    </div>
+    <div style="flex:1"></div>
+    <span id="sb-errors" style="display:none;font-size:12px;font-weight:700;color:var(--error)"></span>
+  </div>
+  <script>
+    (function(){
+      function _syncSummaryBar(){
+        var modeEl=document.getElementById('ctrl-mode-badge');
+        var pnlEl=document.getElementById('ctrl-pnl-pts');
+        var statEl=document.getElementById('instance-status-badge');
+        var sbMode=document.getElementById('sb-mode');
+        var sbPnl=document.getElementById('sb-pnl');
+        var sbStat=document.getElementById('sb-status');
+        if(modeEl&&sbMode){sbMode.textContent=modeEl.textContent;sbMode.className=modeEl.className;}
+        if(pnlEl&&sbPnl){
+          sbPnl.textContent=pnlEl.textContent;
+          var pts=parseFloat(pnlEl.textContent)||0;
+          sbPnl.style.color=pts>0?'var(--success)':pts<0?'var(--error)':'var(--muted)';
+        }
+        if(statEl&&sbStat){sbStat.innerHTML=statEl.innerHTML;sbStat.className=statEl.className;}
+      }
+      setInterval(_syncSummaryBar,1000);
+      document.addEventListener('DOMContentLoaded',_syncSummaryBar);
+    })();
+  </script>
+
+  <!-- Plan strip -->
+  <div class="plan-strip" id="plan-strip" style="display:none">
+    <div class="plan-strip-item">
+      <span class="plan-strip-lbl">Plan</span>
+      <span class="plan-strip-val" id="ps-plan">—</span>
+    </div>
+    <div style="width:1px;height:28px;background:var(--border)"></div>
+    <div class="plan-strip-item">
+      <span class="plan-strip-lbl">Broker Slots</span>
+      <span class="plan-strip-val" id="ps-slots">—</span>
+    </div>
+    <div style="width:1px;height:28px;background:var(--border)"></div>
+    <div class="plan-strip-item">
+      <span class="plan-strip-lbl">Expires</span>
+      <span class="plan-strip-val" id="ps-expiry">—</span>
+    </div>
+    <div style="flex:1"></div>
+    <span id="ps-expired-badge" class="badge badge-warning" style="display:none">⚠️ PLAN EXPIRED</span>
+  </div>
+
+  <!-- Kill-switch alert (shown when locked) -->
+  <div id="kill-alert" class="kill-bar kill-bar-hit mb-4" style="display:none">
+    🚨 <strong>Kill-switch active</strong> — Daily loss limit hit. Bot is halted for today.
+    <span id="kill-alert-until" style="margin-left:8px;color:var(--muted)"></span>
+  </div>
+
+  <!-- Setup alert / onboarding card -->
+  <div id="setup-alert" style="display:none;background:var(--surface);border:1px solid var(--info);border-radius:10px;padding:16px 18px;margin-bottom:16px;color:var(--text-soft);font-size:13px">
+    <div style="font-weight:700;color:var(--text);font-size:14px;margin-bottom:6px">🚀 Get started — connect your broker</div>
+    <div style="margin-bottom:10px">Click <button onclick="openBrokerSetup()" style="color:var(--primary);background:transparent;border:none;cursor:pointer;font-weight:700;text-decoration:underline">Connect Broker</button> to enter your API credentials and start trading. It only takes a minute.</div>
+    <div id="onboard-ip-hint" style="display:none;background:var(--badge-ok-bg);border:1px solid var(--badge-ok-br);border-radius:8px;padding:10px 14px;margin-top:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--success);margin-bottom:4px">📌 Whitelist your static IP first</div>
+      <div style="font-size:12px;color:var(--success);margin-bottom:8px">Your account has been assigned a dedicated static IP. Before adding your broker API key, whitelist this IP in your broker's developer portal:</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <code id="onboard-ip-value" style="background:var(--surface2);padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;color:var(--success);font-family:monospace;letter-spacing:0.5px"></code>
+        <button onclick="copyOnboardIP()" style="padding:4px 10px;border-radius:6px;background:var(--badge-ok-bg);border:1px solid var(--badge-ok-br);color:var(--badge-ok-txt);font-size:11px;cursor:pointer">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stale broker token banner -->
+  <div id="stale-cred-banner" style="display:none;background:var(--surface);border:1.5px solid var(--warn);border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
+    <span style="font-size:18px">⚠️</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--warn)">Broker Token Expired</div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="stale-cred-text"></div>
+    </div>
+    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:var(--badge-warn-bg);border:1px solid var(--badge-warn-br);color:var(--badge-warn-txt);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Connect →</button>
+  </div>
+
+  <!-- Missing broker credentials banner -->
+  <div id="missing-creds-banner" style="display:none;background:var(--surface);border:1.5px solid var(--info);border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
+    <span style="font-size:18px">🔑</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--info)">Broker Credentials Missing</div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="missing-creds-text"></div>
+    </div>
+    <button onclick="openBrokerSetup()" style="padding:6px 14px;border-radius:7px;background:var(--surface2);border:1px solid var(--info);color:var(--text-soft);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Add credentials →</button>
+  </div>
+
+  <!-- Auto-reconnect status banner -->
+  <div id="reconnect-banner" style="display:none;background:var(--surface);border:1.5px solid var(--link);border-radius:10px;padding:11px 16px;margin-bottom:14px;align-items:center;gap:12px">
+    <span style="font-size:16px;animation:spin 2s linear infinite;display:inline-block">↺</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--link)">Attempting Auto-Reconnect</div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:2px" id="reconnect-banner-text"></div>
+    </div>
+    <button onclick="_cancelAllReconnects()" style="padding:6px 14px;border-radius:7px;background:var(--surface2);border:1px solid var(--link);color:var(--text-soft);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Cancel</button>
+  </div>
+
+  <!-- Kill-switch locked banner -->
+  <div id="kill-switch-banner" style="display:none;background:var(--badge-err-bg);border:1.5px solid var(--badge-err-br);border-radius:10px;padding:13px 18px;margin-bottom:16px;align-items:center;gap:12px">
+    <span style="font-size:22px">🔒</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--error)">Trading Locked by Kill Switch</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-top:2px" id="ks-lock-reason">Daily loss limit exceeded. Contact admin to unlock.</div>
+    </div>
+    <div id="ks-unlock-time" style="font-size:11px;color:var(--muted);text-align:right"></div>
+  </div>
+
+  <div class="grid-2" style="gap:20px;align-items:start">
+
+    <!-- ── LEFT: Bot Control ── -->
+    <div>
+
+      <!-- Broker selector card -->
+      <div class="card" style="padding:18px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span class="sec-title">Bot Control</span>
+          <span id="instance-status-badge" class="badge badge-stopped"><span class="dot dot-red"></span>STOPPED</span>
+        </div>
+
+        <!-- Broker tabs -->
+        <div class="broker-tabs" id="broker-tabs" style="margin-bottom:14px"></div>
+
+        <!-- Token status row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px">
+          <div>
+            <div style="font-size:12px;color:var(--muted)">Connection</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
+              <span id="token-status-pill" class="token-pill token-stale">Not connected</span>
+              <span id="token-updated-at" style="font-size:11px;color:var(--muted)"></span>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btn-refresh-token" onclick="refreshToken()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Connect
+          </button>
+        </div>
+
+        <!-- Instrument & Mode row -->
+        <div style="display:flex;gap:10px;margin-bottom:16px;font-size:13px">
+          <div style="flex:1">
+            <div class="inp-label">Instrument</div>
+            <span id="ctrl-instrument" style="font-weight:700;color:var(--text)">—</span>
+          </div>
+          <div style="flex:1">
+            <div class="inp-label">Qty / Lot</div>
+            <span id="ctrl-qty" style="font-weight:700">—</span>
+          </div>
+          <div style="flex:1">
+            <div class="inp-label">Mode</div>
+            <span id="ctrl-mode-badge" class="badge badge-paper">PAPER</span>
+          </div>
+        </div>
+
+        <!-- Capital gauge + PnL -->
+        <div style="display:flex;align-items:center;gap:16px;padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:16px">
+          <div class="gauge-ring" id="gauge-wrap">
+            <svg width="76" height="76" viewBox="0 0 76 76">
+              <circle cx="38" cy="38" r="31" fill="none" style="stroke:var(--border)" stroke-width="7"/>
+              <circle id="gauge-arc" cx="38" cy="38" r="31" fill="none" stroke="#00d4aa" stroke-width="7"
+                      stroke-dasharray="194.8" stroke-dashoffset="194.8" stroke-linecap="round"/>
+            </svg>
+            <div class="gauge-label">
+              <span id="gauge-pct" style="color:var(--primary)">0%</span>
+              <span style="font-size:9px;color:var(--muted)">Target</span>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--muted)">Today's PnL</div>
+            <div id="ctrl-pnl-pts" class="stat-val text-muted" style="font-size:20px">0 pts</div>
+            <div id="ctrl-pnl-rs" style="font-size:13px;color:var(--muted)">₹0</div>
+          </div>
+        </div>
+
+        <!-- Kill-switch indicator -->
+        <div id="ctrl-kill-bar" style="display:none;margin-bottom:12px"></div>
+
+        <!-- BOT toggle button (big) -->
+        <button id="bot-big-btn" class="bot-toggle-btn state-start" onclick="onBotToggle(!getBotRunning())" style="margin-bottom:10px">
+          ▶ START ALL
+        </button>
+
+        <!-- Trading toggle row (acts on selected broker) -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;font-weight:700">Allow New Trades <span style="font-size:11px;font-weight:400;color:var(--muted)">(selected broker)</span></div>
+            <div style="font-size:11px;color:var(--muted)" id="trading-toggle-card-hint">Select a broker to enable/disable</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="trading-toggle-card" onchange="onTradingToggle(this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <!-- Square off button -->
+        <button class="btn btn-danger" style="width:100%;" onclick="confirmSquareOff()" id="btn-sq-off">⬛ Square Off All</button>
+      </div>
+
+      <!-- Daily Loss Limit indicator -->
+      <div class="card-sm" style="padding:14px" id="loss-limit-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:700">Daily Loss Guard</span>
+          <button onclick="showPane('settings');setTimeout(()=>document.getElementById('acc-risk')?.click(),200)" style="font-size:11px;color:var(--primary);background:transparent;border:none;cursor:pointer">Edit →</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1">
+            <div class="progress-track">
+              <div class="progress-fill" id="loss-fill" style="width:0%;background:var(--error)"></div>
+            </div>
+          </div>
+          <span id="loss-pct-lbl" style="font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap">0%</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">
+          Loss: <span id="loss-curr">₹0</span> / Limit: <span id="loss-limit">—</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: Stats + Trades ── -->
+    <div>
+
+      <!-- Stats grid -->
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card-sm" style="padding:14px">
+          <div class="stat-lbl">Today PnL</div>
+          <div class="stat-val text-muted" id="stat-pnl-pts">0 pts</div>
+          <div class="stat-sub" id="stat-pnl-rs">₹0</div>
+        </div>
+        <div class="card-sm" style="padding:14px">
+          <div class="stat-lbl">Trades</div>
+          <div class="stat-val" id="stat-trades">0</div>
+          <div class="stat-sub" id="stat-wl">W:0 / L:0</div>
+        </div>
+        <div class="card-sm" style="padding:14px">
+          <div class="stat-lbl">Win Rate</div>
+          <div class="stat-val" id="stat-winrate">—</div>
+          <div class="stat-sub" id="stat-avg">Avg: 0 pts</div>
+        </div>
+        <div class="card-sm" style="padding:14px">
+          <div class="stat-lbl">Strategy</div>
+          <div class="stat-val" style="font-size:18px" id="stat-strategy">V3</div>
+          <div class="stat-sub" id="stat-uptime">Uptime: —</div>
+        </div>
+      </div>
+
+      <!-- PnL sparkline -->
+      <div class="card" style="padding:16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span class="sec-title">PnL Trend (Last 10 Trades)</span>
+          <span id="spark-total" style="font-size:13px;font-weight:700;color:var(--muted)">0 pts</span>
+        </div>
+        <div class="spark" id="sparkline" style="height:48px">
+          <span style="color:var(--muted);font-size:12px;align-self:center;margin:auto">No trades yet</span>
+        </div>
+      </div>
+
+      <!-- Recent trades -->
+      <div class="card" style="padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span class="sec-title">Recent Trades</span>
+          <button onclick="showPane('history')" style="font-size:12px;color:var(--primary);background:transparent;border:none;cursor:pointer">View all →</button>
+        </div>
+        <div id="recent-trades-wrap" style="overflow-x:auto">
+          <div id="recent-trades-empty" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No trades today</div>
+          <table class="trade-table" id="recent-trades-table" style="display:none">
+            <thead>
+              <tr>
+                <th>Time</th><th>Dir</th><th>Strike</th>
+                <th>Entry</th><th>Exit</th><th>PnL (pts)</th><th>₹</th><th>Reason</th>
+              </tr>
+            </thead>
+            <tbody id="recent-trades-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+

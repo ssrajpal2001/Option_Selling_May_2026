@@ -1,0 +1,73 @@
+﻿<!-- ══════════════════════════════════════════════════════════ POSITIONS PANE -->
+<div class="pane" id="pane-positions">
+
+  <!-- Positions card -->
+  <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+
+    <!-- Card header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="sec-title" style="margin:0">Open Positions</span>
+        <span id="pos-count-badge" style="display:none;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(0,212,170,.15);color:var(--primary)"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="pos-last-updated" style="font-size:11px;color:var(--muted)"></span>
+        <span id="pos-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted)"></span>
+        <button class="sqoff-btn" style="padding:5px 12px;font-size:11px" onclick="confirmSquareOff()">Close All</button>
+      </div>
+    </div>
+
+    <!-- Per-broker tab strip (one tab per running broker subprocess). -->
+    <div id="pos-broker-tabs" style="display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap"></div>
+
+    <!-- Plain-English bot status -->
+    <div id="pos-plain-status" style="padding:8px 16px 0;font-size:13px;color:var(--text-soft);line-height:1.5"></div>
+
+    <!-- Empty state -->
+    <div id="pos-empty" class="pos-empty">
+      <div class="pos-empty-icon">📭</div>
+      <div class="pos-empty-txt">No open positions today</div>
+      <div style="font-size:12px;margin-top:4px;color:var(--muted)">Bot will show active CE/PE positions here once placed</div>
+    </div>
+
+    <!-- Positions table -->
+    <div id="pos-table-wrap" class="pos-scroll" style="display:none">
+      <table class="pos-table">
+        <thead>
+          <tr>
+            <th>Instrument</th>
+            <th>Type</th>
+            <th>Strike</th>
+            <th>Qty</th>
+            <th>Avg Price</th>
+            <th>LTP</th>
+            <th>P&amp;L ₹</th>
+            <th>P&amp;L %</th>
+            <th>Entry Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="pos-table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Sticky P&L Summary bar at bottom -->
+    <div class="pos-summary-bar" id="pos-summary-bar" style="border-top:1px solid var(--border);border-radius:0;margin:0;position:sticky;bottom:0">
+      <div class="pos-summary-item">
+        <span class="pos-summary-lbl">Open P&amp;L</span>
+        <span class="pos-summary-val text-muted" id="pos-open-pnl">₹0</span>
+      </div>
+      <div style="width:1px;background:var(--border);align-self:stretch"></div>
+      <div class="pos-summary-item">
+        <span class="pos-summary-lbl">Today Realised</span>
+        <span class="pos-summary-val text-muted" id="pos-realised-pnl">₹0</span>
+      </div>
+      <div style="width:1px;background:var(--border);align-self:stretch"></div>
+      <div class="pos-summary-item">
+        <span class="pos-summary-lbl">Net Day P&amp;L</span>
+        <span class="pos-summary-val text-muted" id="pos-net-pnl">₹0</span>
+      </div>
+    </div>
+  </div>
+</div>
+

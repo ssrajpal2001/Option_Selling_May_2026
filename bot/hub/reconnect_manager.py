@@ -21,6 +21,7 @@ from utils.logger import logger
 IST = timezone(timedelta(hours=5, minutes=30))
 MAX_RETRIES = 5
 INTERVAL_SECONDS = 60
+URGENT_INTERVAL_SECONDS = 30  # Used when open positions exist during disconnect
 EXHAUSTED_COOLDOWN_HOURS = 1
 
 
@@ -100,7 +101,9 @@ class ReconnectManager:
         self._exhausted.pop((user_id, broker), None)
 
     def schedule(self, user_id: int, broker: str, headless_login_fn,
-                 force: bool = False) -> bool:
+                 force: bool = False,
+                 has_open_positions: bool = False,
+                 on_exhausted_fn=None) -> bool:
         """
         Start a background reconnect loop (asyncio task) for the given
         (user_id, broker) pair.  Idempotent — returns False if already running.
@@ -109,6 +112,13 @@ class ReconnectManager:
         access-token string on success or None/falsy on failure.
 
         Set force=True to override the exhaustion cooldown (e.g. manual retry).
+
+        has_open_positions=True activates urgent mode:
+          - First retry fires after URGENT_INTERVAL_SECONDS (30s) instead of the normal 60s.
+          - A WARNING is logged immediately so operators act fast.
+
+        on_exhausted_fn: optional async callable invoked when all retries are exhausted.
+          Typical use: lambda: eod_squareoff() to close positions if reconnect fails.
         """
         if self.is_active(user_id, broker):
             return False
@@ -129,9 +139,18 @@ class ReconnectManager:
         session = _BrokerReconnectSession(user_id, broker)
         self._sessions[(user_id, broker)] = session
 
+        # Urgent mode: shorter retry interval and an immediate alert when positions are open.
+        retry_interval = URGENT_INTERVAL_SECONDS if has_open_positions else INTERVAL_SECONDS
+        if has_open_positions:
+            logger.warning(
+                f"[ReconnectManager] URGENT: {broker} disconnected for user {user_id} "
+                f"with OPEN POSITIONS. Attempting reconnect every {retry_interval}s. "
+                f"If {MAX_RETRIES} attempts fail, emergency square-off will trigger."
+            )
+
         async def _loop():
             for attempt in range(1, MAX_RETRIES + 1):
-                await asyncio.sleep(INTERVAL_SECONDS)
+                await asyncio.sleep(retry_interval)
                 session.attempts = attempt
                 session.last_attempt = datetime.now(IST).isoformat()
                 logger.info(
@@ -169,6 +188,24 @@ class ReconnectManager:
                 f"[ReconnectManager] {broker} exhausted {MAX_RETRIES} retries for user {user_id}; "
                 f"cooldown active for {EXHAUSTED_COOLDOWN_HOURS}h"
             )
+
+            # When positions are open and we still can't reconnect, fire the emergency callback.
+            if has_open_positions and on_exhausted_fn is not None:
+                logger.critical(
+                    f"[ReconnectManager] Reconnect FAILED with open positions for user {user_id}. "
+                    f"Triggering emergency square-off."
+                )
+                try:
+                    if asyncio.iscoroutinefunction(on_exhausted_fn):
+                        await on_exhausted_fn()
+                    else:
+                        on_exhausted_fn()
+                except Exception as cb_exc:
+                    logger.error(
+                        f"[ReconnectManager] Emergency square-off callback raised: {cb_exc}",
+                        exc_info=True,
+                    )
+
             return None
 
         task = asyncio.create_task(_loop())

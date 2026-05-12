@@ -1,0 +1,129 @@
+/*
+ * mobile-fixes.css — AlgoSoft responsive overrides
+ * Applied on top of inline styles in client_dashboard.html.
+ * Breakpoints: 640px (phone), 768px (tablet).
+ */
+
+/* ── Prevent iOS zoom-on-focus ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Toast: bottom-center on mobile (right edge can be off-screen) ───── */
+@media (max-width: 640px) {
+  .toast {
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 88px !important;   /* above the 80px mobile-bar */
+    max-width: none !important;
+  }
+}
+
+/* ── Positions table: guaranteed scroll wrapper ──────────────────────── */
+@media (max-width: 768px) {
+  .pos-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pos-table {
+    min-width: 700px !important;
+  }
+}
+
+/* ── Card padding: reduce on phone ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .card {
+    padding: 12px !important;
+  }
+}
+
+/* ── Dashboard stats: 2-col on phone, 4-col on desktop ─────────────── */
+/* (already in template, this reinforces) */
+@media (max-width: 640px) {
+  .grid-4 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ── Pane content: full width on mobile ─────────────────────────────── */
+@media (max-width: 768px) {
+  .pane.active {
+    width: 100% !important;
+    max-width: 100vw;
+  }
+}
+
+/* ── Market bar: touch-scroll with snap ─────────────────────────────── */
+@media (max-width: 640px) {
+  .market-bar {
+    scroll-snap-type: x mandatory;
+  }
+  .mbar-item {
+    scroll-snap-align: start;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* ── Settings grid: 1-col on tablet too ─────────────────────────────── */
+@media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Broker settings panel: no horizontal overflow ───────────────────── */
+@media (max-width: 640px) {
+  .bsettings-group {
+    overflow-x: auto !important;
+  }
+}
+
+/* ── Mobile bar height: ensure 80px for safe bottom inset ───────────── */
+.mobile-bar {
+  height: 80px;
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone home bar */
+}
+
+/* ── Backtest results table ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #backtest-result-table-wrap,
+  #backtest-results {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #backtest-result-table-wrap table,
+  #backtest-results table {
+    min-width: 600px !important;
+  }
+}
+
+/* ── History table ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #history-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #history-table-wrap table {
+    min-width: 580px !important;
+  }
+}
+
+/* ── Nav inner: prevent overflow at very small widths ───────────────── */
+@media (max-width: 360px) {
+  .nav-inner {
+    padding: 0 8px !important;
+    gap: 4px !important;
+  }
+  .nav-right {
+    gap: 4px !important;
+  }
+}

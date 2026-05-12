@@ -376,11 +376,7 @@ class BaseOrchestrator(ABC):
             v3_mode = self.json_config.get_value(f"{self.instrument_name}.v3_mode")
             if v3_mode is None: v3_mode = self.json_config.get_value("NIFTY.v3_mode")
 
-            if str(v3_mode).lower() == 'true':
-                from hub.sell_manager_v3 import SellManagerV3
-                self.sell_manager = SellManagerV3(self)
-            else:
-                from hub.sell_manager import SellManager
-                self.sell_manager = SellManager(self)
+            from hub.sell_manager_v3 import SellManagerV3
+            self.sell_manager = SellManagerV3(self)
         if hasattr(self, '_backtest_strangle_triggered'):
             self._backtest_strangle_triggered = False

@@ -1,0 +1,62 @@
+﻿<!-- ══════════════════════════════════════════════════════════ CALENDAR PANE -->
+<div class="pane" id="pane-calendar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text)">📅 Monthly PnL Calendar</h2>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="calNav(-1)" style="padding:5px 12px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px">◀</button>
+      <span id="cal-month-label" style="font-size:14px;font-weight:700;color:var(--text);min-width:120px;text-align:center">—</span>
+      <button onclick="calNav(1)" style="padding:5px 12px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px">▶</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <!-- Day-of-week headers -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">MON</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">TUE</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">WED</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">THU</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">FRI</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">SAT</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0">SUN</div>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+  </div>
+
+  <!-- Day detail modal overlay -->
+  <div id="cal-day-detail" style="display:none;margin-top:4px">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span id="cal-detail-title" style="font-size:15px;font-weight:700;color:var(--text)">—</span>
+        <button onclick="document.getElementById('cal-day-detail').style.display='none'" style="font-size:18px;background:none;border:none;color:var(--muted);cursor:pointer">✕</button>
+      </div>
+      <div id="cal-detail-body" style="font-size:13px;color:var(--muted)">No trades.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<!-- Mobile bottom nav -->
+<div class="mobile-bar" id="mobile-bar">
+  <a onclick="showPane('dashboard')" id="mob-dashboard" class="active">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </a>
+  <a onclick="showPane('positions')" id="mob-positions">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Positions
+  </a>
+  <a onclick="showPane('backtest')" id="mob-backtest">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Backtest
+  </a>
+  <a onclick="showPane('history')" id="mob-history">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    History
+  </a>
+  <a onclick="showPane('settings')" id="mob-settings">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Settings
+  </a>
+</div>

@@ -1,175 +1,236 @@
-# Ruflo — Claude Code Configuration
+# CLAUDE.md
 
-## Rules
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-- Do what has been asked; nothing more, nothing less
-- NEVER create files unless absolutely necessary — prefer editing existing files
-- NEVER create documentation files unless explicitly requested
-- NEVER save working files or tests to root — use `/src`, `/tests`, `/docs`, `/config`, `/scripts`
-- ALWAYS read a file before editing it
-- NEVER commit secrets, credentials, or .env files
-- Keep files under 500 lines
-- Validate input at system boundaries
+---
 
-## Agent Comms (SendMessage-First Coordination)
+## What This Is
 
-Named agents coordinate via `SendMessage`, not polling or shared state.
+**AlgoSoft** — a multi-broker, multi-client options-selling (short-strangle) trading bot for NSE/MCX instruments (NIFTY, BankNifty, etc.). It runs a V3 Sell strategy with live WebSocket feeds, paper trading, a FastAPI web dashboard, and support for 11 broker integrations.
+
+**Git remote:** `https://github.com/ssrajpal2001/Option_Selling_May_2026.git`
+> Always run `git pull` before starting work. Local can fall behind remote.
+
+---
+
+## Running the Bot
+
+```bash
+# Install dependencies (Python 3.12+, using uv)
+uv pip install -r bot/requirements.txt
+
+# Run live trading
+python main.py --config config/config_trader.ini
+
+# Run backtest
+python main.py --config config/config_trader.ini --backtest_enabled
+
+# Run web server only (FastAPI on :5000)
+cd bot && python -m uvicorn web.server:app --host 0.0.0.0 --port 5000 --workers 1
+
+# PM2 production (Ubuntu EC2)
+pm2 status
+pm2 restart algosoft-bot
+pm2 logs algosoft-bot --lines 100
+
+# Health check
+curl http://localhost:5000/health
+curl http://localhost:5000/api/admin/bot-status
+```
+
+---
+
+## Knowledge Graph — Component Relationships
 
 ```
-Lead (you) ←→ architect ←→ developer ←→ tester ←→ reviewer
-              (named agents message each other directly)
+┌─────────────────────────────────────────────────────────────────┐
+│                        main.py (entry)                          │
+│                      EngineManager                              │
+│          ┌──────────────┴──────────────┐                        │
+│   LiveOrchestrator              BacktestOrchestrator            │
+└──────────┬──────────────────────────────────────────────────────┘
+           │
+    ┌──────┴───── DATA LAYER ────────────────────┐
+    │  DataManager (option chain, contracts)     │
+    │  DualFeedManager (Upstox + Dhan WS feeds)  │
+    │  AtmManager (ATM strike + expiry tracking) │
+    └──────┬─────────────────────────────────────┘
+           │ ticks
+    ┌──────┴───── PROCESSING ────────────────────┐
+    │  TickProcessor → IndicatorManager          │
+    │    VWAP (timezone-safe, no look-ahead)     │
+    │    RSI, ROC                                │
+    └──────┬─────────────────────────────────────┘
+           │ signals
+    ┌──────┴───── STRATEGY (V3) ─────────────────┐
+    │  SellManagerV3                             │
+    │  ├─ sell_v3/entry_logic.py (candidate sel) │
+    │  ├─ sell_v3/exit_logic.py  (exit rules)    │
+    │  └─ sell_v3/base.py        (shared config) │
+    │  SignalEvaluator / ExitEvaluator           │
+    │  LifecycleManager (session start/EOD)      │
+    └──────┬─────────────────────────────────────┘
+           │ trade events (EventBus pub/sub)
+    ┌──────┴───── EXECUTION ─────────────────────┐
+    │  BrokerManager (routes per user)           │
+    │  PositionManager (CE/PE state)             │
+    │  PortfolioManager (multi-pos P&L)          │
+    │  Brokers: Zerodha, Upstox, Dhan, AngelOne  │
+    │           Fyers, Groww, AliceBlue, Paper   │
+    └──────┬─────────────────────────────────────┘
+           │ status / state
+    ┌──────┴───── PERSISTENCE ───────────────────┐
+    │  StateManager (JSON state per instrument)  │
+    │  SQLite (algosoft.db — client/user data)   │
+    │  PostgreSQL (optional, multi-tenant)       │
+    └──────┬─────────────────────────────────────┘
+           │
+    ┌──────┴───── WEB LAYER ─────────────────────┐
+    │  FastAPI server (:5000)                    │
+    │  admin_api.py   → /api/admin/*             │
+    │  client_api.py  → /api/client/*            │
+    │  broker_api.py  → /api/broker/*            │
+    │  auth_api.py    → /api/auth/*              │
+    │  Jinja2 templates (client_dashboard.html)  │
+    └────────────────────────────────────────────┘
 ```
 
-### Spawning a Coordinated Team
+---
 
-```javascript
-// ALL agents in ONE message, each knows WHO to message next
-Agent({ prompt: "Research the codebase. SendMessage findings to 'architect'.",
-  subagent_type: "researcher", name: "researcher", run_in_background: true })
-Agent({ prompt: "Wait for 'researcher'. Design solution. SendMessage to 'coder'.",
-  subagent_type: "system-architect", name: "architect", run_in_background: true })
-Agent({ prompt: "Wait for 'architect'. Implement it. SendMessage to 'tester'.",
-  subagent_type: "coder", name: "coder", run_in_background: true })
-Agent({ prompt: "Wait for 'coder'. Write tests. SendMessage results to 'reviewer'.",
-  subagent_type: "tester", name: "tester", run_in_background: true })
-Agent({ prompt: "Wait for 'tester'. Review code quality and security.",
-  subagent_type: "reviewer", name: "reviewer", run_in_background: true })
+## V3 Strategy — Trading Day Workflow
 
-// Kick off the pipeline
-SendMessage({ to: "researcher", summary: "Start", message: "[task context]" })
+```
+09:15 AM ──► LifecycleManager.start()
+               │
+               ▼
+         [Indicator Priming]  ← wait 2–5 min for enough history
+               │
+               ▼
+         [Entry Pulse Loop]  ← fires at each max-entry-TF boundary (e.g. 1m, 5m)
+               │
+        entry_logic.check_entry()
+               ├── ATM candidates selected (beginning concept: ATM + N ITM)
+               ├── Re-entry pool scan (V-slope filter)
+               ├── VWAP slope, RSI, ROC gates evaluated
+               └── PASS → EventBus: EXECUTE_TRADE_REQUEST
+                              │
+                     BrokerManager.place_order()  ← Sell CE + PE simultaneously
+                              │
+                     PositionManager.track()
+                              │
+               ▼
+         [Exit Monitor — every tick]
+        exit_logic.check_exit()
+               ├── Profit target (% of combined entry premium)
+               ├── Stop-loss (LTP < min)
+               ├── Ratio exit (max_LTP / min_LTP ≥ threshold)
+               ├── Scalable TSL (locked profit per lot)
+               └── VWAP slope spike (> threshold% above session low)
+                              │
+                     EventBus: EXIT_TRADE_REQUEST
+                              │
+                     BrokerManager.exit_order()
+                              │
+                     [Smart Rolling?] ──► loop back to Entry Pulse
+               │
+15:15 PM ──► LifecycleManager.eod_squareoff()  (NSE)
+23:00 PM ──► LifecycleManager.eod_squareoff()  (MCX)
 ```
 
-### Patterns
+---
 
-| Pattern | Flow | Use When |
-|---------|------|----------|
-| **Pipeline** | A → B → C → D | Sequential dependencies (feature dev) |
-| **Fan-out** | Lead → A, B, C → Lead | Independent parallel work (research) |
-| **Supervisor** | Lead ↔ workers | Ongoing coordination (complex refactor) |
+## Key Files
 
-### Rules
+| Category | File | Purpose |
+|----------|------|---------|
+| **Entry** | `main.py` | Process entry, wires EngineManager |
+| **Strategy** | `bot/hub/sell_manager_v3.py` | V3 state machine |
+| | `bot/hub/sell_v3/entry_logic.py` | Entry candidate selection + gate evaluation |
+| | `bot/hub/sell_v3/exit_logic.py` | Exit condition checks |
+| | `bot/hub/lifecycle_manager.py` | Market open/close/EOD timing |
+| **Data** | `bot/hub/data_manager.py` | Option chain + contract loading |
+| | `bot/hub/dual_feed_manager.py` | Upstox + Dhan parallel WebSocket feeds |
+| | `bot/hub/tick_processor.py` | Raw tick → indicator pipeline |
+| **Indicators** | `bot/hub/indicator_manager.py` | VWAP/RSI/ROC with timezone-safe caching |
+| | `bot/indicators/vwap.py` | VWAP (finalized snapshot — no look-ahead) |
+| **Execution** | `bot/hub/broker_manager.py` | Routes orders to correct broker per user |
+| | `bot/hub/position_manager.py` | Tracks open CE/PE state |
+| | `bot/hub/event_bus.py` | Pub/sub trade event bus |
+| **Brokers** | `bot/brokers/base_broker.py` | Abstract broker interface |
+| | `bot/brokers/zerodha_client.py`, `upstox_client.py`, `dhan_client.py` | Broker SDKs |
+| **Web** | `bot/web/admin_api.py` | Admin: data providers, client mgmt (113KB) |
+| | `bot/web/client_api.py` | Client: positions, orders, logs, toggles (124KB) |
+| | `bot/web/templates/client_dashboard.html` | Main UI (3,935 lines — planned refactor) |
+| **Config** | `bot/utils/config_manager.py` | Parses `config/config_trader.ini` |
+| | `bot/utils/json_config_manager.py` | Parses `strategy_logic.json` (per-instrument V3 rules) |
 
-- ALWAYS name agents — `name: "role"` makes them addressable
-- ALWAYS include comms instructions in prompts — who to message, what to send
+---
+
+## Configuration Files
+
+| File | Role |
+|------|------|
+| `config/config_trader.ini` | Brokers, timeframes, indicators, paper/live toggle |
+| `strategy_logic.json` | V3 rules per instrument (entry TF, exit thresholds, VWAP slope, max trades/day) |
+| `config/sell_v3_state_NIFTY.json` | Persisted V3 state (last pulse, candidates, trade count) — written at runtime |
+| `bot/config/algosoft.db` | SQLite: client accounts, broker tokens, trade history |
+| `ecosystem.config.js` | PM2 process manager (auto-restart, log rotation) |
+
+---
+
+## Known Invariants
+
+- **VWAP must use a finalized intraday snapshot**, not live value at boundary + 5s. The look-ahead bias was fixed in commits `a73ac40`–`bf412e7`. Do not revert this pattern.
+- **All timestamps must be IST (Asia/Kolkata)**. Mixing UTC and IST causes silent indicator misalignment.
+- **Dhan client auto-detects SDK version** — `DhanContext` vs legacy import. Do not assume a single import path.
+- **DualFeedManager** redundancy: if Upstox returns 401, Dhan feed continues trading. Never short-circuit one feed unconditionally.
+- **Paper trading mode** executes identical code paths to live — only `BrokerManager` switches the order client.
+
+---
+
+## Pending Critical Tasks (from pending-tasks-reference.md)
+
+| # | Task | Key Files |
+|---|------|-----------|
+| #3 | Redesign client dashboard (clean UI, two-toggle UX) | `client_dashboard.html`, `client_api.py` |
+| #4 | Automate Dhan token renewal (30-day expiry) | `admin_api.py`, `dhan_client.py` |
+| #5 | Wire V3 Sell live execution (trades not firing) | `sell_manager_v3.py`, `broker_manager.py` |
+| #12 | UX polish: market status, capital gauge, mobile CSS | `client_dashboard.html` |
+
+---
+
+## Agent Coordination Rules
+
+Named agents coordinate via `SendMessage`, not polling.
+
+```
+Lead ←→ architect ←→ coder ←→ tester ←→ reviewer
+```
+
 - Spawn ALL agents in ONE message with `run_in_background: true`
-- After spawning: STOP, tell user what's running, wait for results
-- NEVER poll status — agents message back or complete automatically
+- Include who to message next in every agent prompt
+- After spawning: tell user what's running, wait for results
 
-## Swarm & Routing
-
-### Config
-- **Topology**: hierarchical-mesh (anti-drift)
-- **Max Agents**: 15
-- **Memory**: hybrid
-- **HNSW**: Enabled
-- **Neural**: Enabled
-
+**When to use swarm** (3+ files, new features, cross-module changes, API changes):
 ```bash
 npx @claude-flow/cli@latest swarm init --topology hierarchical --max-agents 8 --strategy specialized
 ```
 
-### Agent Routing
-
-| Task | Agents | Topology |
-|------|--------|----------|
-| Bug Fix | researcher, coder, tester | hierarchical |
-| Feature | architect, coder, tester, reviewer | hierarchical |
-| Refactor | architect, coder, reviewer | hierarchical |
-| Performance | perf-engineer, coder | hierarchical |
-| Security | security-architect, auditor | hierarchical |
-
-### When to Swarm
-- **YES**: 3+ files, new features, cross-module refactoring, API changes, security, performance
-- **NO**: single file edits, 1-2 line fixes, docs updates, config changes, questions
-
-### 3-Tier Model Routing
-
-| Tier | Handler | Use Cases |
-|------|---------|-----------|
-| 1 | Agent Booster (WASM) | Simple transforms — skip LLM, use Edit directly |
-| 2 | Haiku | Simple tasks, low complexity |
-| 3 | Sonnet/Opus | Architecture, security, complex reasoning |
-
-## Memory & Learning
-
-### Before Any Task
+**Before any task:**
 ```bash
 npx @claude-flow/cli@latest memory search --query "[task keywords]" --namespace patterns
-npx @claude-flow/cli@latest hooks route --task "[task description]"
 ```
 
-### After Success
+**After success:**
 ```bash
 npx @claude-flow/cli@latest memory store --namespace patterns --key "[name]" --value "[what worked]"
-npx @claude-flow/cli@latest hooks post-task --task-id "[id]" --success true --store-results true
 ```
 
-### MCP Tools (use `ToolSearch("keyword")` to discover)
+### Agent Routing
 
-| Category | Key Tools |
-|----------|-----------|
-| **Memory** | `memory_store`, `memory_search`, `memory_search_unified` |
-| **Bridge** | `memory_import_claude`, `memory_bridge_status` |
-| **Swarm** | `swarm_init`, `swarm_status`, `swarm_health` |
-| **Agents** | `agent_spawn`, `agent_list`, `agent_status` |
-| **Hooks** | `hooks_route`, `hooks_post-task`, `hooks_worker-dispatch` |
-| **Security** | `aidefence_scan`, `aidefence_is_safe`, `aidefence_has_pii` |
-| **Hive-Mind** | `hive-mind_init`, `hive-mind_consensus`, `hive-mind_spawn` |
-
-### Background Workers
-
-| Worker | When |
-|--------|------|
-| `audit` | After security changes |
-| `optimize` | After performance work |
-| `testgaps` | After adding features |
-| `map` | Every 5+ file changes |
-| `document` | After API changes |
-
-```bash
-npx @claude-flow/cli@latest hooks worker dispatch --trigger audit
-```
-
-## Agents
-
-**Core**: `coder`, `reviewer`, `tester`, `planner`, `researcher`
-**Architecture**: `system-architect`, `backend-dev`, `mobile-dev`
-**Security**: `security-architect`, `security-auditor`
-**Performance**: `performance-engineer`, `perf-analyzer`
-**Coordination**: `hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator`
-**GitHub**: `pr-manager`, `code-review-swarm`, `issue-tracker`, `release-manager`
-
-Any string works as a custom agent type.
-
-## Build & Test
-
-- ALWAYS run tests after code changes
-- ALWAYS verify build succeeds before committing
-
-```bash
-npm run build && npm test
-```
-
-## CLI Quick Reference
-
-```bash
-npx @claude-flow/cli@latest init --wizard           # Setup
-npx @claude-flow/cli@latest swarm init --v3-mode     # Start swarm
-npx @claude-flow/cli@latest memory search --query "" # Vector search
-npx @claude-flow/cli@latest hooks route --task ""    # Route to agent
-npx @claude-flow/cli@latest doctor --fix             # Diagnostics
-npx @claude-flow/cli@latest security scan            # Security scan
-npx @claude-flow/cli@latest performance benchmark    # Benchmarks
-```
-
-26 commands, 140+ subcommands. Use `--help` on any command for details.
-
-## Setup
-
-```bash
-claude mcp add claude-flow -- npx -y @claude-flow/cli@latest
-npx @claude-flow/cli@latest daemon start
-npx @claude-flow/cli@latest doctor --fix
-```
-
-**Agent tool** handles execution (agents, files, code, git). **MCP tools** handle coordination (swarm, memory, hooks). **CLI** is the same via Bash.
+| Task | Agents |
+|------|--------|
+| Bug Fix | researcher, coder, tester |
+| Feature | architect, coder, tester, reviewer |
+| Security | security-architect, auditor |
+| Performance | perf-engineer, coder |
