@@ -1,0 +1,102 @@
+{
+  "updated_at": "2026-05-13T18:50:56.916840",
+  "heartbeat": 1778678456.9218557,
+  "pid": 1704,
+  "bot_running": true,
+  "trading_active": true,
+  "broker_name": "upstox",
+  "funds": 0.0,
+  "broker_positions": [],
+  "instrument": "CRUDEOIL",
+  "atm": null,
+  "spot_price": null,
+  "index_price": null,
+  "mode": "LIVE",
+  "buy": {
+    "CALL": {
+      "status": "IDLE"
+    },
+    "PUT": {
+      "status": "IDLE"
+    }
+  },
+  "sell": {
+    "CE": {
+      "placed": false
+    },
+    "PE": {
+      "placed": false
+    },
+    "v3_extras": {},
+    "stats": {
+      "rsi": null,
+      "roc": null,
+      "slope": null,
+      "price": null,
+      "vwap": null,
+      "ce_strike": null,
+      "pe_strike": null,
+      "entry_reason": "SCANNING"
+    }
+  },
+  "oi_snapshot": {
+    "call_oi": 0,
+    "put_oi": 0
+  },
+  "session_pnl": 0.0,
+  "trade_count": 0,
+  "last_error": null,
+  "log_tail": [
+    "2026-05-13 18:50:51,150 - UpstoxApp - INFO - [ProviderFactory] FeedServer reachable \u2014 FeedClient will use shared tick distribution.",
+    "2026-05-13 18:50:51,151 - UpstoxApp - INFO - [ProviderFactory] Contract REST client: upstox (RestApiClient)",
+    "2026-05-13 18:50:51,151 - UpstoxApp - INFO - [FeedClient] start() called \u2014 creating _connection_loop task.",
+    "2026-05-13 18:50:51,153 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for CRUDEOIL",
+    "2026-05-13 18:50:51,153 - UpstoxApp - INFO - [CRUDEOIL] IndicatorManager initialized on orchestrator.",
+    "2026-05-13 18:50:51,156 - UpstoxApp - INFO - \u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557",
+    "2026-05-13 18:50:51,156 - UpstoxApp - INFO - \u2551 ACTIVE V3 STRATEGY SETTINGS (Instrument: CRUDEOIL  )          \u2551",
+    "2026-05-13 18:50:51,157 - UpstoxApp - INFO - \u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563",
+    "2026-05-13 18:50:51,157 - UpstoxApp - INFO - \u2551 MASTER STATUS: [ENABLED]                                      \u2551",
+    "2026-05-13 18:50:51,157 - UpstoxApp - INFO - \u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563",
+    "2026-05-13 18:50:51,158 - UpstoxApp - INFO - \u2551 TIMING: Start:09:15:00 | EntryEnd:23:00 | SquareOff:23:29 | Lot:100  \u2551",
+    "2026-05-13 18:50:51,158 - UpstoxApp - INFO - \u2551 PREMIUMS: Target LTP: 60                                                  \u2551",
+    "2026-05-13 18:50:51,158 - UpstoxApp - INFO - \u2551 BEGINNING ENTRY: OFF                                                 \u2551",
+    "2026-05-13 18:50:51,158 - UpstoxApp - INFO - \u2551 RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      \u2551",
+    "2026-05-13 18:50:51,159 - UpstoxApp - INFO - \u2551 ROLLOVERS: Target:ON(12.5%) | Decay:ON(5) | Ratio:ON(4.0) \u2551",
+    "2026-05-13 18:50:51,159 - UpstoxApp - INFO - \u2551 SMART ROLLING: [DISABLED]                                     \u2551",
+    "2026-05-13 18:50:51,159 - UpstoxApp - INFO - \u2551 SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              \u2551",
+    "2026-05-13 18:50:51,160 - UpstoxApp - INFO - \u2551 GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            \u2551",
+    "2026-05-13 18:50:51,160 - UpstoxApp - INFO - \u2551 PNL GUARDRAIL: [DISABLED] Target:100.0 Pts | SL:60.0 Pts                 \u2551",
+    "2026-05-13 18:50:51,160 - UpstoxApp - INFO - \u2551 SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                \u2551",
+    "2026-05-13 18:50:51,160 - UpstoxApp - INFO - \u2551 DYNAMIC EXITS: CLOSE>VWAP(1m)                                        \u2551",
+    "2026-05-13 18:50:51,161 - UpstoxApp - INFO - \u2551 ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       \u2551",
+    "2026-05-13 18:50:51,161 - UpstoxApp - INFO - \u2551 LIMITS: Max Daily Trades: 5                                   \u2551",
+    "2026-05-13 18:50:51,161 - UpstoxApp - INFO - \u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d",
+    "2026-05-13 18:50:51,161 - UpstoxApp - INFO - [CRUDEOIL] Global SellManagerV3 initialized.",
+    "2026-05-13 18:50:51,263 - UpstoxApp - INFO - Tick worker started for CRUDEOIL.",
+    "2026-05-13 18:50:51,265 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).",
+    "2026-05-13 18:50:51,266 - UpstoxApp - INFO - [FeedClient] _read_loop ENTERED. connected=True reader_present=True",
+    "2026-05-13 18:50:51,427 - UpstoxApp - INFO - ContractManager: 'MCX_INDEX|CRUDE OIL' returned no options. Retrying with futures_key 'MCX_FO:CRUDEOIL26MAYFUT'...",
+    "2026-05-13 18:50:51,498 - UpstoxApp - ERROR - Upstox API 400 Bad Request at /option/contract. Body: {\"status\":\"error\",\"errors\":[{\"errorCode\":\"UDAPI100011\",\"message\":\"Invalid Instrument key\",\"propertyPath\":null,\"invalidValue\":null,\"error_code\":\"UDAPI100011\",\"property_path\":null,\"invalid_value\":null}]}",
+    "2026-05-13 18:50:51,499 - UpstoxApp - WARNING - API call to /option/contract failed (Status: 400). Reason: 400, message='Bad Request', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=MCX_FO:CRUDEOIL26MAYFUT')",
+    "2026-05-13 18:50:51,499 - UpstoxApp - ERROR - Error fetching option contracts: 400, message='Bad Request', url=URL('https://api.upstox.com/v2/option/contract?instrument_key=MCX_FO:CRUDEOIL26MAYFUT')",
+    "2026-05-13 18:50:51,605 - UpstoxApp - INFO - ContractManager: No options found via API for 'MCX_INDEX|CRUDE OIL'. Attempting CSV fallback (backtest mode only)...",
+    "2026-05-13 18:50:51,695 - UpstoxApp - INFO - ContractManager: CSV search for 'CRUDEOIL' in MCX found 2434 options.",
+    "2026-05-13 18:50:51,696 - UpstoxApp - INFO - ContractManager: Sample CSV row: {'instrument_key': 'MCX_FO|570309', 'exchange_token': 570309, 'tradingsymbol': 'CRUDEOILM26JUL9050CE', 'name': 'CRUDE OIL', 'last_price': 875.3, 'expiry': '2026-07-16', 'strike': 9050.0, 'tick_size': 5.0, 'lot_size': 10, 'instrument_type': 'OPTFUT', 'option_type': 'CE', 'exchange': 'MCX_FO', 'name_norm': 'CRUDEOIL'}",
+    "2026-05-13 18:50:51,883 - UpstoxApp - INFO - ContractManager: CSV fallback success. Loaded 2434 option contracts for CRUDEOIL from MCX.",
+    "2026-05-13 18:50:51,884 - UpstoxApp - INFO - ContractManager: All CE/PE expiry dates loaded (3 unique): [datetime.date(2026, 5, 14), datetime.date(2026, 6, 16), datetime.date(2026, 7, 16)]",
+    "2026-05-13 18:50:51,884 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-05-14 (day=Thursday)",
+    "2026-05-13 18:50:51,889 - UpstoxApp - INFO - [CRUDEOIL] Default expiry resolved: signal=2026-05-14 (CURRENT_WEEK), trade=2026-05-14 (WEEKLY)",
+    "2026-05-13 18:50:51,891 - UpstoxApp - INFO - [CRUDEOIL] [BUY] Expiry resolved: signal=2026-05-14 (WEEKLY), trade=2026-05-14 (WEEKLY)",
+    "2026-05-13 18:50:51,894 - UpstoxApp - INFO - [CRUDEOIL] [SELL] Expiry resolved: signal=2026-05-14 (MONTHLY), trade=2026-05-14 (MONTHLY)",
+    "2026-05-13 18:50:51,894 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to CRUDEOIL",
+    "2026-05-13 18:50:51,895 - UpstoxApp - INFO - [CRUDEOIL] SellManagerV3 initialized for User: ssrajpal2001",
+    "2026-05-13 18:50:51,895 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=CRUDEOIL",
+    "2026-05-13 18:50:51,895 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.",
+    "2026-05-13 18:50:51,896 - UpstoxApp - INFO - [CRUDEOIL] Initial subscriptions: ['MCX_FO:CRUDEOIL26MAYFUT', 'MCX_INDEX|CRUDE OIL']",
+    "2026-05-13 18:50:51,896 - UpstoxApp - INFO - [FeedClient] Subscription sent to FeedServer: 2 instruments (mode=full). Keys: ['MCX_FO:CRUDEOIL26MAYFUT', 'MCX_INDEX|CRUDE OIL']",
+    "2026-05-13 18:50:51,896 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:00:00).",
+    "2026-05-13 18:50:51,897 - UpstoxApp - INFO - Trading bot is now live.",
+    "2026-05-13 18:50:51,897 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active."
+  ],
+  "trade_history": []
+}

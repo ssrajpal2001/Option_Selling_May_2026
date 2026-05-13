@@ -1,0 +1,102 @@
+{
+  "updated_at": "2026-05-13T18:29:16.990203",
+  "heartbeat": 1778677157.2913232,
+  "pid": 11044,
+  "bot_running": true,
+  "trading_active": true,
+  "broker_name": "angelone",
+  "funds": 104156.4665,
+  "broker_positions": [],
+  "instrument": "NIFTY",
+  "atm": null,
+  "spot_price": null,
+  "index_price": null,
+  "mode": "LIVE",
+  "buy": {
+    "CALL": {
+      "status": "IDLE"
+    },
+    "PUT": {
+      "status": "IDLE"
+    }
+  },
+  "sell": {
+    "CE": {
+      "placed": false
+    },
+    "PE": {
+      "placed": false
+    },
+    "v3_extras": {},
+    "stats": {
+      "rsi": null,
+      "roc": null,
+      "slope": null,
+      "price": null,
+      "vwap": null,
+      "ce_strike": null,
+      "pe_strike": null,
+      "entry_reason": "SCANNING"
+    }
+  },
+  "oi_snapshot": {
+    "call_oi": 0,
+    "put_oi": 0
+  },
+  "session_pnl": 0.0,
+  "trade_count": 0,
+  "last_error": null,
+  "log_tail": [
+    "2026-05-13 18:28:01,069 - UpstoxApp - INFO - [FeedClient] start() called \u2014 creating _connection_loop task.",
+    "2026-05-13 18:28:01,070 - UpstoxApp - WARNING - futures_instrument_key not defined in config for NIFTY. Relying on auto-discovery.",
+    "2026-05-13 18:28:01,071 - UpstoxApp - INFO - Initialized non-blocking DataRecorder for NIFTY",
+    "2026-05-13 18:28:01,071 - UpstoxApp - INFO - [NIFTY] IndicatorManager initialized on orchestrator.",
+    "2026-05-13 18:28:01,074 - UpstoxApp - INFO - \u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557",
+    "2026-05-13 18:28:01,074 - UpstoxApp - INFO - \u2551 ACTIVE V3 STRATEGY SETTINGS (Instrument: NIFTY     )          \u2551",
+    "2026-05-13 18:28:01,075 - UpstoxApp - INFO - \u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563",
+    "2026-05-13 18:28:01,075 - UpstoxApp - INFO - \u2551 MASTER STATUS: [ENABLED]                                      \u2551",
+    "2026-05-13 18:28:01,075 - UpstoxApp - INFO - \u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563",
+    "2026-05-13 18:28:01,075 - UpstoxApp - INFO - \u2551 TIMING: Start:09:15:00 | EntryEnd:15:00 | SquareOff:15:29 | Lot:25   \u2551",
+    "2026-05-13 18:28:01,076 - UpstoxApp - INFO - \u2551 PREMIUMS: Target LTP: 60                                                  \u2551",
+    "2026-05-13 18:28:01,076 - UpstoxApp - INFO - \u2551 BEGINNING ENTRY: OFF                                                 \u2551",
+    "2026-05-13 18:28:01,076 - UpstoxApp - INFO - \u2551 RE-ENTRY GATES:  CLOSE<VWAP(5m)                                      \u2551",
+    "2026-05-13 18:28:01,077 - UpstoxApp - INFO - \u2551 ROLLOVERS: Target:ON(12.5%) | Decay:ON(20) | Ratio:ON(4.0) \u2551",
+    "2026-05-13 18:28:01,077 - UpstoxApp - INFO - \u2551 SMART ROLLING: [ENABLED]                                     \u2551",
+    "2026-05-13 18:28:01,077 - UpstoxApp - INFO - \u2551 SCALABLE TSL: Base:1000/250 | Step:250/250 (Rupees)              \u2551",
+    "2026-05-13 18:28:01,078 - UpstoxApp - INFO - \u2551 GUARDRAILS: ROC Exit:OFF(15m, T:-20.0/SL:10.0)            \u2551",
+    "2026-05-13 18:28:01,078 - UpstoxApp - INFO - \u2551 PNL GUARDRAIL: [DISABLED] Target:100.0 Pts | SL:60.0 Pts                 \u2551",
+    "2026-05-13 18:28:01,078 - UpstoxApp - INFO - \u2551 SINGLE TRADE: Target: 30.0 Pts | SL: 20.0 Pts                                \u2551",
+    "2026-05-13 18:28:01,079 - UpstoxApp - INFO - \u2551 DYNAMIC EXITS: CLOSE>VWAP(1m) AND RSI>VALUE(2m) AND ROC>VALUE(2m) AND SLOPE>VALUE(1m) \u2551",
+    "2026-05-13 18:28:01,079 - UpstoxApp - INFO - \u2551 ACCELERATION: Rust Core [ACTIVE] | Zero-Stall I/O [ACTIVE]       \u2551",
+    "2026-05-13 18:28:01,079 - UpstoxApp - INFO - \u2551 LIMITS: Max Daily Trades: 5                                   \u2551",
+    "2026-05-13 18:28:01,079 - UpstoxApp - INFO - \u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d",
+    "2026-05-13 18:28:01,080 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0",
+    "2026-05-13 18:28:01,080 - UpstoxApp - INFO - [NIFTY] Global SellManagerV3 initialized.",
+    "2026-05-13 18:28:01,102 - UpstoxApp - INFO - Tick worker started for NIFTY.",
+    "2026-05-13 18:28:01,104 - UpstoxApp - INFO - [FeedClient] Connected to FeedServer (attempt 1).",
+    "2026-05-13 18:28:01,104 - UpstoxApp - INFO - [FeedClient] _read_loop ENTERED. connected=True reader_present=True",
+    "2026-05-13 18:28:01,238 - UpstoxApp - INFO - BrokerManager: All square-off commands dispatched.",
+    "2026-05-13 18:28:01,554 - UpstoxApp - INFO - ContractManager: Expiry day detected (2026-05-13) \u2014 today's contracts absent from standard endpoint. Fetching from expired-instruments API...",
+    "2026-05-13 18:28:01,656 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v2 returned 200 but data=[] for expiry=2026-05-13",
+    "2026-05-13 18:28:01,748 - UpstoxApp - WARNING - ContractManager: https://api.upstox.com/v3 returned HTTP 404",
+    "2026-05-13 18:28:01,749 - UpstoxApp - ERROR - ContractManager: All endpoints returned empty \u2014 no expiry-day contracts found for 2026-05-13 (key=NSE_INDEX|Nifty 50)",
+    "2026-05-13 18:28:01,749 - UpstoxApp - WARNING - ContractManager: expired-instruments API returned no contracts. Trying /option/chain fallback \u2026",
+    "2026-05-13 18:28:01,829 - UpstoxApp - WARNING - ContractManager: /option/chain fallback also returned no contracts for 2026-05-13. Bot will use next available expiry \u2014 today's expiry contracts unavailable.",
+    "2026-05-13 18:28:01,830 - UpstoxApp - INFO - ContractManager: All CE/PE expiry dates loaded (18 unique): [datetime.date(2026, 5, 19), datetime.date(2026, 5, 26), datetime.date(2026, 6, 2), datetime.date(2026, 6, 9), datetime.date(2026, 6, 16), datetime.date(2026, 6, 30), datetime.date(2026, 7, 28), datetime.date(2026, 9, 29), datetime.date(2026, 12, 29), datetime.date(2027, 3, 30)]...",
+    "2026-05-13 18:28:01,830 - UpstoxApp - INFO - ContractManager: Near weekly expiry resolved to 2026-05-19 (day=Tuesday)",
+    "2026-05-13 18:28:01,836 - UpstoxApp - INFO - [NIFTY] Default expiry resolved: signal=2026-05-19 (CURRENT_WEEK), trade=2026-05-19 (WEEKLY)",
+    "2026-05-13 18:28:01,838 - UpstoxApp - INFO - [NIFTY] [BUY] Expiry resolved: signal=2026-05-19 (WEEKLY), trade=2026-05-19 (WEEKLY)",
+    "2026-05-13 18:28:01,840 - UpstoxApp - INFO - [NIFTY] [SELL] Expiry resolved: signal=2026-05-19 (WEEKLY), trade=2026-05-19 (WEEKLY)",
+    "2026-05-13 18:28:01,840 - UpstoxApp - INFO - [EngineManager] Adding client session for ID: 2 to NIFTY",
+    "2026-05-13 18:28:01,841 - UpstoxApp - INFO - [SellManagerV3] State loaded for NIFTY. TSL High Lock: 0.0",
+    "2026-05-13 18:28:01,841 - UpstoxApp - INFO - [NIFTY] SellManagerV3 initialized for User: ssrajpal2001",
+    "2026-05-13 18:28:01,841 - UpstoxApp - INFO - UserSession Initialized: User=ssrajpal2001 | Instrument=NIFTY",
+    "2026-05-13 18:28:01,841 - UpstoxApp - INFO - No saved state file found. Starting with a fresh state.",
+    "2026-05-13 18:28:01,842 - UpstoxApp - INFO - [NIFTY] Initial subscriptions: ['NSE_INDEX|Nifty 50']",
+    "2026-05-13 18:28:01,842 - UpstoxApp - INFO - [FeedClient] Subscription sent to FeedServer: 1 instruments (mode=full). Keys: ['NSE_INDEX|Nifty 50']",
+    "2026-05-13 18:28:01,842 - UpstoxApp - INFO - [EngineManager] Bot initialized successfully. Waiting for trading window (09:15:00).",
+    "2026-05-13 18:28:01,842 - UpstoxApp - INFO - Trading bot is now live.",
+    "2026-05-13 18:28:01,843 - UpstoxApp - INFO - [EngineManager] Trading window opened. Signal monitoring active."
+  ],
+  "trade_history": []
+}

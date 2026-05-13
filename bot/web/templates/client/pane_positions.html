@@ -24,10 +24,15 @@
     <div id="pos-plain-status" style="padding:8px 16px 0;font-size:13px;color:var(--text-soft);line-height:1.5"></div>
 
     <!-- Empty state -->
-    <div id="pos-empty" class="pos-empty">
-      <div class="pos-empty-icon">📭</div>
-      <div class="pos-empty-txt">No open positions today</div>
-      <div style="font-size:12px;margin-top:4px;color:var(--muted)">Bot will show active CE/PE positions here once placed</div>
+    <div id="pos-empty" class="pos-empty" style="padding:0">
+      <!-- Static fallback shown when bot is not running or no scan data -->
+      <div id="pos-no-data" style="padding:48px 20px;text-align:center">
+        <div class="pos-empty-icon">📭</div>
+        <div class="pos-empty-txt">No open positions today</div>
+        <div style="font-size:12px;margin-top:4px;color:var(--muted)">Bot will show active CE/PE positions here once placed</div>
+      </div>
+      <!-- Live scanning panel — populated by JS when bot is running -->
+      <div id="pos-scan-panel" style="display:none"></div>
     </div>
 
     <!-- Positions table -->

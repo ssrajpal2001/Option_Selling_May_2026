@@ -2,7 +2,7 @@
     "CRUDEOIL": {
         "v3_mode": true,
         "sell": {
-            "enabled": true,
+            "enabled": false,
             "start_time": "09:00",
             "v3": {
                 "entry_rules_beginning": [],
@@ -75,22 +75,77 @@
                 "max_trades_per_day": 5,
                 "single_trade_target_pts": "",
                 "single_trade_stoploss_pts": "",
-                "monday":    {"single_trade_target_pts": "", "single_trade_stoploss_pts": "", "guardrail_pnl": {"target_pts": "", "stoploss_pts": ""}},
-                "tuesday":   {"single_trade_target_pts": "", "single_trade_stoploss_pts": "", "guardrail_pnl": {"target_pts": "", "stoploss_pts": ""}},
-                "wednesday": {"single_trade_target_pts": "", "single_trade_stoploss_pts": "", "guardrail_pnl": {"target_pts": "", "stoploss_pts": ""}},
-                "thursday":  {"single_trade_target_pts": "", "single_trade_stoploss_pts": "", "guardrail_pnl": {"target_pts": "", "stoploss_pts": ""}},
-                "friday":    {"single_trade_target_pts": "", "single_trade_stoploss_pts": "", "guardrail_pnl": {"target_pts": "", "stoploss_pts": ""}},
+                "monday": {
+                    "single_trade_target_pts": "",
+                    "single_trade_stoploss_pts": "",
+                    "guardrail_pnl": {
+                        "target_pts": "",
+                        "stoploss_pts": ""
+                    }
+                },
+                "tuesday": {
+                    "single_trade_target_pts": "",
+                    "single_trade_stoploss_pts": "",
+                    "guardrail_pnl": {
+                        "target_pts": "",
+                        "stoploss_pts": ""
+                    }
+                },
+                "wednesday": {
+                    "single_trade_target_pts": "",
+                    "single_trade_stoploss_pts": "",
+                    "guardrail_pnl": {
+                        "target_pts": "",
+                        "stoploss_pts": ""
+                    }
+                },
+                "thursday": {
+                    "single_trade_target_pts": "",
+                    "single_trade_stoploss_pts": "",
+                    "guardrail_pnl": {
+                        "target_pts": "",
+                        "stoploss_pts": ""
+                    }
+                },
+                "friday": {
+                    "single_trade_target_pts": "",
+                    "single_trade_stoploss_pts": "",
+                    "guardrail_pnl": {
+                        "target_pts": "",
+                        "stoploss_pts": ""
+                    }
+                },
                 "reentry_best_metric": "balanced_premium",
                 "ltp_target": 60,
                 "entry_workflow_mode": "reentry_only",
-                "rsi": {"period": 14},
-                "roc": {"length": 9}
+                "rsi": {
+                    "period": 14
+                },
+                "roc": {
+                    "length": 9
+                }
             },
             "exit_indicators": {
-                "tsl": {"enabled": false, "offset": ""},
-                "atr_tsl": {"enabled": false, "length": "", "multiplier": "", "tf": "", "check_mode": "TICK"},
-                "ltp_below_min": {"enabled": false, "threshold": ""},
-                "combined_vwap_slope": {"enabled": true, "tf": "", "threshold": ""}
+                "tsl": {
+                    "enabled": false,
+                    "offset": ""
+                },
+                "atr_tsl": {
+                    "enabled": false,
+                    "length": "",
+                    "multiplier": "",
+                    "tf": "",
+                    "check_mode": "TICK"
+                },
+                "ltp_below_min": {
+                    "enabled": false,
+                    "threshold": ""
+                },
+                "combined_vwap_slope": {
+                    "enabled": true,
+                    "tf": "",
+                    "threshold": ""
+                }
             },
             "product_type": "MIS",
             "buy_product_type": "MIS",
@@ -103,12 +158,106 @@
             "ltp_exit_min": "",
             "itm_count": "",
             "indicators": {
-                "vwap_slope": {"tf": "", "check_mode": "TICK", "operator": "<", "threshold": "", "occurrences": ""}
+                "vwap_slope": {
+                    "tf": "",
+                    "check_mode": "TICK",
+                    "operator": "<",
+                    "threshold": "",
+                    "occurrences": ""
+                }
             }
         },
-        "buy": {"enabled": false},
-        "oi_exit": {"enabled": false},
-        "profit_target_exit": {"enabled": false},
+        "buy": {
+            "enabled": false,
+            "exit_indicators": {
+                "tsl": {
+                    "enabled": false,
+                    "offset": "",
+                    "multiplier": ""
+                },
+                "atr_tsl": {
+                    "enabled": false,
+                    "length": "",
+                    "multiplier": "",
+                    "tf": "",
+                    "check_mode": "CLOSE"
+                },
+                "reversal": {
+                    "enabled": false
+                },
+                "target_exit": {
+                    "enabled": false
+                },
+                "s1_low": {
+                    "dynamic_tf": false,
+                    "tf": "",
+                    "fast_tf": ""
+                },
+                "vwap_slope": {
+                    "tf": "",
+                    "check_mode": "TICK",
+                    "operator": "<",
+                    "threshold": "",
+                    "occurrences": ""
+                },
+                "r1_target": {
+                    "tf": "",
+                    "threshold": ""
+                },
+                "r1_falling": {
+                    "tf": ""
+                },
+                "r1_low_breach": {
+                    "tf": ""
+                },
+                "r1_stagnation": {
+                    "minutes": ""
+                },
+                "s1_double_drop": {
+                    "tf": ""
+                },
+                "s1_confirm": {
+                    "fast_tf": "",
+                    "slow_tf": ""
+                }
+            },
+            "start_time": "",
+            "product_type": "MIS",
+            "signal_expiry": "WEEKLY",
+            "trade_expiry": "WEEKLY",
+            "entry_formula": "",
+            "exit_formula": "",
+            "indicators": {
+                "vwap_slope": {
+                    "tf": "",
+                    "check_mode": "TICK",
+                    "operator": ">",
+                    "threshold": "",
+                    "occurrences": ""
+                },
+                "vwap": {
+                    "tf": "",
+                    "check_mode": "TICK"
+                },
+                "pattern": {
+                    "tf": ""
+                },
+                "r1_high": {
+                    "tf": ""
+                }
+            }
+        },
+        "oi_exit": {
+            "enabled": false,
+            "strikes_range": "",
+            "call_oi_increase_pct": "",
+            "put_oi_increase_pct": "",
+            "check_interval_seconds": ""
+        },
+        "profit_target_exit": {
+            "enabled": false,
+            "points": ""
+        },
         "range_915_gate_enabled": false,
         "record_data": true
     },

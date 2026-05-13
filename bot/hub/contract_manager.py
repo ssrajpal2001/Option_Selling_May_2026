@@ -330,8 +330,14 @@ class ContractManager:
 
             if not raw_contracts:
                 is_backtest = self.config_manager.get_boolean('settings', 'backtest_enabled', fallback=False)
-                if not is_backtest:
-                    # LIVE MODE: CSV fallback is DISABLED.
+                # MCX instruments (CrudeOil, Gold, Silver, NaturalGas) only have monthly expiry.
+                # The weekly-expiry concern that makes CSV risky for NSE/BSE does not apply here,
+                # so CSV fallback is safe for MCX even in live mode.
+                _instr_name_chk = (self.config_manager.get_instrument_by_symbol(instrument_key) or
+                                   (self.atm_manager.instrument_name if self.atm_manager else ""))
+                _is_mcx = any(x in _instr_name_chk.upper() for x in ['CRUDE', 'NATURAL', 'GOLD', 'SILVER'])
+                if not is_backtest and not _is_mcx:
+                    # LIVE MODE (NSE/BSE): CSV fallback is DISABLED.
                     # The CSV is a public snapshot file that does NOT include near-weekly
                     # contracts (May 5, May 12, May 19, etc.). Using CSV causes:
                     #   • Wrong expiry resolution (e.g. May 26 instead of May 5)
@@ -349,7 +355,7 @@ class ContractManager:
                     )
                     return False
 
-                # BACKTEST MODE ONLY: Fall back to CSV snapshot
+                # BACKTEST MODE or MCX LIVE: Fall back to CSV snapshot
                 logger.info(f"ContractManager: No options found via API for '{instrument_key}'. Attempting CSV fallback (backtest mode only)...")
 
                 # Deduce exchange from symbol/instrument name
@@ -364,11 +370,14 @@ class ContractManager:
                 # Proactive CSV Download if missing or stale
                 if not os.path.exists(csv_path) or (datetime.datetime.now().timestamp() - os.path.getmtime(csv_path)) > 86400:
                     try:
-                        import aiohttp
+                        import aiohttp, ssl as _ssl
                         url = f"https://assets.upstox.com/market-quote/instruments/exchange/{exchange}.csv.gz"
                         logger.info(f"ContractManager: Downloading {exchange} instruments from {url}...")
+                        _ssl_ctx = _ssl.create_default_context()
+                        _ssl_ctx.check_hostname = False
+                        _ssl_ctx.verify_mode = _ssl.CERT_NONE
                         async with aiohttp.ClientSession() as session:
-                            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}) as resp:
+                            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}, ssl=_ssl_ctx) as resp:
                                 if resp.status == 200:
                                     os.makedirs('config', exist_ok=True)
                                     with open(csv_path, 'wb') as f: f.write(await resp.read())

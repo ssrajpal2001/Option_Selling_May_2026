@@ -1,0 +1,1 @@
+{"bot_running": true, "trading_active": false, "pid": 1704, "mode": "LIVE", "instrument": "CRUDEOIL", "broker": "upstox", "heartbeat": 1778678444.45245, "updated_at": "2026-05-13T18:50:44.452450+05:30", "session_pnl": 0, "trade_count": 0, "trade_history": [], "log_tail": ["Bot starting in client mode. Connection active. Waiting for 'Start Trading' toggle..."]}

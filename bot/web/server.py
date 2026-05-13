@@ -112,6 +112,14 @@ def _get_user_from_request(request: Request):
         return None
 
 
+# ─── Root redirect ────────────────────────────────────────────────────────────
+
+@app.get("/")
+async def root_redirect():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/login")
+
+
 # ─── Auth Pages ───────────────────────────────────────────────────────────────
 
 @app.get("/login", response_class=HTMLResponse)

@@ -113,7 +113,10 @@ class BaseOrchestrator(ABC):
         if not self.futures_instrument_key:
             # Auto-discovery for MCX if missing in INI
             if self.is_mcx:
-                self.futures_instrument_key = f"MCX_FO:{self.instrument_name}FUT"
+                _today = datetime.date.today()
+                _mon = _today.strftime('%b').upper()
+                _yy = _today.strftime('%y')
+                self.futures_instrument_key = f"MCX_FO:{self.instrument_name}{_yy}{_mon}FUT"
             else:
                 logger.warning(f"futures_instrument_key not defined in config for {self.primary_instrument}. Relying on auto-discovery.")
 

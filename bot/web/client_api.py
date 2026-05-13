@@ -1628,7 +1628,7 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
 
     # Per-broker running status for all configured instances
     all_broker_instances = db_fetchall(
-        "SELECT id, broker, status, trading_active, trading_mode, quantity FROM client_broker_instances WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
+        "SELECT id, broker, status, trading_active, trading_mode, quantity, instrument FROM client_broker_instances WHERE client_id=? AND status != 'removed' ORDER BY id ASC",
         (user["id"],)
     )
     brokers_status = []
@@ -1643,6 +1643,7 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
             "trading_active": bool(bi["trading_active"]),
             "trading_mode": bi["trading_mode"] or "paper",
             "quantity": bi["quantity"] or 25,
+            "instrument": bi["instrument"] or "NIFTY",
         })
 
     # Each broker subprocess writes its own status file. Read them all so the
@@ -1657,9 +1658,18 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
     if inst_instrument:
         legacy_paths.append(Path(f'config/bot_status_client_{user["id"]}_{inst_instrument}.json'))
     legacy_paths.append(Path(f'config/bot_status_client_{user["id"]}.json'))
-    if inst_instrument:
-        for bi in all_broker_instances:
-            bf = Path(f'config/bot_status_client_{user["id"]}_{inst_instrument}_{bi["broker"]}.json')
+    for bi in all_broker_instances:
+        # Try the selected instrument first, then the broker's own instrument so
+        # that mixed-instrument setups (e.g. zerodha=CRUDEOIL, angelone=NIFTY)
+        # all appear in the positions panel regardless of which broker tab is active.
+        bi_instr = bi.get("instrument") or ""
+        candidates = []
+        if inst_instrument:
+            candidates.append(inst_instrument)
+        if bi_instr and bi_instr != inst_instrument:
+            candidates.append(bi_instr)
+        for try_instr in candidates:
+            bf = Path(f'config/bot_status_client_{user["id"]}_{try_instr}_{bi["broker"]}.json')
             if not bf.exists():
                 continue
             try:
@@ -1672,6 +1682,7 @@ async def bot_status(instrument: Optional[str] = None, user=Depends(get_current_
                 bot_data_per_broker[bi["broker"]] = payload
             except (json.JSONDecodeError, OSError, TypeError, ValueError):
                 continue
+            break  # found a file for this broker, no need to try other instruments
 
     # If per-broker files weren't found, fall back to legacy combined file.
     # Surface it as the active instance's broker key so the tab strip still
