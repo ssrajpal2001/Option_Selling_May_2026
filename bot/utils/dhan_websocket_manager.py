@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import json
+import ssl
 import websockets
 from .logger import logger
 from hub.data_feed_base import DataFeed
@@ -8,6 +9,20 @@ from dhanhq import marketfeed
 from hub.event_bus import event_bus
 from types import ModuleType
 import sys
+
+# Fix SSL certificate verification on Windows.
+# Python on Windows sometimes can't verify wss:// server certs (missing root CA).
+# Patching ssl.create_default_context() to use certifi's bundle fixes this globally.
+try:
+    import certifi as _certifi
+    _orig_cdc = ssl.create_default_context
+    def _certifi_cdc(*args, **kwargs):
+        if not args and 'cafile' not in kwargs and 'capath' not in kwargs and 'cadata' not in kwargs:
+            kwargs['cafile'] = _certifi.where()
+        return _orig_cdc(*args, **kwargs)
+    ssl.create_default_context = _certifi_cdc
+except ImportError:
+    pass
 
 class DhanWebSocketManager(DataFeed):
     """

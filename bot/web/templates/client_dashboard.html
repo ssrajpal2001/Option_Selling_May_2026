@@ -1005,13 +1005,16 @@ function _humanBotStatus(d, activePosns, todayTrades, running) {
   // Returns a plain-English sentence describing what the bot is currently doing.
   const now = new Date();
   const h = now.getHours(), m = now.getMinutes();
-  const isMarketHours = (h > 9 || (h === 9 && m >= 15)) && (h < 15 || (h === 15 && m <= 30));
+  const isNSEHours = (h > 9 || (h === 9 && m >= 15)) && (h < 15 || (h === 15 && m <= 30));
+  const isMCXHours = (h >= 9) && (h < 23 || (h === 23 && m <= 30)); // MCX trades until 23:30 IST
+  const isMarketHours = isNSEHours || isMCXHours;
 
-  if (!running) return 'Bot is stopped. Start it to begin monitoring.';
+  // Check market hours first — after hours show idle regardless of bot state
   if (!isMarketHours) {
     if (h < 9 || (h === 9 && m < 15)) return 'Waiting for market to open at 9:15 AM IST.';
     return 'Market closed. Bot is idle until tomorrow.';
   }
+  if (!running) return 'Bot is stopped. Start it to begin monitoring.';
   if (activePosns.length > 0) {
     const sides = activePosns.map(s => {
       const p = (d.bot_data?.sell || {})[s] || {};
@@ -1109,7 +1112,7 @@ function renderPositions(d, todayTrades) {
   // Plain-English status line
   const plainStatusEl = document.getElementById('pos-plain-status');
   if (plainStatusEl) {
-    plainStatusEl.innerHTML = _humanBotStatus(d, activePosns, todayTrades, state.running);
+    plainStatusEl.innerHTML = _humanBotStatus(d, activePosns, todayTrades, state.botRunning);
   }
 
   // Empty/table toggle
