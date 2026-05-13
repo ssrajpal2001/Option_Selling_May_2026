@@ -632,13 +632,38 @@ async def _startup_auto_connect():
     On bot startup, wait a few seconds for the server to fully initialise, then
     attempt to connect both global data feeders automatically.  This means the
     admin never needs to click 'Connect Now' after a restart.
+    Skips re-login if the token is already fresh in DB (< 6 hours old).
     """
     await asyncio.sleep(5)           # let Uvicorn finish startup
     logger.info("[Startup] Auto-connecting global data providers...")
     try:
         from web.admin_api import global_provider_connect_background
+        from web.db import db_fetchone
+        import pytz as _ptz
+        from datetime import datetime as _dt
+        _IST = _ptz.timezone('Asia/Kolkata')
+
         for p in ('upstox', 'dhan'):
             try:
+                # Skip re-login if token is fresh in DB (< 6h old)
+                _dp = db_fetchone(
+                    "SELECT access_token_encrypted, token_issued_at FROM data_providers WHERE provider=?",
+                    (p,)
+                )
+                if _dp and _dp.get('access_token_encrypted') and _dp.get('token_issued_at'):
+                    try:
+                        _issued = _dt.fromisoformat(_dp['token_issued_at'])
+                        if _issued.tzinfo is None:
+                            _issued = _IST.localize(_issued)
+                        _age_h = (_dt.now(_IST) - _issued.astimezone(_IST)).total_seconds() / 3600
+                        if _age_h < 6:
+                            logger.info(
+                                f"[Startup] {p} token is {_age_h:.1f}h old — "
+                                "skipping re-login, FeedServer will connect with existing token."
+                            )
+                            continue
+                    except Exception:
+                        pass
                 result = await global_provider_connect_background(p, admin={"id": 0})
                 status = "OK" if result.get("success") else f"FAILED: {result.get('message','')}"
                 logger.info(f"[Startup] Auto-connect {p}: {status}")
@@ -1329,6 +1354,7 @@ async def _hub_reconnect_scanner():
     This ensures reconnect attempts happen even when the client dashboard is closed.
     """
     SCAN_INTERVAL_SECONDS = 30 * 60  # 30 minutes
+    await asyncio.sleep(120)  # 2-minute grace period — let subprocesses connect first
     while True:
         try:
             rows = db_fetchall(
@@ -1433,7 +1459,10 @@ async def startup_event():
         )
 
     # Auto-seed global provider credentials from credentials.ini (if not yet in DB)
-    _seed_global_providers_from_ini()
+    # Run in thread so it doesn't block the event loop during startup
+    async def _seed_global_providers_task():
+        await asyncio.to_thread(_seed_global_providers_from_ini)
+    asyncio.create_task(_seed_global_providers_task())
     # Immediately try to connect both feeders in background (non-blocking)
     asyncio.create_task(_startup_auto_connect())
     # Background morning scheduler (runs daily at 08:30 AM IST)
