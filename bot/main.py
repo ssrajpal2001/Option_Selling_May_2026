@@ -214,6 +214,11 @@ async def main():
             signal.signal(signal.SIGTERM, _win_signal_handler)
         except (OSError, ValueError):
             pass
+        # CTRL_BREAK_EVENT (sent by instance_manager stop) maps to SIGBREAK on Windows
+        try:
+            signal.signal(signal.SIGBREAK, _win_signal_handler)
+        except (OSError, ValueError, AttributeError):
+            pass
 
     # --- 3. Engine Management ---
     engine_manager = EngineManager(config_manager, api_client_manager, broker_manager,

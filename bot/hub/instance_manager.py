@@ -92,6 +92,7 @@ class InstanceManager:
                 env=env,
                 stdout=log_fd,
                 stderr=log_fd,
+                start_new_session=True,  # isolate from uvicorn console group — Ctrl+C won't auto-square-off
             )
             self._processes[instance_id] = proc
             self._log_fds[instance_id] = log_fd
@@ -117,9 +118,16 @@ class InstanceManager:
         if proc:
             if proc.poll() is None:
                 try:
-                    proc.send_signal(signal.SIGTERM)
+                    if sys.platform == 'win32':
+                        # CTRL_BREAK_EVENT works in new process group and lets the bot do graceful square-off
+                        try:
+                            os.kill(proc.pid, signal.CTRL_BREAK_EVENT)
+                        except Exception:
+                            proc.terminate()
+                    else:
+                        proc.send_signal(signal.SIGTERM)
                     try:
-                        proc.wait(timeout=5)
+                        proc.wait(timeout=10)
                     except subprocess.TimeoutExpired:
                         proc.kill()
                     stopped = True
