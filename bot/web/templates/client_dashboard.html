@@ -1411,6 +1411,12 @@ function updateBrokerBotStatusRow(broker) {
     // Qty
     const qtyInput = document.getElementById('broker-inline-qty');
     if (qtyInput) qtyInput.value = brokerData.quantity || 25;
+
+    // Instrument
+    const instrInline = document.getElementById('broker-inline-instrument');
+    if (instrInline) instrInline.value = brokerData.instrument || 'NIFTY';
+    const instrFull = document.getElementById('set-instrument');
+    if (instrFull) instrFull.value = brokerData.instrument || 'NIFTY';
   }
 }
 
@@ -1526,24 +1532,27 @@ async function saveQuickBrokerUpdate() {
   const broker = state.selectedBroker;
   if (!broker) { toast('Select a broker first.', 'warn'); return; }
   const qty  = parseInt(document.getElementById('broker-inline-qty')?.value || '25', 10);
+  const instrument = (document.getElementById('broker-inline-instrument')?.value || 'NIFTY').toUpperCase();
   // Read mode from state (kept in sync by setBrokerMode / updateBrokerBotStatusRow)
   // Avoids brittle CSS-string comparison that browsers normalize to rgb(...)
   const bd0 = (state.brokersStatus || []).find(b => b.broker === broker);
   const activeMode = state.selectedBrokerMode || bd0?.trading_mode || 'paper';
   try {
-    const d = await api('POST', '/broker/quick-update', { broker, trading_mode: activeMode, quantity: qty });
+    const d = await api('POST', '/broker/quick-update', { broker, trading_mode: activeMode, quantity: qty, instrument });
     // Sync local state
     const bd = (state.brokersStatus || []).find(b => b.broker === broker);
-    if (bd) { bd.trading_mode = activeMode; bd.quantity = qty; }
+    if (bd) { bd.trading_mode = activeMode; bd.quantity = qty; bd.instrument = instrument; }
     // Sync mode badge in nav
     const modeBadgeNav = document.getElementById('mode-badge-nav');
     if (modeBadgeNav) {
       modeBadgeNav.className = `badge badge-${activeMode}`;
       modeBadgeNav.textContent = activeMode.toUpperCase();
     }
-    // Sync settings form qty
+    // Sync settings form qty and instrument
     const setQty = document.getElementById('set-qty');
     if (setQty) setQty.value = qty;
+    const setInstr = document.getElementById('set-instrument');
+    if (setInstr) setInstr.value = instrument;
     toast(d.message || 'Saved!', 'ok');
   } catch (e) {
     toast(e.message || 'Save failed', 'err');

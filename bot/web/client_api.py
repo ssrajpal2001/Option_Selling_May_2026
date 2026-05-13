@@ -818,6 +818,7 @@ class BrokerQuickUpdateRequest(BaseModel):
     broker: str
     trading_mode: str = "paper"
     quantity: int = 25
+    instrument: str = "NIFTY"
 
 @router.post("/bot/toggle-trading")
 async def toggle_trading(body: TradingToggleRequest, user=Depends(get_current_user)):
@@ -909,9 +910,17 @@ async def broker_quick_update(body: BrokerQuickUpdateRequest, user=Depends(get_c
     if not _inst:
         raise HTTPException(404, "Broker not configured for this account.")
 
+    _VALID_INSTRUMENTS = (
+        "NIFTY", "BANKNIFTY", "MIDCPNIFTY", "FINNIFTY", "SENSEX",
+        "CRUDEOIL", "CRUDEOILM", "GOLD", "GOLDM", "SILVER", "SILVERMIC", "NATURALGAS",
+    )
+    instrument = body.instrument.upper() if body.instrument else "NIFTY"
+    if instrument not in _VALID_INSTRUMENTS:
+        instrument = "NIFTY"  # safe fallback
+
     db_execute(
-        "UPDATE client_broker_instances SET trading_mode=?, quantity=? WHERE client_id=? AND broker=?",
-        (body.trading_mode, body.quantity, user["id"], body.broker)
+        "UPDATE client_broker_instances SET trading_mode=?, quantity=?, instrument=? WHERE client_id=? AND broker=?",
+        (body.trading_mode, body.quantity, instrument, user["id"], body.broker)
     )
     # Write runtime config file so running subprocess picks up changes within ~5 s
     cfg_file = Path(f"config/broker_config_{user['id']}_{body.broker}.json")
@@ -919,12 +928,13 @@ async def broker_quick_update(body: BrokerQuickUpdateRequest, user=Depends(get_c
         json.dump({
             "trading_mode": body.trading_mode,
             "quantity": body.quantity,
+            "instrument": instrument,
             "updated_at": time.time()
         }, _f)
     _audit_client(user["id"], "broker_quick_update", {
-        "broker": body.broker, "mode": body.trading_mode, "qty": body.quantity
+        "broker": body.broker, "mode": body.trading_mode, "qty": body.quantity, "instrument": instrument
     })
-    return {"success": True, "message": f"{body.broker.capitalize()} updated: {body.trading_mode.upper()}, Qty {body.quantity}"}
+    return {"success": True, "message": f"{body.broker.capitalize()} updated: {body.trading_mode.upper()}, {instrument}, Qty {body.quantity}"}
 
 @router.post("/bot/square-off-all")
 async def square_off_all_positions(user=Depends(get_current_user)):
