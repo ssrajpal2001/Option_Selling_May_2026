@@ -1092,6 +1092,33 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
                 )
                 instance["access_token_encrypted"] = enc_token
                 logger.info(f"[Bot Start] Headless login SUCCESS for {broker_name}")
+
+                # If Upstox: sync new token to global data_providers so the live WebSocket
+                # feed is not left with a now-invalidated token (Upstox cancels old tokens
+                # when a new one is issued — same account used for both trading and data feed).
+                if broker_name == "upstox":
+                    try:
+                        _dp_row = db_fetchone(
+                            "SELECT api_key_encrypted FROM data_providers WHERE provider='upstox'", ()
+                        )
+                        if _dp_row:
+                            _dp_api_key = decrypt_secret(_dp_row.get("api_key_encrypted") or "")
+                            _inst_api_key = decrypt_secret(instance.get("api_key_encrypted") or "")
+                            if _dp_api_key and _dp_api_key == _inst_api_key:
+                                db_execute(
+                                    "UPDATE data_providers SET access_token_encrypted=?, "
+                                    "token_issued_at=?, status='configured' WHERE provider='upstox'",
+                                    (enc_token, now_ist),
+                                )
+                                from hub.feed_registry import refresh_feed_credentials as _rfc
+                                _rfc("upstox", token, api_key=_inst_api_key)
+                                logger.info(
+                                    "[Bot Start] Synced new Upstox token to data_providers "
+                                    "and signaled data feed — same account detected."
+                                )
+                    except Exception as _sync_err:
+                        logger.debug(f"[Bot Start] Upstox data-provider token sync skipped: {_sync_err}")
+
             else:
                 logger.warning(f"[Bot Start] Headless login failed for {broker_name}")
         except Exception as exc:

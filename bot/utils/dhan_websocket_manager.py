@@ -118,6 +118,7 @@ class DhanWebSocketManager(DataFeed):
 
         logger.info(f"[Global Dhan] Using feed class: {_DhanFeedCls.__name__}")
 
+        _consecutive_failures = 0
         while self._running:
             try:
                 logger.info(f"[Global Dhan] Connecting to Dhan Market Feed (v2)...")
@@ -172,15 +173,35 @@ class DhanWebSocketManager(DataFeed):
                                 # _process_raw_packet updated the epoch → confirmed market-data tick
                                 self._retry_delay = 2
                                 _tick_confirmed = True
+                                _consecutive_failures = 0
                     except asyncio.TimeoutError:
                         continue
-                    except websockets.exceptions.ConnectionClosed:
-                        logger.warning(f"[Global Dhan] WebSocket closed by server. Next retry in {self._retry_delay}s.")
+                    except websockets.exceptions.ConnectionClosed as _cc:
+                        _rcvd = getattr(_cc, 'rcvd', None)
+                        _code = getattr(_rcvd, 'code', '?') if _rcvd else '?'
+                        _reason = (getattr(_rcvd, 'reason', '') or '') if _rcvd else ''
+                        logger.warning(
+                            f"[Global Dhan] WebSocket closed by server "
+                            f"(code={_code}, reason='{_reason}'). Next retry in {self._retry_delay}s."
+                        )
                         break
                     except Exception as e:
                         if "no close frame" in str(e).lower(): break
                         logger.error(f"[Global Dhan] Loop error: {e}")
                         break
+
+                # Track consecutive failures (never got a tick before close)
+                if not _tick_confirmed:
+                    _consecutive_failures += 1
+                    if _consecutive_failures >= 8:
+                        logger.warning(
+                            f"[Global Dhan] {_consecutive_failures} consecutive failed connections — "
+                            "backing off 10 minutes. Check Dhan credentials or market data subscription."
+                        )
+                        await asyncio.sleep(600)
+                        _consecutive_failures = 0
+                        self._retry_delay = 2
+                        continue
 
                 # Inner loop exited (server close, protocol error, etc.).
                 # Apply backoff before reconnecting — critical to prevent HTTP 429 bursts
@@ -195,8 +216,11 @@ class DhanWebSocketManager(DataFeed):
                     self._retry_delay = min(self._retry_delay * 2, 60)
 
             except Exception as e:
+                _cc_info = ''
+                if hasattr(e, 'rcvd') and e.rcvd:
+                    _cc_info = f" (code={e.rcvd.code}, reason='{e.rcvd.reason}')"
                 if self._running:
-                    logger.error(f"[Global Dhan] Connection failed: {e}. Retrying in {self._retry_delay}s...")
+                    logger.error(f"[Global Dhan] Connection failed: {e}{_cc_info}. Retrying in {self._retry_delay}s...")
                     try:
                         await asyncio.wait_for(self._reconnect_trigger.wait(), timeout=self._retry_delay)
                         logger.info("[DhanWebSocketManager] Connection retry backoff interrupted by trigger.")
