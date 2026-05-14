@@ -80,12 +80,11 @@ async def main():
         _status_path = os.path.join(os.getcwd(), "config", f"bot_status_client_{client_cfg.client_id}.json")
         os.makedirs(os.path.dirname(_status_path), exist_ok=True)
 
-        # Ensure trading toggle is initialized to FALSE on start (User must explicitly click Start Trading)
-        # Commercial Requirement: "CONNECT TO BROKER" (starting bot) should not automatically start trading.
+        # Always reset trading toggle to FALSE on every bot start.
+        # Commercial Requirement: "CONNECT TO BROKER" must never auto-start trading.
         _toggle_path = os.path.join(os.getcwd(), "config", f"trading_enabled_{client_cfg.client_id}.json")
-        if not os.path.exists(_toggle_path):
-            with open(_toggle_path, "w") as _tf:
-                json.dump({"enabled": False, "updated_at": time.time()}, _tf)
+        with open(_toggle_path, "w") as _tf:
+            json.dump({"enabled": False, "updated_at": time.time()}, _tf)
 
         with open(_status_path, "w") as _sf:
             _tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))

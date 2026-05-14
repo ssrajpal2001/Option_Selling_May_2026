@@ -131,10 +131,8 @@ class InstanceManager:
                             proc.terminate()
                     else:
                         proc.send_signal(signal.SIGTERM)
-                    try:
-                        proc.wait(timeout=10)
-                    except subprocess.TimeoutExpired:
-                        proc.kill()
+                    # Do NOT wait — proc.wait() blocks asyncio event loop and
+                    # crashes uvicorn on Windows. The bot exits on its own signal.
                     stopped = True
                 except: pass
             del self._processes[instance_id]
@@ -146,19 +144,21 @@ class InstanceManager:
             if row and row["bot_pid"]:
                 pid = int(row["bot_pid"])
                 try:
-                    os.kill(pid, signal.SIGTERM)
-                    # Small wait to see if it exits
-                    import time
-                    time.sleep(1)
-                    try:
-                        os.kill(pid, 0)
-                        # Still alive? Force kill
-                        os.kill(pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
+                    if sys.platform == 'win32':
+                        try:
+                            os.kill(pid, signal.CTRL_BREAK_EVENT)
+                        except Exception:
+                            os.kill(pid, signal.SIGTERM)
+                    else:
+                        os.kill(pid, signal.SIGTERM)
+                    # Do NOT sleep here — time.sleep() blocks the asyncio event loop
+                    # and crashes uvicorn on Windows. The SIGTERM/CTRL_BREAK_EVENT is
+                    # sufficient; the subprocess handles its own graceful teardown.
                     stopped = True
                 except ProcessLookupError:
-                    stopped = True # Already dead
+                    stopped = True  # Already dead
+                except Exception:
+                    pass
         except Exception as e:
             logger.error(f"[InstanceManager] Error killing PID for instance {instance_id}: {e}")
 
