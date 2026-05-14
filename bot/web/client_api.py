@@ -843,8 +843,13 @@ async def toggle_trading(body: TradingToggleRequest, user=Depends(get_current_us
             raise HTTPException(404, "Broker not configured for this account.")
     _write_broker_trading_file(user["id"], broker, body.enabled)
 
-    msg = "Trading enabled." if body.enabled else "Trading disabled. Active trades will be closed."
-    logger.info(f"[Client] User {user['id']} toggled trading to {body.enabled}")
+    msg = (
+        "Trading enabled. Bot will resume scanning for entries."
+        if body.enabled else
+        "Trading paused for your account. Open positions will be closed. "
+        "Bot process keeps running — toggle ON to resume anytime."
+    )
+    logger.info(f"[Client] User {user['id']} toggled trading to {body.enabled} (bot subprocess stays alive)")
     action = "trading_start" if body.enabled else "trading_stop"
     _audit_client(user["id"], action, {"broker": broker})
     return {"success": True, "message": msg}
@@ -885,8 +890,12 @@ async def toggle_broker_trading(body: TradingToggleRequest, user=Depends(get_cur
 
     _write_broker_trading_file(user["id"], body.broker, body.enabled)
 
-    msg = f"{body.broker.capitalize()} trading {'enabled' if body.enabled else 'disabled'}."
-    logger.info(f"[Client] User {user['id']} toggled {body.broker} trading to {body.enabled}")
+    msg = (
+        f"{body.broker.capitalize()} trading enabled."
+        if body.enabled else
+        f"{body.broker.capitalize()} trading paused — open positions will close. Bot subprocess keeps running."
+    )
+    logger.info(f"[Client] User {user['id']} toggled {body.broker} trading to {body.enabled} (subprocess stays alive)")
     action = "trading_start" if body.enabled else "trading_stop"
     _audit_client(user["id"], action, {"broker": body.broker})
     return {"success": True, "message": msg}

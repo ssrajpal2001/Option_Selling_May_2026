@@ -161,41 +161,53 @@ class WebSocketManager(DataFeed):
                             from web.auth import decrypt_secret
                             current_tok = active_client.auth_handler.get_access_token()
                             fresh = None
+                            _best_updated = ''
 
-                            # 1. Try data_providers (global feed token — admin-managed)
+                            # 0. Check GLOBAL_UPSTOX_TOKEN env var (injected at subprocess launch
+                            #    from data_providers DB — fresher than credentials.ini).
+                            _env_tok = os.environ.get("GLOBAL_UPSTOX_TOKEN", "")
+                            if _env_tok:
+                                fresh = _env_tok
+                                logger.info("[WSManager] 401 — using GLOBAL_UPSTOX_TOKEN from env.")
+
+                            # 1. Try data_providers (global feed token — admin-managed).
+                            #    NOTE: do NOT skip if candidate == current_tok; Upstox tokens expire
+                            #    by time, not just by string value. Always attempt the DB token so a
+                            #    watchdog-renewed token is picked up even if the string was unchanged.
                             row = db_fetchone(
-                                "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
+                                "SELECT access_token_encrypted, updated_at FROM data_providers WHERE provider='upstox'",
                                 ()
                             )
                             if row and row[0]:
                                 candidate = decrypt_secret(row[0])
-                                if candidate and candidate != current_tok:
+                                _dp_updated = row.get('updated_at', '') or ''
+                                if candidate and _dp_updated > _best_updated:
                                     fresh = candidate
+                                    _best_updated = _dp_updated
 
                             # 2. Fallback: try any Upstox broker instance token (covers the case
-                            #    where the Upstox broker auto-logged-in but data_providers is stale
-                            #    and only a non-Upstox broker bot is running today).
-                            if not fresh:
-                                row2 = db_fetchone(
-                                    "SELECT access_token_encrypted FROM client_broker_instances "
-                                    "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
-                                    "ORDER BY updated_at DESC LIMIT 1",
-                                    ()
-                                )
-                                if row2 and row2[0]:
-                                    candidate = decrypt_secret(row2[0])
-                                    if candidate and candidate != current_tok:
-                                        fresh = candidate
-                                        # Propagate to data_providers so next attempt uses it
-                                        try:
-                                            from web.db import db_execute
-                                            from web.auth import encrypt_secret
-                                            db_execute(
-                                                "UPDATE data_providers SET access_token_encrypted=? WHERE provider='upstox'",
-                                                (encrypt_secret(fresh),)
-                                            )
-                                        except Exception:
-                                            pass
+                            #    where the Upstox broker auto-logged-in but data_providers is stale).
+                            row2 = db_fetchone(
+                                "SELECT access_token_encrypted, updated_at FROM client_broker_instances "
+                                "WHERE broker='upstox' AND access_token_encrypted IS NOT NULL "
+                                "ORDER BY updated_at DESC LIMIT 1",
+                                ()
+                            )
+                            if row2 and row2[0]:
+                                candidate = decrypt_secret(row2[0])
+                                _inst_updated = row2.get('updated_at', '') or ''
+                                if candidate and _inst_updated > _best_updated:
+                                    fresh = candidate
+                                    # Propagate to data_providers so next attempt uses it
+                                    try:
+                                        from web.db import db_execute
+                                        from web.auth import encrypt_secret
+                                        db_execute(
+                                            "UPDATE data_providers SET access_token_encrypted=? WHERE provider='upstox'",
+                                            (encrypt_secret(fresh),)
+                                        )
+                                    except Exception:
+                                        pass
 
                             if fresh:
                                 # Update whichever attribute the auth_handler actually uses:

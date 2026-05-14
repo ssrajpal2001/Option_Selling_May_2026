@@ -56,6 +56,23 @@ class InstanceManager:
         user_row = db_fetchone("SELECT static_ip FROM users WHERE id=?", (client_id,))
         static_ip = (user_row.get("static_ip") or "") if user_row else ""
 
+        # Fetch the current global data-feed tokens from DB so the subprocess starts
+        # with the freshest available token — not a potentially-stale credentials.ini value.
+        _global_upstox_token = ""
+        _global_dhan_token   = ""
+        try:
+            _dp_u = db_fetchone("SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'")
+            if _dp_u and _dp_u.get("access_token_encrypted"):
+                _global_upstox_token = decrypt_secret(_dp_u["access_token_encrypted"])
+        except Exception:
+            pass
+        try:
+            _dp_d = db_fetchone("SELECT access_token_encrypted FROM data_providers WHERE provider='dhan'")
+            if _dp_d and _dp_d.get("access_token_encrypted"):
+                _global_dhan_token = decrypt_secret(_dp_d["access_token_encrypted"])
+        except Exception:
+            pass
+
         env.update({
             "CLIENT_ID": str(client_id),
             "CLIENT_USERNAME": username,
@@ -72,6 +89,8 @@ class InstanceManager:
             "CLIENT_BROKER_USER_ID": broker_user_id,
             "CLIENT_INSTANCE_ID": str(instance_id),
             "CLIENT_STATIC_IP": static_ip,
+            "GLOBAL_UPSTOX_TOKEN": _global_upstox_token,
+            "GLOBAL_DHAN_TOKEN":   _global_dhan_token,
         })
 
         # Ensure logs directory exists using absolute path to prevent startup failures
