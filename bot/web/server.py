@@ -1103,39 +1103,92 @@ def _get_nse_holidays() -> frozenset:
     return _NSE_HOLIDAYS_DEFAULT
 
 
+_crash_restart_counts: dict = {}  # instance_id → [epoch timestamps of auto-restarts this hour]
+_MAX_AUTO_RESTARTS_PER_HOUR = 3
+
+
 async def _instance_crash_monitor():
     """
-    Poll every 60 seconds for client bot subprocesses that have exited unexpectedly.
-    Fires an admin Telegram alert when a 'running' DB row has a dead process.
-    Updates the DB row to idle so the monitor doesn't re-fire for the same crash.
+    Poll every 20 seconds for bot subprocesses that crashed or froze.
+    Auto-restarts if crash detected, unless the user intentionally stopped the bot.
+    Limits to 3 auto-restarts per hour per instance to prevent restart loops.
+    A stale heartbeat (>90s old in status JSON) is treated as a frozen/stuck bot.
     """
+    import json as _json
+    import time as _time
+
     while True:
         try:
-            await asyncio.sleep(60)
+            await asyncio.sleep(20)
             running_rows = db_fetchall(
-                "SELECT cbi.id, cbi.bot_pid, u.username, cbi.trading_mode, cbi.instrument "
+                "SELECT cbi.id, cbi.bot_pid, cbi.bot_stop_reason, cbi.broker, "
+                "       cbi.trading_mode, cbi.instrument, cbi.client_id, "
+                "       u.username "
                 "FROM client_broker_instances cbi "
                 "JOIN users u ON u.id = cbi.client_id "
                 "WHERE cbi.status='running' AND cbi.bot_pid IS NOT NULL"
             )
             for row in running_rows:
                 pid = row.get("bot_pid")
+                instance_id = row["id"]
                 if not pid:
                     continue
+
+                crash_reason = None
+
+                # Check 1: Is PID alive?
+                pid_alive = True
                 try:
                     import os as _os
                     _os.kill(int(pid), 0)
-                    # Process is alive — no action needed
                 except ProcessLookupError:
-                    # Process is gone but DB still says running — crash detected
+                    pid_alive = False
+                    crash_reason = f"PID {pid} exited unexpectedly"
+                except Exception:
+                    pass  # Permission/other OS errors — assume alive
+
+                # Check 2: Heartbeat staleness (catches frozen/stuck bots)
+                if pid_alive:
+                    client_id = row.get("client_id")
+                    status_file = Path(f"config/bot_status_client_{client_id}.json")
+                    if status_file.exists():
+                        try:
+                            with open(status_file) as _sf:
+                                st = _json.load(_sf)
+                            hb = float(st.get("heartbeat") or 0)
+                            if hb > 0:
+                                age = _time.time() - hb
+                                if age > 90:
+                                    crash_reason = f"Bot frozen — heartbeat {age:.0f}s stale"
+                        except Exception:
+                            pass
+
+                if not crash_reason:
+                    continue  # healthy
+
+                # Mark DB idle immediately
+                db_execute(
+                    "UPDATE client_broker_instances SET status='idle', bot_pid=NULL "
+                    "WHERE id=?",
+                    (instance_id,)
+                )
+
+                # Don't auto-restart if the user deliberately stopped via UI
+                if row.get("bot_stop_reason") == "user_stop":
                     logger.warning(
-                        f"[CrashMonitor] Instance {row['id']} (PID {pid}) for "
-                        f"'{row['username']}' exited unexpectedly — marking idle."
+                        f"[CrashMonitor] Instance {instance_id}: {crash_reason} "
+                        f"(user-stopped — no auto-restart)"
                     )
-                    db_execute(
-                        "UPDATE client_broker_instances SET status='idle', bot_pid=NULL "
-                        "WHERE id=?",
-                        (row["id"],)
+                    continue
+
+                # Enforce restart rate limit
+                now = _time.time()
+                restarts = _crash_restart_counts.get(instance_id, [])
+                restarts = [t for t in restarts if now - t < 3600]  # trim to last hour
+                if len(restarts) >= _MAX_AUTO_RESTARTS_PER_HOUR:
+                    logger.error(
+                        f"[CrashMonitor] Instance {instance_id}: {crash_reason} "
+                        f"— restart limit reached ({_MAX_AUTO_RESTARTS_PER_HOUR}/h), giving up"
                     )
                     try:
                         from utils.notifier import notify_admin_instance_event
@@ -1143,12 +1196,46 @@ async def _instance_crash_monitor():
                             row["username"], "stopped",
                             row.get("trading_mode", ""),
                             row.get("instrument", ""),
-                            reason=f"Process crashed (PID {pid} exited unexpectedly)",
+                            reason=f"CRASH LIMIT REACHED: {crash_reason}",
                         )
-                    except Exception as _tge:
-                        logger.error(f"[CrashMonitor] Admin Telegram alert failed: {_tge}")
-                except Exception:
-                    pass  # Other OS errors — skip
+                    except Exception:
+                        pass
+                    continue
+
+                # Auto-restart
+                logger.warning(
+                    f"[CrashMonitor] Instance {instance_id}: {crash_reason} "
+                    f"— auto-restarting (attempt {len(restarts)+1}/{_MAX_AUTO_RESTARTS_PER_HOUR})"
+                )
+                try:
+                    from hub.instance_manager import instance_manager
+                    ok, msg, new_pid = instance_manager.restart_instance(instance_id)
+                    if ok:
+                        restarts.append(now)
+                        _crash_restart_counts[instance_id] = restarts
+                        db_execute(
+                            "UPDATE client_broker_instances SET status='running', bot_pid=? "
+                            "WHERE id=?",
+                            (new_pid, instance_id)
+                        )
+                        logger.info(
+                            f"[CrashMonitor] Instance {instance_id} restarted as PID {new_pid} "
+                            f"({len(restarts)}/{_MAX_AUTO_RESTARTS_PER_HOUR} restarts this hour)"
+                        )
+                        try:
+                            from utils.notifier import notify_admin_instance_event
+                            notify_admin_instance_event(
+                                row["username"], "started",
+                                row.get("trading_mode", ""),
+                                row.get("instrument", ""),
+                            )
+                        except Exception:
+                            pass
+                    else:
+                        logger.error(f"[CrashMonitor] Instance {instance_id} restart failed: {msg}")
+                except Exception as _re:
+                    logger.error(f"[CrashMonitor] Instance {instance_id} restart error: {_re}")
+
         except asyncio.CancelledError:
             break
         except Exception as e:

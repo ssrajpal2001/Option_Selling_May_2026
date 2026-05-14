@@ -98,6 +98,11 @@ class InstanceManager:
             self._log_fds[instance_id] = log_fd
             logger.info(f"[InstanceManager] Started instance {instance_id} (PID {proc.pid}) for client {username}")
             try:
+                from web.db import db_execute as _dbe
+                _dbe("UPDATE client_broker_instances SET bot_stop_reason=NULL WHERE id=?", (instance_id,))
+            except Exception:
+                pass
+            try:
                 from utils.notifier import notify_admin_instance_event
                 notify_admin_instance_event(username, "started", trading_mode, instrument)
             except Exception as _tge:
@@ -169,6 +174,11 @@ class InstanceManager:
         if stopped:
             logger.info(f"[InstanceManager] Stopped instance {instance_id}")
             try:
+                from web.db import db_execute as _dbe
+                _dbe("UPDATE client_broker_instances SET bot_stop_reason='user_stop' WHERE id=?", (instance_id,))
+            except Exception:
+                pass
+            try:
                 from web.db import db_fetchone
                 inst_row = db_fetchone(
                     "SELECT u.username, cbi.trading_mode, cbi.instrument "
@@ -189,6 +199,37 @@ class InstanceManager:
                 logger.debug(f"[InstanceManager] Admin Telegram stop alert failed: {_tge}")
             return True, "Bot stopped."
         return False, "No running instance found."
+
+    def restart_instance(self, instance_id: int) -> tuple[bool, str, int]:
+        """Fetch credentials from DB and restart the bot subprocess for auto-recovery."""
+        from web.db import db_fetchone
+        from web.auth import decrypt_secret
+        row = db_fetchone(
+            "SELECT cbi.client_id, cbi.broker, cbi.instrument, cbi.quantity, "
+            "       cbi.strategy_version, cbi.trading_mode, "
+            "       cbi.api_key_encrypted, cbi.access_token_encrypted, "
+            "       u.username "
+            "FROM client_broker_instances cbi "
+            "JOIN users u ON u.id = cbi.client_id "
+            "WHERE cbi.id=?",
+            (instance_id,)
+        )
+        if not row:
+            return False, f"Instance {instance_id} not found in DB", None
+        api_key = decrypt_secret(row["api_key_encrypted"]) if row.get("api_key_encrypted") else ""
+        access_token = decrypt_secret(row["access_token_encrypted"]) if row.get("access_token_encrypted") else ""
+        return self.start_instance(
+            instance_id=instance_id,
+            client_id=row["client_id"],
+            username=row["username"],
+            broker=row["broker"],
+            instrument=row.get("instrument", "NIFTY"),
+            quantity=row.get("quantity", 25),
+            strategy_version=row.get("strategy_version", "V3"),
+            trading_mode=row.get("trading_mode", "paper"),
+            api_key=api_key,
+            access_token=access_token,
+        )
 
     def stop_all_for_client(self, client_id: int):
         from web.db import db_fetchall, db_execute

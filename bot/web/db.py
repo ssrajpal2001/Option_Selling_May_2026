@@ -170,6 +170,10 @@ def _migrate(conn: sqlite3.Connection):
     if "phone_number" not in user_cols:
         conn.execute("ALTER TABLE users ADD COLUMN phone_number TEXT")
 
+    cbi_cols = [row[1] for row in conn.execute("PRAGMA table_info(client_broker_instances)").fetchall()]
+    if "bot_stop_reason" not in cbi_cols:
+        conn.execute("ALTER TABLE client_broker_instances ADD COLUMN bot_stop_reason TEXT")
+
     dp_cols = [row[1] for row in conn.execute("PRAGMA table_info(data_providers)").fetchall()]
     if "api_secret_encrypted" not in dp_cols:
         conn.execute("ALTER TABLE data_providers ADD COLUMN api_secret_encrypted TEXT")
