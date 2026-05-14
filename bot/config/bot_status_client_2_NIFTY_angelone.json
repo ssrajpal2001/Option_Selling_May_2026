@@ -43,7 +43,7 @@
     "call_oi": 0,
     "put_oi": 0
   },
-  "session_pnl": 0.0,
+  "session_pnl": 0,
   "trade_count": 0,
   "last_error": null,
   "log_tail": [

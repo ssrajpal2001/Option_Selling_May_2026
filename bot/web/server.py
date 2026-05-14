@@ -51,6 +51,28 @@ def _configure_web_logging():
     upstox_logger.setLevel(logging.INFO)
     upstox_logger.propagate = False
 
+    # Also write web server / FeedServer logs to a rotating file for agent diagnostics
+    try:
+        from logging.handlers import RotatingFileHandler as _RFH
+        _log_dir = Path(__file__).parent.parent / 'logs'
+        _log_dir.mkdir(parents=True, exist_ok=True)
+        _file_handler = _RFH(
+            str(_log_dir / 'web_server.log'),
+            maxBytes=10 * 1024 * 1024,  # 10 MB
+            backupCount=5,
+            encoding='utf-8',
+        )
+        _file_handler.setLevel(logging.INFO)
+        _file_handler.setFormatter(fmt)
+        if not any(isinstance(h, _RFH) for h in upstox_logger.handlers):
+            upstox_logger.addHandler(_file_handler)
+        # Also catch root-logger messages (web.server, web.client_api, etc.)
+        root_logger = logging.getLogger()
+        if not any(isinstance(h, _RFH) for h in root_logger.handlers):
+            root_logger.addHandler(_file_handler)
+    except Exception:
+        pass  # Non-fatal: file logging is best-effort
+
     # Configure root logger for module-level loggers (e.g. web.server, web.client_api)
     root = logging.getLogger()
     if not any(isinstance(h, logging.StreamHandler) and h.stream is sys.stdout for h in root.handlers):
