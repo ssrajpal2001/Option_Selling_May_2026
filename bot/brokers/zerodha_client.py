@@ -294,7 +294,9 @@ class ZerodhaClient(BaseBroker):
                 order_id = "PAPER_ZERODHA_ORDER"
             else:
                 product_type = kwargs.get('product_type', 'NRML')
-                order_id = self.place_order(contract, transaction_type, final_qty, signal_expiry_date, product_type=product_type)
+                order_id = await asyncio.to_thread(
+                    self.place_order, contract, transaction_type, final_qty, signal_expiry_date, product_type=product_type
+                )
 
             if order_id:
                 if not self.paper_trade:
@@ -366,7 +368,9 @@ class ZerodhaClient(BaseBroker):
                 logger.info(f"  Quantity: {final_qty} | Price: {kwargs.get('ltp', 0)}")
                 order_id = "PAPER_ZERODHA_EXIT"
             else:
-                order_id = self.place_order(contract, exit_transaction_type, final_qty, signal_expiry_date)
+                order_id = await asyncio.to_thread(
+                    self.place_order, contract, exit_transaction_type, final_qty, signal_expiry_date
+                )
 
             if order_id:
                 if not self.paper_trade:

@@ -361,8 +361,8 @@ class FeedServer:
             from web.db import db_fetchone as _dbf
             from web.auth import decrypt_secret as _dec
             _row = _dbf("SELECT access_token_encrypted FROM data_providers WHERE provider=?", (provider,))
-            if _row and _row[0]:
-                _fresh_token = _dec(_row[0])
+            if _row and _row.get("access_token_encrypted"):
+                _fresh_token = _dec(_row.get("access_token_encrypted") or "")
                 if _fresh_token and hasattr(feed, 'refresh_credentials'):
                     feed.refresh_credentials(_fresh_token)
                     logger.info(f"[FeedServer] reconnect_provider({provider}) — synced fresh token and triggered reconnect via refresh_credentials.")

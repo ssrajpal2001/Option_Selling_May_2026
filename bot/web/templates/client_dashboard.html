@@ -2828,7 +2828,7 @@ async function init() {
   setInterval(_pollBrokerStatus, 30000);
   setInterval(pollFeedStatus, 15000);
   pollFeedStatus();
-  setInterval(pollPositions, 2000);  // Fast 2s refresh for live P&L on Positions tab
+  setInterval(pollPositions, 500);   // 500ms refresh for near-tick P&L on Positions tab
   setInterval(loadMarketStatus, 60000);
   setInterval(tickClock, 1000);
   tickClock();

@@ -649,25 +649,41 @@ async def _global_provider_scheduler():
             logger.error(f"[Scheduler] Global provider scheduler error: {e}")
             await asyncio.sleep(60)
 
+async def _validate_token_upstox(token: str) -> bool:
+    """Quick REST validation of an Upstox access token. Returns True if valid."""
+    try:
+        import aiohttp as _aio
+        async with _aio.ClientSession() as _sess:
+            async with _sess.get(
+                "https://api.upstox.com/v2/user/profile",
+                headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+                timeout=_aio.ClientTimeout(total=8),
+            ) as _r:
+                return _r.status == 200
+    except Exception:
+        return False
+
+
 async def _startup_auto_connect():
     """
     On bot startup, wait a few seconds for the server to fully initialise, then
     attempt to connect both global data feeders automatically.  This means the
     admin never needs to click 'Connect Now' after a restart.
-    Skips re-login if the token is already fresh in DB (< 6 hours old).
+    Skips re-login only if the token is both fresh in DB (< 6h old) AND passes a
+    live API validation check — age alone is not enough (token can be fresh but invalid).
     """
     await asyncio.sleep(5)           # let Uvicorn finish startup
     logger.info("[Startup] Auto-connecting global data providers...")
     try:
         from web.admin_api import global_provider_connect_background
         from web.db import db_fetchone
+        from web.auth import decrypt_secret as _dec
         import pytz as _ptz
         from datetime import datetime as _dt
         _IST = _ptz.timezone('Asia/Kolkata')
 
         for p in ('upstox', 'dhan'):
             try:
-                # Skip re-login if token is fresh in DB (< 6h old)
                 _dp = db_fetchone(
                     "SELECT access_token_encrypted, token_issued_at FROM data_providers WHERE provider=?",
                     (p,)
@@ -679,11 +695,24 @@ async def _startup_auto_connect():
                             _issued = _IST.localize(_issued)
                         _age_h = (_dt.now(_IST) - _issued.astimezone(_IST)).total_seconds() / 3600
                         if _age_h < 6:
-                            logger.info(
-                                f"[Startup] {p} token is {_age_h:.1f}h old — "
-                                "skipping re-login, FeedServer will connect with existing token."
-                            )
-                            continue
+                            # Age looks fresh — but validate the token is actually live
+                            _token = _dec(_dp['access_token_encrypted'] or "")
+                            _valid = False
+                            if p == 'upstox' and _token:
+                                _valid = await _validate_token_upstox(_token)
+                            else:
+                                _valid = True  # Dhan validated at startup by provider_factory
+                            if _valid:
+                                logger.info(
+                                    f"[Startup] {p} token is {_age_h:.1f}h old and API-verified — "
+                                    "skipping re-login, FeedServer will connect with existing token."
+                                )
+                                continue
+                            else:
+                                logger.warning(
+                                    f"[Startup] {p} token is {_age_h:.1f}h old but INVALID (401) — "
+                                    "proceeding with re-login."
+                                )
                     except Exception:
                         pass
                 result = await global_provider_connect_background(p, admin={"id": 0})
@@ -885,10 +914,15 @@ async def _upstox_token_watchdog():
     Pattern mirrors _dhan_auto_renewal_scheduler.
     """
     CHECK_INTERVAL = 600  # 10 minutes
+    _first_run = True
     while True:
         try:
-            await asyncio.sleep(CHECK_INTERVAL)
-            logger.debug("[UpstoxWatchdog] Running token health check...")
+            if _first_run:
+                await asyncio.sleep(30)  # short startup grace, then check immediately
+                _first_run = False
+            else:
+                await asyncio.sleep(CHECK_INTERVAL)
+            logger.info("[UpstoxWatchdog] Running token health check...")
             try:
                 import aiohttp as _aio
                 from web.auth import encrypt_secret, decrypt_secret
@@ -1011,12 +1045,17 @@ async def _upstox_token_watchdog():
 
 async def _dhan_auto_renewal_scheduler():
     """
-    Run every hour — check client Dhan instances in API Key mode.
+    Run every hour — check global Dhan data provider + client Dhan instances in API Key mode.
     If their token age > 22 hours (expires at 24h), auto-renew it.
     """
+    _first_run = True
     while True:
         try:
-            await asyncio.sleep(3600)  # check every hour
+            if _first_run:
+                await asyncio.sleep(45)  # short startup grace, then check immediately
+                _first_run = False
+            else:
+                await asyncio.sleep(3600)  # check every hour
             logger.info("[Scheduler] Running Dhan token auto-renewal check...")
             try:
                 from web.auth import encrypt_secret, decrypt_secret
@@ -1067,6 +1106,60 @@ async def _dhan_auto_renewal_scheduler():
                             logger.warning(f"[Dhan Renewal] Token renewal FAILED for instance {inst['id']}: {_dhan_result['error']}")
                     except Exception as _ie:
                         logger.error(f"[Dhan Renewal] Instance {inst.get('id')} error: {_ie}")
+
+                # Also renew the GLOBAL Dhan data provider token
+                try:
+                    dp = db_fetchone(
+                        "SELECT api_key_encrypted, user_id_encrypted, password_encrypted, "
+                        "totp_encrypted, token_issued_at FROM data_providers WHERE provider='dhan'",
+                        ()
+                    )
+                    if dp and dp.get("password_encrypted"):
+                        ts_str = dp.get("token_issued_at") or ""
+                        skip = False
+                        if ts_str:
+                            try:
+                                ts = datetime.fromisoformat(ts_str)
+                                if ts.tzinfo is None:
+                                    ts = IST.localize(ts)
+                                age_hours = (now - ts.astimezone(IST)).total_seconds() / 3600
+                                if age_hours < 22:
+                                    skip = True
+                            except Exception:
+                                pass
+                        if not skip:
+                            from web.auth import decrypt_secret as _ds, encrypt_secret as _es
+                            _ak  = _ds(dp.get("api_key_encrypted") or "")
+                            _cid = _ds(dp.get("user_id_encrypted") or "")
+                            _pw  = _ds(dp["password_encrypted"])
+                            _tp  = _ds(dp.get("totp_encrypted") or "")
+                            if _ak and _pw:
+                                _res = generate_dhan_token(_ak, _cid, _pw, _tp)
+                                _tok = _res.get("token")
+                                if _tok:
+                                    _now = now.isoformat()
+                                    db_execute(
+                                        "UPDATE data_providers SET access_token_encrypted=?, "
+                                        "status='configured', updated_at=?, token_issued_at=? WHERE provider='dhan'",
+                                        (_es(_tok), _now, _now)
+                                    )
+                                    # Signal the live global Dhan feed to reconnect with new token
+                                    try:
+                                        from hub.feed_registry import refresh_feed_credentials
+                                        refresh_feed_credentials("dhan", _tok)
+                                    except Exception as _sig_err:
+                                        logger.debug(f"[Dhan Renewal] Could not signal global feed: {_sig_err}")
+                                    logger.info("[Dhan Renewal] Global Dhan data provider token auto-renewed.")
+                                else:
+                                    logger.warning(f"[Dhan Renewal] Global Dhan renewal FAILED: {_res.get('error')}")
+                            else:
+                                logger.warning(
+                                    "[Dhan Renewal] Global Dhan auto-renewal skipped — "
+                                    "API Key + Password not stored. Go to Admin → Data Providers → Dhan."
+                                )
+                except Exception as _gde:
+                    logger.error(f"[Dhan Renewal] Global Dhan provider check error: {_gde}")
+
             except Exception as e:
                 logger.error(f"[Dhan Renewal] Scheduler inner error: {e}")
 

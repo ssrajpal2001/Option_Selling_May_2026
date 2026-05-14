@@ -146,8 +146,12 @@ class DhanWebSocketManager(DataFeed):
 
                 # Re-subscribe
                 if self.subscriptions:
-                    subs_list = list(self.subscriptions)
-                    logger.info(f"[Global Dhan] Re-subscribing to {len(subs_list)} instruments.")
+                    # Ensure security_id is int — Dhan SDK rejects string IDs in the binary frame
+                    subs_list = [(int(seg), int(sid)) for seg, sid in self.subscriptions]
+                    logger.info(
+                        f"[Global Dhan] Re-subscribing to {len(subs_list)} instruments. "
+                        f"Sample: {subs_list[:3]}"
+                    )
                     self.feed.subscribe_symbols(subs_list)
 
                 # Only reset backoff once the connection is genuinely stable — i.e., after
@@ -238,7 +242,8 @@ class DhanWebSocketManager(DataFeed):
 
         if self.feed and getattr(self.feed.ws, 'open', False):
             logger.info(f"[Global Dhan] Subscribing to {len(new_items)} new items.")
-            self.feed.subscribe_symbols(new_items)
+            # Ensure int types — Dhan SDK binary frame requires int segment + int security_id
+            self.feed.subscribe_symbols([(int(seg), int(sid)) for seg, sid in new_items])
 
     def unsubscribe(self, symbols):
         to_remove = [s for s in symbols if s in self.subscriptions]

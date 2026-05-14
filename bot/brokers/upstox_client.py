@@ -185,8 +185,10 @@ class UpstoxClient(BaseBroker):
 
         try:
             product_type = kwargs.get('product_type', 'NRML')
-            order_id = self.place_order(contract, transaction_type, final_qty,
-                                        expiry=signal_expiry_date, product_type=product_type)
+            order_id = await asyncio.to_thread(
+                self.place_order, contract, transaction_type, final_qty,
+                expiry=signal_expiry_date, product_type=product_type
+            )
             if order_id:
                 logger.info(f"[UpstoxClient] Placed {transaction_type} ({direction}) order={order_id} qty={final_qty} user={self.user_id}")
                 await event_bus.publish('TRADE_CONFIRMED', {
@@ -229,7 +231,9 @@ class UpstoxClient(BaseBroker):
 
         try:
             signal_expiry_date = kwargs.get('signal_expiry_date')
-            order_id = self.place_order(contract, exit_transaction_type, final_qty, expiry=signal_expiry_date)
+            order_id = await asyncio.to_thread(
+                self.place_order, contract, exit_transaction_type, final_qty, expiry=signal_expiry_date
+            )
             if order_id:
                 logger.info(f"[UpstoxClient] Closed {side} position: {exit_transaction_type} qty={final_qty} order={order_id} user={self.user_id}")
             return order_id

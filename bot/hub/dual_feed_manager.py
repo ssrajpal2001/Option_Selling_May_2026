@@ -8,8 +8,10 @@ from hub.event_bus import event_bus
 
 _KOLKATA = pytz.timezone('Asia/Kolkata')
 
-# How long (seconds) a feed can be silent before the watchdog considers it stale
-_STALE_THRESHOLD_SECS = 60
+# How long (seconds) a feed can be silent before the watchdog considers it stale.
+# NIFTY can be quiet for >60s in low-volatility periods while WS stays alive.
+# Only treat as stale if no tick AND WS is also disconnected.
+_STALE_THRESHOLD_SECS = 180
 # How often (seconds) the watchdog checks feed health
 _WATCHDOG_INTERVAL_SECS = 30
 
@@ -252,6 +254,14 @@ class DualFeedManager(DataFeed):
         try:
             # Refresh Upstox token from DB before reconnecting to avoid 401 loops
             if name == 'upstox' and hasattr(feed, 'refresh_credentials'):
+                # If WS is still connected (just market-quiet), skip the reconnect entirely.
+                # Only reconnect when the connection itself is dead.
+                if getattr(feed, 'is_connected', False):
+                    logger.info(
+                        f"[DualFeedWatchdog] upstox STALE but WS is_connected=True "
+                        f"— market is quiet, skipping reconnect."
+                    )
+                    return
                 try:
                     from web.db import db_fetchone
                     from web.auth import decrypt_secret
@@ -259,8 +269,9 @@ class DualFeedManager(DataFeed):
                         "SELECT access_token_encrypted FROM data_providers WHERE provider='upstox'",
                         ()
                     )
-                    if row and row[0]:
-                        fresh_token = decrypt_secret(row[0])
+                    # row is a dict — must use key name, not integer index
+                    if row and row.get("access_token_encrypted"):
+                        fresh_token = decrypt_secret(row["access_token_encrypted"])
                         if fresh_token:
                             feed.refresh_credentials(fresh_token)
                             logger.info("[DualFeedWatchdog] upstox token refreshed from DB before reconnect.")
