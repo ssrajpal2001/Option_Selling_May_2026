@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import threading
 from pathlib import Path
 from utils.logger import logger
 
@@ -145,21 +146,27 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 );
 """
 
-_conn = None
+_local = threading.local()
+_db_initialized = False
+_db_init_lock = threading.Lock()
 
 
 def get_db() -> sqlite3.Connection:
-    global _conn
-    if _conn is None:
+    global _db_initialized
+    if not hasattr(_local, 'conn') or _local.conn is None:
         Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
-        _conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA journal_mode=WAL")
-        _conn.execute("PRAGMA foreign_keys=ON")
-        _migrate(_conn)
-        _seed(_conn)
-        logger.info(f"[DB] SQLite connected: {DB_PATH}")
-    return _conn
+        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        with _db_init_lock:
+            if not _db_initialized:
+                _migrate(conn)
+                _seed(conn)
+                _db_initialized = True
+                logger.info(f"[DB] SQLite connected: {DB_PATH}")
+        _local.conn = conn
+    return _local.conn
 
 
 def _migrate(conn: sqlite3.Connection):

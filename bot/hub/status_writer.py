@@ -426,7 +426,23 @@ class StatusWriter:
             tmp = self.status_path.with_suffix(f'.{os.getpid()}.tmp')
             with open(tmp, 'w') as f:
                 json.dump(status, f, default=str, indent=2)
-            os.replace(tmp, self.status_path)
+            # On Windows, os.replace() raises PermissionError (WinError 5) when the web
+            # server has the target file open for reading without FILE_SHARE_DELETE.
+            # Retry briefly — the reader holds the file open for <1ms typically.
+            _replaced = False
+            for _attempt in range(5):
+                try:
+                    os.replace(tmp, self.status_path)
+                    _replaced = True
+                    break
+                except PermissionError:
+                    time.sleep(0.02)
+            if not _replaced:
+                try:
+                    os.unlink(tmp)
+                except Exception:
+                    pass
+                logger.warning(f"[StatusWriter] Could not replace {self.status_path} after 5 retries (file locked)")
         except Exception as e:
             logger.warning(f"[StatusWriter] Failed to write status file {self.status_path}: {e}")
 

@@ -104,16 +104,28 @@ class FuturesManager:
                             with open(cache_file, 'wb') as f: f.write(await resp.read())
                         else: return False
             df = pd.read_csv(cache_file, compression='gzip')
-            futures = df[(df['instrument_type'].isin(['FUT', 'FUTIDX', 'FUTSTK'])) & (df['underlying_key'] == instrument_key)].copy()
+            # FUTCOM = MCX commodity futures; FUT/FUTIDX/FUTSTK = NSE/BSE equity/index futures
+            fut_types = ['FUT', 'FUTIDX', 'FUTSTK', 'FUTCOM']
+            # Column names differ across exchange CSVs: MCX uses 'tradingsymbol', NSE_FO uses 'trading_symbol'
+            sym_col = 'trading_symbol' if 'trading_symbol' in df.columns else 'tradingsymbol'
+            futures = pd.DataFrame()
+            if 'underlying_key' in df.columns:
+                futures = df[(df['instrument_type'].isin(fut_types)) & (df['underlying_key'] == instrument_key)].copy()
             if futures.empty:
                 search_term = "bank" if "bank" in instrument_name.lower() else ("nifty" if "nifty" in instrument_name.lower() else instrument_name.lower())
-                futures = df[(df['instrument_type'].isin(['FUT', 'FUTIDX', 'FUTSTK'])) & (df['trading_symbol'].str.lower().str.contains(search_term, na=False))].copy()
+                futures = df[(df['instrument_type'].isin(fut_types)) & (df[sym_col].str.lower().str.contains(search_term, na=False))].copy()
             if not futures.empty:
                 futures['expiry'] = pd.to_datetime(futures['expiry'])
                 futures = futures[futures['expiry'].dt.date >= datetime.date.today()].sort_values(by='expiry')
+                # Prefer full-size contracts over mini (lot_size >= 100 vs 10)
+                if 'lot_size' in futures.columns:
+                    full = futures[futures['lot_size'] >= 100]
+                    if not full.empty:
+                        futures = full
                 if not futures.empty:
-                    new_key = futures.iloc[0]['instrument_key'] or f"{exchange}:{futures.iloc[0].get('trading_symbol')}"
+                    new_key = futures.iloc[0]['instrument_key'] or f"{exchange}:{futures.iloc[0].get(sym_col)}"
                     if new_key:
+                        logger.info(f"[FuturesManager] MCX CSV: discovered futures key {new_key} for {instrument_name}")
                         update_callback(new_key)
                         return True
         except Exception as e: logger.debug(f"CSV Discovery failed: {e}")

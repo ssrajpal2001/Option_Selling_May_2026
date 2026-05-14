@@ -78,8 +78,8 @@ class DataManager:
             orch = self.atm_manager.orchestrator
             orch.futures_instrument_key = new_key
             self.atm_manager.spot_instrument_key = new_key
-            if hasattr(orch, 'price_feed_handler'):
-                orch.price_feed_handler.futures_instrument_key = new_key
+            if hasattr(orch, 'price_feed_handler') and new_key:
+                orch.price_feed_handler.update_futures_key(new_key)
 
     def get_trading_instruments(self):
         return self.all_options, self.near_expiry_date

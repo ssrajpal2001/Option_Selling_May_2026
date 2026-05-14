@@ -48,6 +48,14 @@ class PriceFeedHandler:
         asyncio.create_task(tick_dispatcher.register(self.index_instrument_key, self.handle_tick_dispatched_normalized))
         asyncio.create_task(tick_dispatcher.register(self.futures_instrument_key, self.handle_tick_dispatched_normalized))
 
+    def update_futures_key(self, new_key):
+        """Re-register tick dispatcher handlers when futures key is discovered dynamically (e.g. MCX)."""
+        old_key = self.futures_instrument_key
+        self.futures_instrument_key = new_key
+        asyncio.create_task(tick_dispatcher.register(new_key, self.handle_tick_dispatched))
+        asyncio.create_task(tick_dispatcher.register(new_key, self.handle_tick_dispatched_normalized))
+        logger.info(f"[PriceFeedHandler] Futures key updated: {old_key!r} → {new_key!r}. Tick handlers re-registered.")
+
     def _extract_timestamp(self, feed, fallback_ts):
         """Extracts the best available exchange timestamp (LTT) from a feed."""
         ltt_ms = 0

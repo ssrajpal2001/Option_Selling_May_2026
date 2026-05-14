@@ -1236,7 +1236,14 @@ async def _start_one_broker_instance(instance: dict, user: dict, permitted_broke
         access_token=decrypt_secret(instance["access_token_encrypted"]) if instance.get("access_token_encrypted") else "",
     )
     if ok:
-        db_execute("UPDATE client_broker_instances SET status='running', bot_pid=? WHERE id=?", (pid, instance["id"]))
+        # Reset trading_active=0 on every fresh start so bot runs in PAUSED state.
+        # User must explicitly enable the Trade toggle to begin order placement.
+        db_execute(
+            "UPDATE client_broker_instances SET status='running', bot_pid=?, trading_active=0 WHERE id=?",
+            (pid, instance["id"])
+        )
+        # Write paused-state toggle file so the subprocess sees it immediately on first read
+        _write_broker_trading_file(user["id"], broker_name, False)
         _audit_client(user["id"], "bot_activate", {"broker": broker_name, "mode": instance.get("trading_mode")})
         return {"broker": broker_name, "status": "started", "message": msg}
     return {"broker": broker_name, "status": "failed", "message": msg}
@@ -2672,3 +2679,49 @@ async def get_user_strategy(user=Depends(get_current_user)):
         except Exception:
             pass
     return {"overrides": overrides}
+
+
+def _resolve_client_instrument(user_id: int) -> str:
+    """Return the instrument for a client, preferring runtime config over DB default."""
+    bi = db_fetchone(
+        "SELECT instrument, broker FROM client_broker_instances "
+        "WHERE client_id=? AND status != 'removed' "
+        "ORDER BY CASE WHEN status='running' THEN 0 ELSE 1 END, id DESC LIMIT 1",
+        (user_id,)
+    )
+    instrument = (bi["instrument"] if bi else None) or "NIFTY"
+    broker     = (bi["broker"]     if bi else None) or ""
+    # broker_config is written by /broker/quick-update — more up-to-date than DB default
+    _bcfg = Path(f"config/broker_config_{user_id}_{broker}.json")
+    if _bcfg.exists():
+        try:
+            _b = json.loads(_bcfg.read_text())
+            if _b.get("instrument"):
+                instrument = _b["instrument"]
+        except Exception:
+            pass
+    return instrument
+
+
+@router.get("/strategy")
+async def client_get_strategy(user=Depends(get_current_user)):
+    """Return strategy_logic.json settings for this client's configured instrument."""
+    from web.config_api import _load_strategy
+    instrument = _resolve_client_instrument(user["id"])
+    data = _load_strategy()
+    return {"instrument": instrument, "settings": data.get(instrument, data.get("NIFTY", {}))}
+
+
+class ClientStrategyUpdate(BaseModel):
+    settings: dict
+
+
+@router.post("/strategy")
+async def client_save_strategy(payload: ClientStrategyUpdate, user=Depends(get_current_user)):
+    """Patch strategy_logic.json for this client's instrument only."""
+    from web.config_api import _load_strategy, _save_strategy
+    instrument = _resolve_client_instrument(user["id"])
+    data = _load_strategy()
+    data[instrument] = payload.settings
+    _save_strategy(data)
+    return {"success": True, "instrument": instrument, "message": "Strategy saved. Changes take effect on next tick."}

@@ -135,7 +135,13 @@
         </div>
 
         <!-- Broker tabs -->
-        <div class="broker-tabs" id="broker-tabs" style="margin-bottom:14px"></div>
+        <div class="broker-tabs" id="broker-tabs" style="margin-bottom:10px"></div>
+
+        <!-- Per-broker trade toggle table (one row per configured broker) -->
+        <div id="broker-trade-grid" style="margin-bottom:14px;display:none">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Trade Enable per Broker</div>
+          <div id="broker-trade-rows" style="display:flex;flex-direction:column;gap:4px"></div>
+        </div>
 
         <!-- Token status row -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px">
@@ -191,9 +197,9 @@
         <!-- Kill-switch indicator -->
         <div id="ctrl-kill-bar" style="display:none;margin-bottom:12px"></div>
 
-        <!-- BOT toggle button (big) -->
+        <!-- BOT toggle button (big) — OFF pauses trading only, subprocess stays alive -->
         <button id="bot-big-btn" class="bot-toggle-btn state-start" onclick="onBotToggle(!getBotRunning())" style="margin-bottom:10px">
-          ▶ START ALL
+          ▶ START BOT
         </button>
 
         <!-- Trading toggle row (acts on selected broker) -->

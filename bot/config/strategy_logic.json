@@ -5,7 +5,18 @@
             "enabled": false,
             "start_time": "09:00",
             "v3": {
-                "entry_rules_beginning": [],
+                "entry_rules_beginning": [
+                    {
+                        "indicator": "advanced",
+                        "operator": "AND",
+                        "openBrackets": "",
+                        "closeBrackets": "",
+                        "operand1": "CLOSE",
+                        "operator_sym": "<",
+                        "operand2": "VWAP",
+                        "tf": "5"
+                    }
+                ],
                 "entry_rules_reentry": [
                     {
                         "indicator": "advanced",
@@ -116,7 +127,7 @@
                     }
                 },
                 "reentry_best_metric": "balanced_premium",
-                "ltp_target": 60,
+                "ltp_target": 30,
                 "entry_workflow_mode": "reentry_only",
                 "rsi": {
                     "period": 14

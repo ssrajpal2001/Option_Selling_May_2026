@@ -1,1 +1,0 @@
-{"bot_running": true, "trading_active": false, "pid": 6568, "mode": "LIVE", "instrument": "NIFTY", "broker": "upstox", "heartbeat": 1778738574.8952909, "updated_at": "2026-05-14T11:32:54.895290+05:30", "session_pnl": 0, "trade_count": 0, "trade_history": [], "log_tail": ["Bot starting in client mode. Connection active. Waiting for 'Start Trading' toggle..."]}"]}

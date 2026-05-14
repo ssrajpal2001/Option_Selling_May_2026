@@ -55,3 +55,18 @@ bot/config/algosoft.db
 bot/config/algosoft.db-shm
 bot/config/algosoft.db-wal
 bot/config/bot_status.json
+# Runtime state (recreated on every run)
+bot/config/bot_status*.json
+bot/config/sell_v3_state_*.json
+bot/config/trading_enabled*.json
+bot/config/broker_config_*.json
+
+# Tick CSV data (rebuilt from live ticks, not needed on server)
+bot/data/
+bot/data_history/
+
+# Backtest data (30 MB, not needed for live trading)
+bot/backtest_data/
+
+# Logs (start fresh on server)
+bot/logs/

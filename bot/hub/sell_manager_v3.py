@@ -213,7 +213,7 @@ class SellManagerV3:
         logger.info(f"╠══════════════════════════════════════════════════════════════════════╣")
 
         # 1. Timing & Sizing
-        st = self._v3_cfg('start_time', '09:15:00')
+        st = self._v3_cfg('start_time') or self._cfg('start_time', '09:15:00')
         et = self._v3_cfg('entry_end_time', '14:00:00')
         ct = self._v3_cfg('close_time', '15:20:00')
         ltp_tgt = self._v3_cfg('ltp_target')

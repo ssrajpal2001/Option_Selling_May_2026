@@ -147,13 +147,19 @@ class DhanWebSocketManager(DataFeed):
 
                 # Re-subscribe
                 if self.subscriptions:
-                    # Ensure security_id is int — Dhan SDK rejects string IDs in the binary frame
-                    subs_list = [(int(seg), int(sid)) for seg, sid in self.subscriptions]
-                    logger.info(
-                        f"[Global Dhan] Re-subscribing to {len(subs_list)} instruments. "
-                        f"Sample: {subs_list[:3]}"
-                    )
-                    self.feed.subscribe_symbols(subs_list)
+                    subs_list = []
+                    for seg, sid in self.subscriptions:
+                        try:
+                            subs_list.append((int(seg), int(sid)))
+                        except (ValueError, TypeError):
+                            # Non-numeric IDs (e.g. MCX Upstox keys) are not supported by Dhan
+                            logger.debug(f"[Global Dhan] Skipping non-Dhan key on re-subscribe: {seg}/{sid}")
+                    if subs_list:
+                        logger.info(
+                            f"[Global Dhan] Re-subscribing to {len(subs_list)} instruments. "
+                            f"Sample: {subs_list[:3]}"
+                        )
+                        self.feed.subscribe_symbols(subs_list)
 
                 # Only reset backoff once the connection is genuinely stable — i.e., after
                 # at least one valid market-data tick has been parsed by _process_raw_packet.

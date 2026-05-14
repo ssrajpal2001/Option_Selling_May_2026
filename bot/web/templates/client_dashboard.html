@@ -991,6 +991,7 @@ async function pollBotStatus() {
 
     updateBotUI(anyRunning, state.tradingEnabled);
     renderBrokerTabs();
+    renderBrokerTradeGrid();
     if (state.selectedBroker) updateBrokerBotStatusRow(state.selectedBroker);
     updateStatsUI(todayTrades);
     updateKillSwitchUI();
@@ -1256,14 +1257,14 @@ function updateBotUI(running, tradingEnabled) {
   document.getElementById('bot-toggle-lbl').style.color = running ? 'var(--primary)' : 'var(--muted)';
   document.getElementById('trading-toggle-lbl').style.color = tradingEnabled ? '#fbbf24' : 'var(--muted)';
 
-  // Big button
+  // Big button — OFF pauses trading (bot subprocess stays running), not a hard stop
   const bb = document.getElementById('bot-big-btn');
   if (running) {
     bb.className = 'bot-toggle-btn state-stop';
-    bb.textContent = '■ STOP ALL';
+    bb.textContent = '⏸ PAUSE ALL TRADING';
   } else {
     bb.className = 'bot-toggle-btn state-start';
-    bb.textContent = '▶ START ALL';
+    bb.textContent = '▶ START BOT';
   }
 
   // Status badge
@@ -1386,7 +1387,7 @@ function updateKillSwitchUI() {
 async function onBotToggle(wantRunning) {
   const btn = document.getElementById('bot-big-btn');
   btn.disabled = true;
-  btn.textContent = wantRunning ? '⏳ Starting all...' : '⏳ Stopping all...';
+  btn.textContent = wantRunning ? '⏳ Starting...' : '⏳ Pausing trading...';
   try {
     if (wantRunning) {
       const d = await api('POST', '/bot/start', {});
@@ -1411,15 +1412,24 @@ async function onBotToggle(wantRunning) {
           parts.push(`Failed — ${failDetail || d.failed.map(cap).join(', ')}`);
         }
         const toastType = d.success === false ? 'warn' : 'ok';
-        toast(parts.join(' · ') || (d.success === false ? 'No brokers could be started' : 'Bot started'), toastType);
+        toast(parts.join(' · ') || (d.success === false ? 'No brokers could be started' : 'Bot started — enable TRADE toggle to begin trading'), toastType);
         if (d.plan_warning) toast(d.plan_warning, 'warn');
       } else {
-        toast(d.message || 'Bot started successfully!', 'ok');
+        toast(d.message ? d.message + ' — enable TRADE toggle to begin trading' : 'Bot started!', 'ok');
         if (d.plan_warning) toast(d.plan_warning, 'warn');
       }
     } else {
-      const d = await api('POST', '/bot/stop');
-      toast(d.message || 'Bot stopped.', 'ok');
+      // BOT toggle OFF = pause all trading, subprocess keeps running in background.
+      // Use individual broker stop buttons in Settings to actually terminate the subprocess.
+      const runningBrokers = (state.brokersStatus || []).filter(b => b.running);
+      if (runningBrokers.length === 0) {
+        toast('No running bots to pause.', 'warn');
+      } else {
+        await Promise.all(runningBrokers.map(b =>
+          api('POST', '/bot/toggle-broker-trading', { enabled: false, broker: b.broker }).catch(() => {})
+        ));
+        toast('All trading paused. Bot subprocesses keep running — use TRADE toggle to resume.', 'ok');
+      }
     }
     await pollBotStatus();
   } catch (e) {
@@ -1477,6 +1487,57 @@ function updateBrokerBotStatusRow(broker) {
     const instrFull = document.getElementById('set-instrument');
     if (instrFull) instrFull.value = brokerData.instrument || 'NIFTY';
   }
+}
+
+// ── Per-broker trade toggle grid (shown in Bot Control card) ─────────────────
+function renderBrokerTradeGrid() {
+  const grid = document.getElementById('broker-trade-grid');
+  const rows = document.getElementById('broker-trade-rows');
+  if (!grid || !rows) return;
+  const brokers = state.brokersStatus || [];
+  if (!brokers.length) { grid.style.display = 'none'; return; }
+  grid.style.display = '';
+  rows.innerHTML = brokers.map(b => {
+    const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+    const runDot = b.running
+      ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0"></span>`
+      : `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#475569;flex-shrink:0"></span>`;
+    const checked = b.trading_active ? 'checked' : '';
+    const disabled = b.running ? '' : 'disabled';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border-soft)">
+      ${runDot}
+      <span style="font-size:12px;font-weight:700;flex:1;color:${b.running ? 'var(--text)' : 'var(--muted)'}">${cap(b.broker)}</span>
+      <span style="font-size:10px;color:var(--muted);margin-right:4px">${b.running ? (b.trading_active ? 'Trading ON' : 'Trading OFF') : 'Stopped'}</span>
+      <label class="toggle-switch" title="${b.running ? 'Toggle trading for ' + cap(b.broker) : 'Start the bot first'}">
+        <input type="checkbox" ${checked} ${disabled} onchange="_toggleBrokerTrade('${b.broker}', this.checked, this)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+
+async function _toggleBrokerTrade(broker, enabled, el) {
+  el.disabled = true;
+  try {
+    await api('POST', '/bot/toggle-broker-trading', { enabled, broker });
+    const bd = (state.brokersStatus || []).find(b => b.broker === broker);
+    if (bd) bd.trading_active = enabled;
+    // Sync nav + card toggles if this is the selected broker
+    if (state.selectedBroker === broker) {
+      const nt = document.getElementById('trading-main-toggle');
+      const ct = document.getElementById('trading-toggle-card');
+      if (nt) nt.checked = enabled;
+      if (ct) ct.checked = enabled;
+      state.tradingEnabled = enabled;
+      document.getElementById('trading-toggle-lbl').style.color = enabled ? '#fbbf24' : 'var(--muted)';
+    }
+    renderBrokerTradeGrid();
+    toast(`${broker.charAt(0).toUpperCase()+broker.slice(1)} trading ${enabled ? 'enabled' : 'paused'}.`, 'ok');
+  } catch(e) {
+    toast(e.message || 'Toggle failed', 'err');
+    el.checked = !enabled;
+  }
+  el.disabled = false;
 }
 
 function _applyModePill(mode) {

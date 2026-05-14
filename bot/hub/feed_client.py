@@ -38,6 +38,9 @@ _IDLE_TIMEOUT = 90          # seconds of silence → send ping
 # Each round takes ~(_CONNECT_RETRIES × 2s) + _RECONNECT_DELAY ≈ 11s, so 3 rounds ≈ 33s
 # before degrading — long enough for a transient web-process restart to recover.
 _FALLBACK_TRIGGER_ROUNDS = 3
+# While fallback is active, retry FeedServer at this interval (seconds).
+# A web-process restart (e.g. token refresh) recovers all bots automatically.
+_FALLBACK_RETRY_INTERVAL = 300
 
 
 class FeedClient(DataFeed):
@@ -202,6 +205,7 @@ class FeedClient(DataFeed):
                         )
                         if (
                             self._fallback_feed is not None
+                            and not self._fallback_active
                             and self._reconnect_fail_rounds >= _FALLBACK_TRIGGER_ROUNDS
                         ):
                             logger.warning(
@@ -209,13 +213,26 @@ class FeedClient(DataFeed):
                                 "— FeedServer has been unreachable too long."
                             )
                             await self._activate_fallback()
-                            return  # fallback is now running; no need to loop
-                        # Keep retrying — FeedServer may come back (e.g. web restart)
-                        await asyncio.sleep(_RECONNECT_DELAY)
+                            # Do NOT return — keep retrying FeedServer so a web-process
+                            # restart (e.g. fresh token) auto-recovers all bot subprocesses.
+                        retry_delay = _FALLBACK_RETRY_INTERVAL if self._fallback_active else _RECONNECT_DELAY
+                        if self._fallback_active:
+                            logger.info(
+                                f"[FeedClient] Fallback active — will retry FeedServer "
+                                f"in {retry_delay}s (round {self._reconnect_fail_rounds})."
+                            )
+                        await asyncio.sleep(retry_delay)
                         continue
 
                 # Successful connection: reset failure counter
                 self._reconnect_fail_rounds = 0
+
+                # If fallback was active, cleanly hand ticks back to FeedServer
+                if self._fallback_active:
+                    logger.info(
+                        "[FeedClient] FeedServer reconnected — deactivating fallback DualFeedManager."
+                    )
+                    await self._deactivate_fallback()
 
                 # Re-subscribe all tracked symbols after reconnect
                 if self._subscribed_symbols and self._writer:
@@ -339,3 +356,22 @@ class FeedClient(DataFeed):
             "[FeedClient] Fallback DualFeedManager active — "
             f"{len(self._subscribed_symbols)} symbols subscribed."
         )
+
+    async def _deactivate_fallback(self) -> None:
+        """
+        Switch tick delivery back to FeedServer after successful reconnect.
+        Closes the fallback DualFeedManager after a brief overlap window so
+        any in-flight ticks finish processing before the connection is torn down.
+        """
+        self._fallback_active = False
+
+        async def _close_after_grace():
+            await asyncio.sleep(10)
+            try:
+                await self._fallback_feed.close()
+                logger.info("[FeedClient] Fallback DualFeedManager closed — FeedServer is primary again.")
+            except Exception as exc:
+                logger.debug(f"[FeedClient] Fallback close: {exc}")
+
+        if self._fallback_feed:
+            asyncio.create_task(_close_after_grace())

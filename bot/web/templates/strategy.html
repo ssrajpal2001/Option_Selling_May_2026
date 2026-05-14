@@ -1295,6 +1295,7 @@ function unpackRules(builderId, rules) {
 }
 
 async function loadStrategy() {
+  localStorage.setItem('algosoft-instr', document.getElementById('instr-selector').value);
   try {
     const r = await fetch('/api/strategy');
     strategyData = await r.json();
@@ -1355,6 +1356,8 @@ async function saveAll() {
   }
 }
 
+const _savedInstr = localStorage.getItem('algosoft-instr');
+if (_savedInstr) document.getElementById('instr-selector').value = _savedInstr;
 loadStrategy();
 </script>
 {% endblock %}

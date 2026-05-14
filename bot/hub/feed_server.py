@@ -509,9 +509,14 @@ class FeedServer:
         for w in list(self._writers):
             try:
                 w.write(line)
-                # Moderate timeout to avoid stalling the entire broadcast if one client is slow/blocked.
-                # 0.05s (50ms) is enough for local TCP but prevents long stalls.
-                await asyncio.wait_for(w.drain(), timeout=0.05)
+                # Do NOT call asyncio.wait_for(drain, timeout) here.
+                # Cancelling drain() corrupts the StreamWriter's internal transport state,
+                # causing FeedClients to be silently ejected from _writers on the FIRST
+                # tick burst that takes >50ms — which on high-volume batches (10-20 ticks)
+                # is common. Local loopback TCP has a 128KB+ kernel buffer; plain write()
+                # without drain is safe and never blocks for same-machine clients.
+                if w.is_closing():
+                    dead.append(w)
             except Exception:
                 dead.append(w)
         for w in dead:

@@ -22,8 +22,8 @@
 
     <!-- Right controls -->
     <div class="nav-right">
-      <!-- Bot toggle -->
-      <label class="toggle" title="Bot ON/OFF" id="bot-main-toggle-wrap">
+      <!-- Bot toggle: ON=start subprocess, OFF=pause trading (subprocess stays alive) -->
+      <label class="toggle" title="BOT: ON starts subprocess · OFF pauses all trading (bot keeps running)" id="bot-main-toggle-wrap">
         <input type="checkbox" id="bot-main-toggle" onchange="onBotToggle(this.checked)">
         <div class="toggle-track"></div>
         <div class="toggle-thumb"></div>
@@ -32,8 +32,8 @@
 
       <div style="width:1px;height:22px;background:var(--border)"></div>
 
-      <!-- Trading toggle -->
-      <label class="toggle" title="Trading ON/OFF" id="trading-main-toggle-wrap">
+      <!-- Trading toggle: per selected-broker, enables/disables order placement -->
+      <label class="toggle" title="TRADE: enable/disable order placement for selected broker only" id="trading-main-toggle-wrap">
         <input type="checkbox" id="trading-main-toggle" onchange="onTradingToggle(this.checked)">
         <div class="toggle-track"></div>
         <div class="toggle-thumb"></div>
