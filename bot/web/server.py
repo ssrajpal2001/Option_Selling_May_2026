@@ -1137,31 +1137,67 @@ async def _instance_crash_monitor():
                 crash_reason = None
 
                 # Check 1: Is PID alive?
+                # IMPORTANT: os.kill(pid, 0) on Windows sends CTRL_C_EVENT (SIGINT) to the
+                # process — it does NOT silently check liveness like on Linux. Use the
+                # InstanceManager's Popen handle first (poll() is signal-free), then fall
+                # back to a ctypes OpenProcess check for PIDs not in our in-process dict.
                 pid_alive = True
                 try:
-                    import os as _os
-                    _os.kill(int(pid), 0)
-                except ProcessLookupError:
-                    pid_alive = False
-                    crash_reason = f"PID {pid} exited unexpectedly"
+                    from hub.instance_manager import instance_manager as _im
+                    _proc = _im._processes.get(instance_id)
+                    if _proc is not None:
+                        pid_alive = _proc.poll() is None
+                        if not pid_alive:
+                            crash_reason = f"PID {pid} exited unexpectedly"
+                    else:
+                        # Process not in our dict (server restarted) — use ctypes on Windows
+                        if sys.platform == 'win32':
+                            import ctypes as _ct
+                            _PQLI = 0x1000  # PROCESS_QUERY_LIMITED_INFORMATION
+                            _h = _ct.windll.kernel32.OpenProcess(_PQLI, False, int(pid))
+                            if _h:
+                                _ct.windll.kernel32.CloseHandle(_h)
+                            else:
+                                pid_alive = False
+                                crash_reason = f"PID {pid} exited unexpectedly"
+                        else:
+                            import os as _os
+                            try:
+                                _os.kill(int(pid), 0)
+                            except ProcessLookupError:
+                                pid_alive = False
+                                crash_reason = f"PID {pid} exited unexpectedly"
+                            except PermissionError:
+                                pass  # Process exists, no permission — assume alive
                 except Exception:
-                    pass  # Permission/other OS errors — assume alive
+                    pass  # Any error in check — assume alive, skip
 
-                # Check 2: Heartbeat staleness (catches frozen/stuck bots)
+                # Check 2: Heartbeat staleness — use the broker-specific status file
+                # (bot_status_client_{id}_{instrument}_{broker}.json) which has fresh
+                # runtime heartbeats. The generic bot_status_client_{id}.json is only
+                # written at startup and goes stale quickly when multiple bots run.
                 if pid_alive:
                     client_id = row.get("client_id")
-                    status_file = Path(f"config/bot_status_client_{client_id}.json")
-                    if status_file.exists():
-                        try:
-                            with open(status_file) as _sf:
-                                st = _json.load(_sf)
-                            hb = float(st.get("heartbeat") or 0)
-                            if hb > 0:
-                                age = _time.time() - hb
-                                if age > 90:
-                                    crash_reason = f"Bot frozen — heartbeat {age:.0f}s stale"
-                        except Exception:
-                            pass
+                    instrument = row.get("instrument", "")
+                    broker = row.get("broker", "")
+                    # Try broker-specific file first, fall back to generic
+                    status_candidates = [
+                        Path(f"config/bot_status_client_{client_id}_{instrument}_{broker}.json"),
+                        Path(f"config/bot_status_client_{client_id}.json"),
+                    ]
+                    for status_file in status_candidates:
+                        if status_file.exists():
+                            try:
+                                with open(status_file) as _sf:
+                                    st = _json.load(_sf)
+                                hb = float(st.get("heartbeat") or 0)
+                                if hb > 0:
+                                    age = _time.time() - hb
+                                    if age > 90:
+                                        crash_reason = f"Bot frozen — heartbeat {age:.0f}s stale"
+                                break  # Found a valid file — stop looking
+                            except Exception:
+                                pass
 
                 if not crash_reason:
                     continue  # healthy
